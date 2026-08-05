@@ -1,0 +1,18 @@
+//
+//  NCChannelViewController+RRS.h
+//  NexconnChatUI
+//
+//  Created by nexconn-ios on 10/4/26.
+//  Copyright (c) 2026 Nexconn. All rights reserved.
+//
+
+#import "NCChannelViewController.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+NS_ASSUME_NONNULL_BEGIN
+
+@interface NCChannelViewController (RRS)
+- (void)rrs_observeReadReceipt;
+- (void)rrs_didReceiveMessageReadReceiptResponses:(NSArray<NCMessageReadReceiptResponse *> *)responses;
+@end
+
+NS_ASSUME_NONNULL_END

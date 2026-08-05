@@ -1,0 +1,137 @@
+//
+//  NCSearchFriendsViewController.m
+//  NexconnChatUI
+//
+//  Created by nexconn-ios on 10/4/26.
+//  Copyright (c) 2026 Nexconn. All rights reserved.
+//
+
+#import "NCSearchFriendsViewController.h"
+#import "NCFriendListView.h"
+#import "NCChatUICommonDefine.h"
+#import "NCAlertView.h"
+@interface NCSearchFriendsViewController ()<UITableViewDelegate, UITableViewDataSource,NCListViewModelResponder>
+
+@property (nonatomic, strong) NCSearchFriendsViewModel *viewModel;
+@property (nonatomic, strong) NCFriendListView *listView;
+@end
+
+@implementation NCSearchFriendsViewController
+- (instancetype)initWithViewModel:(NCSearchFriendsViewModel *)viewModel
+{
+    self = [super init];
+    if (self) {
+        [viewModel bindResponder:self];
+        self.viewModel = viewModel;
+    }
+    return self;
+}
+
+- (void)loadView {
+    self.view = self.listView;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self setupView];
+}
+
+- (void)setupView {
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    [self.viewModel registerCellForTableView:self.listView.tableView];
+    if (!self.title) {
+        self.title = NCUILocalizedString(@"search_friend_title");
+    }
+    [self configureSearchBar];
+    [self configureRightNaviItems];
+    UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
+    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+}
+
+- (void)leftBarButtonItemPressed {
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+- (void)configureSearchBar {
+    UISearchBar *bar = [self.viewModel configureSearchBarForViewController:self];
+    [self.listView configureSearchBar:bar];
+}
+
+- (void)configureRightNaviItems {
+    NSArray *items = [self.viewModel configureRightNaviItemsForViewController:self];
+    self.navigationItem.rightBarButtonItems = items;
+}
+
+#pragma mark - NCFriendListViewModelResponder
+- (void)reloadData:(BOOL)isEmpty {
+    [self.listView.tableView reloadData];
+    [self.listView.tableView setNeedsLayout];
+    [self.listView.tableView layoutIfNeeded];
+    self.listView.labEmpty.hidden = !isEmpty;
+}
+
+- (void)showTips:(NSString *)tips {
+    [NCAlertView showAlertController:nil
+                             message:tips
+                    hiddenAfterDelay:2];
+}
+
+#pragma mark - UITableViewDelegate
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self.viewModel viewController:self
+                         tableView:tableView
+                      didSelectRow:indexPath];
+}
+
+#pragma mark - UITableViewDataSource
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return [self.viewModel numberOfSections];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return [self.viewModel numberOfRowsInSection:section];
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return  [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return NCUserManagementCellHeight;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    return nil;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+    return nil;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    return 0.01f;
+}
+
+// Without this delegate method, the table view uses the header height for its footer.
+// Returning 0 or 0.0f does not suppress that default footer height.
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
+    return 0.01f;
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self.view endEditing:YES];
+}
+
+#pragma mark - Property
+
+- (NCFriendListView *)listView {
+    if (!_listView) {
+        NCFriendListView *listView = [NCFriendListView new];
+        listView.tableView.dataSource = self;
+        listView.tableView.delegate = self;
+        _listView = listView;
+    }
+    return _listView;
+}
+@end

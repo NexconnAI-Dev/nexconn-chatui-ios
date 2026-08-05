@@ -1,0 +1,18 @@
+//
+//  NCFriendListCell.h
+//  NexconnChatUI
+//
+//  Created by nexconn-ios on 10/4/26.
+//  Copyright (c) 2026 Nexconn. All rights reserved.
+//
+
+#import "NCFriendListPermanentCell.h"
+UIKIT_EXTERN NSString * _Nullable const NCFriendListCellIdentifier;
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface NCFriendListCell : NCFriendListPermanentCell
+- (void)showPortrait:(NSString *)url;
+@end
+
+NS_ASSUME_NONNULL_END
