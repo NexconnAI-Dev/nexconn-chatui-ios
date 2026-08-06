@@ -1,0 +1,91 @@
+name: Bug report
+description: Report a reproducible problem in Nexconn ChatUI for iOS
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, private user data, or unpatched security vulnerabilities. Report security issues to support@nexconn.ai.
+  - type: input
+    id: version
+    attributes:
+      label: ChatUI version
+      placeholder: 26.3.0
+    validations:
+      required: true
+  - type: dropdown
+    id: integration
+    attributes:
+      label: Integration method
+      options:
+        - Swift Package Manager
+        - Source integration
+    validations:
+      required: true
+  - type: input
+    id: ios-version
+    attributes:
+      label: iOS version
+      placeholder: iOS 17.5
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device or simulator
+      placeholder: iPhone 15 Pro simulator
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Describe what happened and its impact.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: List the exact steps that reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Platform and environment
+      description: Include iOS version, device or simulator, Xcode version, integration method, and relevant dependency versions.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Include relevant logs, stack traces, or write "None" if no logs are available.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: minimal_reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide a minimal code sample or a link to a small reproducible project. Remove credentials and private data.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed secrets and private data from this report.
+          required: true

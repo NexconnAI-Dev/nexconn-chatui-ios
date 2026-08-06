@@ -9,6 +9,7 @@ for channel lists, conversations, messages, profiles, groups, and media.
 - [Register](https://console.nexconn.ai/agile/register?utm_source=ConsolegithubChatUIiOS)
   to get a Nexconn App Key.
 - [Documentation](https://docs.nexconn.ai/chatui-ios)
+- [Release notes](https://docs.nexconn.ai/chatui-ios/release-notes)
 - [Demo app](https://www.nexconn.ai/demos/chat)
 - [Chat UI](https://www.nexconn.ai/product/chat#ui-showcase)
 
@@ -103,8 +104,8 @@ source component.
 
 ### Source Integration
 
-Every release tag includes the corresponding ChatUI source snapshot. To keep
-the source in the main application repository, copy the complete
+Release tags from `v26.3.0` onward include the corresponding ChatUI source
+snapshot. To keep the source in the main application repository, copy the complete
 `Sources/NexconnChatUI` directory from the selected tag, including its local
 Podspec and resources, then add:
 
@@ -223,6 +224,9 @@ See the complete [Nexconn ChatUI documentation](https://docs.nexconn.ai/chatui-i
 for SDK setup, API details, configuration, media handling, push notifications,
 and integration guidance.
 
+For version changes and upgrade information, see the
+[Nexconn ChatUI iOS release notes](https://docs.nexconn.ai/chatui-ios/release-notes).
+
 For source-based integration and resource troubleshooting, see
 `SOURCE_INTEGRATION.md` in the release tag.
 
@@ -233,7 +237,9 @@ customization. Modified forks are not covered by the same support scope as the
 official binary distribution.
 
 Direct source contributions are not currently accepted. Report defects and
-proposed improvements through the official Nexconn support channel.
+proposed improvements through the [GitHub Issues](https://github.com/NexconnAI-Dev/nexconn-chatui-ios/issues)
+for this repository. Do not report unpatched security vulnerabilities in public
+issues; send private reports to `support@nexconn.ai`.
 
 ## License
 
