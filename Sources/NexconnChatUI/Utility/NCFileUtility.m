@@ -10,6 +10,7 @@
 #import <CommonCrypto/CommonDigest.h>
 
 static NSString *const NCFileCacheRootDirectoryName = @"NexconnChatUI";
+static NSString *const NCFileLocalPathMapDefaultsKey = @"NCFileUtilityLocalPathMap";
 
 static NSString *NCFileMD5(NSString *value) {
     if (value.length == 0) {
@@ -110,6 +111,34 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
 + (BOOL)isFileExist:(NSString *)path {
     NSString *correctedPath = [self correctedFilePath:path];
     return correctedPath.length > 0 && [[NSFileManager defaultManager] fileExistsAtPath:correctedPath];
+}
+
++ (NSString *)fileLocalPathForRemoteURL:(NSString *)remoteURL {
+    NSString *fileKey = [self fileKeyForURL:remoteURL];
+    if (fileKey.length == 0) {
+        return nil;
+    }
+    NSDictionary *pathMap = [[NSUserDefaults standardUserDefaults] dictionaryForKey:NCFileLocalPathMapDefaultsKey];
+    NSString *localPath = [self correctedFilePath:pathMap[fileKey]];
+    if (localPath.length > 0 && [[NSFileManager defaultManager] fileExistsAtPath:localPath]) {
+        return localPath;
+    }
+    return nil;
+}
+
++ (void)setFileLocalPath:(NSString *)localPath forRemoteURL:(NSString *)remoteURL {
+    NSString *fileKey = [self fileKeyForURL:remoteURL];
+    if (fileKey.length == 0) {
+        return;
+    }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSMutableDictionary *pathMap = [[defaults dictionaryForKey:NCFileLocalPathMapDefaultsKey] mutableCopy] ?: [NSMutableDictionary dictionary];
+    if (localPath.length > 0) {
+        pathMap[fileKey] = localPath;
+    } else {
+        [pathMap removeObjectForKey:fileKey];
+    }
+    [defaults setObject:pathMap forKey:NCFileLocalPathMapDefaultsKey];
 }
 
 + (NSString *)recheckedFileName:(NSString *)fileName {

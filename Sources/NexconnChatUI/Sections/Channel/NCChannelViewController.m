@@ -74,6 +74,10 @@
 - (void)handleModifiedMessages:(NSArray<NCMessage *> *)messages;
 @end
 
+@interface NCChannelDataSource (ChannelReleaseCleanup)
+- (void)cleanupForChannelViewControllerRelease;
+@end
+
 extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 NSString *const NCConversationViewScrollNotification = @"NCConversationViewScrollNotification";
@@ -92,6 +96,33 @@ static NSString *NCConversationConnectionStatusHandlerIdentifier(NCChannelViewCo
 
 static NSString *NCConversationTypingStatusHandlerIdentifier(NCChannelViewController *viewController) {
     return [NSString stringWithFormat:@"NCChannelVC-TYPING-%p", viewController];
+}
+
+static NSString *RCConversationGroupHandlerIdentifier(NCChannelViewController *viewController) {
+    return [NSString stringWithFormat:@"RCConversationVC-GROUP-%p", viewController];
+}
+
+static BOOL RCConversationGroupOperationContainsCurrentUser(NCGroupOperationEvent *event) {
+    NSString *currentUserId = [NCEngine getCurrentUserId] ?: @"";
+    if (currentUserId.length == 0) {
+        return NO;
+    }
+    for (NCGroupMemberInfo *memberInfo in event.memberInfos) {
+        if ([memberInfo.userId isEqualToString:currentUserId]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static BOOL RCConversationGroupOperationInvalidatesCurrentUser(NCGroupOperationEvent *event) {
+    if (event.operation == NCGroupOperationDismiss) {
+        return YES;
+    }
+    if (event.operation != NCGroupOperationKick && event.operation != NCGroupOperationQuit) {
+        return NO;
+    }
+    return RCConversationGroupOperationContainsCurrentUser(event);
 }
 
 @interface NCUploadImageStatusListener : NSObject
@@ -145,7 +176,7 @@ static NSString *NCCombinePreviewNavigationTitle(NCCombineMessage *message) {
     UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, NCMessageCellDelegate,
     NCChatSessionInputBarControlDelegate, UIGestureRecognizerDelegate, UIScrollViewDelegate,
     UINavigationControllerDelegate, NCChannelHandler,
-NCChatSessionInputBarControlDataSource, NCMessagesMultiSelectedProtocol, NCReferencingViewDelegate, NCTextPreviewViewDelegate, NCMessagesLoadProtocol, NCMessageHandler, NCConnectionStatusHandler, NCSelectingUserDataSource, NCChatUIMessageEventObserver> {
+NCChatSessionInputBarControlDataSource, NCMessagesMultiSelectedProtocol, NCReferencingViewDelegate, NCTextPreviewViewDelegate, NCMessagesLoadProtocol, NCMessageHandler, NCConnectionStatusHandler, NCGroupChannelHandler, NCSelectingUserDataSource, NCChatUIMessageEventObserver> {
     int _defaultLocalHistoryMessageCount;
     int _defaultMessageCount;
     int _defaultRemoteHistoryMessageCount;
@@ -189,6 +220,9 @@ NCChatSessionInputBarControlDataSource, NCMessagesMultiSelectedProtocol, NCRefer
 - (void)scheduleTypingStatusRestoreWithSentTime:(long long)sentTime;
 - (void)invalidateTypingStatusRestoreTimer;
 - (void)restoreNavigationTitleForTypingStatusIfNeeded;
+- (void)breakRetainLinksIfNeeded;
+- (void)markVisibleMessagesAsReadIfNeeded;
+- (void)submitVisibleReadReceiptsIfNeeded;
 @end
 
 static NSString *const ncUnknownMessageCellIndentifier = @"ncUnknownMessageCellIndentifier";
@@ -220,6 +254,96 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
         [self nc_commonInit];
     }
     return self;
+}
+
+- (void)breakRetainLinksIfNeeded {
+    UINavigationController *navigationController = self.navigationController;
+    BOOL inNavigationStack = navigationController ? [navigationController.viewControllers containsObject:self] : NO;
+    if (inNavigationStack) {
+        return;
+    }
+
+    if (_chatSessionInputBarControl.delegate == self) {
+        _chatSessionInputBarControl.delegate = nil;
+    }
+    if (_chatSessionInputBarControl.dataSource == self) {
+        _chatSessionInputBarControl.dataSource = nil;
+    }
+    if (_editInputBarControl.delegate == (id)self) {
+        _editInputBarControl.delegate = nil;
+    }
+    if (_editInputBarControl.dataSource == (id)self) {
+        _editInputBarControl.dataSource = nil;
+    }
+    if (_fullScreenEditView.delegate == (id)self) {
+        _fullScreenEditView.delegate = nil;
+    }
+    if (_referencingView.delegate == (id)self) {
+        _referencingView.delegate = nil;
+    }
+    if (_messageCollectionView.delegate == (id)self) {
+        _messageCollectionView.delegate = nil;
+    }
+    if (_messageCollectionView.dataSource == (id)self) {
+        _messageCollectionView.dataSource = nil;
+    }
+    if ([NCMessageSelectionUtility sharedManager].delegate == self) {
+        [NCMessageSelectionUtility sharedManager].delegate = nil;
+    }
+    if (_dataSource.loadDelegate == self) {
+        _dataSource.loadDelegate = nil;
+    }
+
+    if (_resetBottomTapGesture) {
+        _resetBottomTapGesture.delegate = nil;
+        [_resetBottomTapGesture.view removeGestureRecognizer:_resetBottomTapGesture];
+        _resetBottomTapGesture = nil;
+    }
+    for (UIGestureRecognizer *gestureRecognizer in [_unreadRightBottomIcon.gestureRecognizers copy]) {
+        [_unreadRightBottomIcon removeGestureRecognizer:gestureRecognizer];
+    }
+    [_unReadButton removeTarget:self action:NULL forControlEvents:UIControlEventAllEvents];
+    [_unReadMentionedButton removeTarget:self action:NULL forControlEvents:UIControlEventAllEvents];
+
+    self.navigationItem.leftBarButtonItems = nil;
+    self.navigationItem.rightBarButtonItems = nil;
+    self.leftBarButtonItems = nil;
+    self.rightBarButtonItems = nil;
+}
+
+- (BOOL)shouldMarkMessagesAsRead {
+    BOOL viewLoaded = self.isViewLoaded;
+    UIWindow *window = viewLoaded ? self.view.window : nil;
+    UINavigationController *navigationController = self.navigationController;
+    BOOL inNavigationStack = navigationController ? [navigationController.viewControllers containsObject:self] : NO;
+    BOOL hasPresentedController = self.presentedViewController || navigationController.presentedViewController;
+    return self.isConversationAppear && viewLoaded && window && inNavigationStack && !hasPresentedController;
+}
+
+- (void)submitVisibleReadReceiptsIfNeeded {
+    if (![self shouldMarkMessagesAsRead]) {
+        return;
+    }
+
+    NSArray<NSIndexPath *> *visibleIndexPaths = [self.messageCollectionView.indexPathsForVisibleItems copy];
+    for (NSIndexPath *indexPath in visibleIndexPaths) {
+        if (indexPath.row >= self.channelDataRepository.count) {
+            continue;
+        }
+        NCMessageModel *model = self.channelDataRepository[indexPath.row];
+        if ([model rrs_shouldRespondReadReceipt] && model.messageId) {
+            [self.readReceiptBatchManager addSubmitTask:model.messageId];
+        }
+    }
+}
+
+- (void)markVisibleMessagesAsReadIfNeeded {
+    if (![self shouldMarkMessagesAsRead]) {
+        return;
+    }
+    [self.util syncReadStatus];
+    [self.currentChannel clearUnreadCountWithCompletion:nil];
+    [self submitVisibleReadReceiptsIfNeeded];
 }
 
 - (NCBaseChannel *)currentChannel {
@@ -408,11 +532,18 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     self.navigationTitle = [self currentNavigationTitle];
     
     [NCEngine addChannelHandlerWithIdentifier:NCConversationTypingStatusHandlerIdentifier(self) handler:self];
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf markVisibleMessagesAsReadIfNeeded];
+    });
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [self.util syncReadStatus];
+    BOOL shouldMarkRead = [self shouldMarkMessagesAsRead];
+    if (shouldMarkRead) {
+        [self.util syncReadStatus];
+    }
     
     if (_resetBottomTapGesture) {
         [self.messageCollectionView removeGestureRecognizer:_resetBottomTapGesture];
@@ -420,7 +551,9 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     [[NCSystemSoundPlayer defaultPlayer] resetIgnoreConversation];
     [self stopPlayingVoiceMessage];
     self.isConversationAppear = NO;
-    [self.currentChannel clearUnreadCountWithCompletion:nil];
+    if (shouldMarkRead) {
+        [self.currentChannel clearUnreadCountWithCompletion:nil];
+    }
 
     [self.chatSessionInputBarControl cancelVoiceRecord];
     [NCEngine removeChannelHandlerForIdentifier:NCConversationTypingStatusHandlerIdentifier(self)];
@@ -488,6 +621,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     [self registerClass:[NCSightMessageCell class] forMessageType:NCMessageType.shortVideo];
     [self registerClass:[NCTipMessageCell class] forMessageType:NCInformationNotificationMessageIdentifier];
     [self registerClass:[NCTipMessageCell class] forMessageType:NCGroupNotificationMessageIdentifier];
+    [self registerClass:[NCTipMessageCell class] forMessageType:NCMessageType.recallNotification];
     [self registerClass:[NCStreamMessageCell class] forMessageType:NCMessageType.stream];
 
     [self registerClass:[NCUnknownMessageCell class] forCellWithReuseIdentifier:ncUnknownMessageCellIndentifier];
@@ -557,7 +691,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 
         CGRect _conversationViewFrame = self.view.bounds;
 
-        CGFloat _conversationViewFrameY = CGRectGetMaxY([UIApplication sharedApplication].statusBarFrame) +
+        CGFloat _conversationViewFrameY = [NCChatUIUtility getStatusBarHeightForView:self.view] +
                                           CGRectGetMaxY(self.navigationController.navigationBar.bounds);
 
         if (NC_IOS_SYSTEM_VERSION_LESS_THAN(@"7.0")) {
@@ -854,6 +988,9 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
                                              selector:@selector(onUserOnlineStatusChanged:)
                                                  name:NCChatUIUserOnlineStatusChangedNotification
                                                object:nil];
+    if (self.channelType == NCChannelTypeGroup) {
+        [NCEngine addGroupChannelHandlerWithIdentifier:RCConversationGroupHandlerIdentifier(self) handler:self];
+    }
     
     [self rrs_observeReadReceipt];
 }
@@ -976,10 +1113,13 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 - (void)handleAppResumeNotification {
     self.isConversationAppear = YES;
     [self.messageCollectionView reloadData];
-    if ([NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
+    BOOL shouldMarkRead = [self shouldMarkMessagesAsRead];
+    if ([NCEngine getConnectionStatus] == NCConnectionStatusConnected && shouldMarkRead) {
         [self.util syncReadStatus];
     }
-    [self.currentChannel clearUnreadCountWithCompletion:nil];
+    if (shouldMarkRead) {
+        [self.currentChannel clearUnreadCountWithCompletion:nil];
+    }
 }
 
 - (void)handleWillResignActiveNotification {
@@ -1030,7 +1170,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 }
 
 - (void)onConnectionStatusChangedNotification:(NSNotification *)status {
-    if (NCConnectionStatusConnected == [status.object integerValue]) {
+    if (NCConnectionStatusConnected == [status.object integerValue] && [self shouldMarkMessagesAsRead]) {
         [self.util syncReadStatus];
     }
 }
@@ -1135,13 +1275,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 }
 
 - (NCMentionedInfo *)currentInputBarMentionedInfo {
-    NSArray<NSString *> *mentionedUserIdList = self.chatSessionInputBarControl.mentionedUserIdList;
-    if (mentionedUserIdList.count == 0) {
-        return nil;
-    }
-    return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
-                                      userIdList:mentionedUserIdList
-                                mentionedContent:nil];
+    return self.chatSessionInputBarControl.mentionedInfo;
 }
 
 #pragma mark - UIScrollViewDelegate
@@ -1391,6 +1525,9 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     }
     
     NCMessageModel *model = [self.channelDataRepository objectAtIndex:indexPath.row];
+    if (![self shouldMarkMessagesAsRead]) {
+        return;
+    }
     if ([model rrs_shouldRespondReadReceipt] && model.messageId) {
         // Submit V5 read receipt responses through the batch manager.
         [self.readReceiptBatchManager addSubmitTask:model.messageId];
@@ -1830,6 +1967,10 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 }
 // Handles a completed short-video recording.
 - (void)sightDidFinishRecord:(NSString *)url thumbnail:(UIImage *)image duration:(NSUInteger)duration {
+    if (url.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:url]) {
+        NSLog(@"sightDidFinishRecord: invalid local path, drop short video message. url = %@", url);
+        return;
+    }
     NCShortVideoMessage *sightMessage =
         [[NCShortVideoMessage alloc] initWithLocalPath:url thumbnail:image duration:(int)duration];
     [self sendMessage:sightMessage pushContent:nil];
@@ -2155,32 +2296,46 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 }
 
 - (void)deleteOldMessageNotificationMessageIfNeed {
-    // Remove NCOldMessageNotificationMessage when no message remains on either side of the history separator.
-    if (self.channelDataRepository.count > 0) {
-        NCMessageModel *lastOldModel = self.channelDataRepository[0];
-        NCMessageModel *lastNewModel = self.channelDataRepository[self.channelDataRepository.count - 1];
+    //如果“以上是历史消息(NCOldMessageNotificationMessage)”上面或者下面没有消息了，把NCOldMessageNotificationMessage也删除
+    if (self.channelDataRepository.count == 0) {
+        return;
+    }
 
-        if ([lastOldModel.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
-            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
-            [self.channelDataRepository removeObject:lastOldModel];
-            [self.messageCollectionView deleteItemsAtIndexPaths:[NSArray arrayWithObject:indexPath]];
-
-            // After removing the history separator, show a timestamp on the first channel message and adjust its height.
-            NCMessageModel *topMsg = (self.channelDataRepository)[0];
-            topMsg.isDisplayMessageTime = YES;
-            topMsg.cellSize = CGSizeMake(topMsg.cellSize.width, topMsg.cellSize.height + 30);
-            NCMessageCell *__cell = (NCMessageCell *)[self.messageCollectionView
-                cellForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
-            if (__cell) {
-                [__cell setDataModel:topMsg];
-            }
-            [self.messageCollectionView reloadData];
+    NCMessageModel *firstModel = self.channelDataRepository.firstObject;
+    if ([firstModel.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+        [self.channelDataRepository removeObjectAtIndex:0];
+        if (indexPath.row < [self.messageCollectionView numberOfItemsInSection:0]) {
+            [self.messageCollectionView deleteItemsAtIndexPaths:@[ indexPath ]];
         }
-        if ([lastNewModel.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
-            NSIndexPath *indexPath =
-                [NSIndexPath indexPathForRow:self.channelDataRepository.count - 1 inSection:0];
-            [self.channelDataRepository removeObject:lastNewModel];
-            [self.messageCollectionView deleteItemsAtIndexPaths:[NSArray arrayWithObject:indexPath]];
+
+        if (self.channelDataRepository.count == 0) {
+            [self.messageCollectionView reloadData];
+            return;
+        }
+
+        //删除“以上是历史消息”之后，会话的第一条消息显示时间，并且调整高度
+        NCMessageModel *topMsg = self.channelDataRepository.firstObject;
+        CGSize cellSize = topMsg.cellSize;
+        topMsg.isDisplayMessageTime = YES;
+        topMsg.cellSize = CGSizeMake(cellSize.width, cellSize.height + 30);
+        NCMessageCell *__cell = (NCMessageCell *)[self.messageCollectionView
+            cellForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
+        if (__cell) {
+            [__cell setDataModel:topMsg];
+        }
+        [self.messageCollectionView reloadData];
+    }
+
+    NCMessageModel *lastModel = self.channelDataRepository.lastObject;
+    if ([lastModel.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        NSIndexPath *indexPath =
+            [NSIndexPath indexPathForRow:self.channelDataRepository.count - 1 inSection:0];
+        [self.channelDataRepository removeLastObject];
+        if (indexPath.row < [self.messageCollectionView numberOfItemsInSection:0]) {
+            [self.messageCollectionView deleteItemsAtIndexPaths:@[ indexPath ]];
+        } else {
+            [self.messageCollectionView reloadData];
         }
     }
 }
@@ -2235,7 +2390,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     if ([webViewController isKindOfClass:[SFSafariViewController class]]) {
         [self presentViewController:webViewController animated:YES completion:nil];
     } else {
-        UIWindow *window = [NCChatUIUtility getKeyWindow];
+        UIWindow *window = [NCChatUIUtility getWindowForView:self.view];
         UINavigationController *navigationController = (UINavigationController *)window.rootViewController;
         [navigationController pushViewController:webViewController animated:YES];
     }
@@ -2539,6 +2694,23 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     }
 }
 
+- (void)onGroupOperation:(NCGroupOperationEvent *)event {
+    if (self.channelType != NCChannelTypeGroup ||
+        ![event.groupId isEqualToString:self.channelId] ||
+        !RCConversationGroupOperationInvalidatesCurrentUser(event)) {
+        return;
+    }
+    void (^leaveBlock)(void) = ^{
+        [self quitConversationViewAndClear];
+        [self alertErrorAndLeft:NCUILocalizedString(@"not_in_group")];
+    };
+    if ([NSThread isMainThread]) {
+        leaveBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), leaveBlock);
+    }
+}
+
 - (void)leftBarButtonItemPressed:(id)sender {
     [self quitConversationViewAndClear];
     if (self.navigationController && [self.navigationController.viewControllers.lastObject isEqual:self]) {
@@ -2550,9 +2722,16 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 }
 
 - (void)alertErrorAndLeft:(NSString *)errorInfo {
-    [NCAlertView showAlertController:nil message:errorInfo hiddenAfterDelay:1 inViewController:self dismissCompletion:^{
+    [NCAlertView showAlertController:nil
+                              message:errorInfo
+                         actionTitles:nil
+                          cancelTitle:NCUILocalizedString(@"close")
+                         confirmTitle:nil
+                       preferredStyle:UIAlertControllerStyleAlert
+                         actionsBlock:nil
+                          cancelBlock:^{
         [self.navigationController popViewControllerAnimated:YES];
-    }];
+    } confirmBlock:nil inViewController:self];
 }
 
 #pragma mark - Cell multi select
@@ -2707,9 +2886,12 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
         NCMessage *latestMessage = message;
         if ([latestMessage.content isKindOfClass:[NCReferenceMessage class]]) {
             NCReferenceMessage *refMessage = (NCReferenceMessage *)latestMessage.content;
-            NCMessageModel *uiMessageModel = [self.util modelByMessageUId:refMessage.referMsgId];
-            if (uiMessageModel && uiMessageModel.hasChanged) {
-                refMessage.referMsgStatus = NCReferenceMessageStatusUpdated;
+            if (refMessage.referMsgStatus == NCReferenceMessageStatusDefault
+                || refMessage.referMsgStatus == NCReferenceMessageStatusUpdated) {
+                NCMessageModel *refModel = [self.util modelByMessageUId:refMessage.referMsgId];
+                if ([self referenceMessageIsEditedForModel:refModel]) {
+                    refMessage.referMsgStatus = NCReferenceMessageStatusUpdated;
+                }
             }
         }
         NCMessageModel *latestMessageModel = [NCMessageModel modelWithNCMessage:latestMessage];
@@ -3174,6 +3356,14 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     return NO;
 }
 
+- (BOOL)referenceMessageIsEditedForModel:(NCMessageModel *)model {
+    if (!model) {
+        return NO;
+    }
+    NCMessageModel *latestModel = model.messageId.length > 0 ? [self.util modelByMessageUId:model.messageId] : nil;
+    return latestModel ? latestModel.hasChanged : model.hasChanged;
+}
+
 - (BOOL)sendReferenceMessage:(NSString *)content {
     if (self.referencingView.referModel) {
         NCReferenceMessage *reference = [[NCReferenceMessage alloc] init];
@@ -3182,7 +3372,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
         reference.referMsgSenderId = self.referencingView.referModel.senderUserId;
         reference.mentionedInfo = [self currentInputBarMentionedInfo];
         reference.referMsgId = self.referencingView.referModel.messageId;
-        if (self.referencingView.referModel.hasChanged) {
+        if ([self referenceMessageIsEditedForModel:self.referencingView.referModel]) {
             reference.referMsgStatus = NCReferenceMessageStatusUpdated;
         }
         [self sendMessage:reference pushContent:nil];
@@ -3349,7 +3539,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 }
 
 - (float)getSafeAreaExtraBottomHeight {
-    return [NCChatUIUtility getWindowSafeAreaInsets].bottom;
+    return [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].bottom;
 }
 
 - (BOOL)isExtensionCell:(NCMessageContent *)messageContent {
@@ -3372,12 +3562,17 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     [[NCChatUIExtensionManager sharedManager] containerViewWillDestroy:self.channelType
                                                                channelId:self.channelId];
     
+    [[NCChatUI shared] removeMessageEventObserver:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [NCEngine removeMessageHandlerForIdentifier:NCConversationReadReceiptHandlerIdentifier(self)];
+    [NCEngine removeChannelHandlerForIdentifier:NCConversationTypingStatusHandlerIdentifier(self)];
     [NCEngine removeConnectionStatusHandlerForIdentifier:NCConversationConnectionStatusHandlerIdentifier(self)];
+    [NCEngine removeGroupChannelHandlerForIdentifier:RCConversationGroupHandlerIdentifier(self)];
+    [self.dataSource cleanupForChannelViewControllerRelease];
     
     // Stop batched read receipt submission.
     [self.readReceiptBatchManager invalidate];
+    [self breakRetainLinksIfNeeded];
 
 }
 
@@ -3608,7 +3803,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
             extraHeight = 24; // A full-width sensor housing increases navigation height from 20 to 44 points.
         }
         CGFloat height = 32;
-        _unReadButton.frame = CGRectMake(0, [NCChatUIUtility getWindowSafeAreaInsets].top + self.navigationController.navigationBar.frame.size.height + 14, 0, height);
+        _unReadButton.frame = CGRectMake(0, [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].top + self.navigationController.navigationBar.frame.size.height + 14, 0, height);
         [_unReadButton setBackgroundImage:NCDynamicImage(@"channel_unread_button_bg_img") forState:UIControlStateNormal];
         [_unReadButton addSubview:self.unReadMessageLabel];
         [_unReadButton addTarget:self

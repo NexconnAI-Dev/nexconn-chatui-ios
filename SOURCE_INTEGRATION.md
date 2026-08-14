@@ -24,21 +24,6 @@ dynamic frameworks, static frameworks, and modular static libraries. Keep the
 linkage configuration already used by the host application. Do not add
 `use_frameworks!` only for NexconnChatUI.
 
-## Host App Permissions
-
-The host application must provide user-facing usage descriptions for the
-privacy-sensitive features it enables. Add the following keys to the host
-application's `Info.plist`:
-
-- `NSCameraUsageDescription` for taking photos and recording video.
-- `NSMicrophoneUsageDescription` for recording voice messages and video audio.
-- `NSPhotoLibraryUsageDescription` for selecting or reading photos and videos.
-- `NSPhotoLibraryAddUsageDescription` for saving photos and videos to the library.
-
-Request the relevant runtime permission before presenting the corresponding
-media or voice UI. `PrivacyInfo.xcprivacy` packaged with ChatUI does not replace
-these host-application usage descriptions.
-
 ## Add the Source Component
 
 Place the complete component directory in the application repository. The

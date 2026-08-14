@@ -93,6 +93,9 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     if (self.searchController.active) {
         return _searchResultArr.count;
     } else {
+        if (section < 0 || section >= allKeys.count) {
+            return 0;
+        }
         NSString *key = [allKeys objectAtIndex:section];
         NSArray *arr = [allUsers objectForKey:key];
         return [arr count];
@@ -130,14 +133,12 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
 
     NCChatUIUserInfo *user = nil;
-    if (self.searchController.active) {
-        user = _searchResultArr[indexPath.row];
-    } else {
-        NSString *key = [allKeys objectAtIndex:indexPath.section];
-        NSArray *arrayForKey = [allUsers objectForKey:key];
-        user = arrayForKey[indexPath.row];
+    user = [self userInfoAtIndexPath:indexPath];
+    if (!user) {
+        [tableView reloadData];
+        return cell;
     }
-    if (user.userId) {
+    if (user.userId.length > 0) {
         NCChatUIUserInfo *cachedUserInfo = [[NCUserInfoCache sharedCache] getUserInfo:user.userId];
         user.alias = cachedUserInfo.alias;
     }
@@ -149,13 +150,10 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCChatUIUserInfo *user;
-    if (self.searchController.active) {
-        user = _searchResultArr[indexPath.row];
-    } else {
-        NSString *key = [allKeys objectAtIndex:indexPath.section];
-        NSArray *arrayForKey = [allUsers objectForKey:key];
-        user = arrayForKey[indexPath.row];
+    NCChatUIUserInfo *user = [self userInfoAtIndexPath:indexPath];
+    if (user.userId.length == 0) {
+        [tableView reloadData];
+        return;
     }
     if (self.selectedBlock) {
         self.selectedBlock(user);
@@ -188,16 +186,24 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     if (needUpdateUserInfo) {
         dispatch_async(self.sortDataQueue, ^{
             NCChatUIUserInfo *userInfo = [self.dataSource getSelectingUserInfo:needUpdateUserInfo.userId];
-            needUpdateUserInfo.name = NCManagedUserDisplayName(userInfo);
+            if (!userInfo) {
+                return;
+            }
+            needUpdateUserInfo.name = userInfo.name;
             needUpdateUserInfo.avatarUrl = userInfo.avatarUrl;
             NSMutableDictionary *tmpDict = [self sortedArrayWithPinYinDic:safeArray];
             dispatch_async(dispatch_get_main_queue(), ^{
+                needUpdateUserInfo.alias = userInfo.alias;
                 allUsers = tmpDict;
                 allKeys = [[tmpDict allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
 
                     return [obj1 compare:obj2 options:NSNumericSearch];
                 }];
-                [self.tableView reloadData];
+                if (self.searchController.active) {
+                    [self filterContentForSearchText:self.searchController.searchBar.text scope:nil];
+                } else {
+                    [self.tableView reloadData];
+                }
             });
         });
     }
@@ -208,6 +214,30 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
 }
 
 #pragma mark - Private Methods
+- (NCChatUIUserInfo *)userInfoAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section < 0 || indexPath.row < 0) {
+        return nil;
+    }
+    if (self.searchController.active) {
+        if (indexPath.section != 0 || indexPath.row >= _searchResultArr.count) {
+            return nil;
+        }
+        id user = _searchResultArr[indexPath.row];
+        return [user isKindOfClass:[NCChatUIUserInfo class]] ? user : nil;
+    }
+
+    if (indexPath.section >= allKeys.count) {
+        return nil;
+    }
+    NSString *key = allKeys[indexPath.section];
+    NSArray *arrayForKey = [allUsers objectForKey:key];
+    if (indexPath.row >= arrayForKey.count) {
+        return nil;
+    }
+    id user = arrayForKey[indexPath.row];
+    return [user isKindOfClass:[NCChatUIUserInfo class]] ? user : nil;
+}
+
 - (void)setUpView {
     [self.view addSubview:self.tableView];
 }
@@ -261,16 +291,29 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
 
 // Returns whether the source string contains or equals the search text.
 - (void)filterContentForSearchText:(NSString *)searchText scope:(NSString *)scope {
+    if (searchText.length == 0) {
+        [_searchResultArr removeAllObjects];
+        [self.tableView reloadData];
+        return;
+    }
+
     NSMutableArray *tempResults = [NSMutableArray array];
     NSUInteger searchOptions = NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch;
     NSArray *safeArray = [self.dataArr copy];
-    for (int i = 0; i < safeArray.count; i++) {
-        NSString *storeString = [(NCChatUIUserInfo *)safeArray[i] name];
-        NSRange storeRange = NSMakeRange(0, storeString.length);
-
-        NSRange foundRange = [storeString rangeOfString:searchText options:searchOptions range:storeRange];
-        if (foundRange.length) {
-            [tempResults addObject:safeArray[i]];
+    for (NCChatUIUserInfo *user in safeArray) {
+        NSString *displayName = NCManagedUserDisplayName(user);
+        NSArray<NSString *> *candidates = @[
+            displayName,
+            user.alias ?: @"",
+            user.name ?: @"",
+            user.userId ?: @"",
+            [NCChatUIUtility getPinYinUpperFirstLetters:displayName] ?: @""
+        ];
+        for (NSString *candidate in candidates) {
+            if (candidate.length > 0 && [candidate rangeOfString:searchText options:searchOptions].location != NSNotFound) {
+                [tempResults addObject:user];
+                break;
+            }
         }
     }
     [_searchResultArr removeAllObjects];

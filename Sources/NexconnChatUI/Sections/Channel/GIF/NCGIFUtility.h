@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString *)downloadFileNameForMessageName:(nullable NSString *)messageName
                                        mediaURLString:(nullable NSString *)mediaUrl;
++ (nullable NSString *)downloadFileNameForMediaURLString:(nullable NSString *)mediaUrl
+                                        defaultExtension:(nullable NSString *)defaultExtension;
 
 @end
 

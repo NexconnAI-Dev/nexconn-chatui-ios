@@ -54,7 +54,10 @@ static const NSInteger kNCOnlineStatusSubscribeMinBatchSize = 1;
 /// Default batch retry delay: 500 milliseconds, stored in nanoseconds for dispatch_after.
 static const int64_t kNCOnlineStatusBatchRetryDelay = (500 * NSEC_PER_MSEC);
 
-/// Queue-specific key used to detect cacheQueue reentry and avoid deadlock.
+/// 订阅在线状态查询限频后的最大自动重试次数
+static const NSInteger kNCOnlineStatusSubscribeStatusMaxRetryCount = 3;
+
+/// cacheQueue 特定 key，用于检测当前是否在队列内执行，避免递归死锁
 static const void *kNCOnlineStatusCacheQueueKey = &kNCOnlineStatusCacheQueueKey;
 /// NCEngine handler identifier.
 static NSString * const kNCOnlineStatusUserHandlerIdentifier = @"NCUserOnlineStatusManager";
@@ -92,7 +95,13 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 /// User IDs with an online-status request in flight.
 @property (nonatomic, strong) NSMutableSet<NSString *> *fetchingUserIds;
 
-/// Unordered set of subscribed user IDs.
+/// 订阅在线状态查询按批次记录的限频重试次数
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *subscribeOnlineStatusRetryCounts;
+
+/// 已调度延迟重试的订阅在线状态查询批次，避免重复 dispatch_after
+@property (nonatomic, strong) NSMutableSet<NSString *> *scheduledSubscribeOnlineStatusRetryKeys;
+
+/// 已订阅的用户ID列表
 @property (nonatomic, strong) NSMutableSet<NSString *> *subscribedUserIds;
 
 /// Cache of user IDs positively identified as friends.
@@ -130,6 +139,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         
         // Initialize the in-flight request set.
         _fetchingUserIds = [NSMutableSet set];
+        _subscribeOnlineStatusRetryCounts = [NSMutableDictionary dictionary];
+        _scheduledSubscribeOnlineStatusRetryKeys = [NSMutableSet set];
         
         // Initialize the unordered subscribed-user set.
         _subscribedUserIds = [NSMutableSet set];
@@ -245,11 +256,18 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         // Log the current user after a successful connection.
         NSString *currentUserId = [NCEngine getCurrentUserId];
         NCLogD(@"Connected as user: %@", currentUserId);
-    } else if (event.status == NCConnectionStatusSignOut) {
-        // Clear local cache and subscription tracking after sign-out.
+    } else if (event.status == NCConnectionStatusSignOut ||
+               event.status == NCConnectionStatusKickedOfflineByOtherClient ||
+               event.status == NCConnectionStatusTokenIncorrect ||
+               event.status == NCConnectionStatusUserAbandon ||
+               event.status == NCConnectionStatusDisconnException) {
+        // 终态断连：用户切换、互踢、Token失效、账号废弃、异常断开，清空所有缓存和订阅记录
         NSString *currentUserId = [NCEngine getCurrentUserId];
-        NCLogD(@"User signOut %@ , clearing all cache and subscriptions", currentUserId);
+        NCLogD(@"Terminal disconnect (status=%ld) for user %@, clearing all cache and subscriptions", (long)event.status, currentUserId);
         [self clearCache];
+
+        // 通知UI清理展示
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"NCUserOnlineStatusCacheCleared" object:nil];
     }
 }
 
@@ -272,7 +290,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     NSMutableArray<NSString *> *unsubscribedUsers = [NSMutableArray array];
     
     for (NCSubscribeChangeEvent *changeEvent in event.events) {
-        if (changeEvent.subscribeType == NCSubscribeTypeOnlineStatus && changeEvent.userId.length > 0) {
+        if ([self isOnlineStatusSubscribeType:changeEvent.subscribeType] && changeEvent.userId.length > 0) {
             if (changeEvent.operationType == NCSubscribeOperationTypeSubscribe) {
                 [subscribedUsers addObject:changeEvent.userId];
             } else {
@@ -313,17 +331,45 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     if (!event.events || event.events.count == 0) {
         return;
     }
-    NSMutableArray<NSString *> *userIds = [NSMutableArray array];
+    NSMutableArray<NCSubscribeUserOnlineStatus *> *changedStatuses = [NSMutableArray array];
     
     for (NCSubscriptionStatusInfo *statusInfo in event.events) {
-        // Process only regular and friend online-status events.
-        if (statusInfo.subscribeType == NCSubscribeTypeOnlineStatus ||
-            statusInfo.subscribeType == NCSubscribeTypeFriendOnlineStatus) {
-            [userIds addObject:statusInfo.userId];
+        // 只处理在线状态事件
+        if ([self isOnlineStatusSubscribeType:statusInfo.subscribeType] && statusInfo.userId.length > 0) {
+            NCSubscribeUserOnlineStatus *status = [self onlineStatusFromSubscriptionStatusInfo:statusInfo];
+            [changedStatuses addObject:status];
         }
     }
-    NCLogD(@"Event change, userIds:%@", userIds);
-    [self getSubscribeUsersOnlineStatus:userIds.copy];
+    NCLogD(@"Event change, userIds:%@", [changedStatuses valueForKey:@"userId"]);
+    [self cacheOnlineStatusesAndNotify:changedStatuses.copy];
+}
+
+- (BOOL)isOnlineStatusSubscribeType:(NCSubscribeType)subscribeType {
+    return subscribeType == NCSubscribeTypeOnlineStatus ||
+           subscribeType == NCSubscribeTypeFriendOnlineStatus;
+}
+
+- (NCSubscribeUserOnlineStatus *)onlineStatusFromSubscriptionStatusInfo:(NCSubscriptionStatusInfo *)statusInfo {
+    NCSubscribeUserOnlineStatus *status = [NCSubscribeUserOnlineStatus new];
+    status.userId = statusInfo.userId;
+
+    NSMutableArray<NCPlatformOnlineStatus *> *details = [NSMutableArray array];
+    BOOL isOnline = NO;
+    for (NCSubscriptionStatusDetail *detail in statusInfo.details ?: @[]) {
+        BOOL platformOnline = detail.eventValue == 1;
+        NCPlatformOnlineStatus *platformStatus = [NCPlatformOnlineStatus new];
+        platformStatus.platform = detail.platform;
+        platformStatus.isOnline = platformOnline;
+        platformStatus.updateTime = detail.changeTime;
+        [details addObject:platformStatus];
+        if (platformOnline) {
+            isOnline = YES;
+        }
+    }
+
+    status.details = details.copy;
+    status.isOnline = isOnline;
+    return status;
 }
 
 #pragma mark - NCUserHandler (Friend Relationship Events)
@@ -428,6 +474,23 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         return;
     }
     NCLogD(@"Fetch online status, users:%@", userIds);
+
+    // 只有在好友在线状态能力开启时才需要等待好友同步完成
+    // 普通在线状态能力单独开启时直接处理，不依赖好友订阅同步
+    if (![self isFriendOnlineStatusSubscribeEnable]) {
+        NCLogD(@"Friend online status subscribe disabled, directly fetch online status");
+        [self filterAndFetchOnlineStatus:userIds processSubscribeLimit:processSubscribeLimit];
+        return;
+    }
+
+    // 等待好友同步完成只在连接建立前有意义：可避免好友信息未同步时误判好友/非好友。
+    // 但 manager 是懒加载，杀进程冷启动后若同步完成事件早于 manager 注册即被永久错过，
+    // 此后待处理队列不会再被排空。连接已建立说明同步窗口已过，直接处理而非继续等待。
+    if ([NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
+        NCLogD(@"Already connected, fetch online status without waiting for friend sync");
+        [self filterAndFetchOnlineStatus:userIds processSubscribeLimit:processSubscribeLimit];
+        return;
+    }
 
     __block BOOL syncCompleted = NO;
     __block NSUInteger addedCount = 0;
@@ -653,26 +716,94 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         NCLogD(@"Get subscribe users online status, no users to fetch");
         return;
     }
-    NCLogD(@"Get subscribe users online status, users:%@", needFetchUserIds);
 
-    [[NCEngine userModule] getSubscribeUsersOnlineStatusWithUserIds:needFetchUserIds
+    NSString *retryKey = [self subscribeOnlineStatusRetryKeyForUserIds:needFetchUserIds];
+    [self requestSubscribeUsersOnlineStatus:needFetchUserIds retryKey:retryKey];
+}
+
+- (void)requestSubscribeUsersOnlineStatus:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+    if (userIds.count == 0) {
+        return;
+    }
+    NCLogD(@"Get subscribe users online status, users:%@", userIds);
+
+    [[NCEngine userModule] getSubscribeUsersOnlineStatusWithUserIds:userIds
                                                           completion:^(NSArray<NCSubscribeUserOnlineStatus *> * _Nullable status, NCError * _Nullable error) {
         NSInteger statusCode = error ? error.code : NCChatUIErrorCodeSuccess;
         NCLogD(@"getSubscribeUsersOnlineStatus, code:%ld", (long)statusCode);
-        // Clear the in-flight markers.
-        dispatch_async(self.cacheQueue, ^{
-            [self.fetchingUserIds minusSet:[NSSet setWithArray:needFetchUserIds]];
-        });
-        
-        if (statusCode == NCChatUIErrorCodeSuccess && status) {
-            [self cacheOnlineStatusesAndNotify:status];
+        if (statusCode == NCChatUIErrorCodeSuccess) {
+            [self finishSubscribeOnlineStatusFetch:userIds retryKey:retryKey];
+            if (status) {
+                [self cacheOnlineStatusesAndNotify:status];
+            }
         } else if (statusCode == NCChatUIErrorCodeRequestOverFrequency) {
-            NCLogD(@"getSubscribeUsersOnlineStatus over frequency, retry users:%@", needFetchUserIds);
-            [self getSubscribeUsersOnlineStatus:needFetchUserIds];
+            [self scheduleSubscribeOnlineStatusRetry:userIds retryKey:retryKey];
         } else {
-            NCLogD(@"getSubscribeUsersOnlineStatus failed, users:%@", needFetchUserIds);
+            [self finishSubscribeOnlineStatusFetch:userIds retryKey:retryKey];
+            NCLogD(@"getSubscribeUsersOnlineStatus failed, users:%@", userIds);
         }
     }];
+}
+
+- (NSString *)subscribeOnlineStatusRetryKeyForUserIds:(NSArray<NSString *> *)userIds {
+    NSMutableOrderedSet<NSString *> *validUserIds = [NSMutableOrderedSet orderedSet];
+    for (NSString *userId in userIds) {
+        if (userId.length > 0) {
+            [validUserIds addObject:userId];
+        }
+    }
+    NSArray<NSString *> *sortedUserIds = [[validUserIds array] sortedArrayUsingSelector:@selector(compare:)];
+    return [sortedUserIds componentsJoinedByString:@"\n"];
+}
+
+- (void)scheduleSubscribeOnlineStatusRetry:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+    if (retryKey.length == 0) {
+        [self finishSubscribeOnlineStatusFetch:userIds retryKey:retryKey];
+        return;
+    }
+
+    dispatch_async(self.cacheQueue, ^{
+        NSInteger retryCount = [self.subscribeOnlineStatusRetryCounts[retryKey] integerValue];
+        if (retryCount >= kNCOnlineStatusSubscribeStatusMaxRetryCount) {
+            NCLogD(@"getSubscribeUsersOnlineStatus over frequency retry reached limit:%ld, users:%@",
+                   (long)retryCount, userIds);
+            [self finishSubscribeOnlineStatusFetchOnCacheQueue:userIds retryKey:retryKey];
+            return;
+        }
+
+        if ([self.scheduledSubscribeOnlineStatusRetryKeys containsObject:retryKey]) {
+            NCLogD(@"getSubscribeUsersOnlineStatus over frequency retry already scheduled, users:%@", userIds);
+            return;
+        }
+
+        NSInteger nextRetryCount = retryCount + 1;
+        self.subscribeOnlineStatusRetryCounts[retryKey] = @(nextRetryCount);
+        [self.scheduledSubscribeOnlineStatusRetryKeys addObject:retryKey];
+        NCLogD(@"getSubscribeUsersOnlineStatus over frequency, retry count:%ld, users:%@",
+               (long)nextRetryCount, userIds);
+
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay), self.cacheQueue, ^{
+            if (![self.scheduledSubscribeOnlineStatusRetryKeys containsObject:retryKey]) {
+                return;
+            }
+            [self.scheduledSubscribeOnlineStatusRetryKeys removeObject:retryKey];
+            [self requestSubscribeUsersOnlineStatus:userIds retryKey:retryKey];
+        });
+    });
+}
+
+- (void)finishSubscribeOnlineStatusFetch:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+    dispatch_async(self.cacheQueue, ^{
+        [self finishSubscribeOnlineStatusFetchOnCacheQueue:userIds retryKey:retryKey];
+    });
+}
+
+- (void)finishSubscribeOnlineStatusFetchOnCacheQueue:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+    [self.fetchingUserIds minusSet:[NSSet setWithArray:userIds]];
+    if (retryKey.length > 0) {
+        [self.subscribeOnlineStatusRetryCounts removeObjectForKey:retryKey];
+        [self.scheduledSubscribeOnlineStatusRetryKeys removeObject:retryKey];
+    }
 }
 
 - (void)clearOnlineStatusCache:(NSArray<NSString *> *)userIds {

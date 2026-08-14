@@ -34,6 +34,10 @@
 }
 
 - (void)updateNotice:(NSString *)notice inViewController:(nonnull UIViewController *)viewController{
+    NSString *trimmed = [notice stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (trimmed.length == 0) {
+        return;
+    }
     NCGroupInfo *group = [self updatedGroupWithNotice:notice];
     if ([self.delegate respondsToSelector:@selector(groupNoticeWillUpdate:viewModel:inViewController:)]) {
         BOOL intercept = [self.delegate groupNoticeWillUpdate:group viewModel:self inViewController:viewController];
@@ -45,6 +49,18 @@
         [self updateGroup:group inViewController:viewController];
     } inViewController:viewController];
     
+}
+
+- (BOOL)canSaveNotice:(NSString *)notice {
+    if (!self.canEdit) {
+        return NO;
+    }
+    NSString *trimmed = [notice stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (trimmed.length == 0) {
+        return NO;
+    }
+    NSString *currentNotice = self.group.notice ?: @"";
+    return ![trimmed isEqualToString:currentNotice];
 }
 
 - (NSString *)tip {

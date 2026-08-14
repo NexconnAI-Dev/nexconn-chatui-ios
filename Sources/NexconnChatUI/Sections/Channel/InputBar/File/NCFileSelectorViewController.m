@@ -20,6 +20,10 @@
 @property (nonatomic, strong) NSMutableArray *dataSource;
 @property (nonatomic, strong) UIBarButtonItem *rightItem;
 @property (nonatomic, strong) UIButton *buttonDone;
+@property (nonatomic, strong) dispatch_queue_t directoryScanQueue;
+@property (nonatomic, assign) NSUInteger dataSourceLoadRequestId;
+@property (nonatomic, strong) UIView *directoryLoadingView;
+@property (nonatomic, strong) UIActivityIndicatorView *directoryLoadingIndicatorView;
 @end
 
 static NSString *const NCFileValue = @"file";
@@ -34,6 +38,8 @@ static NSString *const NCListValue = @"List";
     if (self) {
         self.rootPath = rootPath;
         self.maxSelectedNumber = 20;
+        self.directoryScanQueue =
+            dispatch_queue_create("ai.nexconn.chatui.file-selector.directory-scan", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -156,6 +162,7 @@ static NSString *const NCListValue = @"List";
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if ([[tableView cellForRowAtIndexPath:indexPath] isKindOfClass:[NCSelectDirectoryTableViewCell class]]) {
+        [tableView deselectRowAtIndexPath:indexPath animated:NO];
         NSString *dir = self.dataSource[indexPath.section][NCListValue][indexPath.row];
         [self selecteDirectory:dir];
     } else if ([[tableView cellForRowAtIndexPath:indexPath] isKindOfClass:[NCSelectFilesTableViewCell class]]) {
@@ -225,15 +232,18 @@ static NSString *const NCListValue = @"List";
 
 - (void)clickDoneBtn:(id)sender {
     NSMutableArray *selectedFileList = [[NSMutableArray alloc] init];
-    __block NSArray *fileList;
-    [self.dataSource enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
-        NSDictionary *dict = (NSDictionary *)obj;
-        if ([dict[NCTypeValue] isEqualToString:NCFileValue]) {
-            fileList = dict[NCListValue];
-            *stop = YES;
-        }
-    }];
     for (NSIndexPath *indexPath in [self.tableView indexPathsForSelectedRows]) {
+        if (indexPath.section >= self.dataSource.count) {
+            continue;
+        }
+        NSDictionary *dict = self.dataSource[indexPath.section];
+        if (![dict[NCTypeValue] isEqualToString:NCFileValue]) {
+            continue;
+        }
+        NSArray *fileList = dict[NCListValue];
+        if (indexPath.row >= fileList.count) {
+            continue;
+        }
         [selectedFileList
             addObject:[NSString stringWithFormat:@"%@/%@", self.rootPath, [fileList objectAtIndex:indexPath.row]]];
     }
@@ -246,26 +256,107 @@ static NSString *const NCListValue = @"List";
 }
 
 - (void)getDataSourceList {
-    NSString *filePath = self.rootPath;
+    self.dataSourceLoadRequestId += 1;
+    NSUInteger requestId = self.dataSourceLoadRequestId;
+    NSString *filePath = [self.rootPath copy];
+
+    self.dataSource = [[NSMutableArray alloc] init];
+    [self.tableView reloadData];
+    [self p_setDirectoryLoading:YES];
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(self.directoryScanQueue, ^{
+        NSArray *dataSource = [NCFileSelectorViewController p_dataSourceListForDirectoryPath:filePath];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (!strongSelf || strongSelf.dataSourceLoadRequestId != requestId) {
+                return;
+            }
+            [strongSelf p_setDirectoryLoading:NO];
+            strongSelf.dataSource = [dataSource mutableCopy];
+            [strongSelf.tableView reloadData];
+        });
+    });
+}
+
++ (NSArray *)p_dataSourceListForDirectoryPath:(NSString *)filePath {
+    if (filePath.length <= 0) {
+        return @[];
+    }
+
+    NSURL *directoryURL = [NSURL fileURLWithPath:filePath isDirectory:YES];
+    NSArray *properties = @[ NSURLIsDirectoryKey ];
+    NSArray<NSURL *> *contents =
+        [[NSFileManager defaultManager] contentsOfDirectoryAtURL:directoryURL
+                                      includingPropertiesForKeys:properties
+                                                         options:0
+                                                           error:nil];
     NSMutableArray *fileList = [[NSMutableArray alloc] init];
     NSMutableArray *docList = [[NSMutableArray alloc] init];
-    for (NSString *file in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:filePath error:nil]) {
-        BOOL fool;
-        [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithFormat:@"%@/%@", filePath, file]
-                                             isDirectory:&fool];
-        if (!fool) {
-            [fileList addObject:file];
+    for (NSURL *fileURL in contents) {
+        NSString *fileName = fileURL.lastPathComponent;
+        if (fileName.length <= 0) {
+            continue;
+        }
+        NSNumber *isDirectory = nil;
+        [fileURL getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:nil];
+        if (isDirectory.boolValue) {
+            [docList addObject:fileName];
         } else {
-            [docList addObject:file];
+            [fileList addObject:fileName];
         }
     }
-    self.dataSource = [[NSMutableArray alloc] init];
+
+    [docList sortUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+    [fileList sortUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+
+    NSMutableArray *dataSource = [[NSMutableArray alloc] init];
     if (docList.count > 0) {
-        [self.dataSource addObject:@{NCTypeValue : NCDirectotyValue, NCListValue : docList}];
+        [dataSource addObject:@{NCTypeValue : NCDirectotyValue, NCListValue : docList}];
     }
     if (fileList.count > 0) {
-        [self.dataSource addObject:@{NCTypeValue : NCFileValue, NCListValue : fileList}];
+        [dataSource addObject:@{NCTypeValue : NCFileValue, NCListValue : fileList}];
     }
+    return [dataSource copy];
+}
+
+- (void)p_setDirectoryLoading:(BOOL)loading {
+    if (loading) {
+        self.tableView.backgroundView = self.directoryLoadingView;
+        [self.directoryLoadingIndicatorView startAnimating];
+        return;
+    }
+
+    if (self.tableView.backgroundView == self.directoryLoadingView) {
+        self.tableView.backgroundView = nil;
+    }
+    [self.directoryLoadingIndicatorView stopAnimating];
+}
+
+- (UIView *)directoryLoadingView {
+    if (!_directoryLoadingView) {
+        _directoryLoadingView = [[UIView alloc] initWithFrame:self.tableView.bounds];
+        _directoryLoadingView.backgroundColor = self.tableView.backgroundColor;
+
+        UIActivityIndicatorView *indicatorView = nil;
+        if (@available(iOS 13.0, *)) {
+            indicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+        } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+            indicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+#pragma clang diagnostic pop
+        }
+        indicatorView.hidesWhenStopped = YES;
+        indicatorView.translatesAutoresizingMaskIntoConstraints = NO;
+        [_directoryLoadingView addSubview:indicatorView];
+        [NSLayoutConstraint activateConstraints:@[
+            [indicatorView.centerXAnchor constraintEqualToAnchor:_directoryLoadingView.centerXAnchor],
+            [indicatorView.centerYAnchor constraintEqualToAnchor:_directoryLoadingView.centerYAnchor]
+        ]];
+        self.directoryLoadingIndicatorView = indicatorView;
+    }
+    return _directoryLoadingView;
 }
 
 - (void)updateRightButtonLayout {

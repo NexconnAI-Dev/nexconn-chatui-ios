@@ -10,6 +10,7 @@
 #import "NCMentionedStringRangeInfo.h"
 #import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupMentionViewModel.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
 @interface NCInputStateManager ()
@@ -248,11 +249,30 @@
 
 // Replace mentioned user names in the input with their latest display names.
 - (void)updateMentionedInfoWithLatestUserInfo {
-    for (NCMentionedStringRangeInfo *mentionedInfo in self.mentionedRangeInfoList) {
+    // 从后往前处理，避免前面替换影响后续 range
+    NSArray<NCMentionedStringRangeInfo *> *sortedList = [self.mentionedRangeInfoList sortedArrayUsingComparator:^NSComparisonResult(NCMentionedStringRangeInfo *obj1, NCMentionedStringRangeInfo *obj2) {
+        if (obj1.range.location > obj2.range.location) {
+            return NSOrderedAscending; // 降序，从后往前
+        } else if (obj1.range.location < obj2.range.location) {
+            return NSOrderedDescending;
+        }
+        return NSOrderedSame;
+    }];
+
+    NSMutableString *currentText = [self.textView.text mutableCopy];
+
+    for (NCMentionedStringRangeInfo *mentionedInfo in sortedList) {
         NSString *userId = mentionedInfo.userId;
         if (!userId) {
             continue;
         }
+
+        // 校验 range 合法性
+        if (mentionedInfo.range.location >= currentText.length ||
+            mentionedInfo.range.location + mentionedInfo.range.length > currentText.length) {
+            continue;
+        }
+
         NCChatUIUserInfo *userInfo = nil;
         NSString *latestMentionedContent = nil;
         if ([self.delegate respondsToSelector:@selector(inputStateManager:getUserInfoForUserId:)]) {
@@ -261,13 +281,33 @@
         if (userInfo && userInfo.name.length > 0) {
             latestMentionedContent = [NSString stringWithFormat:@"@%@ ", userInfo.name];
         }
+
         if (latestMentionedContent && ![latestMentionedContent isEqualToString:mentionedInfo.content]) {
-            self.textView.text = [self.textView.text stringByReplacingOccurrencesOfString:mentionedInfo.content withString:latestMentionedContent];
+            // 按 range 精准替换当前位置内容
+            [currentText replaceCharactersInRange:mentionedInfo.range withString:latestMentionedContent];
+
+            // 计算长度差，重算前面所有 @ range（因为从后往前，已处理的在当前位置之后，不受影响）
+            NSInteger lengthDiff = latestMentionedContent.length - mentionedInfo.range.length;
+            if (lengthDiff != 0) {
+                for (NCMentionedStringRangeInfo *info in self.mentionedRangeInfoList) {
+                    if (info.range.location < mentionedInfo.range.location) {
+                        // 当前位置之前的不受影响
+                    } else if (info.range.location > mentionedInfo.range.location) {
+                        // 当前位置之后的需要偏移
+                        info.range = NSMakeRange(info.range.location + lengthDiff, info.range.length);
+                    } else if (info == mentionedInfo) {
+                        // 当前项更新 range
+                        info.range = NSMakeRange(info.range.location, latestMentionedContent.length);
+                    }
+                }
+            }
 
             mentionedInfo.content = latestMentionedContent;
-            mentionedInfo.range = NSMakeRange(mentionedInfo.range.location, latestMentionedContent.length);
         }
     }
+
+    // 最后统一赋值回 textView
+    self.textView.text = currentText;
 }
 
 - (void)clearAllStates {
@@ -364,11 +404,22 @@
 
 - (NCMentionedInfo *)mentionedInfo {
     if (self.mentionedRangeInfoList.count > 0) {
+        BOOL containsMentionAll = NO;
         NSMutableSet *mentionedUserIdList = [[NSMutableSet alloc] init];
         for (NCMentionedStringRangeInfo *mentionedInfo in self.mentionedRangeInfoList) {
             if (mentionedInfo.userId) {
+                if ([self isMentionAllUserId:mentionedInfo.userId]) {
+                    containsMentionAll = YES;
+                    continue;
+                }
                 [mentionedUserIdList addObject:mentionedInfo.userId];
             }
+        }
+        if (containsMentionAll) {
+            return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeAll userIdList:nil mentionedContent:nil];
+        }
+        if (mentionedUserIdList.count == 0) {
+            return nil;
         }
         NCMentionedInfo *mentionedInfo = [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
                                                                     userIdList:[mentionedUserIdList allObjects]
@@ -376,6 +427,10 @@
         return mentionedInfo;
     }
     return nil;
+}
+
+- (BOOL)isMentionAllUserId:(NSString *)userId {
+    return [userId isEqualToString:NCMentionAllUsersID];
 }
 
 - (NSArray<NCMentionedStringRangeInfo *> *)mentionedRangeInfo {

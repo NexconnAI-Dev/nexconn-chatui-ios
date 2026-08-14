@@ -18,6 +18,7 @@
 #import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCReadWriteLock.h"
 #import "NSMutableArray+NCOperation.h"
+#import "NCChannelInfoCache.h"
 
 static NSUInteger const NC_KIT_FETCH_INFO_UINT_6 = 6;
 static float const NC_KIT_FETCH_INFO_DELAY_TIME = 0.5;
@@ -25,6 +26,28 @@ static NSUInteger const NC_KIT_BATCH_FETCH_SIZE = 100;
 static NSString * const NCInfoManagementGroupHandlerIdentifier = @"NCInfoManagementGroupHandlerIdentifier";
 static NSString * const NCInfoManagementUserHandlerIdentifier = @"NCInfoManagementUserHandlerIdentifier";
 static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoManagementConnectionHandlerIdentifier";
+
+static BOOL NCGroupOperationMemberInfosContainUser(NCGroupOperationEvent *event, NSString *userId) {
+    if (userId.length == 0) {
+        return NO;
+    }
+    for (NCGroupMemberInfo *memberInfo in event.memberInfos) {
+        if ([memberInfo.userId isEqualToString:userId]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static BOOL NCGroupOperationInvalidatesCurrentUser(NCGroupOperationEvent *event) {
+    if (event.operation == NCGroupOperationDismiss) {
+        return YES;
+    }
+    if (event.operation != NCGroupOperationKick && event.operation != NCGroupOperationQuit) {
+        return NO;
+    }
+    return NCGroupOperationMemberInfosContainUser(event, [NCEngine getCurrentUserId]);
+}
 
 @interface NCInfoManagement ()<NCGroupChannelHandler, NCUserHandler, NCConnectionStatusHandler>
 
@@ -41,7 +64,16 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
 /// Group IDs currently being fetched.
 @property (nonatomic, strong) NSMutableSet<NSString *> *fetchingGroupIds;
 
-/// Read-write lock for concurrent reads and exclusive writes to fetchingUserIds.
+/// 网络失败等待重拉的 userId 集合（使用 userFetchingLock 保护）
+@property (nonatomic, strong) NSMutableSet<NSString *> *pendingRetryUserIds;
+
+/// 网络失败等待重拉的群成员集合（groupId → userId 集合，使用 memberFetchingLock 保护）
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSMutableSet<NSString *> *> *pendingRetryGroupMembers;
+
+/// 网络失败等待重拉的群组ID集合（使用 groupFetchingLock 保护）
+@property (nonatomic, strong) NSMutableSet<NSString *> *pendingRetryGroupIds;
+
+/// 读写锁，用于保护 fetchingUserIds 的并发读、独占写
 @property (nonatomic, strong) NCReadWriteLock *userFetchingLock;
 
 /// Read-write lock for concurrent reads and exclusive writes to fetchingGroupMemberKeys.
@@ -53,12 +85,14 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
 - (NCChatUIGroup *)p_chatUIGroupFromGroupInfo:(NCGroupInfo *)groupInfo;
 - (NCChatUIGroup *)p_chatUIGroupByMergingEventGroup:(NCChatUIGroup *)groupInfo
                                   changedProperties:(NSArray<NSString *> *)changedProperties;
+- (void)p_removeFetchingGroupMemberKeysInGroup:(NSString *)groupId;
 
 @end
 
 @implementation NCInfoManagement
 
-+ (BOOL)p_shouldRetryFriendInfoFetchForErrorCode:(NSInteger)errorCode {
+/// 统一的重试错误码判断（适用于所有资料获取场景）
++ (BOOL)p_shouldRetryForErrorCode:(NSInteger)errorCode {
     return errorCode == NCChatUIErrorCodeNetDataIsSynchronizing ||
            errorCode == NCChatUIErrorCodeRequestOverFrequency ||
            errorCode == NCChatUIErrorCodeNetworkUnavailable;
@@ -71,11 +105,11 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
         instance = [[self alloc] init];
         instance.userId = [NCEngine getCurrentUserId];
         
-        // Initialize request-tracking locks.
+        // 初始化读写锁
         instance.userFetchingLock = [NCReadWriteLock new];
         instance.memberFetchingLock = [NCReadWriteLock new];
         instance.groupFetchingLock = [NCReadWriteLock new];
-        
+
         [NCEngine addGroupChannelHandlerWithIdentifier:NCInfoManagementGroupHandlerIdentifier
                                                handler:instance];
         [NCEngine addUserHandlerWithIdentifier:NCInfoManagementUserHandlerIdentifier
@@ -769,7 +803,24 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
     }];
 }
 
-/// Returns YES when the group is currently being fetched.
+- (void)p_removeFetchingGroupMemberKeysInGroup:(NSString *)groupId {
+    if (groupId.length == 0) {
+        return;
+    }
+    NSString *prefix = [NSString stringWithFormat:@"%@_", groupId];
+    [self.memberFetchingLock performWriteLockBlock:^{
+        NSMutableSet<NSString *> *keysToRemove = [NSMutableSet set];
+        for (NSString *key in self.fetchingGroupMemberKeys) {
+            if ([key hasPrefix:prefix]) {
+                [keysToRemove addObject:key];
+            }
+        }
+        [self.fetchingGroupMemberKeys minusSet:keysToRemove];
+        [self.pendingRetryGroupMembers removeObjectForKey:groupId];
+    }];
+}
+
+/// 群组是否正在请求中，YES 表示正在请求中
 - (BOOL)p_isGroupFetching:(NSString *)groupId {
     if (!groupId) return NO;
     
@@ -856,13 +907,22 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
             }
             return;
         }
-        // Retry while data is synchronizing or requests are rate-limited.
-        if ((error.code == NCChatUIErrorCodeNetDataIsSynchronizing || error.code == NCChatUIErrorCodeRequestOverFrequency) && retryCount > 0) {
+        // 数据同步中、请求过频或网络不可用时重试
+        if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [self p_batchGetGroupMembers:userIds groupId:groupId retryCount:retryCount - 1 complete:complete];
             });
         } else {
-            // Return an empty batch after retries are exhausted.
+            // 重试用完，记录失败待网络恢复后补拉
+            [self.memberFetchingLock performWriteLockBlock:^{
+                NSMutableSet *users = self.pendingRetryGroupMembers[groupId];
+                if (!users) {
+                    users = [NSMutableSet set];
+                    self.pendingRetryGroupMembers[groupId] = users;
+                }
+                [users addObjectsFromArray:userIds];
+            }];
+            // 失败时返回空数组
             if (complete) {
                 complete(@[]);
             }
@@ -919,13 +979,17 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
             }
             return;
         }
-        // Retry while data is synchronizing or requests are rate-limited.
-        if ((error.code == NCChatUIErrorCodeNetDataIsSynchronizing || error.code == NCChatUIErrorCodeRequestOverFrequency) && retryCount > 0) {
+        // 数据同步中、请求过频或网络不可用时重试
+        if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [self p_batchGetGroupInfos:groupIds retryCount:retryCount - 1 complete:complete];
             });
         } else {
-            // Return an empty batch after retries are exhausted.
+            // 重试用完，记录失败待网络恢复后补拉
+            [self.groupFetchingLock performWriteLockBlock:^{
+                [self.pendingRetryGroupIds addObjectsFromArray:groupIds];
+            }];
+            // 失败时返回空数组
             if (complete) {
                 complete(@[]);
             }
@@ -1018,8 +1082,8 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
             }
             return;
         }
-        // Retry while startup networking or synchronization is not ready to avoid an early profile-only fallback.
-        if ([NCInfoManagement p_shouldRetryFriendInfoFetchForErrorCode:error.code] && retryCount > 0) {
+        // 启动早期网络/同步状态未就绪时继续重试，避免过早降级为 profile-only 缓存。
+        if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [self p_batchGetFriendsInfo:userIds retryCount:retryCount - 1 complete:complete];
             });
@@ -1043,13 +1107,17 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
             }
             return;
         }
-        // Retry while data is synchronizing or requests are rate-limited.
-        if ((error.code == NCChatUIErrorCodeNetDataIsSynchronizing || error.code == NCChatUIErrorCodeRequestOverFrequency) && retryCount > 0) {
+        // 数据同步中、请求过频或网络不可用时重试
+        if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [self p_batchGetUserProfiles:userIds retryCount:retryCount - 1 complete:complete];
             });
         } else {
-            // Return an empty batch after retries are exhausted.
+            // 重试用完，记录失败待网络恢复后补拉
+            [self.userFetchingLock performWriteLockBlock:^{
+                [self.pendingRetryUserIds addObjectsFromArray:userIds];
+            }];
+            // 失败时返回空数组
             if (complete) {
                 complete(@[]);
             }
@@ -1133,7 +1201,7 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
 - (void)p_getMyProflieByRetry:(int)retryCount complete:(void (^)( NCChatUIUserInfo *_Nullable user))complete {
     [[NCEngine userModule] getMyUserProfileWithCompletion:^(NCUserProfile * _Nullable userProfile, NCError * _Nullable error) {
         if (error) {
-            if (error.code == NCChatUIErrorCodeNetDataIsSynchronizing && retryCount > 0) {
+            if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     [self p_getMyProflieByRetry:retryCount-1 complete:complete];
                 });
@@ -1159,7 +1227,7 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
             managedUser.friendInfo = friendInfos.firstObject;
             complete(managedUser);
         } else {
-            if (error && [NCInfoManagement p_shouldRetryFriendInfoFetchForErrorCode:error.code] && retryCount > 0) {
+            if (error && [NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     [self p_getFriendsInfoByRetry:userId retryCount:retryCount-1 complete:complete];
                 });
@@ -1173,7 +1241,7 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
 - (void)p_getUserProfileByRetry:(NSString *)userId retryCount:(int)retryCount complete:(void (^)( NCChatUIUserInfo *_Nullable user))complete {
     [[NCEngine userModule] getUserProfilesWithUserIds:@[userId] completion:^(NSArray<NCUserProfile *> * _Nullable userProfiles, NCError * _Nullable error) {
         if (error) {
-            if (error.code == NCChatUIErrorCodeNetDataIsSynchronizing && retryCount > 0) {
+            if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     [self p_getUserProfileByRetry:userId retryCount:retryCount-1 complete:complete];
                 });
@@ -1208,7 +1276,7 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
 - (void)p_getGroupInfoByRetry:(NSString *)groupId retryCount:(int)retryCount complete:(void (^)(NCChatUIGroup * _Nullable))complete {
     [NCGroupChannel getGroupsInfoWithGroupIds:@[groupId] completion:^(NSArray<NCGroupInfo *> * _Nullable groupInfos, NCError * _Nullable error) {
         if (error) {
-            if (error.code == NCChatUIErrorCodeNetDataIsSynchronizing && retryCount > 0) {
+            if ([NCInfoManagement p_shouldRetryForErrorCode:error.code] && retryCount > 0) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NC_KIT_FETCH_INFO_DELAY_TIME * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     [self p_getGroupInfoByRetry:groupId retryCount:retryCount-1 complete:complete];
                 });
@@ -1515,6 +1583,21 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
     [self p_cacheAndDispatchGroupMember:managedUser groupId:event.groupId];
 }
 
+- (void)onGroupOperation:(NCGroupOperationEvent *)event {
+    if (event.groupId.length == 0 || !NCGroupOperationInvalidatesCurrentUser(event)) {
+        return;
+    }
+    NSString *groupId = event.groupId;
+    [self.cache removeGroupCache:groupId];
+    [self.cache removeGroupMemberCacheForGroupId:groupId];
+    [[NCChannelInfoCache sharedCache] clearConversationInfo:NCChannelTypeGroup channelId:groupId];
+    [self p_removeFetchingGroupIds:@[groupId]];
+    [self p_removeFetchingGroupMemberKeysInGroup:groupId];
+    [self.groupFetchingLock performWriteLockBlock:^{
+        [self.pendingRetryGroupIds removeObject:groupId];
+    }];
+}
+
 #pragma mark -- NCUserHandler
 
 - (void)onFriendCleared:(NCFriendClearedEvent *)event {
@@ -1571,15 +1654,89 @@ static NSString * const NCInfoManagementConnectionHandlerIdentifier = @"NCInfoMa
     return _fetchingGroupIds;
 }
 
+- (NSMutableSet<NSString *> *)pendingRetryUserIds {
+    if (!_pendingRetryUserIds) {
+        _pendingRetryUserIds = [NSMutableSet set];
+    }
+    return _pendingRetryUserIds;
+}
+
+- (NSMutableDictionary<NSString *, NSMutableSet<NSString *> *> *)pendingRetryGroupMembers {
+    if (!_pendingRetryGroupMembers) {
+        _pendingRetryGroupMembers = [NSMutableDictionary dictionary];
+    }
+    return _pendingRetryGroupMembers;
+}
+
+- (NSMutableSet<NSString *> *)pendingRetryGroupIds {
+    if (!_pendingRetryGroupIds) {
+        _pendingRetryGroupIds = [NSMutableSet set];
+    }
+    return _pendingRetryGroupIds;
+}
+
 #pragma mark -- NCChatUIConnectionStatusDelegate
 - (void)onConnectionStatusChanged:(NCConnectionStatusChangedEvent *)event {
     NSString *currentUserId = [NCEngine getCurrentUserId];
-    if (event.status == NCConnectionStatusConnected && self.userId != currentUserId) {
+    if (event.status != NCConnectionStatusConnected || currentUserId.length == 0) {
+        return;
+    }
+    if (self.userId.length == 0) {
+        self.userId = currentUserId;
+        return;
+    }
+    if (![self.userId isEqualToString:currentUserId]) {
         self.userId = currentUserId;
         [self.cache removeAllUserCache];
         [self.cache removeAllGroupCache];
         [self.cache removeAllGroupMemberCache];
     }
+
+    // 网络恢复后，重拉失败的资料
+    if (event.status == NCConnectionStatusConnected) {
+        [self p_retryFailedInfoFetches];
+    }
+}
+
+/// 网络恢复后，补拉之前因网络失败而未获取到的资料
+- (void)p_retryFailedInfoFetches {
+    // 1. 取出并清空失败的用户ID
+    __block NSArray<NSString *> *userIds = nil;
+    [self.userFetchingLock performWriteLockBlock:^{
+        userIds = [self.pendingRetryUserIds allObjects];
+        [self.pendingRetryUserIds removeAllObjects];
+    }];
+
+    // 2. 取出并清空失败的群成员（groupId → userId 集合）
+    __block NSDictionary<NSString *, NSMutableSet<NSString *> *> *groupMembers = nil;
+    [self.memberFetchingLock performWriteLockBlock:^{
+        groupMembers = [self.pendingRetryGroupMembers copy];
+        [self.pendingRetryGroupMembers removeAllObjects];
+    }];
+
+    // 3. 取出并清空失败的群组ID
+    __block NSArray<NSString *> *groupIds = nil;
+    [self.groupFetchingLock performWriteLockBlock:^{
+        groupIds = [self.pendingRetryGroupIds allObjects];
+        [self.pendingRetryGroupIds removeAllObjects];
+    }];
+
+    // 4. 补拉用户资料
+    if (userIds.count > 0) {
+        [self fetchUserInfos:userIds];
+    }
+
+    // 5. 补拉群资料
+    if (groupIds.count > 0) {
+        [self fetchGroupInfos:groupIds];
+    }
+
+    // 6. 补拉群成员：逐组补拉
+    [groupMembers enumerateKeysAndObjectsUsingBlock:^(NSString *groupId, NSMutableSet<NSString *> *users, BOOL *stop) {
+        if (groupId.length > 0 && users.count > 0) {
+            [self fetchGroupMembers:users.allObjects withGroupId:groupId];
+        }
+    }];
 }
 
 @end

@@ -10,6 +10,7 @@
 #import "NCMenuView.h"
 #import "NCMenuItem.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 
 // Triangular pointer view
 @interface NCArrowView : UIView
@@ -160,7 +161,7 @@
     // Resolve the window containing the target view.
     UIWindow *currentWindow = targetView.window;
     if (!currentWindow) {
-        currentWindow = [UIApplication sharedApplication].keyWindow;
+        currentWindow = [NCChatUIUtility getWindowForView:targetView];
     }
     if (!currentWindow) {
         currentWindow = [UIApplication sharedApplication].windows.firstObject;

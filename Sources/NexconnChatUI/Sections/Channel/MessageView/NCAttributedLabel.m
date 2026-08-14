@@ -219,17 +219,24 @@
         self.attributedStrings = allResults;
         [self generateAttributedString];
     } else {
+        // 后台检测。捕获当前文本快照，检测和回落都以快照为准；回到主线程后校验
+        // label 的 originalString 是否仍是同一份文本，若因 cell 复用已切换到别的消息，
+        // 则丢弃这次结果，避免把旧消息的匹配 range 错套到新消息上（下划线错位）。
+        NSString *capturedString = self.originalString;
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
             NSMutableArray *allResults = [NSMutableArray array];
-            [dataDetector enumerateMatchesInString:self.originalString
+            [dataDetector enumerateMatchesInString:capturedString
                                            options:kNilOptions
-                                             range:NSMakeRange(0, self.originalString.length)
+                                             range:NSMakeRange(0, capturedString.length)
                                         usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
                                             if (result) {
                                                 [allResults addObject:result];
                                             }
                                         }];
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (![self.originalString isEqualToString:capturedString]) {
+                    return;
+                }
                 self.attributedStrings = allResults;
                 [self generateAttributedString];
             });

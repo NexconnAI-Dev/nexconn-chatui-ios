@@ -29,6 +29,7 @@
 @property (nonatomic, assign) NSInteger currentCount;
 @property (nonatomic, copy) void(^throttleReloadAction)(void);
 @property (nonatomic, strong, nullable) NCChannelsQuery *channelsQuery;
+@property (nonatomic, strong) NSMutableSet<NSString *> *conversationKeySet;
 @end
 
 @implementation NCChannelListDataSource
@@ -38,6 +39,7 @@
     if (self) {
         self.updateEventQueue = dispatch_queue_create("ai.nexconn.conversation.updateEventQueue", NULL);
         self.currentCount = 0;
+        self.conversationKeySet = [[NSMutableSet alloc] init];
         self.dataList = [[NSMutableArray alloc] init];
         self.isConverstaionListAppear = NO;
         self.cellBackgroundColor = NCDynamicColor(@"channel-list_background_color");
@@ -52,6 +54,11 @@
 - (void)setDisplayConversationTypeArray:(NSArray *)displayConversationTypeArray {
     _displayConversationTypeArray = [displayConversationTypeArray copy];
     self.channelsQuery = nil;
+}
+
+- (void)setDataList:(NSMutableArray *)dataList {
+    _dataList = dataList ?: [[NSMutableArray alloc] init];
+    [self rebuildConversationKeySet];
 }
 
 - (void)loadMoreConversations:(void (^)(NSMutableArray<NCChannelModel *> *modelList))completion {
@@ -94,52 +101,83 @@
             if (!ws) {
                 return;
             }
-        dispatch_async(self.updateEventQueue, ^{
-            ws.currentCount += builtModels.count;
-            for (NCChannelModel *model in builtModels) {
-                if (![self containInCurrentDataSource:model]) {
-                    model.topCellBackgroundColor = ws.topCellBackgroundColor;
-                    model.cellBackgroundColor = ws.cellBackgroundColor;
-                    [modelList addObject:model];
-                }
-            }
-            if (modelList.count > 0) {
-                if (self.delegate && [self.delegate respondsToSelector:@selector(dataSource:willReloadTableData:)]) {
-                    modelList = [ws.delegate dataSource:ws willReloadTableData:modelList];
-                }
-            }
-            
-            [self rrs_refreshCachedAndFetchReceiptInfo:modelList];
-            
-            [self fetchUserProfile:modelList];
             dispatch_async(dispatch_get_main_queue(), ^{
-                if(modelList.count > 0) {
-                    [ws.dataList addObjectsFromArray:modelList.copy];
+                if (!ws) {
+                    return;
                 }
-                [self fetchUserOnlineStatus:modelList.copy];
-                if(completion) {
-                    completion(modelList);
+                NSMutableArray<NCChannelModel *> *filteredModels = [builtModels mutableCopy];
+                if (filteredModels.count > 0 &&
+                    ws.delegate &&
+                    [ws.delegate respondsToSelector:@selector(dataSource:willReloadTableData:)]) {
+                    filteredModels = [ws.delegate dataSource:ws willReloadTableData:filteredModels];
+                }
+
+                NSMutableArray<NSIndexPath *> *insertIndexPaths = [NSMutableArray array];
+                NSMutableArray<NCChannelModel *> *insertedModels = [NSMutableArray array];
+                for (NCChannelModel *model in filteredModels) {
+                    if (![ws containsConversationModel:model]) {
+                        model.topCellBackgroundColor = ws.topCellBackgroundColor;
+                        model.cellBackgroundColor = ws.cellBackgroundColor;
+                        [ws.dataList addObject:model];
+                        [ws.conversationKeySet addObject:[ws conversationKeyForModel:model]];
+                        [insertedModels addObject:model];
+                        [insertIndexPaths addObject:[NSIndexPath indexPathForRow:ws.dataList.count - 1
+                                                                      inSection:0]];
+                    }
+                }
+                ws.currentCount = ws.dataList.count;
+
+                if (insertIndexPaths.count > 0 &&
+                    ws.delegate &&
+                    [ws.delegate respondsToSelector:@selector(dataSource:willInsertAtIndexPaths:)]) {
+                    [ws.delegate dataSource:ws willInsertAtIndexPaths:insertIndexPaths];
+                }
+
+                [ws rrs_refreshCachedAndFetchReceiptInfo:insertedModels];
+                [ws fetchUserProfile:insertedModels];
+                [ws fetchUserOnlineStatus:insertedModels.copy];
+                if (completion) {
+                    completion(insertedModels);
                 }
             });
-        });
         }];
     }];
 }
 
-- (BOOL)containInCurrentDataSource:(NCChannelModel *)model {
-    NSArray *array = [self.dataList copy];
-    for (NCChannelModel *tmpModel in array) {
-        if ([tmpModel isMatchingChannelType:model.channelType
-                                  channelId:model.channelId]) {
-            NSString *leftSubChannelId = tmpModel.subChannelId ?: @"";
-            NSString *rightSubChannelId = model.subChannelId ?: @"";
-            if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
-                continue;
-            }
-            return YES;
+- (BOOL)containsConversationModel:(NCChannelModel *)model {
+    NSString *key = [self conversationKeyForModel:model];
+    if (key.length == 0) {
+        return NO;
+    }
+    return [self.conversationKeySet containsObject:key];
+}
+
+- (NSString *)conversationKeyForModel:(NCChannelModel *)model {
+    return [self conversationKeyForChannelType:model.channelType
+                                     channelId:model.channelId
+                                  subChannelId:model.subChannelId];
+}
+
+- (NSString *)conversationKeyForChannelType:(NCChannelType)channelType
+                                  channelId:(NSString *)channelId
+                               subChannelId:(NSString *)subChannelId {
+    if (channelId.length == 0) {
+        return nil;
+    }
+    return [NSString stringWithFormat:@"%lu|%@|%@",
+                                      (unsigned long)channelType,
+                                      channelId,
+                                      subChannelId ?: @""];
+}
+
+- (void)rebuildConversationKeySet {
+    [self.conversationKeySet removeAllObjects];
+    for (NCChannelModel *model in self.dataList) {
+        NSString *key = [self conversationKeyForModel:model];
+        if (key.length > 0) {
+            [self.conversationKeySet addObject:key];
         }
     }
-    return NO;
 }
 
 - (void)forceLoadConversationModelList:(void (^)(NSMutableArray<NCChannelModel *> *modelList))completion {
@@ -177,42 +215,54 @@
             return;
         }
 
-        int count = (int)MAX(self.currentCount, PagingCount);
-        self.channelsQuery = [self createChannelsQueryWithPageSize:count topPriority:topPriority];
+        self.channelsQuery = [self createChannelsQueryWithPageSize:PagingCount topPriority:topPriority];
         if (!self.channelsQuery) {
             finishForceLoad();
             return;
         }
 
-        [self.channelsQuery loadNextPageWithCompletion:^(NSArray<NCBaseChannel *> * _Nullable channels, NCError * _Nullable error) {
-            NCLogI(@"forceLoadConversationModelList page callback, error=%@, channelCount=%@",
-                   error.code ? @(error.code) : @(0),
-                   @(channels.count));
-            if (error) {
-                dispatch_async(self.updateEventQueue, ^{
-                    finishForceLoad();
-                });
+        __weak typeof(self) weakSelf = self;
+        __block void (^loadNextPage)(void) = nil;
+        loadNextPage = ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (!strongSelf || !strongSelf.channelsQuery) {
+                finishForceLoad();
                 return;
             }
 
-            dispatch_async(self.updateEventQueue, ^{
-                [self updateNotificationContextForChannels:channels];
-                [self buildConversationPageFromChannels:channels completion:^(NSMutableArray<NCChannelModel *> *builtModels) {
-                    dispatch_async(self.updateEventQueue, ^{
+            [strongSelf.channelsQuery loadNextPageWithCompletion:^(NSArray<NCBaseChannel *> * _Nullable channels, NCError * _Nullable error) {
+                NCLogI(@"forceLoadConversationModelList page callback, error=%@, channelCount=%@",
+                       error.code ? @(error.code) : @(0),
+                       @(channels.count));
+                if (error) {
+                    dispatch_async(strongSelf.updateEventQueue, ^{
+                        finishForceLoad();
+                    });
+                    return;
+                }
+
+                [strongSelf updateNotificationContextForChannels:channels];
+                [strongSelf buildConversationPageFromChannels:channels completion:^(NSMutableArray<NCChannelModel *> *builtModels) {
+                    dispatch_async(strongSelf.updateEventQueue, ^{
                         for (NCChannelModel *model in builtModels) {
-                            model.topCellBackgroundColor = self.topCellBackgroundColor;
-                            model.cellBackgroundColor = self.cellBackgroundColor;
+                            model.topCellBackgroundColor = strongSelf.topCellBackgroundColor;
+                            model.cellBackgroundColor = strongSelf.cellBackgroundColor;
                             NCLogI(@"conversation channelId:%@,channelType:%@,unreadMessageCount:%@",
                                    model.channelId,
                                    @(model.channelType),
                                    @(model.unreadMessageCount));
                             [modelList addObject:model];
                         }
-                        finishForceLoad();
+                        if (channels.count >= PagingCount) {
+                            loadNextPage();
+                        } else {
+                            finishForceLoad();
+                        }
                     });
                 }];
-            });
-        }];
+            }];
+        };
+        loadNextPage();
     });
 }
 
@@ -416,6 +466,7 @@ matchesChannelType:(NCChannelType)channelType
             } else {
                 [self.dataList removeObjectAtIndex:oldIndex];
                 [self.dataList insertObject:matchingModel atIndex:newIndex];
+                [self rebuildConversationKeySet];
                 if (self.delegate && [self.delegate respondsToSelector:@selector(dataSource:willDeleteAtIndexPaths:willInsertAtIndexPaths:)]) {
                     [self.delegate dataSource:self willDeleteAtIndexPaths:@[ [NSIndexPath indexPathForRow:oldIndex inSection:0] ] willInsertAtIndexPaths:@[ [NSIndexPath indexPathForRow:newIndex inSection:0] ]];
                 }
@@ -439,6 +490,7 @@ matchesChannelType:(NCChannelType)channelType
                     newModel.cellBackgroundColor = self.cellBackgroundColor;
                     NSUInteger newIndex = [self getFirstModelIndex:newModel.isTop sentTime:newModel.sentTime];
                     [self.dataList insertObject:newModel atIndex:newIndex];
+                    [self.conversationKeySet addObject:[self conversationKeyForModel:newModel]];
                     if (self.delegate && [self.delegate respondsToSelector:@selector(dataSource:willInsertAtIndexPaths:)]) {
                         [self.delegate dataSource:self willInsertAtIndexPaths:@[ [NSIndexPath indexPathForRow:newIndex inSection:0] ]];
                     }

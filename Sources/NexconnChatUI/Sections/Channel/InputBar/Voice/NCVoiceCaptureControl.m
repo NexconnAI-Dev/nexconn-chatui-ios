@@ -8,6 +8,7 @@
 
 #import "NCVoiceCaptureControl.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCVoiceRecorder.h"
 #import "NCChatUIConfig.h"
 #import "NCBaseImageView.h"
@@ -48,8 +49,11 @@
 #pragma mark - Public Methods
 
 - (void)startRecord {
-    // Show the recording UI.
-    UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
+    //显示UI
+    UIWindow *keyWindow = [NCChatUIUtility getWindowForView:nil];
+    if (!keyWindow) {
+        return;
+    }
     [keyWindow addSubview:self];
 
     [self stopTimer];

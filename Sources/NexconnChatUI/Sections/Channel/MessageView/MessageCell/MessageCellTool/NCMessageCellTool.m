@@ -130,9 +130,14 @@
 }
 
 + (NSDictionary *)getTextLinkOrPhoneNumberAttributeDictionary:(NCMessageDirection)msgDirection{
+    return [self getTextLinkOrPhoneNumberAttributeDictionary:msgDirection linkColorKey:@"link_color"];
+}
+
++ (NSDictionary *)getTextLinkOrPhoneNumberAttributeDictionary:(NCMessageDirection)msgDirection
+                                                 linkColorKey:(NSString *)linkColorKey{
 
     if (msgDirection == NCMessageDirectionSend ) {
-        UIColor *linkColor = NCDynamicColor(@"link_color");
+        UIColor *linkColor = NCDynamicColor(linkColorKey);
         if (linkColor) {
             return @{@(NSTextCheckingTypeLink) :
                          @{NSForegroundColorAttributeName : linkColor,
@@ -147,7 +152,7 @@
                  }
         };
     }else{
-        UIColor *linkColor = NCDynamicColor(@"link_color");
+        UIColor *linkColor = NCDynamicColor(linkColorKey);
         if (linkColor) {
             return @{@(NSTextCheckingTypeLink) : @{NSForegroundColorAttributeName : linkColor,
                                                    NSUnderlineColorAttributeName :linkColor,
@@ -161,6 +166,33 @@
         };
     }
     
+}
+
++ (NSString *)phoneURLStringWithPhoneNumber:(NSString *)phoneNumber {
+    if (![phoneNumber isKindOfClass:[NSString class]]) {
+        NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is nil");
+        return nil;
+    }
+
+    NSString *trimmedPhoneNumber = [phoneNumber stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (trimmedPhoneNumber.length == 0) {
+        NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is empty");
+        return nil;
+    }
+
+    if ([trimmedPhoneNumber rangeOfCharacterFromSet:[NSCharacterSet decimalDigitCharacterSet]].location == NSNotFound) {
+        NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is invalid");
+        return nil;
+    }
+
+    NSMutableCharacterSet *allowedCharacters = [[NSMutableCharacterSet decimalDigitCharacterSet] mutableCopy];
+    [allowedCharacters addCharactersInString:@"+-() "];
+    if ([trimmedPhoneNumber rangeOfCharacterFromSet:allowedCharacters.invertedSet].location != NSNotFound) {
+        NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is invalid");
+        return nil;
+    }
+
+    return [@"tel://" stringByAppendingString:trimmedPhoneNumber];
 }
 
 #pragma mark - Private Methods

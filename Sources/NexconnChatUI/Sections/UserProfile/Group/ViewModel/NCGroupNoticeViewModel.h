@@ -66,6 +66,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param viewController The current view controller
 - (void)updateNotice:(NSString *)notice inViewController:(UIViewController *)viewController;
 
+/// Whether the given notice text can be saved.
+///
+/// Returns `YES` only when editing is allowed, the trimmed text is non-empty,
+/// and the trimmed text differs from the current notice.
+///
+/// @param notice The group notice text to evaluate
+/// @return `YES` if the notice can be saved
+- (BOOL)canSaveNotice:(NSString *)notice;
+
 /// Tip text
 ///
 /// @return The tip text

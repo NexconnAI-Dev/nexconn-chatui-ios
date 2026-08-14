@@ -11,6 +11,7 @@
 #import "NCPhotosPickerController.h"
 #import "NCAssetModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCPhotoPickerCollectCell.h"
 #import "NCPhotoPreviewCollectionViewController.h"
 #import "NCChatUIConfig.h"
@@ -49,7 +50,9 @@ static NSString *const reuseIdentifier = @"Cell";
         self.assetArray = [NSMutableArray new];
         self.selectedAssets = [NSMutableArray new];
         self.collectionView.backgroundColor = NCDynamicColor(@"common_background_color");
-        [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
+        if ([[NCAssetHelper shareAssetHelper] hasAuthorizationStatusAuthorized]) {
+            [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
+        }
     }
     return self;
 }
@@ -117,9 +120,9 @@ static NSString *const reuseIdentifier = @"Cell";
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-    CGRect statusBarRect = [[UIApplication sharedApplication] statusBarFrame];
+    CGFloat statusBarHeight = [NCChatUIUtility getStatusBarHeightForView:self.view];
     int shouldBeSubtractionHeight = 0;
-    if (statusBarRect.size.height == 40) {
+    if (statusBarHeight == 40) {
         shouldBeSubtractionHeight = 20;
     }
     CGFloat height = 49 + [self getSafeAreaExtraBottomHeight];
@@ -559,7 +562,7 @@ static NSString *const reuseIdentifier = @"Cell";
 }
 
 - (float)getSafeAreaExtraBottomHeight {
-    return [NCChatUIUtility getWindowSafeAreaInsets].bottom;
+    return [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].bottom;
 }
 
 #pragma mark - Helper

@@ -45,8 +45,11 @@
     if ([self.delegate respondsToSelector:@selector(generateGroupId)]) {
         group.groupId = [self.delegate generateGroupId];
     }
-    if (group.groupId == 0) {
+    group.groupId = [self p_validGroupIdFromGroupId:group.groupId];
+    if (group.groupId.length < 1) {
         NCLogE(@"create group, groupId is empty");
+        [self stopLoading];
+        [NCAlertView showAlertController:nil message:NCUILocalizedString(@"group_create_error") hiddenAfterDelay:2];
         return;
     }
     group.groupName = groupName;
@@ -67,6 +70,13 @@
                         return;
                     }
                 }
+                NSString *validGroupId = [self p_validGroupIdFromGroupId:group.groupId];
+                if (validGroupId.length < 1) {
+                    NCLogE(@"create group success, groupId is empty");
+                    [NCAlertView showAlertController:nil message:NCUILocalizedString(@"group_create_error") hiddenAfterDelay:2];
+                    return;
+                }
+                group.groupId = validGroupId;
                 NCChannelViewController *conversationVC = [[NCChannelViewController alloc] initWithChannelType:NCChannelTypeGroup channelId:group.groupId];
                 conversationVC.navigationItem.title = groupName;
                 [viewController.navigationController pushViewController:conversationVC animated:YES];
@@ -95,5 +105,9 @@
             });
         }];
     }
+}
+
+- (NSString *)p_validGroupIdFromGroupId:(NSString *)groupId {
+    return [groupId stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 @end

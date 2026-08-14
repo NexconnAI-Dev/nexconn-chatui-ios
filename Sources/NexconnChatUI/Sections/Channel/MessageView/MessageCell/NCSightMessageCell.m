@@ -26,6 +26,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 @property (nonatomic, strong) UIView *playButtonView;
 @property (nonatomic, strong) UILabel *durationLabel;
 @property (nonatomic, strong) NCBaseImageView *playImage;
+@property (nonatomic, strong) UIView *thumbnailOverlayView;
 @end
 
 @implementation NCSightMessageCell
@@ -76,6 +77,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
         self.messageContentView.contentSize = imageSize;
         self.thumbnailView.frame = self.messageContentView.bounds;
+        self.thumbnailOverlayView.frame = self.thumbnailView.bounds;
         if (self.progressView.superview) {
             [self.progressView removeFromSuperview];
         }
@@ -145,6 +147,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (void)initialize {
     [self.messageContentView addSubview:self.thumbnailView];
+    [self.thumbnailView addSubview:self.thumbnailOverlayView];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(updateDownloadMediaStatus:)
@@ -273,6 +276,15 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
         _thumbnailView.layer.cornerRadius = 6;
     }
     return _thumbnailView;
+}
+
+- (UIView *)thumbnailOverlayView {
+    if (!_thumbnailOverlayView) {
+        _thumbnailOverlayView = [[UIView alloc] initWithFrame:CGRectZero];
+        _thumbnailOverlayView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
+        _thumbnailOverlayView.userInteractionEnabled = NO;
+    }
+    return _thumbnailOverlayView;
 }
 
 @end

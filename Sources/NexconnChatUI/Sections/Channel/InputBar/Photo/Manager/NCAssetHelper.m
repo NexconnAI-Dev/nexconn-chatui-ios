@@ -100,14 +100,7 @@ dispatch_queue_t NCPhotoWorkingQueue = NULL;
 
 //bugID=50382
 - (void)addRegisterIfNeed {
-    PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
-    BOOL authed = NO;
-    if (@available(iOS 14, *)) {
-        authed = (status == PHAuthorizationStatusAuthorized || status == PHAuthorizationStatusLimited);
-    } else {
-        authed = (status == PHAuthorizationStatusAuthorized);
-    }
-    if (authed) {
+    if ([self isPhotoLibraryAuthorizationStatusAccessible:[PHPhotoLibrary authorizationStatus]]) {
         static dispatch_once_t onceToken2;
         dispatch_once(&onceToken2, ^{
             [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
@@ -116,7 +109,7 @@ dispatch_queue_t NCPhotoWorkingQueue = NULL;
 }
 
 - (BOOL)hasAuthorizationStatusAuthorized {
-    return [PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized;
+    return [self isPhotoLibraryAuthorizationStatusAccessible:[PHPhotoLibrary authorizationStatus]];
 }
 
 - (NSArray *)getCachePhotoGroups {
@@ -334,7 +327,7 @@ progressHandler:(void (^)(double progress, NSError *error, BOOL *stop, NSDiction
 
 - (void)getAlbumsFromSystem:(void (^)(NSArray *assetGroup))result {
     [self requestAuthorization:^(PHAuthorizationStatus status) {
-        if ([PHPhotoLibrary authorizationStatus] != PHAuthorizationStatusAuthorized) {
+        if (![self isPhotoLibraryAuthorizationStatusAccessible:status]) {
             return result(nil);
         }
         PHFetchOptions *option = [[PHFetchOptions alloc] init];
@@ -415,6 +408,13 @@ progressHandler:(void (^)(double progress, NSError *error, BOOL *stop, NSDiction
     }];
 }
 
+- (BOOL)isPhotoLibraryAuthorizationStatusAccessible:(PHAuthorizationStatus)status {
+    if (@available(iOS 14, *)) {
+        return status == PHAuthorizationStatusAuthorized || status == PHAuthorizationStatusLimited;
+    }
+    return status == PHAuthorizationStatusAuthorized;
+}
+
 + (void)savePhotosAlbumWithImage:(UIImage *)image authorizationStatusBlock:(nullable dispatch_block_t)authorizationStatusBlock resultBlock:(nullable void (^)(BOOL success))resultBlock {
     PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
     if (PHAuthorizationStatusRestricted == status || PHAuthorizationStatusDenied == status) {
@@ -490,6 +490,15 @@ progressHandler:(void (^)(double progress, NSError *error, BOOL *stop, NSDiction
         if (authorizationStatusBlock) {
             authorizationStatusBlock();
         }
+        return;
+    }
+
+    if (videoPath.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:videoPath]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (resultBlock) {
+                resultBlock(NO);
+            }
+        });
         return;
     }
 

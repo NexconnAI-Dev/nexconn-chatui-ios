@@ -12,6 +12,7 @@
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 #import "NCInfoUpdateCenter.h"
+#import "NCMessageCellTool.h"
 
 @interface NCMessageModel (NCTipMessageCell)
 
@@ -76,11 +77,10 @@
 }
 
 - (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
-    if (!phoneNumber) {
-        NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is nil");
+    NSString *number = [NCMessageCellTool phoneURLStringWithPhoneNumber:phoneNumber];
+    if (!number) {
         return;
     }
-    NSString *number = [@"tel://" stringByAppendingString:phoneNumber];
     if ([self.delegate respondsToSelector:@selector(didTapPhoneNumberInMessageCell:model:)]) {
         [self.delegate didTapPhoneNumberInMessageCell:number model:self.model];
         return;
@@ -115,8 +115,7 @@
 - (NCTipLabel *)tipMessageLabel{
     if (!_tipMessageLabel) {
         _tipMessageLabel = [NCTipLabel greyTipLabel];
-        _tipMessageLabel.backgroundColor = NCDynamicColor(@"common_background_color");
-        _tipMessageLabel.textColor = NCDynamicColor(@"text_secondary_color");
+        _tipMessageLabel.textColor = NCDynamicColor(@"control_title_white_color");
         _tipMessageLabel.delegate = self;
         _tipMessageLabel.userInteractionEnabled = YES;
         _tipMessageLabel.marginInsets = UIEdgeInsetsMake(0.5f, 0.5f, 0.5f, 0.5f);

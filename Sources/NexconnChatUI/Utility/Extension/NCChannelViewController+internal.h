@@ -9,6 +9,10 @@
 #ifndef NCChannelViewController_internal_h
 #define NCChannelViewController_internal_h
 #import "NCChannelViewController.h"
+
+@class NCChannelCollectionViewHeader;
+@class NCChannelVCUtil;
+
 @interface NCChannelViewController ()
 @property (nonatomic, strong, readonly) NCChannelVCUtil *util;
 @property (nonatomic, strong, readonly) NCChannelCollectionViewHeader *collectionViewHeader;
@@ -19,6 +23,7 @@
 - (void)updateUnreadMsgCountLabel;
 - (void)updateForMessageSendSuccess:(NCMessage *)message;
 - (void)setupUnReadMessageView;
+- (BOOL)shouldMarkMessagesAsRead;
 @end
 
 #endif /* NCChannelViewController_internal_h */

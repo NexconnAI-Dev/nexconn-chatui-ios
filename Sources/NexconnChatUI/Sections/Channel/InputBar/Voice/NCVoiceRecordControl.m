@@ -180,12 +180,15 @@
             } else if ([AVAudioSession sharedInstance].recordPermission == AVAudioSessionRecordPermissionDenied) {
                 [self alertRecordPermissionDenied];
             } else if ([AVAudioSession sharedInstance].recordPermission == AVAudioSessionRecordPermissionUndetermined) {
+                // Bug 7071637281 修复：首次请求权限时，只请求权限不自动开始录制
+                // 用户需要在授权后重新点击录音按钮
                 [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
-                    if (!granted) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (!granted) {
                             [self alertRecordPermissionDenied];
-                        });
-                    };
+                        }
+                        // 注意：不调用 successBlock，用户需要重新点击按钮
+                    });
                 }];
             }
         }

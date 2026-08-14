@@ -103,7 +103,10 @@
 }
 
 - (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
-    NSString *number = [@"tel://" stringByAppendingString:phoneNumber];
+    NSString *number = [NCMessageCellTool phoneURLStringWithPhoneNumber:phoneNumber];
+    if (!number) {
+        return;
+    }
     if ([self.delegate respondsToSelector:@selector(didTapPhoneNumberInMessageCell:model:)]) {
         [self.delegate didTapPhoneNumberInMessageCell:number model:self.model];
         return;

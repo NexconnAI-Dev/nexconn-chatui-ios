@@ -58,7 +58,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
         self.channelType = channelType;
         self.channelId = channelId;
         self.fileSize = fileSize;
-        self.fileName = fileName;
+        self.fileName = [NCFileUtility recheckedFileName:fileName];
         self.fileType = fileType;
     }
     return self;
@@ -253,7 +253,9 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     self.progressLabel.hidden = YES;
     self.cancelButton.hidden = YES;
 
-    [self transformEncodingFromFilePath:self.localPath];
+    if ([self.fileType isEqualToString:@"txt"]) {
+        [self transformEncodingFromFilePath:self.localPath];
+    }
     if (self.localPath) {
         NSURL *fileURL = [NSURL fileURLWithPath:self.localPath];
         [self.webView loadFileURL:fileURL allowingReadAccessToURL:fileURL];
@@ -281,7 +283,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                                           applicationActivities:nil];
     if ([NCChatUIUtility currentDeviceIsIPad]) {
         UIPopoverPresentationController *popPresenter = [activityVC popoverPresentationController];
-        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        UIWindow *window = [NCChatUIUtility getWindowForView:self.view];
         popPresenter.sourceView = window;
         popPresenter.sourceRect = CGRectMake(window.frame.size.width / 2, window.frame.size.height / 2, 0, 0);
         popPresenter.permittedArrowDirections = 0;

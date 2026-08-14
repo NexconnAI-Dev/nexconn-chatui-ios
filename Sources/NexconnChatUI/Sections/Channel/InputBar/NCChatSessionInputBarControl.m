@@ -11,6 +11,7 @@
 #import "NCAlbumListTableViewController.h"
 #import "NCAssetHelper.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCChatUIExtensionService.h"
 #import "NCFileSelectorViewController.h"
 #import "NCMentionedStringRangeInfo.h"
@@ -25,15 +26,17 @@
 #import "NCSemanticContext.h"
 #import "NCBaseButton.h"
 #import "NCMenuController.h"
-// Two 70-point cell rows, 14-point top and bottom padding, and spacing between rows.
+#import "NCGroupMentionViewModel.h"
+//单个cell的高度是70（RCPlaginBoardCellSize）*2 + 上下padding的高度14*2 ＋
+//上下两个图标之间的padding
 #define Height_EmojBoardView 223.5f
 #define Height_PluginBoardView 223.5f
 // Standard system status-bar height
 #define SYS_STATUSBAR_HEIGHT 20
 // Hotspot status-bar height
 #define HOTSPOT_STATUSBAR_HEIGHT 20
-#define APP_STATUSBAR_HEIGHT (CGRectGetHeight([UIApplication sharedApplication].statusBarFrame))
-// Detect an active hotspot from APP_STATUSBAR_HEIGHT.
+#define APP_STATUSBAR_HEIGHT ([NCChatUIUtility getStatusBarHeightForView:nil])
+// 根据APP_STATUSBAR_HEIGHT判断是不是存在热门栏
 #define IS_HOTSPOT_CONNECTED (APP_STATUSBAR_HEIGHT == (SYS_STATUSBAR_HEIGHT + HOTSPOT_STATUSBAR_HEIGHT) ? YES : NO)
 
 NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotification";
@@ -125,7 +128,6 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         [self addSubview:self.inputContainerView];
     }
     [self updateSubviewsLayout];
-    [self setDraft:self.inputTextView.text];
 }
 
 - (void)addMentionedUser:(NCChatUIUserInfo *)userInfo {
@@ -392,7 +394,15 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 #pragma mark -  NCEmojiViewDelegate
 - (void)didTouchEmojiView:(NCEmojiBoardView *)emojiView touchedEmoji:(NSString *)string {
     if (nil == string) {
-        NSRange range = NSMakeRange(self.inputTextView.selectedRange.location - 1, 1);
+        NSUInteger textLength = self.inputTextView.textStorage.length;
+        NSUInteger cursorLocation = self.inputTextView.selectedRange.location;
+        if (textLength == 0 || cursorLocation == 0 || cursorLocation == NSNotFound || cursorLocation > textLength) {
+            return;
+        }
+        NSRange range = NSMakeRange(cursorLocation - 1, 1);
+        if (NSMaxRange(range) > textLength) {
+            return;
+        }
         if (self.delegate &&
             [self.delegate respondsToSelector:@selector(inputTextView:shouldChangeTextInRange:replacementText:)]) {
             [self.delegate inputTextView:self.inputTextView shouldChangeTextInRange:range replacementText:string];
@@ -515,8 +525,18 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     [sightVC
      dismissViewControllerAnimated:YES
      completion:^{
+        NSString *path = url.path;
+        if (path.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+            if ([self.delegate respondsToSelector:@selector(sightDidRecordFailedWith:status:)]) {
+                NSError *error = [NSError errorWithDomain:@"NCChatSessionInputBar"
+                                                     code:-1
+                                                 userInfo:@{NSLocalizedDescriptionKey : @"Invalid short video local path"}];
+                [self.delegate sightDidRecordFailedWith:error status:0];
+            }
+            return;
+        }
         if ([self.delegate respondsToSelector:@selector(sightDidFinishRecord:thumbnail:duration:)]) {
-            [self.delegate sightDidFinishRecord:url.path thumbnail:thumnail duration:duration];
+            [self.delegate sightDidFinishRecord:path thumbnail:thumnail duration:duration];
         }
     }];
 }
@@ -759,6 +779,13 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     }
 }
 
+- (BOOL)isMentionedRange:(NSRange)range validForTextLength:(NSUInteger)textLength {
+    if (range.location == NSNotFound || range.length == 0 || range.location > textLength) {
+        return NO;
+    }
+    return range.length <= textLength - range.location;
+}
+
 - (BOOL)willUpdateInputTextMetionedInfo:(NSString *)text range:(NSRange)range{
     BOOL shouldUseDefaultChangeText = YES;
     if (self.isMentionedEnabled) {
@@ -770,8 +797,14 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         if (text.length == 0) {
             for (NCMentionedStringRangeInfo *mentionedInfo in [self.mentionedRangeInfoList copy]) {
                 NSRange mentionedRange = mentionedInfo.range;
-                // Deleting at the end of a mention removes the entire mention.
+                if (![self isMentionedRange:mentionedRange
+                             validForTextLength:self.inputTextView.textStorage.length]) {
+                    [self.mentionedRangeInfoList removeObject:mentionedInfo];
+                    continue;
+                }
+                //如果删除的光标在@信息的最后，删除这个@信息
                 if (range.length == 1 && (mentionedRange.location + mentionedRange.length == range.location + 1)) {
+                    NSUInteger originalTextLength = self.inputTextView.textStorage.length;
                     shouldUseDefaultChangeText = NO;
                     [self.inputTextView.textStorage deleteCharactersInRange:mentionedRange];
                     // Mutating textStorage does not trigger inputTextViewDidChange, so invoke it explicitly.
@@ -784,6 +817,13 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
                     changedLength = -(NSInteger)mentionedInfo.range.length;
 
                     [self.mentionedRangeInfoList removeObject:mentionedInfo];
+                    for (NCMentionedStringRangeInfo *remainingInfo in [self.mentionedRangeInfoList copy]) {
+                        NSRange remainingRange = remainingInfo.range;
+                        if (![self isMentionedRange:remainingRange validForTextLength:originalTextLength] ||
+                            NSIntersectionRange(remainingRange, mentionedRange).length > 0) {
+                            [self.mentionedRangeInfoList removeObject:remainingInfo];
+                        }
+                    }
                     break;
                 } else if (mentionedRange.location <= range.location &&
                            range.location < mentionedRange.location + mentionedRange.length) {
@@ -1190,6 +1230,7 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 - (void)setDraft:(NSString *)draft {
+    [self.mentionedRangeInfoList removeAllObjects];
     if (draft && draft.length > 0) {
         __autoreleasing NSError *error = nil;
         NSData *draftData = [draft dataUsingEncoding:NSUTF8StringEncoding];
@@ -1200,11 +1241,13 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
                 if ([draftDict.allKeys containsObject:@"draftContent"]) {
                     draft = [draftDict objectForKey:@"draftContent"];
                 }
+                NSString *draftContent = [draft isKindOfClass:[NSString class]] ? draft : @"";
                 NSArray *mentionedRangeInfoList = [draftDict objectForKey:@"mentionedRangeInfoList"];
                 for (NSString *mentionedInfoString in mentionedRangeInfoList) {
                     NCMentionedStringRangeInfo *mentionedInfo =
                         [[NCMentionedStringRangeInfo alloc] initWithDecodeString:mentionedInfoString];
-                    if (mentionedInfo) {
+                    if (mentionedInfo &&
+                        [self isMentionedRange:mentionedInfo.range validForTextLength:draftContent.length]) {
                         [self.mentionedRangeInfoList addObject:mentionedInfo];
                     }
                 }
@@ -1251,10 +1294,24 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 - (NCMentionedInfo *)mentionedInfo {
-    NSArray<NSString *> *mentionedUserIdList = self.mentionedUserIdList;
+    BOOL containsMentionAll = NO;
+    NSMutableArray<NSString *> *mentionedUserIdList = [[NSMutableArray alloc] init];
+    for (NCMentionedStringRangeInfo *mentionedInfo in self.mentionedRangeInfoList) {
+        if (mentionedInfo.userId.length == 0) {
+            continue;
+        }
+        if ([self isMentionAllUserId:mentionedInfo.userId]) {
+            containsMentionAll = YES;
+            continue;
+        }
+        [mentionedUserIdList addObject:mentionedInfo.userId];
+    }
+    if (containsMentionAll) {
+        return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeAll userIdList:nil mentionedContent:nil];
+    }
     if (mentionedUserIdList.count > 0) {
         NCMentionedInfo *mentionedInfo = [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
-                                                                     userIdList:mentionedUserIdList
+                                                                     userIdList:mentionedUserIdList.copy
                                                                mentionedContent:nil];
         //    [self.mentionedRangeInfoList removeAllObjects];
         return mentionedInfo;
@@ -1268,11 +1325,15 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     }
     NSMutableArray<NSString *> *mentionedUserIdList = [[NSMutableArray alloc] init];
     for (NCMentionedStringRangeInfo *mentionedInfo in self.mentionedRangeInfoList) {
-        if (mentionedInfo.userId.length > 0) {
+        if (mentionedInfo.userId.length > 0 && ![self isMentionAllUserId:mentionedInfo.userId]) {
             [mentionedUserIdList addObject:mentionedInfo.userId];
         }
     }
-    return mentionedUserIdList.copy;
+    return mentionedUserIdList.count > 0 ? mentionedUserIdList.copy : nil;
+}
+
+- (BOOL)isMentionAllUserId:(NSString *)userId {
+    return [userId isEqualToString:NCMentionAllUsersID];
 }
 
 - (CGFloat)inputBarHeight {

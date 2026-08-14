@@ -362,6 +362,20 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     } else if ([messageContent isKindOfClass:[NCGroupNotificationMessage class]]) {
         NCGroupNotificationMessage *groupNotification = (NCGroupNotificationMessage *)messageContent;
         digest = [self __formatGroupNotificationMessageContent:groupNotification] ?: groupNotification.message ?: @"";
+    } else if ([messageContent isKindOfClass:[NCRecallNotificationMessage class]]) {
+        NCRecallNotificationMessage *recall = (NCRecallNotificationMessage *)messageContent;
+        if (recall.operatorId.length == 0) {
+            digest = NCUILocalizedString(@"recalled_a_message");
+        } else if (recall.admin) {
+            digest = NCUILocalizedString(@"admin_recalled_a_message");
+        } else if ([recall.operatorId isEqualToString:[NCEngine getCurrentUserId]]) {
+            digest = NCUILocalizedString(@"you_recalled_a_message");
+        } else {
+            NCChatUIUserInfo *userInfo =
+                [[NCUserInfoCacheManager sharedManager] getUserInfo:recall.operatorId];
+            NSString *operatorName = userInfo.name.length > 0 ? userInfo.name : recall.operatorId;
+            digest = [operatorName stringByAppendingString:NCUILocalizedString(@"recalled_a_message")];
+        }
     } else if ([messageContent isKindOfClass:[NCUnknownMessage class]]) {
         digest = NCUILocalizedString(@"unknown_message_cell_tip");
     }
@@ -416,7 +430,9 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     return [NCChatUIUtility getNotificationUserInfoDictionary:channelType
                                                fromUserId:message.senderUserId
                                                  channelId:channelId
-                                               objectName:message.messageType];
+                                               objectName:message.messageType
+                                                clientId:(long)message.clientId
+                                               messageId:message.messageId];
 }
 
 + (NSDictionary *)getNotificationUserInfoDictionary:(NSInteger)channelType
@@ -442,13 +458,14 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     if (type.length == 0) {
         return nil;
     }
+    NSString *clientIdString = [NSString stringWithFormat:@"%ld", clientId];
     return @{
         @"rc" : @{
             @"cType" : type ?: @"",
             @"fId" : fromUserId ?: @"",
             @"oName" : objectName ?: @"",
             @"tId" : channelId ?: @"",
-            @"mId" : [NSString stringWithFormat:@"%ld", clientId],
+            @"mId" : clientIdString,
             @"id" : messageId ?: @""
         }
     };
@@ -594,6 +611,10 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     [channel clearUnreadCountWithCompletion:nil];
 }
 
++ (BOOL)shouldNeedReadReceiptForChannelType:(NCChannelType)channelType {
+    return [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(channelType)];
+}
+
 + (NSString *)getPinYinUpperFirstLetters:(NSString *)hanZi {
     if (hanZi.length == 0) {
         return nil;
@@ -635,27 +656,101 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     return url;
 }
 
-+ (UIWindow *)getKeyWindow {
-    UIWindow *keyWindow;
-    for (UIWindow *window in [UIApplication sharedApplication].windows) {
-        if ([window isKeyWindow]) {
-            keyWindow = window;
+static BOOL NCChatUIWindowIsUsable(UIWindow *window) {
+    return window && !window.hidden && window.alpha > 0.01;
+}
+
+static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
+    for (UIWindow *window in windows) {
+        if (window.isKeyWindow) {
+            return window;
         }
     }
-    return keyWindow;
+    for (UIWindow *window in windows) {
+        if (NCChatUIWindowIsUsable(window) && window.windowLevel == UIWindowLevelNormal) {
+            return window;
+        }
+    }
+    for (UIWindow *window in windows) {
+        if (NCChatUIWindowIsUsable(window)) {
+            return window;
+        }
+    }
+    return windows.firstObject;
+}
+
++ (UIWindow *)getKeyWindow {
+    return [self getWindowForView:nil];
+}
+
++ (UIWindow *)getWindowForView:(UIView *)view {
+    if (view.window) {
+        return view.window;
+    }
+    if (@available(iOS 13.0, *)) {
+        UIWindow *fallbackWindow = nil;
+        // iOS 13 多 Scene 下不能从全局 windows 推断当前页面，优先使用前台 Scene 的窗口集合。
+        for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if (![scene isKindOfClass:[UIWindowScene class]]) {
+                continue;
+            }
+            UISceneActivationState activationState = scene.activationState;
+            if (activationState != UISceneActivationStateForegroundActive &&
+                activationState != UISceneActivationStateForegroundInactive) {
+                continue;
+            }
+            UIWindow *window = NCChatUIFirstUsableWindow(((UIWindowScene *)scene).windows);
+            if (window.isKeyWindow) {
+                return window;
+            }
+            if (!fallbackWindow) {
+                fallbackWindow = window;
+            }
+        }
+        if (fallbackWindow) {
+            return fallbackWindow;
+        }
+    }
+    return NCChatUIFirstUsableWindow([UIApplication sharedApplication].windows);
 }
 
 + (UIEdgeInsets)getWindowSafeAreaInsets {
+    return [self getWindowSafeAreaInsetsForView:nil];
+}
+
++ (UIEdgeInsets)getWindowSafeAreaInsetsForView:(UIView *)view {
     UIEdgeInsets result = UIEdgeInsetsZero;
     if (@available(iOS 11.0, *)) {
-        UIWindow *window = [self getKeyWindow];
+        UIWindow *window = [self getWindowForView:view];
         if (window) {
             result = window.safeAreaInsets;
         }
-    }else{
-        result.top = [[UIApplication sharedApplication] statusBarFrame].size.height;
+    } else {
+        result.top = [self getStatusBarHeightForView:view];
     }
     return result;
+}
+
++ (CGFloat)getStatusBarHeightForView:(UIView *)view {
+    if (@available(iOS 13.0, *)) {
+        UIWindow *window = [self getWindowForView:view];
+        UIStatusBarManager *statusBarManager = window.windowScene.statusBarManager;
+        if (statusBarManager) {
+            return CGRectGetHeight(statusBarManager.statusBarFrame);
+        }
+    }
+    return CGRectGetHeight([UIApplication sharedApplication].statusBarFrame);
+}
+
++ (UIInterfaceOrientation)getInterfaceOrientationForView:(UIView *)view {
+    if (@available(iOS 13.0, *)) {
+        UIWindow *window = [self getWindowForView:view];
+        UIInterfaceOrientation orientation = window.windowScene.interfaceOrientation;
+        if (orientation != UIInterfaceOrientationUnknown) {
+            return orientation;
+        }
+    }
+    return [UIApplication sharedApplication].statusBarOrientation;
 }
 
 /*

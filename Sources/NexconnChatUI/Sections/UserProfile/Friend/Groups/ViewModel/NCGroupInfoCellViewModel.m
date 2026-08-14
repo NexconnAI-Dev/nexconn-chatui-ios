@@ -47,6 +47,9 @@
 }
 
 - (void)itemDidSelectedByViewController:(UIViewController *)vc {
+    if (self.groupInfo.groupId.length == 0) {
+        return;
+    }
     NCChannelViewController *conversationVC = [[NCChannelViewController alloc] initWithChannelType:NCChannelTypeGroup channelId:self.groupInfo.groupId];
     [vc.navigationController pushViewController:conversationVC animated:YES];
 }
@@ -63,7 +66,9 @@
     if (keyword.length > 0) {
         UIColor *color = NCDynamicColor(@"primary_color");
         NSRange range = [[string uppercaseString] rangeOfString:[keyword uppercaseString]];
-        [attributedString addAttribute:NSForegroundColorAttributeName value:color range:range];
+        if (range.location != NSNotFound) {
+            [attributedString addAttribute:NSForegroundColorAttributeName value:color range:range];
+        }
     }
   
     return attributedString;

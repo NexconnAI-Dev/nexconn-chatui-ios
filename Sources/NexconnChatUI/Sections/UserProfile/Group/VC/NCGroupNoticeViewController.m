@@ -53,14 +53,7 @@
 }
 
 - (void)textViewDidChange:(UITextView *)textView {
-    if (!self.viewModel.canEdit) {
-        return;
-    }
-    if ([textView.text isEqualToString:self.viewModel.group.notice]) {
-        self.confirmButton.enabled = NO;
-    } else {
-        self.confirmButton.enabled = YES;
-    }
+    self.confirmButton.enabled = [self.viewModel canSaveNotice:textView.text];
 }
 
 #pragma mark -- private

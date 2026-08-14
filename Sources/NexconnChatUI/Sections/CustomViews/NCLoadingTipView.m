@@ -32,6 +32,9 @@
 + (NCLoadingTipView *)loadingWithTip:(NSString *)tip {
     NCLoadingTipView *view = [[NCLoadingTipView alloc] initWithTip:tip];
     UIWindow *window = [NCChatUIUtility getKeyWindow];
+    if (!window) {
+        return view;
+    }
     view.frame = window.bounds;
     [window addSubview:view];
     return view;

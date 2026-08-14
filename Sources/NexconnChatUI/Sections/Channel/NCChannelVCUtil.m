@@ -22,14 +22,14 @@
 #import "NCHDVoiceMessageCell.h"
 #import "NCChatUIConfig.h"
 #import "NCChannelDataSource.h"
+#import "NCChannelViewController+internal.h"
 #import "NSMutableDictionary+NCOperation.h"
 #import "NCRRSUtil.h"
 #import "NCChatUIErrorCode.h"
 #import "NCFileUtility.h"
 
-// The time-label block is 36 points high: TIME_LABEL_TOP (8) + TIME_LABEL_HEIGHT (16) +
-// TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE (12). Keep this aligned with referenceExtraHeight and
-// NCMessageBaseCell layout so loading older messages preserves the correct scroll offset.
+// 时间标签区块的实际高度：TIME_LABEL_TOP(8) + TIME_LABEL_HEIGHT(16) + TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE(12) = 36，
+// 需与 referenceExtraHeight / NCMessageBaseCell 的布局保持一致，否则加载更多时的滚动补偿高度会偏差。
 NSInteger const NCMessageCellDisplayTimeHeightForCommon = 36;
 NSInteger const NCMessageCellDisplayTimeHeightForHQVoice = 36;
 static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
@@ -77,11 +77,7 @@ static BOOL NCPopulateChannelContext(NCChannelViewController *chatVC,
     return (*channelId).length > 0;
 }
 
-static BOOL NCShouldNeedReadReceiptForChannelType(NCChannelType channelType) {
-    return channelType == NCChannelTypeDirect || channelType == NCChannelTypeGroup;
-}
-
-static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable pushContent) {
+static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullable pushContent) {
     if (pushContent.length == 0) {
         return nil;
     }
@@ -99,6 +95,7 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
     }
     return self;
 }
+
 - (void)sendMessageStatusNotification:(NSString *)actionNametatus clientId:(long)clientId progress:(NSInteger)progress {
     NCMessageCellNotificationModel *notifyModel = [[NCMessageCellNotificationModel alloc] init];
     notifyModel.actionName = actionNametatus;
@@ -147,39 +144,24 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
 }
 
 - (void)figureOutAllConversationDataRepository {
-    for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
+    [self figureOutConversationDataRepositoryFromIndex:0
+                                               toIndex:self.chatVC.channelDataRepository.count - 1];
+}
+
+- (void)figureOutConversationDataRepositoryFromIndex:(NSInteger)startIndex
+                                             toIndex:(NSInteger)endIndex {
+    NSInteger repositoryCount = self.chatVC.channelDataRepository.count;
+    if (repositoryCount <= 0 || startIndex > endIndex) {
+        return;
+    }
+    NSInteger lowerIndex = MAX(0, startIndex);
+    NSInteger upperIndex = MIN(repositoryCount - 1, endIndex + 1);
+    if (lowerIndex > upperIndex) {
+        return;
+    }
+    for (NSInteger i = lowerIndex; i <= upperIndex; i++) {
         NCMessageModel *model = [self.chatVC.channelDataRepository objectAtIndex:i];
-        if (0 == i) {
-            model.isDisplayMessageTime = YES;
-        } else if (i > 0) {
-            NCMessageModel *pre_model = [self.chatVC.channelDataRepository objectAtIndex:i - 1];
-
-            long long previous_time = pre_model.sentTime;
-
-            long long current_time = model.sentTime;
-
-            long long interval =
-                current_time - previous_time > 0 ? current_time - previous_time : previous_time - current_time;
-            CGFloat increment = [[self class] incrementOfTimeLabelBy:model];
-            if (interval / 1000 <= 3 * 60) {
-                if (model.isDisplayMessageTime && model.cellSize.height > 0) {
-                    CGSize size = model.cellSize;
-                    size.height = model.cellSize.height - increment;
-                    model.cellSize = size;
-                }
-                model.isDisplayMessageTime = NO;
-            } else if (![model.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
-                if (!model.isDisplayMessageTime && model.cellSize.height > 0) {
-                    CGSize size = model.cellSize;
-                    size.height = model.cellSize.height + increment;
-                    model.cellSize = size;
-                }
-                model.isDisplayMessageTime = YES;
-            }
-        }
-        if ([model.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
-            model.isDisplayMessageTime = NO;
-        }
+        [self updateTimeDisplayForModel:model atIndex:i];
     }
 }
 
@@ -216,6 +198,34 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
     } else {
         model.isDisplayMessageTime = YES;
     }
+}
+
+- (void)updateTimeDisplayForModel:(NCMessageModel *)model atIndex:(NSInteger)index {
+    if ([model.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        [self updateModel:model displayMessageTime:NO];
+        return;
+    }
+    if (index == 0) {
+        [self updateModel:model displayMessageTime:YES];
+        return;
+    }
+    NCMessageModel *preModel = [self.chatVC.channelDataRepository objectAtIndex:index - 1];
+    long long interval = llabs(model.sentTime - preModel.sentTime);
+    [self updateModel:model displayMessageTime:(interval / 1000 > 3 * 60)];
+}
+
+- (void)updateModel:(NCMessageModel *)model displayMessageTime:(BOOL)displayMessageTime {
+    if (model.isDisplayMessageTime == displayMessageTime) {
+        return;
+    }
+    CGSize cellSize = model.cellSize;
+    CGFloat increment = [[self class] incrementOfTimeLabelBy:model];
+    model.isDisplayMessageTime = displayMessageTime;
+    if (cellSize.height <= 0) {
+        return;
+    }
+    cellSize.height += displayMessageTime ? increment : -increment;
+    model.cellSize = cellSize;
 }
 
 - (void)saveDraftIfNeed {
@@ -387,8 +397,8 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
-        params.needReceipt = NCShouldNeedReadReceiptForChannelType(channelType);
-        params.pushConfig = NCPushConfigWithPushContent(pushContent);
+        params.needReceipt = [NCChatUIUtility shouldNeedReadReceiptForChannelType:channelType];
+        params.pushConfig = RCNCPushConfigWithPushContent(pushContent);
         [[NCChatUI shared] sendMediaMessageWithParams:params
                                              progress:nil
                                            completion:nil
@@ -398,8 +408,8 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
-        params.needReceipt = NCShouldNeedReadReceiptForChannelType(channelType);
-        params.pushConfig = NCPushConfigWithPushContent(pushContent);
+        params.needReceipt = [NCChatUIUtility shouldNeedReadReceiptForChannelType:channelType];
+        params.pushConfig = RCNCPushConfigWithPushContent(pushContent);
         [[NCChatUI shared] sendMessageWithParams:params
                                       completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
             (void)message;
@@ -442,7 +452,8 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
                         AVAsset *model = assertInfo[@"avAsset"];
                         UIImage *image = assertInfo[@"thumbnail"];
                         NSString *localPath = assertInfo[@"localPath"];
-                        dispatch_sync(dispatch_get_main_queue(), ^{
+                        // 这里不能同步切主线程，否则 updateEventQueue 会被主线程长时间占用时反向卡住。
+                        dispatch_main_async_safe(^{
                             NSUInteger duration = round(CMTimeGetSeconds(model.duration));
                             NCShortVideoMessage *sightMsg =
                                 [[NCShortVideoMessage alloc] initWithLocalPath:localPath
@@ -595,6 +606,9 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
     void (^syncBlock)(void) = ^{
         [self startSyncConversationReadStatusWithDelay:delay];
     };
+    if (![self.chatVC shouldMarkMessagesAsRead]) {
+        return;
+    }
         
     NCChannelType channelType = self.chatVC.channelType;
     BOOL isDirectChannel = channelType == NCChannelTypeDirect;
@@ -616,6 +630,9 @@ static NCPushConfig * _Nullable NCPushConfigWithPushContent(NSString * _Nullable
 
 - (void)startSyncConversationReadStatusWithDelay:(BOOL)delay {
     void (^clearUnreadBlock)(void) = ^{
+        if (![self.chatVC shouldMarkMessagesAsRead]) {
+            return;
+        }
         NCBaseChannel *channel = self.chatVC.currentChannel;
         if (!channel) {
             return;

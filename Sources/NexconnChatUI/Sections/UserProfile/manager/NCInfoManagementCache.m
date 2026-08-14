@@ -170,6 +170,25 @@
     }];
 }
 
+- (void)removeGroupMemberCacheForGroupId:(NSString *)groupId {
+    if (groupId.length == 0) {
+        return;
+    }
+    NSString *prefix = [NSString stringWithFormat:@"%@_", groupId];
+    [self.memberThreadLock performWriteLockBlock:^{
+        NSMutableArray<NSString *> *keysToRemove = [NSMutableArray array];
+        for (NSString *key in self.cacheMemberIds) {
+            if ([key hasPrefix:prefix]) {
+                [keysToRemove nc_addObject:key];
+            }
+        }
+        for (NSString *key in keysToRemove) {
+            [self.memberCache nc_removeObjectForKey:key];
+        }
+        [self.cacheMemberIds removeObjectsInArray:keysToRemove];
+    }];
+}
+
 - (void)removeAllGroupMemberCache {
     [self.memberCache removeAllObjects];
     [self.memberThreadLock performWriteLockBlock:^{

@@ -11,6 +11,7 @@
 #import "NCAlbumTableCell.h"
 #import "NCAssetModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCPhotosPickerController.h"
 #import "NCMBProgressHUD.h"
 #import <MobileCoreServices/UTCoreTypes.h>
@@ -168,6 +169,9 @@ static NSString *const cellReuseIdentifier = @"cell";
      Copy the video to a temporary path before sending because the original
      photo-library path may no longer be accessible after an app restart.
      */
+    if (filePath.length == 0) {
+        return nil;
+    }
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if ([fileManager fileExistsAtPath:filePath]) {
         long long millisecond = [[NSDate date] timeIntervalSince1970] * 1000;
@@ -181,6 +185,30 @@ static NSString *const cellReuseIdentifier = @"cell";
         return localPath;
     }
     return filePath;
+}
+
+- (NSString *)p_localPathForVideoAsset:(AVAsset *)avAsset info:(NSDictionary *)info {
+    NSString *localPath = nil;
+    if ([avAsset isKindOfClass:[AVURLAsset class]]) {
+        AVURLAsset *urlAsset = (AVURLAsset *)avAsset;
+        NSURL *url = urlAsset.URL;
+        if (url.isFileURL) {
+            localPath = url.path;
+        } else {
+            localPath = url.relativePath;
+        }
+    }
+    if (localPath.length == 0) {
+        id sandboxToken = info[@"PHImageFileSandboxExtensionTokenKey"];
+        if ([sandboxToken isKindOfClass:[NSString class]] && [sandboxToken length] > 0) {
+            NSArray *localPaths = [(NSString *)sandboxToken componentsSeparatedByString:@";"];
+            NSString *tokenPath = localPaths.lastObject;
+            if ([tokenPath isKindOfClass:[NSString class]] && tokenPath.length > 0) {
+                localPath = tokenPath;
+            }
+        }
+    }
+    return localPath.length > 0 ? localPath : nil;
 }
 
 - (void)handlePhotos:(NSMutableArray *)photos result:(NSMutableArray *)results full:(BOOL)isFull {
@@ -220,24 +248,16 @@ static NSString *const cellReuseIdentifier = @"cell";
                 if (model.thumbnailImage) {
                     [assetInfo setObject:model.thumbnailImage forKey:@"thumbnail"];
                 }
-                NSString *localPath = @"";
-                if (@available(iOS 13.0, *)) {
-                    AVURLAsset *urlAsset = (AVURLAsset *)avAsset;
-                    // Slow-motion assets may be AVComposition instances without a URL property.
-                    if ([urlAsset respondsToSelector:@selector(URL)]) {
-                        NSURL *url = urlAsset.URL;
-                        NSString *tempString = [url relativePath];
-                        localPath = tempString;
-                    }
-                }
-                if (localPath == nil || localPath.length < 1) {
-                    NSArray *localPaths =
-                        [info[@"PHImageFileSandboxExtensionTokenKey"] componentsSeparatedByString:@";"];
-                    if (localPaths.count > 0) {
-                        localPath = [localPaths lastObject];
-                    }
-                }
+                NSString *localPath = [self p_localPathForVideoAsset:avAsset info:info];
                 localPath = [self moveVideoFileAt:localPath];
+                if (localPath.length < 1) {
+                    [NCAlertView showAlertController:nil
+                                             message:NCUILocalizedString(@"Selected_Damaged_Video")
+                                    hiddenAfterDelay:1
+                                    inViewController:self];
+                    [self handlePhotos:photos result:results full:isFull];
+                    return;
+                }
 
                 [assetInfo setObject:localPath forKey:@"localPath"];
 
@@ -253,7 +273,7 @@ static NSString *const cellReuseIdentifier = @"cell";
                 dispatch_async(dispatch_get_main_queue(), ^{
                     strongSelf.isShowHUD = YES;
                     strongSelf.progressHUD =
-                        [NCMBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
+                        [NCMBProgressHUD showHUDAddedTo:[NCChatUIUtility getWindowForView:self.view] animated:YES];
                     strongSelf.progressHUD.label.text = NCUILocalizedString(@"i_cloud_downloading");
                 });
             }
@@ -291,7 +311,7 @@ static NSString *const cellReuseIdentifier = @"cell";
                 dispatch_async(dispatch_get_main_queue(), ^{
                     weakself.isShowHUD = YES;
                     weakself.progressHUD =
-                        [NCMBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow
+                        [NCMBProgressHUD showHUDAddedTo:[NCChatUIUtility getWindowForView:self.view]
                                              animated:YES];
                     weakself.progressHUD.label.text = NCUILocalizedString(@"i_cloud_downloading");
                 });

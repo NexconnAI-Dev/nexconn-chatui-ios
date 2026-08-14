@@ -557,8 +557,9 @@
     if (NCMessageDirectionReceive == self.model.messageDirection) {
         bubbleImage = NCDynamicImage(@"channel_msg_cell_bg_from_img");
     } else {
-        // Use a white bubble for message types that require it.
-        NSArray *whiteBackgroundMessageTypes = @[@"RC:FileMsg", @"RC:CardMsg", NCMessageType.combine];
+        // 根据消息类型判断是否使用白色气泡
+        // 合并转发使用 NCMessageType.combine（当前 SDK 为 "RC:CombineV2Msg"），同时兼容旧版 "RC:CombineMsg"
+        NSArray *whiteBackgroundMessageTypes = @[@"RC:FileMsg", @"RC:CardMsg", @"RC:CombineMsg", NCMessageType.combine];
         if ([whiteBackgroundMessageTypes containsObject:self.model.objectName]) {
             bubbleImage = NCDynamicImage(@"channel_msg_cell_bg_white_img");
         } else {

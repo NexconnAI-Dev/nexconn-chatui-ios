@@ -24,12 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Queries the notification level.
 /// - Parameter type: Channel type.
 /// - Parameter channelId: Channel ID.
-/// - Parameter channelId: Sub-channel ID.
+/// - Parameter subChannelId: Sub-channel ID.
 /// - Parameter completion: Success callback.
 /// - Parameter errorBlock: Failure callback.
 + (void)queryNotificationLevelWith:(NCChannelType)type
                           channelId:(NSString *__nullable)channelId
-                         channelId:(NSString *__nullable )channelId
+                       subChannelId:(NSString *__nullable)subChannelId
                         completion:(void (^)(NCChannelNoDisturbLevel level))completion;
 
 /// NCChannelIdentifier variant used by the NCMessage path.

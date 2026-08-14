@@ -32,6 +32,8 @@
 
 @property (nonatomic, assign) BOOL hasMoreSearchMembers;
 
+@property (nonatomic, assign) BOOL isLoadingSearchMembers;
+
 @property (nonatomic, weak) id<NCListViewModelResponder> responder;
 
 @property (nonatomic, copy) NSString *groupId;
@@ -80,6 +82,7 @@
     self.searchMembersQuery = nil;
     self.loadedSearchMemberCount = 0;
     self.hasMoreSearchMembers = YES;
+    self.isLoadingSearchMembers = NO;
     [self.matchMemberList removeAllObjects];
     [self.searchBarVM endEditingState];
 }
@@ -94,6 +97,7 @@
     self.searchMembersQuery = nil;
     self.loadedSearchMemberCount = 0;
     self.hasMoreSearchMembers = YES;
+    self.isLoadingSearchMembers = NO;
     [self.matchMemberList removeAllObjects];
     if (searchText.length == 0) {
         [self removeSeparatorWithArray:[self memberList]];
@@ -161,19 +165,44 @@
 }
 
 - (void)filterDataSource {
+    if (self.isLoadingSearchMembers) {
+        return;
+    }
     if (self.searchMembersQuery && !self.hasMoreSearchMembers) {
         return;
     }
+    NSString *searchKeyword = self.searchBarVM.searchBar.text ?: @"";
     if (!self.searchMembersQuery) {
         NCSearchGroupMembersQueryParams *params = [NCSearchGroupMembersQueryParams new];
         params.groupId = self.groupId;
-        params.memberName = self.searchBarVM.searchBar.text ?: @"";
+        params.memberName = searchKeyword;
         params.pageSize = self.pageCount;
         self.searchMembersQuery = [NCGroupChannel createSearchGroupMembersQueryWithParams:params];
     }
-    [self.searchMembersQuery loadNextPageWithCompletion:^(NSArray<NCGroupMemberInfo *> * _Nullable members,
-                                                          NCError * _Nullable error) {
+    NCSearchGroupMembersQuery *searchQuery = self.searchMembersQuery;
+    self.isLoadingSearchMembers = YES;
+    [searchQuery loadNextPageWithCompletion:^(NSArray<NCGroupMemberInfo *> * _Nullable members,
+                                              NCError * _Nullable error) {
+        BOOL queryIsCurrent = self.searchMembersQuery == searchQuery;
+        BOOL keywordIsCurrent = [searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""];
+        if (!queryIsCurrent || !keywordIsCurrent) {
+            if (queryIsCurrent) {
+                self.isLoadingSearchMembers = NO;
+            }
+            return;
+        }
         if (error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.searchMembersQuery != searchQuery ||
+                    ![searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""]) {
+                    return;
+                }
+                self.isLoadingSearchMembers = NO;
+                if ([self.responder respondsToSelector:@selector(refreshingFinished:withTips:)]) {
+                    [self.responder refreshingFinished:NO withTips:nil];
+                }
+                [self.responder reloadData:self.matchMemberList.count == 0];
+            });
             return;
         }
         NSArray<NCGroupMemberInfo *> *memberList = members ?: @[];
@@ -188,6 +217,11 @@
         [NCGroupManager fetchFriendInfosWithUserIds:userIds.copy complete:^(NSArray<NCFriendInfo *> * _Nullable friendInfos) {
             NSArray *list = [self getViewModelsWithMembers:memberList friendInfos:friendInfos];
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.searchMembersQuery != searchQuery ||
+                    ![searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""]) {
+                    return;
+                }
+                self.isLoadingSearchMembers = NO;
                 [self.matchMemberList addObjectsFromArray:list];
                 [self removeSeparatorWithArray:list];
                 [self.responder reloadData:self.matchMemberList.count == 0];

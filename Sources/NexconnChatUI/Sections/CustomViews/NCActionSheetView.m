@@ -40,6 +40,9 @@
               selectedBlock:(void (^)(NSInteger index))selectedBlock
                 cancelBlock:(void (^)(void))cancelBlock{
     UIWindow *keyWindow = [NCChatUIUtility getKeyWindow];
+    if (!keyWindow) {
+        return;
+    }
     [keyWindow endEditing:YES];
     NCActionSheetView *actionSheet = [[NCActionSheetView alloc] initWithTitle:title CellArray:cellArray viewSize:keyWindow.bounds.size cancelTitle:cancelTitle selectedBlock:selectedBlock cancelBlock:cancelBlock];
     [keyWindow addSubview:actionSheet];
@@ -102,14 +105,14 @@
 }
 
 - (void)createUI {
-    self.frame = [UIScreen mainScreen].bounds;
+    self.frame = CGRectMake(0, 0, self.viewSize.width, self.viewSize.height);
     [self addSubview:self.maskCoverView];
     [self addSubview:self.tableView];
 }
 
 - (UIView *)maskCoverView {
     if (!_maskCoverView) {
-        _maskCoverView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        _maskCoverView = [[UIView alloc] initWithFrame:self.bounds];
         _maskCoverView.backgroundColor = NCDynamicColor(@"pop_layer_background_color");
         _maskCoverView.alpha = 0.4;
         _maskCoverView.userInteractionEnabled = YES;
@@ -210,7 +213,7 @@
 - (void)show {
     _tableView.frame =
         CGRectMake(0, self.viewSize.height, self.viewSize.width,
-                   _tableView.rowHeight * (_cellArray.count + 1) + _headView.bounds.size.height + (Space_Line * 2) + [NCChatUIUtility getWindowSafeAreaInsets].bottom);
+                   _tableView.rowHeight * (_cellArray.count + 1) + _headView.bounds.size.height + (Space_Line * 2) + [NCChatUIUtility getWindowSafeAreaInsetsForView:self].bottom);
     [UIView animateWithDuration:.2
                      animations:^{
                          CGRect rect = _tableView.frame;

@@ -130,11 +130,15 @@
 "red_packet_message"= "[حزمة حمراء]";
 "combine_message_loading"= "جاري تحميل سجل المحادثات ...";
 "combine_message_load_failed"= "تعذر تحميل سجل المحادثات";
+"combine_message_nesting_limit"= "لا يمكن فتح المزيد من سجلات المحادثات المتداخلة";
 "chat_transcripts"= "إختار إلى 100 سجل محادثة";
 "message_delete_for_all_alert"="تم حذف الرسالة";
 "save_success"= "تم الحفظ بنجاح";
 "save_failed"= "فشل الحفظ";
 "recall_edit"= "تعديل";
+"recalled_a_message"= " قام بالتراجع عن الإرسال";
+"you_recalled_a_message"= "قمت بالتراجع عن الإرسال";
+"admin_recalled_a_message"= "المشرف قام بالتراجع عن الإرسال";
 "reference"="اقتبس";
 "can_not_recall"= "إنتهت فترة السماح لحذف الرسالة، تعذر التراجع عن الإرسال";
 "image_message"="الصورة";
@@ -286,6 +290,9 @@
 "only_group_owner_operation"="مالك المجموعة";
 "group_owner_or_manager_operation"="مالك المجموعة أو المشرفون";
 "all_group_member_operation"="جميع الموظفين";
+"group_member_info_edit_owner_or_admin_or_self"="مالك المجموعة أو المشرفون أو العضو نفسه";
+"group_member_info_edit_owner_or_self"="مالك المجموعة أو العضو نفسه";
+"group_member_info_edit_self_only"="العضو نفسه فقط";
 "invite_group_confirm"="تأكيد دعوة الدردشة الجماعية";
 "group_transfer_vc_title"="نقل المجموعة";
 "group_transfer_alert"="سيكون %@ مالك المجموعة";

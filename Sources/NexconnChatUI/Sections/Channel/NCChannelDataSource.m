@@ -50,6 +50,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 /// Fetches the latest referenced message content and edit state.
 - (void)edit_refreshReferenceMessage:(NSArray<NCMessage *> *)messages
                             complete:(void (^)(NSArray<NCMessage *> *messages))complete;
+- (void)edit_cleanupAllReferenceRefreshContexts;
 
 @end
 
@@ -93,6 +94,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 @property (nonatomic, strong) NSMutableOrderedSet<NSString *> *modifiedMessageDedupKeys;
 @property (nonatomic, strong) NSMutableArray<NCMessagesQuery *> *activeMessagesQueries;
 @property (nonatomic, strong) NSMutableArray<NCLocalMessagesByTimeQuery *> *activeLocalMessagesQueries;
+@property (nonatomic, strong) NSMutableSet *referenceRefreshContexts;
+@property (nonatomic, assign) BOOL didCleanupForChannelRelease;
+
+- (void)cleanupForChannelViewControllerRelease;
 
 @end
 
@@ -116,6 +121,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         self.modifiedMessageDedupKeys = [[NSMutableOrderedSet alloc] init];
         self.activeMessagesQueries = [[NSMutableArray alloc] init];
         self.activeLocalMessagesQueries = [[NSMutableArray alloc] init];
+        self.referenceRefreshContexts = [[NSMutableSet alloc] init];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(streamMessageCellDidUpdate:) name:NCStreamMessageCellUpdateEndNotification object:nil];
         self.ncMessageHandlerIdentifier = NCConversationMessageHandlerIdentifier(chatVC);
         [NCEngine addMessageHandlerWithIdentifier:self.ncMessageHandlerIdentifier handler:self];
@@ -124,7 +130,29 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     return self;
 }
 
-- (void)dealloc {
+- (void)cleanupForChannelViewControllerRelease {
+    @synchronized (self) {
+        if (self.didCleanupForChannelRelease) {
+            return;
+        }
+        self.didCleanupForChannelRelease = YES;
+    }
+
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [self cancelAppendMessageQueue];
+    self.throttleReloadAction = nil;
+    self.loadDelegate = nil;
+    [self.cachedReloadMessages removeAllObjects];
+    [self.unreadNewMsgArr removeAllObjects];
+    [self.unreadMentionedMessages removeAllObjects];
+    [self edit_cleanupAllReferenceRefreshContexts];
+    self.firstUnreadMessage = nil;
+
+    @synchronized (self) {
+        [self.activeMessagesQueries removeAllObjects];
+        [self.activeLocalMessagesQueries removeAllObjects];
+    }
+
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     if (self.ncMessageHandlerIdentifier.length > 0) {
         [NCEngine removeMessageHandlerForIdentifier:self.ncMessageHandlerIdentifier];
@@ -132,7 +160,11 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     [[NCChatUI shared] removeMessageEventObserver:self];
 }
 
-#pragma mark - Message Data Source
+- (void)dealloc {
+    [self cleanupForChannelViewControllerRelease];
+}
+
+#pragma mark - 消息数据源处理
 - (void)getInitialMessage:(NCBaseChannel *)channel {
     [self loadLatestHistoryMessage];
     self.chatVC.unReadMessage = (int)channel.unreadCount;
@@ -309,7 +341,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                 NSInteger itemsCount = [chatVC.messageCollectionView numberOfItemsInSection:0];
                 NSInteger differenceValue = chatVC.channelDataRepository.count - itemsCount;
             
-                // Insert only when the message satisfies the insertion rules.
+                // 符合insert条件才执行
                 if (itemsCount > 0 && strongSelf.cachedReloadMessages.count == differenceValue) {
                     NSMutableArray *reloadIndexPaths = [NSMutableArray new];
                     for (int i=0 ; i<strongSelf.cachedReloadMessages.count ; i++) {
@@ -482,7 +514,6 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     [self handleMessagesAfterLoadMore:messages checkUnreadMessage:YES];
 }
 - (void)handleMessagesAfterLoadMore:(NSArray<NCMessage *> *)messages checkUnreadMessage:(BOOL)check {
-    CGFloat increasedHeight = 0;
     NSMutableArray *indexPathes = [[NSMutableArray alloc] initWithCapacity:self.chatVC.defaultMessageCount];
     int indexPathCount = 0;
     NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
@@ -495,19 +526,6 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         if ([self pushOldMessageModel:model]) {
             [itemToFetchReceipt addObject:model];
             [indexPathes addObject:[NSIndexPath indexPathForItem:indexPathCount++ inSection:0]];
-            CGSize itemSize = [self.chatVC collectionView:self.chatVC.messageCollectionView
-                                            layout:self.customFlowLayout
-                            sizeForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
-            increasedHeight += itemSize.height;
-            if ([self p_showTime:messages index:i]) {
-                CGFloat increment = [NCChannelVCUtil incrementOfTimeLabelBy:model];
-
-                CGSize size = model.cellSize;
-                size.height = model.cellSize.height + increment;
-                model.cellSize = size;
-                model.isDisplayMessageTime = YES;
-                increasedHeight += increment;
-            }
         }
         if (self.firstUnreadMessage && model.clientId == self.firstUnreadMessage.clientId &&
             self.chatVC.enableUnreadMessageIcon && !self.chatVC.unReadButton.selected && self.chatVC.unReadMessage > self.chatVC.defaultMessageCount) {
@@ -518,10 +536,6 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                 [self.chatVC.channelDataRepository insertObject:oldModel atIndex:0];
                 [itemToFetchReceipt addObject:oldModel];
                 [indexPathes addObject:[NSIndexPath indexPathForItem:indexPathCount++ inSection:0]];
-                CGSize itemSize = [self.chatVC collectionView:self.chatVC.messageCollectionView
-                                                layout:self.customFlowLayout
-                                sizeForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
-                increasedHeight += itemSize.height;
             }
             if (check) {
                 [self.chatVC.unReadButton removeFromSuperview];
@@ -538,6 +552,42 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 
     if (indexPathes.count <= 0) {
         return;
+    }
+
+    NSInteger boundaryIndex = indexPathes.count;
+    CGFloat boundaryHeightBefore = 0;
+    BOOL boundaryDisplayTimeBefore = NO;
+    BOOL hasBoundary = (boundaryIndex < self.chatVC.channelDataRepository.count);
+    if (hasBoundary) {
+        NCMessageModel *boundaryModel = [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+        boundaryHeightBefore = boundaryModel.cellSize.height;
+        boundaryDisplayTimeBefore = boundaryModel.isDisplayMessageTime;
+    }
+    [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0
+                                                           toIndex:indexPathes.count - 1];
+
+    // 下拉加载历史后，边界消息（加载前的顶部消息）的时间显示状态可能翻转，
+    // 但它是在屏未复用的 cell，performBatchUpdates 只插入新项不会重新配置它，
+    // 导致 cell 缓存的时间显示状态陈旧、残留时间戳并使高度错位。这里记录是否翻转，
+    // 稍后在批量更新完成回调中显式刷新它。
+    BOOL boundaryDisplayTimeChanged = NO;
+    if (hasBoundary && boundaryIndex < self.chatVC.channelDataRepository.count) {
+        NCMessageModel *boundaryModel = [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+        boundaryDisplayTimeChanged = (boundaryModel.isDisplayMessageTime != boundaryDisplayTimeBefore);
+    }
+
+    CGFloat increasedHeight = 0;
+    for (NSIndexPath *indexPath in indexPathes) {
+        CGSize itemSize = [self.chatVC collectionView:self.chatVC.messageCollectionView
+                                               layout:self.customFlowLayout
+                               sizeForItemAtIndexPath:indexPath];
+        increasedHeight += itemSize.height;
+    }
+    if (boundaryHeightBefore > 0 && boundaryIndex < self.chatVC.channelDataRepository.count) {
+        NCMessageModel *boundaryModel = [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+        if (boundaryModel.cellSize.height > 0) {
+            increasedHeight += boundaryModel.cellSize.height - boundaryHeightBefore;
+        }
     }
 
     CGSize contentSize = self.chatVC.messageCollectionView.contentSize;
@@ -559,6 +609,18 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                 [self.chatVC.messageCollectionView performBatchUpdates:^{
                     [self.chatVC.messageCollectionView insertItemsAtIndexPaths:indexPathes];
                 } completion:^(BOOL finished) {
+                    // 边界 cell 的时间显示状态翻转后，同步刷新在屏的它，避免时间戳与内容重叠。
+                    if (boundaryDisplayTimeChanged
+                        && boundaryIndex < self.chatVC.channelDataRepository.count) {
+                        NCMessageModel *boundaryModel =
+                            [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+                        NSIndexPath *boundaryIndexPath = [NSIndexPath indexPathForItem:boundaryIndex inSection:0];
+                        NCMessageCell *boundaryCell = (NCMessageCell *)[self.chatVC.messageCollectionView
+                            cellForItemAtIndexPath:boundaryIndexPath];
+                        if ([boundaryCell respondsToSelector:@selector(setDataModel:)]) {
+                            [boundaryCell setDataModel:boundaryModel];
+                        }
+                    }
                 }];
             }
            
@@ -574,23 +636,6 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     } @catch (NSException *except) {
         NCLogD(@"----handleMessagesAfterLoadMore %@", except.description);
     }
-}
-
-- (BOOL)p_showTime:(NSArray<NCMessage *> *)messageArray index:(int)index{
-    BOOL showTime = NO;
-    if (index == messageArray.count - 1) {
-        showTime = YES;
-    } else {
-        NSInteger previousIndex = index + 1;
-        NCMessage *previousMessage = messageArray[previousIndex];
-        NCMessage *message = messageArray[index];
-
-        long long previous_time = previousMessage.sentTime;
-        long long current_time = message.sentTime;
-        long long interval = llabs(current_time - previous_time);
-        showTime = interval / 1000 > 3 * 60;
-    }
-    return showTime;
 }
 
 #pragma mark - loadMessageV2
@@ -669,16 +714,21 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         [self.chatVC.channelDataRepository removeAllObjects];
     }
     NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
+    NSInteger insertedCount = 0;
     
     for (int i = 0; i < messages.count; i++) {
         NCMessage *message = [messages objectAtIndex:i];
         NCMessageModel *model = [NCMessageModel modelWithNCMessage:message];
         if ([self pushOldMessageModel:model]) {
             [itemToFetchReceipt addObject:model];
+            insertedCount++;
         }
     }
     [self rrs_fetchReadReceiptInfo:itemToFetchReceipt];
-    [self.chatVC.util figureOutAllConversationDataRepository];
+    if (insertedCount > 0) {
+        [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0
+                                                               toIndex:insertedCount - 1];
+    }
     [self.chatVC.messageCollectionView reloadData];
     [self handleAfterLoadLastestMessage];
 }
@@ -689,11 +739,11 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
     NSMutableArray *indexPaths = [NSMutableArray array];
     NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
+    NSInteger previousItemCount = self.chatVC.channelDataRepository.count;
     for (NCMessage *message in messages) {
         NCMessage *checkedMessage = [self.chatVC willAppendAndDisplayMessage:message];
         if (checkedMessage) {
             NCMessageModel *model = [NCMessageModel modelWithNCMessage:checkedMessage];
-            [self.chatVC.util figureOutLatestModel:model];
             if ([self appendMessageModel:model]) {
                 [self.chatVC.channelDataRepository addObject:model];
                 [itemToFetchReceipt addObject:model];
@@ -704,13 +754,24 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
     [self rrs_fetchReadReceiptInfo:itemToFetchReceipt];
     if (indexPaths.count > 0) {
+        [self.chatVC.util figureOutConversationDataRepositoryFromIndex:previousItemCount
+                                                               toIndex:self.chatVC.channelDataRepository.count - 1];
         /* bugfix:PAASIOSDEV-259
          insertItemsAtIndexPaths: requires this invariant:
          updated index path count + current collection view cell count = data source count.
          Violating it crashes on iOS 12.
          */
-        
-        [self.chatVC.messageCollectionView reloadData];
+        NSInteger collectionViewItemCount = [self.chatVC.messageCollectionView numberOfItemsInSection:0];
+        BOOL canInsertItems = collectionViewItemCount > 0 &&
+            collectionViewItemCount == previousItemCount &&
+            collectionViewItemCount + indexPaths.count == self.chatVC.channelDataRepository.count;
+        if (canInsertItems) {
+            [self.chatVC.messageCollectionView performBatchUpdates:^{
+                [self.chatVC.messageCollectionView insertItemsAtIndexPaths:indexPaths];
+            } completion:nil];
+        } else {
+            [self.chatVC.messageCollectionView reloadData];
+        }
     }
 }
     
@@ -810,7 +871,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 
 - (void)handleAfterLoadLastestMessage{
     [self.chatVC updateUnreadMsgCountLabel];
-    if (self.chatVC.unReadMessage > 0) {
+    if (self.chatVC.unReadMessage > 0 && [self.chatVC shouldMarkMessagesAsRead]) {
         NCBaseChannel *channel = self.chatVC.currentChannel;
         [channel clearUnreadCountWithCompletion:^(BOOL isCleared, NCError * _Nullable error) {
             (void)isCleared;
@@ -1039,7 +1100,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 }
 
 - (void)p_setNCMessageReadStats:(NCMessage *)message {
-    if (self.chatVC.isConversationAppear) {
+    if ([self.chatVC shouldMarkMessagesAsRead]) {
         if (message.clientId > 0 && message.receivedStatusInfo) {
             message.receivedStatusInfo.isRead = YES;
             [message setReceivedStatusInfo:message.receivedStatusInfo completion:nil];
@@ -1048,7 +1109,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 }
 
 - (void)p_receiveNCMessageAndUpdateReadStatus:(NCMessage *)message isPersisted:(BOOL)isPersisted {
-    if (self.chatVC.isConversationAppear && message.direction == NCMessageDirectionReceive &&
+    if ([self.chatVC shouldMarkMessagesAsRead] && message.direction == NCMessageDirectionReceive &&
         isPersisted) {
         [self.chatVC.util syncReadStatusWithDelay:YES];
     }
@@ -1411,12 +1472,13 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
             if (self.unreadMentionedMessages.count == 0) {
                 self.chatVC.unReadMentionedButton.hidden = YES;
             }else{
-                self.chatVC.unReadMentionedButton.hidden = NO;
-                NSString *unReadMentionedMessagesCount = [NSString stringWithFormat:@"%ld", (long)self.unreadMentionedMessages.count];
-                NSString *stringUnReadMentioned = [NSString stringWithFormat:NCUILocalizedString(@"have_mentioned_me_count"), unReadMentionedMessagesCount];
-                
-                self.chatVC.unReadMentionedLabel.text = stringUnReadMentioned;
-                [self.chatVC.util adaptUnreadButtonSize:self.chatVC.unReadMentionedLabel];
+                // TODO(qixinbing): Temporarily ignore the logic for @-mentions.
+//                self.chatVC.unReadMentionedButton.hidden = NO;
+//                NSString *unReadMentionedMessagesCount = [NSString stringWithFormat:@"%ld", (long)self.unreadMentionedMessages.count];
+//                NSString *stringUnReadMentioned = [NSString stringWithFormat:NCUILocalizedString(@"have_mentioned_me_count"), unReadMentionedMessagesCount];
+//                
+//                self.chatVC.unReadMentionedLabel.text = stringUnReadMentioned;
+//                [self.chatVC.util adaptUnreadButtonSize:self.chatVC.unReadMentionedLabel];
             }
         }else {
             self.chatVC.unReadMentionedButton.hidden = YES;

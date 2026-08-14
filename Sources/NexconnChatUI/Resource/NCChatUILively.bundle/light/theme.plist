@@ -12,6 +12,8 @@
 		<string>#020814</string>
 		<key>text_secondary_color</key>
 		<string>#7C838E</string>
+		<key>tip_background_color</key>
+		<string>#C9C9C9</string>
 		<key>common_background_color</key>
 		<string>#FFFFFF</string>
 		<key>auxiliary_background_1_color</key>

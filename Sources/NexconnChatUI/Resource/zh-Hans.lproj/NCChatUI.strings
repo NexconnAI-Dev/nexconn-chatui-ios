@@ -137,11 +137,15 @@
 "red_packet_message" = "[红包]";
 "combine_message_loading" = "聊天记录加载中...";
 "combine_message_load_failed" = "聊天记录加载失败";
+"combine_message_nesting_limit" = "无法继续打开更多层聊天记录";
 "chat_transcripts" = "聊天记录选择不能超过 100 条";
 "message_delete_for_all_alert"="消息已删除";
 "save_success" = "保存成功";
 "save_failed" = "保存失败";
 "recall_edit" = "重新编辑";
+"recalled_a_message" = " 撤回了一条消息";
+"you_recalled_a_message" = "你撤回了一条消息";
+"admin_recalled_a_message" = "管理员 撤回了一条消息";
 "reference"="引用";
 "can_not_recall" = "该消息超过撤回时间，不能被撤回。";
 "chat_files"="聊天文件";
@@ -282,6 +286,9 @@
 "only_group_owner_operation"="仅群主可操作";
 "group_owner_or_manager_operation"="群主或管理员可操作";
 "all_group_member_operation"="全员可操作";
+"group_member_info_edit_owner_or_admin_or_self"="群主、管理员或自己可修改";
+"group_member_info_edit_owner_or_self"="群主或自己可修改";
+"group_member_info_edit_self_only"="仅自己可修改";
 "invite_group_confirm"="群聊邀请确认";
 "group_transfer_vc_title"="转让该群";
 "group_transfer_alert"="确定选择 %@ 为新群主，你将放弃群主身份";

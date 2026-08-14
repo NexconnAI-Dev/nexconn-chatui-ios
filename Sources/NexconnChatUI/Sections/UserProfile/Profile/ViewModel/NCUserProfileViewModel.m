@@ -192,6 +192,9 @@ static NSString *NCProfileCurrentUserId(void) {
     NSArray<NSString *> *changedUserIds = notification.userInfo[NCChatUIUserOnlineStatusChangedUserIdsKey];
     for (NSString *userId in changedUserIds) {
         if ([userId isEqualToString:self.userId]) {
+            if (self.profileList.count == 0 || self.profileList.firstObject.count == 0) {
+                continue;
+            }
             NCProfileCellViewModel *headerVM = self.profileList[0][0];
             if ([headerVM isKindOfClass:NCUserProfileHeaderCellViewModel.class]) {
                 NCUserProfileHeaderCellViewModel *headerCellVM = (NCUserProfileHeaderCellViewModel *)headerVM;

@@ -8,6 +8,7 @@
 
 #import "NCForwardManager.h"
 #import "NCUserInfoCacheManager.h"
+#import "NCFileUtility.h"
 #import "NCMessageModel.h"
 #import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
@@ -17,6 +18,7 @@
 #import "NCChatUIUserInfo.h"
 
 static NSInteger const NCForwardCombineSummaryLimit = 4;
+static NSTimeInterval const NCForwardFetchMessageTimeout = 1.0;
 
 @interface NCForwardManager ()
 
@@ -50,17 +52,27 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
     dispatch_async(self.forwardQueue, ^{
         if (!messageList || conversationList.count <= 0 || !forwardConversationType) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                completedBlock(NO);
+                if (completedBlock) {
+                    completedBlock(NO);
+                }
             });
+            return;
         }
         if (isCombine) {
             [weakSelf sendCombienMessage:messageList
                       selectConversation:conversationList
                                isCombine:isCombine
-                 forwardConversationType:forwardConversationType];
-        } else {
-            [weakSelf sendMessageOneByone:messageList selectConversation:conversationList isCombine:isCombine];
+                 forwardConversationType:forwardConversationType
+                              completed:^(BOOL success) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (completedBlock) {
+                        completedBlock(success);
+                    }
+                });
+            }];
+            return;
         }
+        [weakSelf sendMessageOneByone:messageList selectConversation:conversationList isCombine:isCombine];
         dispatch_async(dispatch_get_main_queue(), ^{
             if (completedBlock) {
                 completedBlock(YES);
@@ -99,9 +111,13 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
 - (void)sendCombienMessage:(NSArray<NCMessageModel *> *)messageList
         selectConversation:(NSArray<NCBaseChannel *> *)conversationList
                  isCombine:(BOOL)isCombine
-   forwardConversationType:(NCChannelType)forwardConversationType {
+   forwardConversationType:(NCChannelType)forwardConversationType
+                  completed:(void (^)(BOOL success))completedBlock {
     (void)isCombine;
     if (messageList.count == 0) {
+        if (completedBlock) {
+            completedBlock(NO);
+        }
         return;
     }
     // Build the combined message.
@@ -111,22 +127,38 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
     for (int i = 0; i < messageList.count; i++) {
         NCMessageModel *messageModel = [messageList objectAtIndex:i];
         if (messageModel.clientId <= 0) {
-            continue;
+            if (completedBlock) {
+                completedBlock(NO);
+            }
+            return;
         }
         NCGetMessageByIdParams *messageParams =
             [[NCGetMessageByIdParams alloc] initWithMessageClientId:messageModel.clientId];
         __block NCMessage *message = nil;
+        __block NCError *fetchError = nil;
         dispatch_semaphore_t waitMessage = dispatch_semaphore_create(0);
         [NCBaseChannel getMessageByIdWithParams:messageParams
                                      completion:^(NCMessage * _Nullable ncMessage, NCError * _Nullable error) {
-            (void)error;
             message = ncMessage;
+            fetchError = error;
             dispatch_semaphore_signal(waitMessage);
         }];
-        dispatch_semaphore_wait(waitMessage, DISPATCH_TIME_FOREVER);
-        if (!message) {
-            continue;
+        // 底层异常不回调时不能永久占用合并转发串行队列，超时后报告失败。
+        dispatch_time_t timeout =
+            dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NCForwardFetchMessageTimeout * NSEC_PER_SEC));
+        if (dispatch_semaphore_wait(waitMessage, timeout) != 0) {
+            if (completedBlock) {
+                completedBlock(NO);
+            }
+            return;
         }
+        if (!message || fetchError) {
+            if (completedBlock) {
+                completedBlock(NO);
+            }
+            return;
+        }
+        [self cacheMediaLocalPathForMessageModel:messageModel];
         [messages addObject:message];
         NSString *senderName;
         // Build the sender name list.
@@ -152,15 +184,41 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
         }
     }
     if (messages.count == 0) {
+        if (completedBlock) {
+            completedBlock(NO);
+        }
         return;
     }
     NCCombineMessage *combineMessage = [[NCCombineMessage alloc] initWithSummaryList:summaryList
                                                                              nameList:nameList
                                                                           channelType:forwardConversationType
                                                                              messages:messages];
+    __block NSInteger pendingSendCount = conversationList.count;
+    __block BOOL sendSucceeded = YES;
     for (NCBaseChannel *conversation in conversationList) {
-        [self sendCombineV2Message:combineMessage toConversation:conversation];
+        [self sendCombineV2Message:combineMessage toConversation:conversation completed:^(BOOL success) {
+            if (!success) {
+                sendSucceeded = NO;
+            }
+            pendingSendCount -= 1;
+            if (pendingSendCount == 0 && completedBlock) {
+                completedBlock(sendSucceeded);
+            }
+        }];
     }
+}
+
+- (void)cacheMediaLocalPathForMessageModel:(NCMessageModel *)messageModel {
+    if (![messageModel.content isKindOfClass:[NCMediaMessageContent class]]) {
+        return;
+    }
+    NCMediaMessageContent *mediaContent = (NCMediaMessageContent *)messageModel.content;
+    if (mediaContent.remoteUrl.length == 0 ||
+        mediaContent.localPath.length == 0 ||
+        ![NCFileUtility isFileExist:mediaContent.localPath]) {
+        return;
+    }
+    [NCFileUtility setFileLocalPath:mediaContent.localPath forRemoteURL:mediaContent.remoteUrl];
 }
 
 - (NSString *)combineForwardSenderNameForMessageModel:(NCMessageModel *)messageModel
@@ -226,8 +284,13 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
     return summaryContent;
 }
 
-- (void)sendCombineV2Message:(NCCombineMessage *)content toConversation:(NCBaseChannel *)conversation {
+- (void)sendCombineV2Message:(NCCombineMessage *)content
+              toConversation:(NCBaseChannel *)conversation
+                  completed:(void (^)(BOOL success))completedBlock {
     if (!content || !conversation.channelId.length) {
+        if (completedBlock) {
+            completedBlock(NO);
+        }
         return;
     }
     NCChatUISendMediaMessageParams *params = [[NCChatUISendMediaMessageParams alloc] initWithContent:content];
@@ -239,9 +302,14 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
         (void)progressMessage;
     } completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
         (void)message;
-        (void)error;
+        if (completedBlock) {
+            completedBlock(error == nil);
+        }
     } cancel:^(NCMessage *cancelMessage) {
         (void)cancelMessage;
+        if (completedBlock) {
+            completedBlock(NO);
+        }
     }];
     [NSThread sleepForTimeInterval:0.4];
 }
@@ -263,7 +331,7 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
         params.channelType = type;
         params.channelId = safeTargetId;
         params.subChannelId = safeSubChannelId;
-        params.needReceipt = type == NCChannelTypeDirect || type == NCChannelTypeGroup;
+        params.needReceipt = [NCChatUIUtility shouldNeedReadReceiptForChannelType:type];
         [[NCChatUI shared] sendMediaMessageWithParams:params
                               progress:^(int progress, NCMessage *progressMessage) {
             (void)progress;
@@ -281,7 +349,7 @@ static NSInteger const NCForwardCombineSummaryLimit = 4;
         params.channelType = type;
         params.channelId = safeTargetId;
         params.subChannelId = safeSubChannelId;
-        params.needReceipt = type == NCChannelTypeDirect || type == NCChannelTypeGroup;
+        params.needReceipt = [NCChatUIUtility shouldNeedReadReceiptForChannelType:type];
         [[NCChatUI shared] sendMessageWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error){
             (void)message;
             (void)error;

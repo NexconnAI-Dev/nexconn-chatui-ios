@@ -70,6 +70,31 @@
     return fileKey.length > 0 ? [NSString stringWithFormat:@"Image_%@.gif", fileKey] : nil;
 }
 
++ (NSString *)downloadFileNameForMediaURLString:(NSString *)mediaUrl defaultExtension:(NSString *)defaultExtension {
+    NSString *fileName = @"";
+    NSURLComponents *components = [NSURLComponents componentsWithString:mediaUrl];
+    if (components.URL.lastPathComponent.length > 0) {
+        fileName = components.URL.lastPathComponent;
+    }
+
+    if (fileName.length == 0) {
+        NSString *pathWithoutQuery = [[mediaUrl componentsSeparatedByString:@"?"] firstObject] ?: @"";
+        fileName = pathWithoutQuery.lastPathComponent ?: @"";
+    }
+
+    NSString *decodedFileName = [fileName stringByRemovingPercentEncoding];
+    if (decodedFileName.length > 0) {
+        fileName = decodedFileName;
+    }
+
+    if (fileName.pathExtension.length == 0 && defaultExtension.length > 0) {
+        fileName = [fileName stringByAppendingPathExtension:defaultExtension];
+    }
+
+    NSString *safeFileName = [NCFileUtility recheckedFileName:fileName];
+    return safeFileName.length > 0 ? safeFileName : fileName;
+}
+
 #pragma mark - Private Methods
 
 + (CGFloat)caculateHeight:(CGFloat)height {

@@ -41,6 +41,9 @@
 - (NSIndexPath *)findDataIndexFromMessageList:(NCMessageModel *)model;
 // Calculates whether each message cell on the channel page needs to show time.
 - (void)figureOutAllConversationDataRepository;
+// Calculates timestamp display only for a newly changed message window and its next boundary.
+- (void)figureOutConversationDataRepositoryFromIndex:(NSInteger)startIndex
+                                             toIndex:(NSInteger)endIndex;
 // Calculates whether a specific message needs to show time in the message list.
 - (void)figureOutLatestModel:(NCMessageModel *)model;
 // Adapts the unread count button size.

@@ -13,10 +13,28 @@
 #import "NCChatUIErrorCode.h"
 #import "NCMessageModel+Edit.h"
 
+@interface NCChannelDataSource (EditLifecyclePrivate)
+@property (nonatomic, strong) NSMutableSet *referenceRefreshContexts;
+- (void)edit_cleanupAllReferenceRefreshContexts;
+@end
+
 @interface NCChannelDataSource ()
 
 @property (nonatomic, weak) NCChannelViewController *chatVC;
 
+@end
+
+@interface NCReferenceRefreshContext : NSObject
+
+@property (nonatomic, strong) NSArray<NCMessage *> *localMessages;
+@property (nonatomic, strong) NSArray<NCMessageResult *> *remoteResults;
+@property (nonatomic, copy) void (^completeBlock)(NSArray<NCMessage *> *);
+@property (nonatomic, assign) BOOL isWaitingForRemoteResults;
+@property (nonatomic, strong) dispatch_source_t timer;
+
+@end
+
+@implementation NCReferenceRefreshContext
 @end
 
 @implementation NCChannelDataSource (Edit)
@@ -57,16 +75,17 @@
         [[NCRefreshReferenceMessageParams alloc] initWithChannelIdentifier:channelIdentifier
                                                                 messageIds:referenceMessages];
     
-    // Start the local/remote result merge window.
-    [self edit_setupCombineCallbackWithMessages:messages complete:complete];
-    
+    NCReferenceRefreshContext *context =
+        [self edit_createReferenceRefreshContextWithMessages:messages complete:complete];
+    [self edit_addReferenceRefreshContext:context];
+
     [NCBaseChannel refreshReferenceMessageWithParams:params localMessageHandler:^(NSArray<NCMessageResult *> * _Nonnull results) {
-        [self edit_handleLocalResults:results];
+        [self edit_handleLocalResults:results context:context];
     } remoteMessageHandler:^(NSArray<NCMessageResult *> * _Nonnull results) {
-        [self edit_handleRemoteResults:results];
+        [self edit_handleRemoteResults:results context:context];
     } errorHandler:^(NCError * _Nullable error) {
         NCChatUIErrorCode code = error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeMessageResponseTimeout;
-        [self edit_handleError:code];
+        [self edit_handleError:code context:context];
     }];
 }
 
@@ -295,138 +314,121 @@
 
 #pragma mark - Local and Remote Result Merging
 
-/**
- * Starts the result merge window and timeout.
- * @param messages The original message list.
- * @param complete The completion callback.
- */
-- (void)edit_setupCombineCallbackWithMessages:(NSArray<NCMessage *> *)messages 
-                                complete:(void (^)(NSArray<NCMessage *> *))complete {
-    // Clear any previous merge state.
-    [self edit_cleanupCombineState];
-    
-    // Retain the original messages and completion callback.
-    self.pendingLocalMessages = messages;
-    self.pendingCompleteBlock = complete;
-    self.isWaitingForRemoteResults = YES;
-    
-    // Limit the merge window to 1000 ms.
+- (NCReferenceRefreshContext *)edit_createReferenceRefreshContextWithMessages:(NSArray<NCMessage *> *)messages
+                                                                       complete:(void (^)(NSArray<NCMessage *> *))complete {
+    NCReferenceRefreshContext *context = [NCReferenceRefreshContext new];
+    context.localMessages = messages;
+    context.completeBlock = complete;
+    context.isWaitingForRemoteResults = YES;
+
     __weak typeof(self) weakSelf = self;
-    dispatch_queue_t queue = dispatch_get_main_queue();
-    self.combineTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-    dispatch_source_set_timer(self.combineTimer, dispatch_time(DISPATCH_TIME_NOW, 1000 * NSEC_PER_MSEC), DISPATCH_TIME_FOREVER, 0);
-    dispatch_source_set_event_handler(self.combineTimer, ^{
-        [weakSelf edit_handleCombineTimeout];
+    __weak NCReferenceRefreshContext *weakContext = context;
+    context.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    dispatch_source_set_timer(context.timer, dispatch_time(DISPATCH_TIME_NOW, 1000 * NSEC_PER_MSEC), DISPATCH_TIME_FOREVER, 0);
+    dispatch_source_set_event_handler(context.timer, ^{
+        [weakSelf edit_handleCombineTimeoutForContext:weakContext];
     });
-    dispatch_resume(self.combineTimer);
+    dispatch_resume(context.timer);
+    return context;
 }
 
-/**
- * Applies local query results while the merge window is active.
- * @param results The locally queried messages.
- */
-- (void)edit_handleLocalResults:(NSArray<NCMessageResult *> *)results {
-    if (!self.isWaitingForRemoteResults) {
+- (void)edit_handleLocalResults:(NSArray<NCMessageResult *> *)results
+                         context:(NCReferenceRefreshContext *)context {
+    if (!context.isWaitingForRemoteResults) {
         return;
     }
-    
-    // Replace message content when local results are available.
+
     if (results.count > 0) {
-        NSArray *updatedMessages = [self edit_replaceMessages:self.pendingLocalMessages withResults:results];
-        self.pendingLocalMessages = updatedMessages;
+        context.localMessages = [self edit_replaceMessages:context.localMessages withResults:results];
     }
-    
-    // Continue waiting for remote results or the timeout.
 }
 
-/**
- * Applies remote query results.
- * @param results The remotely queried messages.
- */
-- (void)edit_handleRemoteResults:(NSArray<NCMessageResult *> *)results {
-    if (!self.isWaitingForRemoteResults) {
-        // Refresh remote reference results independently after the merge window closes.
+- (void)edit_handleRemoteResults:(NSArray<NCMessageResult *> *)results
+                          context:(NCReferenceRefreshContext *)context {
+    if (!context.isWaitingForRemoteResults) {
         [self edit_handleRemoteReferenceMessageResults:results];
         return;
     }
-    
-    // Merge remote results that arrive within the active window.
-    self.pendingRemoteResults = results;
-    [self edit_executeCombinedCallback];
+
+    context.remoteResults = results;
+    [self edit_executeCombinedCallbackForContext:context];
 }
 
-/**
- * Completes the merge when the timeout expires.
- */
-- (void)edit_handleCombineTimeout {
-    if (!self.isWaitingForRemoteResults) {
+- (void)edit_handleCombineTimeoutForContext:(NCReferenceRefreshContext *)context {
+    if (!context.isWaitingForRemoteResults) {
         return;
     }
-    
-    // Return local results now; later remote results are handled independently.
-    [self edit_executeCombinedCallback];
+
+    [self edit_executeCombinedCallbackForContext:context];
 }
 
-/**
- * Handles a query failure.
- * @param code The query error code.
- */
-- (void)edit_handleError:(NCChatUIErrorCode)code {
-    void (^completeBlock)(NSArray<NCMessage *> *) = self.pendingCompleteBlock;
-    NSArray<NCMessage *> *originalMessages = self.pendingLocalMessages;
+- (void)edit_handleError:(NCChatUIErrorCode)code context:(NCReferenceRefreshContext *)context {
+    void (^completeBlock)(NSArray<NCMessage *> *) = context.completeBlock;
+    NSArray<NCMessage *> *originalMessages = context.localMessages;
     (void)code;
-    
-    [self edit_cleanupCombineState];
-    
+
+    [self edit_cleanupReferenceRefreshContext:context];
+
     if (completeBlock) {
-        // Preserve the original messages when the query fails.
         completeBlock(originalMessages);
     }
 }
 
-/**
- * Completes the active result merge.
- */
-- (void)edit_executeCombinedCallback {
-    if (!self.isWaitingForRemoteResults) {
+- (void)edit_executeCombinedCallbackForContext:(NCReferenceRefreshContext *)context {
+    if (!context.isWaitingForRemoteResults) {
         return;
     }
-    
-    // Snapshot the current merge state.
-    NSArray<NCMessage *> *localMessages = self.pendingLocalMessages;
-    NSArray<NCMessageResult *> *remoteResults = self.pendingRemoteResults;
-    void (^completeBlock)(NSArray<NCMessage *> *) = self.pendingCompleteBlock;
-    
-    // Clear state before invoking the callback to prevent duplicate completion.
-    [self edit_cleanupCombineState];
-    
+
+    NSArray<NCMessage *> *localMessages = context.localMessages;
+    NSArray<NCMessageResult *> *remoteResults = context.remoteResults;
+    void (^completeBlock)(NSArray<NCMessage *> *) = context.completeBlock;
+
+    [self edit_cleanupReferenceRefreshContext:context];
+
     if (completeBlock) {
-        // Apply any remote replacements to the local message snapshot.
         NSArray *finalMessages = localMessages;
         if (remoteResults.count > 0) {
             finalMessages = [self edit_replaceMessages:finalMessages withResults:remoteResults];
         }
-        // Return the merged message list.
         completeBlock(finalMessages);
     }
 }
 
-/**
- * Clears the result merge state.
- */
-- (void)edit_cleanupCombineState {
-    self.isWaitingForRemoteResults = NO;
-    
-    // Cancel and release the timeout source.
-    if (self.combineTimer) {
-        dispatch_source_cancel(self.combineTimer);
-        self.combineTimer = nil;
+- (void)edit_addReferenceRefreshContext:(NCReferenceRefreshContext *)context {
+    @synchronized (self) {
+        [self.referenceRefreshContexts addObject:context];
     }
-    
-    // Release cached merge data.
-    self.pendingRemoteResults = nil;
-    self.pendingLocalMessages = nil;
-    self.pendingCompleteBlock = nil;
+}
+
+- (void)edit_removeReferenceRefreshContext:(NCReferenceRefreshContext *)context {
+    @synchronized (self) {
+        [self.referenceRefreshContexts removeObject:context];
+    }
+}
+
+- (void)edit_cleanupAllReferenceRefreshContexts {
+    NSArray<NCReferenceRefreshContext *> *contexts;
+    @synchronized (self) {
+        contexts = self.referenceRefreshContexts.allObjects;
+        [self.referenceRefreshContexts removeAllObjects];
+    }
+    for (NCReferenceRefreshContext *context in contexts) {
+        [self edit_cleanupReferenceRefreshContext:context];
+    }
+}
+
+- (void)edit_cleanupReferenceRefreshContext:(NCReferenceRefreshContext *)context {
+    [self edit_removeReferenceRefreshContext:context];
+    context.isWaitingForRemoteResults = NO;
+
+    if (context.timer) {
+        dispatch_source_cancel(context.timer);
+        context.timer = nil;
+    }
+
+    context.remoteResults = nil;
+    context.localMessages = nil;
+    context.completeBlock = nil;
 }
 
 #pragma mark - Private Methods

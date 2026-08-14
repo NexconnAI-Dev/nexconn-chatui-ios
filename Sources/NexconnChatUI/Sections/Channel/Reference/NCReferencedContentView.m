@@ -123,20 +123,20 @@
     }
     
     if(self.referModel.messageDirection == NCMessageDirectionSend){
-        self.leftLimitLine.backgroundColor = NCDynamicColor(@"text_primary_color");
-        self.nameLabel.textColor =  NCDynamicColor(@"text_primary_color");
+        self.leftLimitLine.backgroundColor = NCDynamicColor(@"text_secondary_color");
+        self.nameLabel.textColor =  NCDynamicColor(@"text_secondary_color");
         if ([self.referedContent isKindOfClass:[NCFileMessage class]]) {
             self.textLabel.textColor = NCDynamicColor(@"primary_color");
         }else{
-            self.textLabel.textColor = NCDynamicColor(@"text_primary_color");
+            self.textLabel.textColor = NCDynamicColor(@"text_secondary_color");
         }
     }else{
-        self.nameLabel.textColor = NCDynamicColor(@"text_primary_color");
-        self.leftLimitLine.backgroundColor = NCDynamicColor(@"text_primary_color");
+        self.nameLabel.textColor = NCDynamicColor(@"text_secondary_color");
+        self.leftLimitLine.backgroundColor = NCDynamicColor(@"text_secondary_color");
         if ([self.referedContent isKindOfClass:[NCFileMessage class]]) {
             self.textLabel.textColor = NCDynamicColor(@"primary_color");
         }else{
-            self.textLabel.textColor = NCDynamicColor(@"text_primary_color");
+            self.textLabel.textColor = NCDynamicColor(@"text_secondary_color");
         }
     }
     
@@ -145,29 +145,17 @@
         && self.textLabel.text.length > 0
         && self.referMsgStatus == NCReferenceMessageStatusUpdated) {
         NSString *originalText = self.textLabel.text;
-        UIColor *originalColor = NCDynamicColor(@"text_primary_color");
-        UIColor *editedTextColor = [NCMessageEditUtil editedTextColor];
+        UIColor *originalColor = NCDynamicColor(@"text_secondary_color");
         UIFont *font = [[NCChatUIConfig defaultConfig].font fontOfFourthLevel];
         NSString *displayText = [NCMessageEditUtil displayTextForOriginalText:originalText isEdited:YES];
-        
+
         if (displayText.length > originalText.length) {
-            if (originalColor) {
-                originalColor = NCDYCOLOR(0xa0a5ab, 0x999999);
-            }
             NSMutableAttributedString *attributedText = [[NSMutableAttributedString alloc] initWithString:displayText
                                                                                                attributes:@{
                 NSFontAttributeName: font,
                 NSForegroundColorAttributeName: originalColor
             }];
-            
-            NSRange originalRange = NSMakeRange(0, originalText.length);
-            NSRange editedRange = NSMakeRange(originalText.length, displayText.length - originalText.length);
-            if (editedTextColor) {
-                [attributedText addAttribute:NSForegroundColorAttributeName
-                                           value:editedTextColor
-                                           range:editedRange];
-            }
-           
+
             self.textLabel.attributedText = attributedText;
         }
     }
@@ -267,7 +255,7 @@
         } else {
             _leftLimitLine = [[UIView alloc] initWithFrame:CGRectMake(0, 2, leftLine_width, 13)];
         }
-        _leftLimitLine.backgroundColor = NCDynamicColor(@"text_primary_color");
+        _leftLimitLine.backgroundColor = NCDynamicColor(@"text_secondary_color");
     }
     return _leftLimitLine;
 }

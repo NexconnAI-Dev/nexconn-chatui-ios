@@ -16,6 +16,25 @@
 #import "NCGroupMemberAdditionalCellViewModel.h"
 #import "NCChatUI.h"
 
+static BOOL NCGroupFollowsOperationInvalidatesCurrentUser(NCGroupOperationEvent *event) {
+    if (event.operation == NCGroupOperationDismiss) {
+        return YES;
+    }
+    if (event.operation != NCGroupOperationKick && event.operation != NCGroupOperationQuit) {
+        return NO;
+    }
+    NSString *currentUserId = [NCEngine getCurrentUserId] ?: @"";
+    if (currentUserId.length == 0) {
+        return NO;
+    }
+    for (NCGroupMemberInfo *memberInfo in event.memberInfos) {
+        if ([memberInfo.userId isEqualToString:currentUserId]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 @interface NCGroupFollowsViewModel ()<NCGroupFollowCellViewModelDelegate, NCGroupChannelHandler>
 @property (nonatomic, copy) NSString *groupId;
 @property (nonatomic, strong) NSMutableArray <NCBaseCellViewModel *>*mutableFollowList;
@@ -84,6 +103,23 @@
 - (void)onGroupFavoritesChangedSync:(NCGroupFavoritesChangedSyncEvent *)event {
     if ([event.groupId isEqualToString:self.groupId]) {
         [self fetchGroupFollows];
+    }
+}
+
+- (void)onGroupOperation:(NCGroupOperationEvent *)event {
+    if (![event.groupId isEqualToString:self.groupId] ||
+        !NCGroupFollowsOperationInvalidatesCurrentUser(event)) {
+        return;
+    }
+    void (^leaveBlock)(void) = ^{
+        UIViewController *viewController = [self.responder currentViewController];
+        [viewController.navigationController popViewControllerAnimated:YES];
+        [NCAlertView showAlertController:nil message:NCUILocalizedString(@"not_in_group") hiddenAfterDelay:1];
+    };
+    if ([NSThread isMainThread]) {
+        leaveBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), leaveBlock);
     }
 }
 

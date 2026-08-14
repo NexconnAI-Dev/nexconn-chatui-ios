@@ -71,7 +71,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (@available(iOS 11.0, *)) {
-        if ([NCChatUIUtility getKeyWindow].safeAreaInsets.bottom > 0) {
+        if ([NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].bottom > 0) {
             _isNotchScreen = YES;
         }
     }
@@ -115,7 +115,7 @@
     [super viewWillDisappear:animated];
     self.navigationController.navigationBarHidden = NO;
     _statusBarHidden = NO;
-    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    [self setNeedsStatusBarAppearanceUpdate];
     if (self.currentIndex < self.messageModelArray.count) {
         self.previousMessageId = self.messageModelArray[self.currentIndex].messageModel.clientId;
     }
@@ -216,8 +216,8 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                           count:(NSInteger)count
                           times:(int)times
                      completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    // Page toward newer sight messages by querying after the anchor in ascending order.
-    [self querySightMessagesWithAnchorModel:model count:count isAscending:YES completion:^(NSArray<NCMessage *> *messages) {
+    // 向后（更新）翻页：Legacy isForward=NO 查询 anchor 之后的小视频。
+    [self querySightMessagesWithAnchorModel:model count:count isAscending:NO completion:^(NSArray<NCMessage *> *messages) {
         NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
         if (times < 2 && messageModels.count == 0 && messages.count == count && messages.lastObject) {
             NCMessageModel *nextModel = [NCMessageModel modelWithNCMessage:messages.lastObject];
@@ -236,8 +236,8 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                            count:(NSInteger)count
                            times:(int)times
                       completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    // Page toward older sight messages by querying before the anchor in descending order.
-    [self querySightMessagesWithAnchorModel:model count:count isAscending:NO completion:^(NSArray<NCMessage *> *messages) {
+    // 向前（更旧）翻页：Legacy isForward=YES 查询 anchor 之前的小视频。
+    [self querySightMessagesWithAnchorModel:model count:count isAscending:YES completion:^(NSArray<NCMessage *> *messages) {
         NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
         if (times < 2 && messages.count == count && messageModels.count == 0 && messages.lastObject) {
             NCMessageModel *nextModel = [NCMessageModel modelWithNCMessage:messages.lastObject];
@@ -276,9 +276,14 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                     return;
                 }
                 NSMutableArray<NCMessageModel *> *modelsArray = [[NSMutableArray alloc] init];
-                [strongSelf appendModels:frontMessagesArray toArray:modelsArray];
+                // 横向预览按从新到旧排列：向前滑动时进入上一条旧小视频。
+                NSArray<NCMessageModel *> *backMessagesForDisplay =
+                    backMessageArray.reverseObjectEnumerator.allObjects;
+                [strongSelf appendModels:backMessagesForDisplay toArray:modelsArray];
                 [strongSelf appendModels:@[ model ] toArray:modelsArray];
-                [strongSelf appendModels:backMessageArray toArray:modelsArray];
+                NSArray<NCMessageModel *> *frontMessagesForDisplay =
+                    frontMessagesArray.reverseObjectEnumerator.allObjects;
+                [strongSelf appendModels:frontMessagesForDisplay toArray:modelsArray];
                 if (modelsArray.count == 0) {
                     [modelsArray addObject:model];
                 }
@@ -320,7 +325,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     return array;
 }
 
-// Compare message identity by clientId first, then messageId.
+// 判断两条消息是否为同一条（clientId 优先，其次 messageId）。
 - (BOOL)isSameModel:(NCMessageModel *)a asModel:(NCMessageModel *)b {
     if (!a || !b) {
         return NO;
@@ -335,7 +340,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     return NO;
 }
 
-// The underlying by_time query may return the anchor or same-millisecond duplicates, so deduplicate by message identity.
+// 底层 by_time 查询可能返回锚点或同毫秒重复消息，拼装列表时按消息身份去重。
 - (void)appendModels:(NSArray<NCMessageModel *> *)models toArray:(NSMutableArray<NCMessageModel *> *)target {
     for (NCMessageModel *model in models) {
         BOOL exists = NO;
@@ -351,7 +356,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     }
 }
 
-// Return only sight messages not already present in the current list.
+// 过滤当前列表已存在的小视频，只返回真正新增的消息。
 - (NSArray<NCMessageModel *> *)modelsExcludingExisting:(NSArray<NCMessageModel *> *)models {
     NSMutableArray<NCMessageModel *> *result = [NSMutableArray array];
     for (NCMessageModel *model in models) {
@@ -461,7 +466,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         }
         self.isLoadingBack = YES;
         __weak typeof(self) weakSelf = self;
-        [self getBackMessagesForModel:anchorModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
+        [self getFrontMessagesForModel:anchorModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 __strong typeof(weakSelf) strongSelf = weakSelf;
                 if (!strongSelf) {
@@ -474,6 +479,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                     strongSelf.previousContentOffsetX = strongSelf.currentIndex * strongSelf.view.bounds.size.width;
                     return;
                 }
+                newModels = newModels.reverseObjectEnumerator.allObjects;
                 NSMutableArray<NSIndexPath *> *indexPathes = [NSMutableArray new];
                 NSInteger lastIndex = strongSelf.messageModelArray.count;
                 for (NSInteger i = 0; i < newModels.count; i++) {
@@ -482,7 +488,6 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                 }
                 [strongSelf.messageModelArray addObjectsFromArray:[strongSelf getSightModels:newModels]];
                 [strongSelf.collectionView insertItemsAtIndexPaths:[indexPathes copy]];
-                [strongSelf.collectionView reloadItemsAtIndexPaths:[indexPathes copy]];
                 [strongSelf.collectionView
                     scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:strongSelf.currentIndex inSection:0]
                            atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
@@ -500,7 +505,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         }
         self.isLoadingFront = YES;
         __weak typeof(self) weakSelf = self;
-        [self getFrontMessagesForModel:anchorModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
+        [self getBackMessagesForModel:anchorModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 __strong typeof(weakSelf) strongSelf = weakSelf;
                 if (!strongSelf) {
@@ -513,6 +518,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                     strongSelf.previousContentOffsetX = strongSelf.currentIndex * strongSelf.view.bounds.size.width;
                     return;
                 }
+                newModels = newModels.reverseObjectEnumerator.allObjects;
                 NSMutableArray<NSIndexPath *> *indexPathes = [NSMutableArray new];
                 for (NSInteger i = 0; i < newModels.count; i++) {
                     NSIndexPath *indexpath = [NSIndexPath indexPathForRow:i inSection:0];
@@ -662,10 +668,11 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
 }
 
 - (void)updateRightTopButtonFrame{
+    CGFloat safeAreaTop = [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].top;
     if ([NCChatUIUtility isRTL]) {
-        self.rightTopButton.frame = CGRectMake(8, [NCChatUIUtility getWindowSafeAreaInsets].top+30, 44, 44);
+        self.rightTopButton.frame = CGRectMake(8, safeAreaTop + 30, 44, 44);
     } else {
-        self.rightTopButton.frame = CGRectMake(self.view.frame.size.width - 44 - 8, [NCChatUIUtility getWindowSafeAreaInsets].top+30, 44, 44);
+        self.rightTopButton.frame = CGRectMake(self.view.frame.size.width - 44 - 8, safeAreaTop + 30, 44, 44);
     }
 }
 
@@ -788,6 +795,5 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                      animations:^{
                          [self setNeedsStatusBarAppearanceUpdate];
                      }];
-    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
 }
 @end

@@ -39,14 +39,6 @@
 
 @property (nonatomic, assign, readonly) BOOL isMentionedEnabled;
 
-// Properties used to combine local and remote callbacks.
-@property (nonatomic, strong) NSArray<NCMessageResult *> *pendingRemoteResults;
-@property (nonatomic, strong) NSArray<NCMessage *> *pendingLocalMessages;
-@property (nonatomic, copy) void (^pendingCompleteBlock)(NSArray<NCMessage *> *);
-@property (nonatomic, assign) BOOL isWaitingForRemoteResults;
-@property (nonatomic, strong) dispatch_source_t combineTimer;
-
-
 // Loads the initial messages when entering the channel page.
 - (void)getInitialMessage:(NCBaseChannel *)channel;
 

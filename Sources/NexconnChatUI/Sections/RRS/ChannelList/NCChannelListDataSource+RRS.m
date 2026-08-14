@@ -41,10 +41,58 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
     return info;
 }
 
+static NSString *NCReadReceiptKey(NCChannelType channelType,
+                                  NSString *channelId,
+                                  NSString *subChannelId,
+                                  NSString *messageId) {
+    if (channelId.length == 0 || messageId.length == 0) {
+        return nil;
+    }
+    return [NSString stringWithFormat:@"%ld%@%@%@%@%@%@",
+                                      (long)channelType,
+                                      @"\x1F",
+                                      channelId ?: @"",
+                                      @"\x1F",
+                                      subChannelId ?: @"",
+                                      @"\x1F",
+                                      messageId ?: @""];
+}
+
+static NSString *NCReadReceiptKeyForInfo(NCMessageReadReceiptInfo *info) {
+    if (!info.channelIdentifier) {
+        return nil;
+    }
+    return NCReadReceiptKey(info.channelIdentifier.channelType,
+                            info.channelIdentifier.channelId,
+                            NCSubChannelIdFromChannelIdentifier(info.channelIdentifier),
+                            info.messageId);
+}
+
+static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
+    if (!model) {
+        return nil;
+    }
+    return NCReadReceiptKey(model.channelType,
+                            model.channelId,
+                            model.subChannelId ?: @"",
+                            model.latestMessageId);
+}
+
+@interface NCChannelListDataSource (RRSPrivate)
+- (void)rrs_applyReadReceiptInfoList:(NSArray<NCMessageReadReceiptInfo *> *)infoList
+                       conversations:(NSArray<NCChannelModel *> *)conversations
+                  skipsZeroReadCount:(BOOL)skipsZeroReadCount
+                  requiresNeedReceipt:(BOOL)requiresNeedReceipt
+            updatesOnlyZeroReadCount:(BOOL)updatesOnlyZeroReadCount;
+- (void)rrs_reloadReadReceiptAffectedIndexPaths:(NSArray<NSIndexPath *> *)indexPaths
+                                         models:(NSArray<NCChannelModel *> *)models;
+@end
+
 @implementation NCChannelListDataSource (RRS)
 
 - (void)rrs_didReceiveMessageReadReceiptResponses:(NSArray<NCMessageReadReceiptResponse *> *)responses {
     [NCRRSDataContext refreshCacheWithResponse:responses];
+    NSMutableArray<NCMessageReadReceiptInfo *> *infoList = [NSMutableArray array];
     for (NCMessageReadReceiptResponse *res in responses) {
         if (res.channelIdentifier.channelType != NCChannelTypeDirect) {
             continue;
@@ -56,37 +104,15 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
             continue;
         }
         NCMessageReadReceiptInfo *info = NCReadReceiptInfoFromResponse(res);
-        NCChannelType channelType = res.channelIdentifier.channelType;
-        NSString *channelId = res.channelIdentifier.channelId ?: @"";
-        NSString *subChannelId = NCSubChannelIdFromChannelIdentifier(res.channelIdentifier);
-        for (NCChannelModel *model in self.dataList) {
-            if ([model isMatchingChannelType:channelType
-                                   channelId:channelId]) {
-                NSString *leftSubChannelId = model.subChannelId ?: @"";
-                NSString *rightSubChannelId = subChannelId;
-                if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
-                    continue;
-                }
-                if ([model lastMessageIsSend]
-                    && model.needReceipt
-                    && model.readReceiptInfo.readCount == 0) {
-                    if (!info) {
-                        continue;
-                    }
-                    model.readReceiptInfo = info;
-                    
-                    NCChannelListCellUpdateInfo *updateInfo =
-                    [[NCChannelListCellUpdateInfo alloc] init];
-                    updateInfo.model = model;
-                    updateInfo.updateType = NCChannelListCellSentStatusUpdate;
-                    [[NSNotificationCenter defaultCenter]
-                     postNotificationName:NCChatUIChannelListCellUpdateNotification
-                     object:updateInfo
-                     userInfo:nil];
-                }
-            }
+        if (info) {
+            [infoList addObject:info];
         }
     }
+    [self rrs_applyReadReceiptInfoList:infoList
+                         conversations:nil
+                    skipsZeroReadCount:NO
+                    requiresNeedReceipt:YES
+              updatesOnlyZeroReadCount:YES];
 }
 
 - (void)rrs_refreshCachedAndFetchReceiptInfo:(NSArray <NCChannelModel *>*)conversations {
@@ -169,58 +195,97 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
 
 - (void)rrs_postReadReceiptNotification:(NSArray<NCMessageReadReceiptInfo *> *)infoList
                           conversations:(NSArray<NCChannelModel *>* )conversations {
-    for (NCMessageReadReceiptInfo *res in infoList) {
-        if (res.readCount == 0) {// Ignore responses with no readers.
+    [self rrs_applyReadReceiptInfoList:infoList
+                         conversations:conversations
+                    skipsZeroReadCount:YES
+                    requiresNeedReceipt:NO
+              updatesOnlyZeroReadCount:NO];
+}
+
+- (void)rrs_applyReadReceiptInfoList:(NSArray<NCMessageReadReceiptInfo *> *)infoList
+                       conversations:(NSArray<NCChannelModel *> *)conversations
+                  skipsZeroReadCount:(BOOL)skipsZeroReadCount
+                  requiresNeedReceipt:(BOOL)requiresNeedReceipt
+            updatesOnlyZeroReadCount:(BOOL)updatesOnlyZeroReadCount {
+    if (infoList.count == 0) {
+        return;
+    }
+    NSMutableDictionary<NSString *, NCMessageReadReceiptInfo *> *receiptInfoByKey = [NSMutableDictionary dictionary];
+    for (NCMessageReadReceiptInfo *info in infoList) {
+        if (skipsZeroReadCount && info.readCount == 0) {// 已读为0 , 不处理
             continue;
         }
-        NCChannelType channelType = res.channelIdentifier.channelType;
-        NSString *channelId = res.channelIdentifier.channelId ?: @"";
-        NSString *subChannelId = NCSubChannelIdFromChannelIdentifier(res.channelIdentifier);
-        for (NCChannelModel *model in conversations) {// Update requested channels first.
-            if ([model isMatchingChannelType:channelType
-                                   channelId:channelId]) {
-                NSString *leftSubChannelId = model.subChannelId ?: @"";
-                NSString *rightSubChannelId = subChannelId;
-                if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
-                    continue;
-                }
-                if ([model lastMessageIsSend]) {
-                    model.readReceiptInfo = res;
-                }
-            }
+        NSString *key = NCReadReceiptKeyForInfo(info);
+        if (key.length > 0) {
+            receiptInfoByKey[key] = info;
         }
-        for (NCChannelModel *model in self.dataList) {
-            if ([conversations containsObject:model]) {// Requested channels can notify immediately.
-                NCChannelListCellUpdateInfo *updateInfo =
-                [[NCChannelListCellUpdateInfo alloc] init];
-                updateInfo.model = model;
-                updateInfo.updateType = NCChannelListCellSentStatusUpdate;
-                [[NSNotificationCenter defaultCenter]
-                 postNotificationName:NCChatUIChannelListCellUpdateNotification
-                 object:updateInfo
-                 userInfo:nil];
-                continue;
-            }
-            if ([model isMatchingChannelType:channelType
-                                   channelId:channelId]) {// Handle matching channels outside the request list.
-                NSString *leftSubChannelId = model.subChannelId ?: @"";
-                NSString *rightSubChannelId = subChannelId;
-                if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
-                    continue;
-                }
-                if ([model lastMessageIsSend]) {
-                    model.readReceiptInfo = res;
-                    NCChannelListCellUpdateInfo *updateInfo =
-                    [[NCChannelListCellUpdateInfo alloc] init];
-                    updateInfo.model = model;
-                    updateInfo.updateType = NCChannelListCellSentStatusUpdate;
-                    [[NSNotificationCenter defaultCenter]
-                     postNotificationName:NCChatUIChannelListCellUpdateNotification
-                     object:updateInfo
-                     userInfo:nil];
-                }
-            }
+    }
+    if (receiptInfoByKey.count == 0) {
+        return;
+    }
+
+    for (NCChannelModel *model in conversations) {// 先刷请求数据
+        NSString *key = NCReadReceiptKeyForModel(model);
+        NCMessageReadReceiptInfo *info = key.length > 0 ? receiptInfoByKey[key] : nil;
+        if (info && [model lastMessageIsSend]) {
+            model.readReceiptInfo = info;
         }
+    }
+
+    NSMutableArray<NSIndexPath *> *affectedIndexPaths = [NSMutableArray array];
+    NSMutableArray<NCChannelModel *> *affectedModels = [NSMutableArray array];
+    NSMutableSet<NSString *> *affectedRows = [NSMutableSet set];
+    [self.dataList enumerateObjectsUsingBlock:^(NCChannelModel *model, NSUInteger idx, BOOL *stop) {
+        (void)stop;
+        NSString *key = NCReadReceiptKeyForModel(model);
+        NCMessageReadReceiptInfo *info = key.length > 0 ? receiptInfoByKey[key] : nil;
+        if (!info || ![model lastMessageIsSend]) {
+            return;
+        }
+        if (requiresNeedReceipt && !model.needReceipt) {
+            return;
+        }
+        if (updatesOnlyZeroReadCount && model.readReceiptInfo.readCount != 0) {
+            return;
+        }
+        model.readReceiptInfo = info;
+        NSString *rowKey = [NSString stringWithFormat:@"%lu", (unsigned long)idx];
+        if ([affectedRows containsObject:rowKey]) {
+            return;
+        }
+        [affectedRows addObject:rowKey];
+        [affectedIndexPaths addObject:[NSIndexPath indexPathForRow:(NSInteger)idx inSection:0]];
+        [affectedModels addObject:model];
+    }];
+
+    [self rrs_reloadReadReceiptAffectedIndexPaths:affectedIndexPaths models:affectedModels];
+}
+
+- (void)rrs_reloadReadReceiptAffectedIndexPaths:(NSArray<NSIndexPath *> *)indexPaths
+                                         models:(NSArray<NCChannelModel *> *)models {
+    if (indexPaths.count == 0) {
+        return;
+    }
+    // 回执处理可能运行在后台线程（updateEventQueue 或读回执请求回调），
+    // 而 delegate 会直接刷新 UITableView，必须切回主线程执行，避免后台线程操作 UIKit 崩溃。
+    if (![NSThread isMainThread]) {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf rrs_reloadReadReceiptAffectedIndexPaths:indexPaths models:models];
+        });
+        return;
+    }
+    if ([self.delegate respondsToSelector:@selector(dataSource:willReloadAtIndexPaths:)]) {
+        [self.delegate dataSource:self willReloadAtIndexPaths:indexPaths];
+        return;
+    }
+    for (NCChannelModel *model in models) {
+        NCChannelListCellUpdateInfo *updateInfo = [[NCChannelListCellUpdateInfo alloc] init];
+        updateInfo.model = model;
+        updateInfo.updateType = NCChannelListCellSentStatusUpdate;
+        [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIChannelListCellUpdateNotification
+                                                            object:updateInfo
+                                                          userInfo:nil];
     }
 }
 

@@ -44,6 +44,12 @@
 @property (copy, nonatomic, nullable) NSString *preferredDownloadFileName;
 
 @property (assign, nonatomic) BOOL isAddStatusObserver;
+
+@property (nonatomic, strong) NSURLSession *session;
+
+@property (nonatomic, copy) NSString *localPath;
+@property (nonatomic, strong) UIImage *thumbnailImage;
+@property (assign, nonatomic) BOOL downloadSucceeded;
 @end
 
 @implementation NCSightPlayerController
@@ -121,14 +127,15 @@
 }
 
 - (nullable UIImage *)firstFrameImage {
-    if (![[NSFileManager defaultManager] fileExistsAtPath:self.sightURL.path]) {
-        return nil;
+    NSString *videoPath = self.sightURL.path;
+    if (videoPath.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:videoPath]) {
+        return [self fallbackSightThumbnailImage];
     }
 
-    NSString *imagePath = [[self.sightURL.path stringByDeletingPathExtension] stringByAppendingString:@".png"];
+    NSString *imagePath = [[videoPath stringByDeletingPathExtension] stringByAppendingString:@".png"];
     NSRange range = [imagePath rangeOfString:NSTemporaryDirectory()];
     if ([[NSFileManager defaultManager] fileExistsAtPath:imagePath] && range.location == NSNotFound) {
-        return [UIImage imageWithContentsOfFile:imagePath];
+        return [UIImage imageWithContentsOfFile:imagePath] ?: [self fallbackSightThumbnailImage];
     }
 
     // AVAsset* assert = [AVAsset assetWithURL:self.assetURL];
@@ -142,20 +149,29 @@
     CMTime actualTime;
 
     CGImageRef image = [generator copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    if (error || image == NULL) {
+        if (image != NULL) {
+            CGImageRelease(image);
+        }
+        return [self fallbackSightThumbnailImage];
+    }
 
     UIImage *shotImage = [[UIImage alloc] initWithCGImage:image];
-    if (range.location == NSNotFound) {
+    if (shotImage && range.location == NSNotFound) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             NSData *imageData = UIImagePNGRepresentation(shotImage);
-            [imageData writeToFile:imagePath atomically:YES];
+            if (imageData) {
+                [imageData writeToFile:imagePath atomically:YES];
+            }
         });
     }
 
     CGImageRelease(image);
-    return shotImage;
+    return shotImage ?: [self fallbackSightThumbnailImage];
 }
 
 - (void)setFirstFrameThumbnail:(nullable UIImage *)image {
+    self.thumbnailImage = image;
     [self.transport setThumbnailImage:image];
 }
 
@@ -186,6 +202,10 @@
 }
 
 #pragma mark - helper
+- (UIImage *)fallbackSightThumbnailImage {
+    return self.thumbnailImage ?: NCDynamicImage(@"channel_msg_cell_sight_icon_img");
+}
+
 - (void)showDowndLoadFailedControl {
     dispatch_async(dispatch_get_main_queue(), ^{
         //[self.transport stopIndicatorViewAnimating];
@@ -479,6 +499,7 @@
 
         [self.view addSubview:self.progressView];
         [self.progressView startIndeterminateAnimation];
+        self.downloadSucceeded = NO;
         __weak typeof(self) weakSelf = self;
         [NCBaseChannel downloadMediaUrl:remoteURL
                                fileName:fileName

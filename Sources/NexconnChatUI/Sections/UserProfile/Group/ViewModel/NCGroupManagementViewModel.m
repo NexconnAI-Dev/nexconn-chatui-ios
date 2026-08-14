@@ -18,6 +18,26 @@
 #import "NCGroupManagerListController.h"
 #import "NCGroupTransferViewController.h"
 #import "NCChatUIErrorCode.h"
+
+static BOOL NCGroupManagementOperationInvalidatesCurrentUser(NCGroupOperationEvent *event) {
+    if (event.operation == NCGroupOperationDismiss) {
+        return YES;
+    }
+    if (event.operation != NCGroupOperationKick && event.operation != NCGroupOperationQuit) {
+        return NO;
+    }
+    NSString *currentUserId = [NCEngine getCurrentUserId] ?: @"";
+    if (currentUserId.length == 0) {
+        return NO;
+    }
+    for (NCGroupMemberInfo *memberInfo in event.memberInfos) {
+        if ([memberInfo.userId isEqualToString:currentUserId]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 @interface NCGroupManagementViewModel ()<NCGroupChannelHandler>
 @property (nonatomic, copy) NSString *groupId;
 @property (nonatomic, strong) NSArray<NSArray <NCBaseCellViewModel *>*> *dataSources;
@@ -67,7 +87,24 @@
 
 - (void)onGroupOperation:(NCGroupOperationEvent *)event {
     if ([event.groupId isEqualToString:self.groupId]) {
-        [self fetchDataSources];
+        if (NCGroupManagementOperationInvalidatesCurrentUser(event)) {
+            [self p_leaveForInvalidGroupOperation];
+        } else {
+            [self fetchDataSources];
+        }
+    }
+}
+
+- (void)p_leaveForInvalidGroupOperation {
+    void (^leaveBlock)(void) = ^{
+        UIViewController *viewController = [self.responder currentViewController];
+        [viewController.navigationController popViewControllerAnimated:YES];
+        [NCAlertView showAlertController:nil message:NCUILocalizedString(@"not_in_group") hiddenAfterDelay:1];
+    };
+    if ([NSThread isMainThread]) {
+        leaveBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), leaveBlock);
     }
 }
 
@@ -172,18 +209,37 @@
 }
 
 - (NSString *)groupOperationPerStr:(NCGroupOperationPermission)permisson {
-    NSArray *permissonStrs = @[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")];
-    return permissonStrs[permisson];
+    switch (permisson) {
+        case NCGroupOperationPermissionOwner:
+            return NCUILocalizedString(@"only_group_owner_operation");
+        case NCGroupOperationPermissionOwnerOrAdmin:
+            return NCUILocalizedString(@"group_owner_or_manager_operation");
+        case NCGroupOperationPermissionEveryone:
+            return NCUILocalizedString(@"all_group_member_operation");
+        default:
+            return @"";
+    }
 }
 
 - (NSString *)getMemberInfoPerStr:(NCGroupMemberInfoEditPermission)permisson {
-    NSArray *permissonStrs = @[NCUILocalizedString(@"group_owner_or_manager_operation"),
-          NCUILocalizedString(@"only_group_owner_operation")];
-    return permissonStrs[permisson];
+    switch (permisson) {
+        case NCGroupMemberInfoEditPermissionOwnerOrAdminOrSelf:
+            return NCUILocalizedString(@"group_member_info_edit_owner_or_admin_or_self");
+        case NCGroupMemberInfoEditPermissionOwnerOrSelf:
+            return NCUILocalizedString(@"group_member_info_edit_owner_or_self");
+        case NCGroupMemberInfoEditPermissionSelfOnly:
+            return NCUILocalizedString(@"group_member_info_edit_self_only");
+        default:
+            return @"";
+    }
 }
 
 - (void)setGroupInfoPermission {
-    [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+    NSArray *permissonStrs = @[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")];
+    [NCActionSheetView showActionSheetView:nil cellArray:permissonStrs cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+        if (index < 0 || index >= (NSInteger)permissonStrs.count) {
+            return;
+        }
         NCUpdateGroupInfoParams *params = [NCUpdateGroupInfoParams new];
         params.groupInfoEditPermissionValue = @((NCGroupOperationPermission)index);
         [self updateGroupInfo:params reloadWithFailed:NO];
@@ -193,7 +249,11 @@
 }
 
 - (void)setAddGroupMemberPermission {
-    [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+    NSArray *permissonStrs = @[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")];
+    [NCActionSheetView showActionSheetView:nil cellArray:permissonStrs cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+        if (index < 0 || index >= (NSInteger)permissonStrs.count) {
+            return;
+        }
         NCUpdateGroupInfoParams *params = [NCUpdateGroupInfoParams new];
         params.invitePermissionValue = @((NCGroupOperationPermission)index);
         [self updateGroupInfo:params reloadWithFailed:NO];
@@ -203,7 +263,11 @@
 }
 
 - (void)setRemoveGroupMemberPermission {
-    [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+    NSArray *permissonStrs = @[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation"), NCUILocalizedString(@"all_group_member_operation")];
+    [NCActionSheetView showActionSheetView:nil cellArray:permissonStrs cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+        if (index < 0 || index >= (NSInteger)permissonStrs.count) {
+            return;
+        }
         NCUpdateGroupInfoParams *params = [NCUpdateGroupInfoParams new];
         params.removeMemberPermissionValue = @((NCGroupOperationPermission)index);
         [self updateGroupInfo:params reloadWithFailed:NO];
@@ -213,9 +277,17 @@
 }
 
 - (void)setGroupMemberInfoPermission {
-    [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"only_group_owner_operation"), NCUILocalizedString(@"group_owner_or_manager_operation")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+    NSArray *permissonStrs = @[
+        NCUILocalizedString(@"group_member_info_edit_owner_or_admin_or_self"),
+        NCUILocalizedString(@"group_member_info_edit_owner_or_self"),
+        NCUILocalizedString(@"group_member_info_edit_self_only")
+    ];
+    [NCActionSheetView showActionSheetView:nil cellArray:permissonStrs cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
+        if (index < 0 || index >= (NSInteger)permissonStrs.count) {
+            return;
+        }
         NCUpdateGroupInfoParams *params = [NCUpdateGroupInfoParams new];
-        params.memberInfoEditPermissionValue = @(index == 0 ? NCGroupMemberInfoEditPermissionOwnerOrSelf : NCGroupMemberInfoEditPermissionOwnerOrAdminOrSelf);
+        params.memberInfoEditPermissionValue = @((NCGroupMemberInfoEditPermission)index);
         [self updateGroupInfo:params reloadWithFailed:NO];
     } cancelBlock:^{
         

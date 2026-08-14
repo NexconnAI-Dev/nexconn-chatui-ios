@@ -9,6 +9,7 @@
 #import "NCTextPreviewView.h"
 #import "NCChatUI.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCMessageCellTool.h"
 #import "NCAlertView.h"
 #import "NCTextPreviewView+Edit.h"
@@ -95,7 +96,10 @@
 
 - (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
     [self didTapCurrentView];
-    NSString *number = [@"tel://" stringByAppendingString:phoneNumber];
+    NSString *number = [NCMessageCellTool phoneURLStringWithPhoneNumber:phoneNumber];
+    if (!number) {
+        return;
+    }
     if ([self.textPreviewDelegate respondsToSelector:@selector(didTapPhoneNumberInMessageCell:model:)]) {
         [self.textPreviewDelegate didTapPhoneNumberInMessageCell:number model:nil];
     }
@@ -108,7 +112,8 @@
 #pragma mark - Privite
 
 - (void)showTextPreviewView {
-    [[UIApplication sharedApplication].keyWindow addSubview:self];
+    UIWindow *window = self.window ?: [NCChatUIUtility getWindowForView:nil];
+    [window addSubview:self];
 }
 
 - (void)didTapCurrentView{
@@ -155,8 +160,10 @@
         _label.textColor = NCDynamicColor(@"text_primary_color");
         _label.font = [UIFont systemFontOfSize:20];
         _label.textAlignment = NSTextAlignmentCenter;
-        _label.attributeDictionary = [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:NCMessageDirectionReceive ];
-        _label.highlightedAttributeDictionary = [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:NCMessageDirectionReceive];
+        _label.attributeDictionary = [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:NCMessageDirectionReceive
+                                                                                     linkColorKey:@"primary_color"];
+        _label.highlightedAttributeDictionary = [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:NCMessageDirectionReceive
+                                                                                                  linkColorKey:@"primary_color"];
         _label.delegate = self;
         _label.userInteractionEnabled = YES;
     }

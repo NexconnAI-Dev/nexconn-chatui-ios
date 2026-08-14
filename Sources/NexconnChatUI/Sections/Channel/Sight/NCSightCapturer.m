@@ -45,6 +45,8 @@
 
 @property (nonatomic, strong) NSTimer *adjustingFocusTimeoutTimer;
 
+@property (nonatomic, assign) BOOL readyForRecording;
+
 @end
 
 @implementation NCSightCapturer
@@ -121,10 +123,15 @@
     
     /*audio*/
     CTCallCenter *center = [[CTCallCenter alloc] init];
-    if (center.currentCalls.count == 0) {   // During a call, the microphone is unavailable to this capture session, so leave the audio input detached.
-        AVCaptureDeviceInput *audioDeviceInput = [[AVCaptureDeviceInput alloc] initWithDevice:self.audioDevice error:nil];
-        BOOL isEnable = audioDeviceInput.ports.firstObject.enabled;
-        if ([self.captureSession canAddInput:audioDeviceInput]) {
+    if (center.currentCalls.count == 0) {   // 打电话时，麦克风被占用，不能录音，否则 15+ 系统报错
+        NSError *audioError = nil;
+        AVCaptureDevice *audioDevice = self.audioDevice;
+        AVCaptureDeviceInput *audioDeviceInput =
+            audioDevice ? [[AVCaptureDeviceInput alloc] initWithDevice:audioDevice error:&audioError] : nil;
+        if (audioError) {
+            NSLog(@"Failed to create audio input: %@", audioError);
+        }
+        if (audioDeviceInput && [self.captureSession canAddInput:audioDeviceInput]) {
             [self.captureSession addInput:audioDeviceInput];
             self.activeAudioInput = audioDeviceInput;
         }
@@ -136,12 +143,24 @@
             [self.captureSession addOutput:audioDeviceOutput];
             self.activeAudioDeviceOutput = audioDeviceOutput;
         }
-        self.audioConnection = [audioDeviceOutput connectionWithMediaType:AVMediaTypeAudio];
+        if (self.activeAudioDeviceOutput) {
+            self.audioConnection = [self.activeAudioDeviceOutput connectionWithMediaType:AVMediaTypeAudio];
+        }
     }
 
     /*video*/
-    AVCaptureDeviceInput *videoDeviceInput = [[AVCaptureDeviceInput alloc] initWithDevice:self.videoDevice error:nil];
-    if ([self.captureSession canAddInput:videoDeviceInput]) {
+    NSError *videoError = nil;
+    AVCaptureDevice *videoDevice = self.videoDevice;
+    AVCaptureDeviceInput *videoDeviceInput =
+        videoDevice ? [[AVCaptureDeviceInput alloc] initWithDevice:videoDevice error:&videoError] : nil;
+    if (videoError) {
+        NSLog(@"Failed to create video input: %@", videoError);
+    }
+    if (!videoDeviceInput) {
+        self.readyForRecording = NO;
+        return;
+    }
+    if (videoDeviceInput && [self.captureSession canAddInput:videoDeviceInput]) {
         [self.captureSession addInput:videoDeviceInput];
         self.activeVideoInput = videoDeviceInput;
     }
@@ -154,12 +173,14 @@
         [self.captureSession addOutput:videoDeviceOutput];
     }
 
-    self.videoConnection = [videoDeviceOutput connectionWithMediaType:AVMediaTypeVideo];
+    self.videoConnection = [self.captureSession.outputs containsObject:videoDeviceOutput]
+                               ? [videoDeviceOutput connectionWithMediaType:AVMediaTypeVideo]
+                               : nil;
     
     // Enable video stabilization when supported.
     AVCaptureDevice *device = [self activeCamera];
     AVCaptureVideoStabilizationMode stabilizationMode = AVCaptureVideoStabilizationModeCinematic;
-    if ([device.activeFormat isVideoStabilizationModeSupported:stabilizationMode]) {
+    if (device && [device.activeFormat isVideoStabilizationModeSupported:stabilizationMode]) {
         [self.videoConnection setPreferredVideoStabilizationMode:stabilizationMode];
     }
 
@@ -189,9 +210,11 @@
     self.videoCompressionSettings =
         [[videoDeviceOutput recommendedVideoSettingsForAssetWriterWithOutputFileType:AVFileTypeMPEG4] copy];
 
-    self.videoBufferOrientation = self.videoConnection.videoOrientation;
-
-    [self focusAtPoint:CGPointMake(0.5, 0.5)];
+    self.readyForRecording = [self hasValidCaptureSettings];
+    if (self.readyForRecording) {
+        self.videoBufferOrientation = self.videoConnection.videoOrientation;
+        [self focusAtPoint:CGPointMake(0.5, 0.5)];
+    }
 }
 
 - (void)teardownCaptureSession {
@@ -253,8 +276,14 @@
 
 - (NSDictionary *)recommendedVideoCompressionSettings {
     NSDictionary *systemSettings = [self.videoCompressionSettings copy];
+    if (systemSettings.count == 0) {
+        return nil;
+    }
     NSInteger height = [systemSettings[@"AVVideoHeightKey"] integerValue] / 2;
     NSInteger width = [systemSettings[@"AVVideoWidthKey"] integerValue] / 2;
+    if (width <= 0 || height <= 0) {
+        return nil;
+    }
     NSDictionary *settings = @{
         AVVideoCodecKey : @"avc1",
         AVVideoHeightKey : @(height),
@@ -286,11 +315,29 @@
 }
 
 - (NSDictionary *)recommendedAudioCompressionSettings {
+    if (!self.activeAudioInput) {
+        return nil;
+    }
     return [self.audioCompressionSettings copy];
 }
 
+- (BOOL)isReadyForRecording {
+    return [self hasValidCaptureSettings];
+}
+
+- (BOOL)hasValidCaptureSettings {
+    NSDictionary *videoSettings = [self recommendedVideoCompressionSettings];
+    if (videoSettings.count == 0) {
+        return NO;
+    }
+    if (!self.activeVideoInput || !self.videoConnection) {
+        return NO;
+    }
+    return YES;
+}
+
 - (void)startRunning {
-    if (![self.captureSession isRunning]) {
+    if (![self.captureSession isRunning] && [self hasValidCaptureSettings]) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(self.sessionQueue, ^{
             [[AVAudioSession sharedInstance] setActive:NO error:nil];

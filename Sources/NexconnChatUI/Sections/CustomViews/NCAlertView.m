@@ -11,6 +11,31 @@
 #import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 @implementation NCAlertView
+
+static UIViewController *NCAlertTopViewController(UIViewController *viewController) {
+    if (!viewController) {
+        return nil;
+    }
+    if (viewController.presentedViewController) {
+        return NCAlertTopViewController(viewController.presentedViewController);
+    }
+    if ([viewController isKindOfClass:[UINavigationController class]]) {
+        return NCAlertTopViewController(((UINavigationController *)viewController).visibleViewController);
+    }
+    if ([viewController isKindOfClass:[UITabBarController class]]) {
+        return NCAlertTopViewController(((UITabBarController *)viewController).selectedViewController);
+    }
+    return viewController;
+}
+
+static UIViewController *NCAlertPresentingViewController(UIViewController *controller) {
+    if (controller) {
+        return NCAlertTopViewController(controller);
+    }
+    UIWindow *window = [NCChatUIUtility getWindowForView:nil];
+    return NCAlertTopViewController(window.rootViewController);
+}
+
 + (void)showAlertController:(NSString *)title message:(NSString *)message cancelTitle:(NSString *)cancelTitle {
     [self showAlertController:title message:message actionTitles:nil cancelTitle:cancelTitle confirmTitle:nil preferredStyle:(UIAlertControllerStyleAlert) actionsBlock:nil cancelBlock:nil confirmBlock:nil inViewController:nil];
 }
@@ -43,11 +68,9 @@
     dispatch_main_async_safe(^{
         UIAlertController *alertController =
         [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-        if (!controller) {
-            UIViewController *rootVC = [NCChatUIUtility getKeyWindow].rootViewController;
-            [rootVC presentViewController:alertController animated:YES completion:nil];
-        }else{
-            [controller presentViewController:alertController animated:YES completion:nil];
+        UIViewController *presentingController = NCAlertPresentingViewController(controller);
+        if (presentingController) {
+            [presentingController presentViewController:alertController animated:YES completion:nil];
         }
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeInterval * NSEC_PER_SEC)), dispatch_get_main_queue(),
                        ^{
@@ -115,16 +138,14 @@
         }
         if (style == UIAlertControllerStyleActionSheet && [NCChatUIUtility currentDeviceIsIPad]) {
             UIPopoverPresentationController *popPresenter = [alertController popoverPresentationController];
-            UIWindow *window = [UIApplication sharedApplication].keyWindow;
+            UIWindow *window = [NCChatUIUtility getWindowForView:controller.view];
             popPresenter.sourceView = window;
             popPresenter.sourceRect = CGRectMake(window.frame.size.width / 2, window.frame.size.height / 2, 0, 0);
             popPresenter.permittedArrowDirections = 0;
         }
-        if (!controller) {
-             UIViewController *rootVC = [NCChatUIUtility getKeyWindow].rootViewController;
-            [rootVC presentViewController:alertController animated:YES completion:nil];
-        }else{
-            [controller presentViewController:alertController animated:YES completion:nil];
+        UIViewController *presentingController = NCAlertPresentingViewController(controller);
+        if (presentingController) {
+            [presentingController presentViewController:alertController animated:YES completion:nil];
         }
     });
 }

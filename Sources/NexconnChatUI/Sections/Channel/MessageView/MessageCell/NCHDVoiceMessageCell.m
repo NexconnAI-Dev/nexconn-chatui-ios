@@ -285,7 +285,7 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     if (self.model.messageDirection == NCMessageDirectionSend && self.model.sentStatus != NCMessageSentStatusSent) {
         return;
     }
-    // The chat and combined-forward pages share this cell; combined-forward messages have clientId <= 0.
+    // 聊天页面和合并转发页面均复用该 cell，合并转发内的消息 clientId <= 0
     if (self.model.clientId <= 0) {
         return;
     }

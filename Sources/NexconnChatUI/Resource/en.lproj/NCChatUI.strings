@@ -118,7 +118,7 @@
 "message_tap_more"="Multi-select";
 
 "receive_new_message"="You received a new message";
-"no_message"="No messages";
+"no_message"="No chats yet";
 "chat_history_message" = "[Chat history]";
 "contact_card_message" = "[Contact card]";
 "group_chat_history" = "Group chat history";
@@ -137,11 +137,15 @@
 "red_packet_message" = "[Red packet]";
 "combine_message_loading" = "Loading chat history...";
 "combine_message_load_failed" = "Unable to load chat history";
+"combine_message_nesting_limit" = "Can't open more nested chat history";
 "chat_transcripts" = "You can select up to 100 messages";
 "message_delete_for_all_alert"="Message deleted";
 "save_success" = "Saved";
 "save_failed" = "Unable to save";
 "recall_edit" = "Edit again";
+"recalled_a_message" = " has recalled a message";
+"you_recalled_a_message" = "You have recalled a message";
+"admin_recalled_a_message" = "Admin has recalled a message";
 "reference"="Quote";
 "can_not_recall" = "Delete expired";
 "chat_files"="Chat files";
@@ -281,6 +285,9 @@
 "only_group_owner_operation"="Owner only";
 "group_owner_or_manager_operation"="Owner and admins";
 "all_group_member_operation"="Everyone";
+"group_member_info_edit_owner_or_admin_or_self"="Owner, admins, or self";
+"group_member_info_edit_owner_or_self"="Owner or self";
+"group_member_info_edit_self_only"="Self only";
 "invite_group_confirm"="Admin approval";
 "group_transfer_vc_title"="Transfer ownership";
 "group_transfer_alert"="Transfer ownership to %@? You'll lose owner access.";

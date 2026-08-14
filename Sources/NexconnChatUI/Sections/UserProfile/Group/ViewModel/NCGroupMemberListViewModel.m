@@ -13,7 +13,29 @@
 #import "NCUserProfileViewModel.h"
 #import "NCChatUICommonDefine.h"
 #import "NCRemoveGroupMemberCellViewModel.h"
-@interface NCGroupMemberListViewModel ()<NCSearchBarViewModelDelegate>
+#import "NCAlertView.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+
+static BOOL NCGroupMemberListOperationInvalidatesCurrentUser(NCGroupOperationEvent *event) {
+    if (event.operation == NCGroupOperationDismiss) {
+        return YES;
+    }
+    if (event.operation != NCGroupOperationKick && event.operation != NCGroupOperationQuit) {
+        return NO;
+    }
+    NSString *currentUserId = [NCEngine getCurrentUserId] ?: @"";
+    if (currentUserId.length == 0) {
+        return NO;
+    }
+    for (NCGroupMemberInfo *memberInfo in event.memberInfos) {
+        if ([memberInfo.userId isEqualToString:currentUserId]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+@interface NCGroupMemberListViewModel ()<NCSearchBarViewModelDelegate, NCGroupChannelHandler>
 
 
 @property (nonatomic, strong) NSMutableArray <NCGroupMemberCellViewModel *>*mutableMemberList;
@@ -39,6 +61,8 @@
 @property (nonatomic, assign) BOOL isLoadingSearchMembers;
 
 @property (nonatomic, weak) NCGroupMemberCellViewModel *lastBottomCellVM;
+
+@property (nonatomic, copy) NSString *groupEventHandlerId;
 @end
 
 @implementation NCGroupMemberListViewModel
@@ -47,6 +71,8 @@
 + (instancetype)viewModelWithGroupId:(NSString *)groupId {
     NCGroupMemberListViewModel *viewModel = [[self.class alloc] init];
     viewModel.groupId = groupId;
+    viewModel.groupEventHandlerId = [NSString stringWithFormat:@"rc.group.member.list.%p", viewModel];
+    [NCEngine addGroupChannelHandlerWithIdentifier:viewModel.groupEventHandlerId handler:viewModel];
     return viewModel;
 }
 
@@ -57,6 +83,10 @@
         self.hasMoreSearchMembers = YES;
     }
     return self;
+}
+
+- (void)dealloc {
+    [NCEngine removeGroupChannelHandlerForIdentifier:self.groupEventHandlerId];
 }
 
 - (UISearchBar *)configureSearchBar {
@@ -90,7 +120,26 @@
     self.responder = responder;
 }
 
-#pragma mark - NCSearchBarViewModelDelegate
+#pragma mark -- NCGroupChannelHandler
+
+- (void)onGroupOperation:(NCGroupOperationEvent *)event {
+    if (![event.groupId isEqualToString:self.groupId] ||
+        !NCGroupMemberListOperationInvalidatesCurrentUser(event)) {
+        return;
+    }
+    void (^leaveBlock)(void) = ^{
+        UIViewController *viewController = [self.responder currentViewController];
+        [viewController.navigationController popViewControllerAnimated:YES];
+        [NCAlertView showAlertController:nil message:NCUILocalizedString(@"not_in_group") hiddenAfterDelay:1];
+    };
+    if ([NSThread isMainThread]) {
+        leaveBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), leaveBlock);
+    }
+}
+
+#pragma mark - RCFriendListSearchBarViewModelDelegate
 
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
     self.searchMembersQuery = nil;

@@ -224,7 +224,7 @@
     // Read safe-area insets for the expanded layout.
     UIEdgeInsets safeAreaInsets = UIEdgeInsetsZero;
     if (@available(iOS 11.0, *)) {
-        safeAreaInsets = [UIApplication sharedApplication].keyWindow.safeAreaInsets;
+        safeAreaInsets = [NCChatUIUtility getWindowSafeAreaInsetsForView:self];
     }
     
     // The expanded layout does not display the top separator.

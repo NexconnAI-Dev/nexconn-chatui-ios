@@ -128,10 +128,12 @@
                             info.status = NCHQDownloadStatusFailed;
                             [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify
                                                                                 object:info];
-                            if (priority) {
+                            if (priority == 1) {
                                 [self.priorityMsgs removeObject:downloadMsg];
-                            } else {
+                            } else if (priority == 2) {
                                 [self.downloadMsgs removeObject:downloadMsg];
+                            } else {
+                                [self.failedMsgs removeObject:downloadMsg];
                             }
                             [self.failedMsgs addObject:downloadMsg];
 

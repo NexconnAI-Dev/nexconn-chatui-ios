@@ -28,6 +28,17 @@ typedef NS_ENUM(NSInteger, NCNoDisturbQueryStrategy) {
 @property (nonatomic, strong) NSDateFormatter *formatter;
 @property (nonatomic, strong, nullable) NSDate *dateBegin;
 @property (nonatomic, strong, nullable) NSDate *dateEnd;
+
+- (void)readGlobalNotificationLevelNumber:(NSNumber *__autoreleasing _Nullable *)levelNumber
+                                 dateBegin:(NSDate *__autoreleasing _Nullable *)dateBegin
+                                   dateEnd:(NSDate *__autoreleasing _Nullable *)dateEnd;
+- (nullable NSNumber *)cachedNotificationLevelForKey:(NSString *)key;
++ (BOOL)isDate:(NSDate *)date inWindowFrom:(NSDate *)dateBegin to:(NSDate *)dateEnd;
++ (NCChannelNoDisturbLevel)currentGlobalNotificationLevelWithLevelNumber:(NSNumber *)levelNumber
+                                                                dateBegin:(NSDate *)dateBegin
+                                                                  dateEnd:(NSDate *)dateEnd
+                                                                     now:(NSDate *)now;
++ (NSTimeInterval)secondsSinceStartOfDayForDate:(NSDate *)date;
 @end
 
 static NCChannelNotificationDataContext *_instance = nil;
@@ -72,7 +83,7 @@ static dispatch_once_t onceToken;
             if ([channel isKindOfClass:[NCCommunitySubChannel class]]) {
                 subChannelId = ((NCCommunitySubChannel *)channel).subChannelId;
             }
-            NSString *key = [self keyStringWith:channel.channelType channelId:channelId channelId:subChannelId];
+            NSString *key = [self keyStringWith:channel.channelType channelId:channelId subChannelId:subChannelId];
             dic[key] = @(channel.noDisturbLevel);
         }
         [context.threadLock performWriteLockBlock:^{
@@ -83,7 +94,7 @@ static dispatch_once_t onceToken;
 
 + (void)queryNotificationLevelWith:(NCChannelType)type
                           channelId:(NSString *__nullable)channelId
-                         channelId:(NSString *__nullable)channelId
+                       subChannelId:(NSString *__nullable)subChannelId
                         completion:(void (^)(NCChannelNoDisturbLevel level))completion {
     NCChannelNotificationDataContext *context = [self currentDataContext];
     [context performOperationQueueBlock:^{
@@ -96,7 +107,7 @@ static dispatch_once_t onceToken;
             }
             [self queryCommonNotificationLevelWith:type
                                           channelId:channelId
-                                         channelId:channelId
+                                      subChannelId:subChannelId
                                         completion:completion];
         }];
     }];
@@ -112,7 +123,7 @@ static dispatch_once_t onceToken;
     }
     [self queryNotificationLevelWith:channelType
                             channelId:channelId
-                           channelId:subChannelId
+                        subChannelId:subChannelId
                           completion:completion];
 }
 
@@ -136,17 +147,16 @@ static dispatch_once_t onceToken;
 
 + (void)queryGlobalNotificationLevel:(void (^)(NCChannelNoDisturbLevel level))completion {
     NCChannelNotificationDataContext *context = [self currentDataContext];
-    __block NSNumber *levelNumber = nil;
-    __block NSDate *dateBegin = nil;
-    __block NSDate *dateEnd = nil;
-    [context.threadLock performReadLockBlock:^{
-        levelNumber = context.notificationInfo[NCChannelNotificationDataContextGlobalNotificationLevel];
-        dateBegin = context.dateBegin;
-        dateEnd = context.dateEnd;
-    }];
+    NSNumber *levelNumber = nil;
+    NSDate *dateBegin = nil;
+    NSDate *dateEnd = nil;
+    [context readGlobalNotificationLevelNumber:&levelNumber dateBegin:&dateBegin dateEnd:&dateEnd];
     NSDate *now = [NSDate date];
-    if (dateBegin && dateEnd && [now compare:dateBegin] != NSOrderedAscending && [now compare:dateEnd] == NSOrderedAscending) {
-        NCChannelNoDisturbLevel level = levelNumber ? (NCChannelNoDisturbLevel)[levelNumber integerValue] : NCChannelNoDisturbLevelDefaultLevel;
+    if ([self isDate:now inWindowFrom:dateBegin to:dateEnd]) {
+        NCChannelNoDisturbLevel level = [self currentGlobalNotificationLevelWithLevelNumber:levelNumber
+                                                                                  dateBegin:dateBegin
+                                                                                    dateEnd:dateEnd
+                                                                                       now:now];
         if (completion) {
             completion(level);
         }
@@ -154,7 +164,16 @@ static dispatch_once_t onceToken;
     }
     [self queryGlobalNotificationLevelInDB:^(NCNoDisturbTimeInfo *setting) {
         [self updateGlobalNotificationLevelWith:setting];
-        NCChannelNoDisturbLevel mappedLevel = [self mapNoDisturbTimeLevelToChannelLevel:setting.level];
+        NSNumber *updatedLevelNumber = nil;
+        NSDate *updatedDateBegin = nil;
+        NSDate *updatedDateEnd = nil;
+        [context readGlobalNotificationLevelNumber:&updatedLevelNumber dateBegin:&updatedDateBegin dateEnd:&updatedDateEnd];
+        NSDate *callbackNow = [NSDate date];
+        NCChannelNoDisturbLevel mappedLevel =
+            [self currentGlobalNotificationLevelWithLevelNumber:updatedLevelNumber
+                                                      dateBegin:updatedDateBegin
+                                                        dateEnd:updatedDateEnd
+                                                           now:callbackNow];
         if (completion) {
             completion(mappedLevel);
         }
@@ -168,10 +187,10 @@ static dispatch_once_t onceToken;
 
 + (void)queryCommonNotificationLevelWith:(NCChannelType)type
                                 channelId:(NSString *__nullable)channelId
-                               channelId:(NSString *__nullable)channelId
+                            subChannelId:(NSString *__nullable)subChannelId
                               completion:(void (^)(NCChannelNoDisturbLevel level))completion {
     NCNoDisturbQueryStrategy strategy = NCNoDisturbQueryStrategyChannel;
-    if ([self isStringEmpty:channelId]) {
+    if ([self isStringEmpty:subChannelId]) {
         strategy = NCNoDisturbQueryStrategyTarget;
     }
     if ([self isStringEmpty:channelId]) {
@@ -179,7 +198,7 @@ static dispatch_once_t onceToken;
     }
     [self queryNotificationLevelWith:type
                             channelId:channelId
-                           channelId:channelId
+                        subChannelId:subChannelId
                             strategy:strategy
                        previousLevel:NCChannelNoDisturbLevelDefaultLevel
                           completion:completion];
@@ -187,7 +206,7 @@ static dispatch_once_t onceToken;
 
 + (void)queryNotificationLevelWith:(NCChannelType)type
                           channelId:(NSString *__nullable)channelId
-                         channelId:(NSString *__nullable)channelId
+                       subChannelId:(NSString *__nullable)subChannelId
                           strategy:(NCNoDisturbQueryStrategy)strategy
                      previousLevel:(NCChannelNoDisturbLevel)previousLevel
                         completion:(void (^)(NCChannelNoDisturbLevel level))completion {
@@ -198,24 +217,21 @@ static dispatch_once_t onceToken;
         return;
     }
     NSString *strategyTargetId = channelId ?: @"";
-    NSString *strategyChannelId = channelId ?: @"";
+    NSString *strategySubChannelId = subChannelId ?: @"";
     if (strategy == NCNoDisturbQueryStrategyTarget) {
-        strategyChannelId = @"";
+        strategySubChannelId = @"";
     } else if (strategy == NCNoDisturbQueryStrategyCategory) {
         strategyTargetId = @"";
-        strategyChannelId = @"";
+        strategySubChannelId = @"";
     }
 
-    NSString *key = [self keyStringWith:type channelId:strategyTargetId channelId:strategyChannelId];
+    NSString *key = [self keyStringWith:type channelId:strategyTargetId subChannelId:strategySubChannelId];
     NCChannelNotificationDataContext *context = [self currentDataContext];
-    __block NSNumber *cachedLevel = nil;
-    [context.threadLock performReadLockBlock:^{
-        cachedLevel = context.notificationInfo[key];
-    }];
+    NSNumber *cachedLevel = [context cachedNotificationLevelForKey:key];
     if (cachedLevel) {
         [self queryNotificationLevelWith:type
                                 channelId:channelId
-                               channelId:channelId
+                            subChannelId:subChannelId
                                 strategy:strategy - 1
                            previousLevel:(NCChannelNoDisturbLevel)[cachedLevel integerValue]
                               completion:completion];
@@ -224,13 +240,13 @@ static dispatch_once_t onceToken;
 
     [self levelInfoInDBWith:type
                    channelId:strategyTargetId
-                  channelId:strategyChannelId
+               subChannelId:strategySubChannelId
                    strategy:strategy
                     success:^(NCChannelNoDisturbLevel level) {
         [context updateNotificationLevelWith:@(level) byKey:key];
         [self queryNotificationLevelWith:type
                                 channelId:channelId
-                               channelId:channelId
+                            subChannelId:subChannelId
                                 strategy:strategy - 1
                            previousLevel:level
                               completion:completion];
@@ -238,7 +254,7 @@ static dispatch_once_t onceToken;
         (void)status;
         [self queryNotificationLevelWith:type
                                 channelId:channelId
-                               channelId:channelId
+                            subChannelId:subChannelId
                                 strategy:strategy - 1
                            previousLevel:previousLevel
                               completion:completion];
@@ -264,7 +280,7 @@ static dispatch_once_t onceToken;
 
 + (void)levelInfoInDBWith:(NCChannelType)type
                  channelId:(NSString *__nullable)channelId
-                channelId:(NSString *__nullable)channelId
+             subChannelId:(NSString *__nullable)subChannelId
                  strategy:(NCNoDisturbQueryStrategy)strategy
                   success:(void (^)(NCChannelNoDisturbLevel level))successBlock
                     error:(void (^)(NSInteger status))errorBlock {
@@ -272,12 +288,12 @@ static dispatch_once_t onceToken;
         [self levelInfoInDBWith:type success:successBlock error:errorBlock];
         return;
     }
-    [self levelInfoInDBWith:type channelId:channelId channelId:channelId success:successBlock error:errorBlock];
+    [self levelInfoInDBWith:type channelId:channelId subChannelId:subChannelId success:successBlock error:errorBlock];
 }
 
 + (void)levelInfoInDBWith:(NCChannelType)type
                  channelId:(NSString *__nullable)channelId
-                channelId:(NSString *__nullable)channelId
+             subChannelId:(NSString *__nullable)subChannelId
                   success:(void (^)(NCChannelNoDisturbLevel level))successBlock
                     error:(void (^)(NSInteger status))errorBlock {
     NSString *finalTargetId = channelId ?: @"";
@@ -288,9 +304,9 @@ static dispatch_once_t onceToken;
         return;
     }
     NCChannelIdentifier *identifier = nil;
-    if (type == NCChannelTypeCommunity && channelId.length > 0) {
+    if (type == NCChannelTypeCommunity && subChannelId.length > 0) {
         identifier = [[NCCommunitySubChannelIdentifier alloc] initWithChannelId:finalTargetId
-                                                                     subChannelId:channelId ?: @""];
+                                                                     subChannelId:subChannelId ?: @""];
     } else {
         identifier = [[NCChannelIdentifier alloc] initWithChannelType:type channelId:finalTargetId];
     }
@@ -324,6 +340,33 @@ static dispatch_once_t onceToken;
 }
 
 #pragma mark - Cache
+
+- (void)readGlobalNotificationLevelNumber:(NSNumber *__autoreleasing _Nullable *)levelNumber
+                                 dateBegin:(NSDate *__autoreleasing _Nullable *)dateBegin
+                                   dateEnd:(NSDate *__autoreleasing _Nullable *)dateEnd {
+    [self.threadLock performReadLockBlock:^{
+        if (levelNumber) {
+            *levelNumber = self.notificationInfo[NCChannelNotificationDataContextGlobalNotificationLevel];
+        }
+        if (dateBegin) {
+            *dateBegin = self.dateBegin;
+        }
+        if (dateEnd) {
+            *dateEnd = self.dateEnd;
+        }
+    }];
+}
+
+- (nullable NSNumber *)cachedNotificationLevelForKey:(NSString *)key {
+    if (key.length == 0) {
+        return nil;
+    }
+    __block NSNumber *levelNumber = nil;
+    [self.threadLock performReadLockBlock:^{
+        levelNumber = self.notificationInfo[key];
+    }];
+    return levelNumber;
+}
 
 + (void)updateGlobalNotificationLevelWith:(NCNoDisturbTimeInfo *)setting {
     NCChannelNotificationDataContext *context = [self currentDataContext];
@@ -375,17 +418,46 @@ static dispatch_once_t onceToken;
 
 + (NSString *)keyStringWith:(NCChannelType)type
                    channelId:(NSString *__nullable)channelId
-                  channelId:(NSString *__nullable)channelId {
+                subChannelId:(NSString *__nullable)subChannelId {
     return [NSString stringWithFormat:@"%ld%@%@%@%@",
             (long)type,
             NCChannelNotificationDataContextKeySeparator,
             channelId ?: @"",
             NCChannelNotificationDataContextKeySeparator,
-            channelId ?: @""];
+            subChannelId ?: @""];
 }
 
 + (BOOL)isStringEmpty:(NSString *)string {
     return (string == nil || string.length == 0);
+}
+
++ (BOOL)isDate:(NSDate *)date inWindowFrom:(NSDate *)dateBegin to:(NSDate *)dateEnd {
+    if (!date || !dateBegin || !dateEnd) {
+        return NO;
+    }
+    NSTimeInterval currentSeconds = [self secondsSinceStartOfDayForDate:date];
+    NSTimeInterval beginSeconds = [self secondsSinceStartOfDayForDate:dateBegin];
+    NSTimeInterval endSeconds = [self secondsSinceStartOfDayForDate:dateEnd];
+    if (endSeconds >= beginSeconds) {
+        return currentSeconds >= beginSeconds && currentSeconds < endSeconds;
+    }
+    return currentSeconds >= beginSeconds || currentSeconds < endSeconds;
+}
+
++ (NCChannelNoDisturbLevel)currentGlobalNotificationLevelWithLevelNumber:(NSNumber *)levelNumber
+                                                                dateBegin:(NSDate *)dateBegin
+                                                                  dateEnd:(NSDate *)dateEnd
+                                                                     now:(NSDate *)now {
+    if (![self isDate:now inWindowFrom:dateBegin to:dateEnd]) {
+        return NCChannelNoDisturbLevelDefaultLevel;
+    }
+    return levelNumber ? (NCChannelNoDisturbLevel)[levelNumber integerValue] : NCChannelNoDisturbLevelDefaultLevel;
+}
+
++ (NSTimeInterval)secondsSinceStartOfDayForDate:(NSDate *)date {
+    NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond
+                                                                   fromDate:date];
+    return components.hour * 3600 + components.minute * 60 + components.second;
 }
 
 + (NCChannelNoDisturbLevel)mapNoDisturbTimeLevelToChannelLevel:(NCNoDisturbTimeLevel)level {

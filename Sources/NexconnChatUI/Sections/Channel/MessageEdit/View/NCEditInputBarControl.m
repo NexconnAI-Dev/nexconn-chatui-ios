@@ -451,8 +451,13 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     UITextView *textView = self.editInputContainer.inputTextView;
     
     if (nil == string) {
-        // Delete the selected emoji token.
-        NSRange range = NSMakeRange(textView.selectedRange.location-1, 1);
+        // 删除操作
+        NSUInteger textLength = textView.textStorage.length;
+        NSUInteger cursorLocation = textView.selectedRange.location;
+        if (textLength == 0 || cursorLocation == 0 || cursorLocation == NSNotFound || cursorLocation > textLength) {
+            return;
+        }
+        NSRange range = NSMakeRange(cursorLocation - 1, 1);
         if ([textView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
             BOOL shouldChange = [textView.delegate textView:textView shouldChangeTextInRange:range replacementText:@""];
             if (shouldChange) {

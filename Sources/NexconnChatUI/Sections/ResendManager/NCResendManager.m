@@ -30,10 +30,6 @@ static NSString *const NCResendManagerConnectionStatusHandlerIdentifier = @"NCRe
 
 @end
 
-static BOOL NCResendShouldNeedReadReceipt(NCChannelType channelType) {
-    return channelType == NCChannelTypeDirect || channelType == NCChannelTypeGroup;
-}
-
 static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identifier) {
     if (!identifier || identifier.channelId.length == 0) {
         return nil;
@@ -238,7 +234,7 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
-        params.needReceipt = NCResendShouldNeedReadReceipt(channelType);
+        params.needReceipt = message.needReceipt;
         NCSendMediaMessageParams *sendParams =
             [[NCSendMediaMessageParams alloc] initWithContent:(NCMediaMessageContent *)ncMessageContent];
         sendParams.needReceipt = params.needReceipt;
@@ -306,7 +302,7 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
-        params.needReceipt = NCResendShouldNeedReadReceipt(channelType);
+        params.needReceipt = message.needReceipt;
         NCSendMessageParams *sendParams = [[NCSendMessageParams alloc] initWithContent:ncMessageContent];
         sendParams.needReceipt = params.needReceipt;
         [channel sendMessageWithParams:sendParams

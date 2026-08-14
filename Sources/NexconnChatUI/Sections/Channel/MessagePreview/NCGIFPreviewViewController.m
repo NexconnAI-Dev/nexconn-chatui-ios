@@ -17,6 +17,7 @@
 #import "NCSemanticContext.h"
 #import "NCMBProgressHUD.h"
 #import "NCGIFUtility.h"
+#import "NCFileUtility.h"
 
 @interface NCGIFPreviewViewController () <NCChatUIMessageEventObserver>
 
@@ -50,7 +51,7 @@
         return;
     }
     NCGIFMessage *gifMessage = (NCGIFMessage *)self.messageModel.content;
-    if (gifMessage.localPath.length > 0) {
+    if (gifMessage.localPath.length > 0 && [NCFileUtility isFileExist:gifMessage.localPath]) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             self.gifData = [NSData dataWithContentsOfFile:gifMessage.localPath];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -83,6 +84,7 @@
             }
             // Save the downloaded file path.
             gifMessage.localPath = mediaPath;
+            [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:gifMessage.remoteUrl];
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 strongSelf.gifData = [NSData dataWithContentsOfFile:mediaPath];
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -202,11 +204,11 @@
 }
 
 - (CGFloat)getSafeAreaExtraBottomHeight {
-    return [NCChatUIUtility getWindowSafeAreaInsets].bottom;
+    return [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].bottom;
 }
 
 - (CGFloat)getDeviceNavBarHeight {
-    return [NCChatUIUtility getWindowSafeAreaInsets].top;
+    return [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].top;
 }
 
 #pragma mark - Getter & Setter

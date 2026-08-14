@@ -63,7 +63,7 @@ static const NSTimeInterval NCChatUIDefaultUploadVideoDurationLimit = 300;
 
 - (UIColor *)editedTextColor {
     if (!_editedTextColor) {
-        _editedTextColor = NCDynamicColor(@"text_primary_color");
+        _editedTextColor = NCDynamicColor(@"text_secondary_color");
     }
     return _editedTextColor;
 }

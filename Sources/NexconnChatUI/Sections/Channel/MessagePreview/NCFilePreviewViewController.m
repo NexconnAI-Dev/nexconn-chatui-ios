@@ -264,7 +264,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     activityVC.modalPresentationStyle = UIModalPresentationFullScreen;
     if ([NCChatUIUtility currentDeviceIsIPad]) {
         UIPopoverPresentationController *popPresenter = [activityVC popoverPresentationController];
-        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        UIWindow *window = [NCChatUIUtility getWindowForView:self.view];
         popPresenter.sourceView = window;
         popPresenter.sourceRect = CGRectMake(window.frame.size.width / 2, window.frame.size.height / 2, 0, 0);
         popPresenter.permittedArrowDirections = 0;
@@ -278,9 +278,9 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (void)startFileDownLoad {
     [self downloading:0];
-    // Persisted file messages use message-based downloads, whose task key is derived from clientId.
-    // This lets sender-side recall cancel the in-flight task through cancel_download_media_message(clientId), matching Android.
-    // Referenced files and combined-forward previews use URL-based downloads because they do not have a valid persisted clientId.
+    // 已持久化的直接文件消息走 message-based 下载（底层 unique_id = rc_message[clientId]），
+    // 使发送端撤回时底层 cancel_download_media_message(clientId) 能命中并取消在途下载，与 Android 对齐。
+    // 引用文件（NCReferenceMessage）与合并转发预览（合成负 clientId）不满足条件，仍走 URL-based 下载。
     if (self.messageModel.clientId > 0 &&
         [self.messageModel.content isKindOfClass:[NCFileMessage class]]) {
         [[NCChatUI shared] downloadMediaMessage:self.messageModel.clientId
@@ -290,7 +290,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
         return;
     }
     NSString *mediaUrl = self.fileMessage.remoteUrl ?: @"";
-    NSString *fileName = self.fileMessage.name ?: mediaUrl.lastPathComponent ?: @"";
+    NSString *fileName = [NCFileUtility recheckedFileName:self.fileMessage.name ?: mediaUrl.lastPathComponent ?: @""];
     if (mediaUrl.length == 0 || fileName.length == 0) {
         NSDictionary *statusDic = @{
             @"clientId" : @(self.messageModel.clientId),
@@ -325,6 +325,9 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                                                               userInfo:statusDic];
             return;
         }
+        // URL-based 下载底层不写 URL→本地路径映射，此处补写，供重进详情页 fileLocalPathForRemoteURL: 检测已下载状态
+        // （合并转发/引用文件的合成消息无持久化 clientId，只能靠该映射恢复）
+        [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:mediaUrl];
         NSDictionary *statusDic = @{
             @"clientId" : @(self.messageModel.clientId),
             @"type" : @"success",
@@ -345,7 +348,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 }
 
 - (void)cancelFileDownload {
-    // Cancel message-based file downloads with the same task key used by startFileDownLoad.
+    // 与 startFileDownLoad 对称：message-based 下载的文件消息用 message-based 取消（rc_message[clientId]）。
     if (self.messageModel.clientId > 0 &&
         [self.messageModel.content isKindOfClass:[NCFileMessage class]]) {
         [[NCChatUI shared] cancelDownloadMediaMessage:self.messageModel.clientId];
@@ -457,12 +460,12 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (WKWebView *)webView {
     if (!_webView) {
-        // Get the status bar frame.
-        CGRect statusRect = [[UIApplication sharedApplication] statusBarFrame];
-        // Get the navigation bar frame.
+        //获取状态栏的rect
+        CGFloat statusBarHeight = [NCChatUIUtility getStatusBarHeightForView:self.view];
+        //获取导航栏的rect
         CGRect navRect = self.navigationController.navigationBar.frame;
-        // Combine the navigation bar and status bar heights.
-        CGFloat totalHeight = statusRect.size.height + navRect.size.height;
+        //那么导航栏+状态栏的高度
+        CGFloat totalHeight = statusBarHeight + navRect.size.height;
         CGRect webViewRect = self.view.bounds;
         if (webViewRect.size.height > ([UIScreen mainScreen].bounds.size.height - totalHeight)) {
             webViewRect.size.height -= totalHeight;

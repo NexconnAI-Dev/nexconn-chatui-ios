@@ -89,10 +89,19 @@ NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey = @"NCChatUIUserOnline
 - (void)p_notifyNetworkStatusChanged:(NCChatUINetworkStatus)status;
 @end
 
-static NSString *const NexconnChatUIVersion = @"26.3.0";
+static NSString *const NexconnChatUIVersion = @"26.4.0";
 static NSString *const NCChatUIMessageHandlerIdentifier = @"NCChatUI.global";
 static NSString *const NCChatUIConnectionStatusHandlerIdentifier = @"NCChatUI.connectionStatus";
 static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
+
+static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
+    return @[
+        [NCOldMessageNotificationMessage class],
+        [NCInformationNotificationMessage class],
+        [NCGroupNotificationMessage class]
+    ];
+}
+
 @implementation NCChatUI
 
 - (instancetype)init {
@@ -160,13 +169,7 @@ static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
 
     self.appKey = params.appKey;
     [NCEngine initializeWithParams:params];
-    [NCEngine registerCustomMessages:@[
-        [NCInformationNotificationMessage class],
-        [NCGroupNotificationMessage class]
-    ]];
-    [NCEngine registerCustomMessages:@[
-        [NCOldMessageNotificationMessage class]
-    ]];
+    [NCEngine registerCustomMessages:NCChatUIDefaultCustomMessageClasses()];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(resetNotificationQuietStatus)
                                                  name:UIApplicationDidEnterBackgroundNotification
@@ -259,9 +262,7 @@ static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
         return;
     }
 
-    if ([self p_updateUserInfoCache:message]) {
-        return;
-    }
+    [self p_updateUserInfoCache:message];
 
     // Automatically download HD voice messages.
     if ([message.content isKindOfClass:[NCHDVoiceMessage class]] && event.left == 0 &&
@@ -332,16 +333,13 @@ static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
     }
 }
 
-- (BOOL)p_updateUserInfoCache:(NCMessage *)message {
+- (void)p_updateUserInfoCache:(NCMessage *)message {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
-        return NO;
+        return;
     }
     NCUserInfo *ncSenderUserInfo = message.content.senderUserInfo;
     if (!ncSenderUserInfo) {
-        if ([message.messageType isEqualToString:@"RC:InfoNtf"]) {
-            return YES;
-        }
-        return NO;
+        return;
     }
     NCChatUIUserInfo *senderUserInfo = [NCChatUIUserInfo new];
     senderUserInfo.userId = ncSenderUserInfo.userId;
@@ -368,11 +366,6 @@ static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
             [[NCUserInfoCacheManager sharedManager] updateUserInfo:senderUserInfo forUserId:senderUserId];
         }
     }
-
-    if ([message.messageType isEqualToString:NCInformationNotificationMessageIdentifier]) {
-        return YES;
-    }
-    return NO;
 }
 
 - (BOOL)p_disableCustomMessageAlert:(NCMessage *)message left:(int)nLeft {
@@ -388,12 +381,20 @@ static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
         return YES;
     }
 
+    if ([self p_isUpdatedMessage:message]) {
+        return YES;
+    }
+
     BOOL isUnknownMessage = (message.content == nil || [message.content isKindOfClass:[NCUnknownMessage class]]);
     if (!NCChatUIConfigCenter.message.showUnkownMessageNotificaiton && isUnknownMessage) {
         return YES;
     }
 
     return NO;
+}
+
+- (BOOL)p_isUpdatedMessage:(NCMessage *)message {
+    return message.hasChanged || message.updateInfo != nil;
 }
 
 - (void)playSoundByMessageIfNeed:(NCMessage *)message {

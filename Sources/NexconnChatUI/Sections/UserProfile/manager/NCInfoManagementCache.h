@@ -40,6 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeGroupMemberCache:(NSString *)userId groupId:(NSString *)groupId;;
 
+- (void)removeGroupMemberCacheForGroupId:(NSString *)groupId;
+
 - (void)removeAllGroupMemberCache;
 @end
 

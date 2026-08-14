@@ -276,7 +276,7 @@ static void *NCFriendListOperationQueueSpecificKey = &NCFriendListOperationQueue
     for (NSString *userId in changedUserIds) {
         NCFriendListCellViewModel *vm = [self.userIDToCellViewModelMap objectForKey:userId];
         if (![self isDisplayOnlineStatus:vm]) {
-            return;
+            continue;
         }
         // Match friend IDs.
         if ([vm.friendInfo.userId isEqualToString:userId]) {

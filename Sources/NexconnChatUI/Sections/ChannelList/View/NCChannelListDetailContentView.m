@@ -14,6 +14,7 @@
 #import "NCEditInputBarConfig.h"
 #import "NCChannelModel+RRS.h"
 #import "NCChannelModel+Display.h"
+#import "NCOldMessageNotificationMessage.h"
 #import "NCRRSUtil.h"
 
 @interface NCChannelListDetailContentView ()
@@ -127,7 +128,8 @@
         }
     } else if ([model hasLatestMessage]) {
         if (self.prefixName.length == 0 || [model lastMessageIsSend] ||
-            [model.latestMessage isKindOfClass:[NCUnknownMessage class]]) {
+            [model.latestMessage isKindOfClass:[NCUnknownMessage class]] ||
+            [model.latestMessage isKindOfClass:[NCInformationNotificationMessage class]]) {
             messageContent = [model formattedLastMessageContent];
         } else {
             messageContent = [NSString stringWithFormat:@"%@: %@", self.prefixName, [model formattedLastMessageContent]];

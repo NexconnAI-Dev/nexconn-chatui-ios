@@ -73,6 +73,9 @@
 }
 
 - (void)itemDidSelectedByViewController:(UIViewController *)vc {
+    if (self.friendInfo.userId.length == 0) {
+        return;
+    }
     NCProfileViewModel *viewModel = [NCUserProfileViewModel viewModelWithUserId:self.friendInfo.userId];
     NCProfileViewController *profile = [[NCProfileViewController alloc] initWithViewModel:viewModel];
     [vc.navigationController pushViewController:profile animated:YES];

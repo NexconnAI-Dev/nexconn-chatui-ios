@@ -10,6 +10,7 @@
 #import "NCAssetHelper.h"
 #import "NCAssetModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCPhotoPreviewCollectCell.h"
 #import "NCVideoPreviewCell.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
@@ -353,7 +354,9 @@ static NSString *const videoCellReuseIdentifier = @"VideoPreviewCell";
 
 - (void)creatTopView {
     CGFloat originY = NC_IOS_SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0") ? 20 : 0;
-    if ([UIApplication sharedApplication].statusBarFrame.size.height > 25) {
+    CGFloat statusBarHeight = [NCChatUIUtility getStatusBarHeightForView:self.view];
+    BOOL hasExtendedStatusBar = statusBarHeight > 25;
+    if (hasExtendedStatusBar) {
         originY = 44;
     }
     self.topView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, originY + 44)];
@@ -365,7 +368,7 @@ static NSString *const videoCellReuseIdentifier = @"VideoPreviewCell";
     [backButton setImage:img forState:UIControlStateNormal];
     [backButton setContentEdgeInsets:UIEdgeInsetsMake(0, 0, 0, 6)];
     [backButton sizeToFit];
-    if ([UIApplication sharedApplication].statusBarFrame.size.height > 25) {
+    if (hasExtendedStatusBar) {
         backButton.frame = CGRectMake(10, _topView.frame.size.height / 2, 44, 44);
     } else {
         backButton.frame = CGRectMake(10, _topView.frame.size.height / 2 - 44 / 2, 44, 44);
@@ -379,7 +382,7 @@ static NSString *const videoCellReuseIdentifier = @"VideoPreviewCell";
     [stateButton setImage:NCDynamicImage(@"photo_preview_check_img") forState:UIControlStateSelected];
     [stateButton sizeToFit];
     stateButton.imageEdgeInsets = (UIEdgeInsets){12, 12, 12, 12};
-    if ([UIApplication sharedApplication].statusBarFrame.size.height > 25) {
+    if (hasExtendedStatusBar) {
         stateButton.frame = CGRectMake(_topView.frame.size.width - 10 - 44, _topView.frame.size.height / 2, 44, 44);
     } else {
         stateButton.frame =
@@ -393,7 +396,7 @@ static NSString *const videoCellReuseIdentifier = @"VideoPreviewCell";
 }
 
 - (void)createBottomView {
-    CGFloat safeAreaHomeBarHeight = [NCChatUIUtility getWindowSafeAreaInsets].bottom;
+    CGFloat safeAreaHomeBarHeight = [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].bottom;
     _bottomView = [[UIView alloc]
         initWithFrame:CGRectMake(0, self.view.bounds.size.height - 49 - safeAreaHomeBarHeight,
                                  self.view.bounds.size.width, 49 + safeAreaHomeBarHeight)];

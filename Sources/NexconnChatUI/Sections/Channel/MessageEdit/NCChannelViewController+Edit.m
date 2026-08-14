@@ -346,13 +346,31 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         (void)error;
         NCMessageModel *model = message ? [NCMessageModel modelWithNCMessage:message] : nil;
         if (!model) {
-            [editInputBarControl.editInputContainer resignInputViewFirstResponder];
-            [self edit_showAlert:NCUILocalizedString(@"message_edit_deleted_alert") confirmBlock:^{
-                safeCompletion(nil, YES);
-            }];
+            [self edit_exitUnavailableMessageEditModeWithInputBarControl:editInputBarControl];
+            safeCompletion(nil, NO);
             return;
         }
         safeCompletion(model, NO);
+    }];
+}
+
+- (void)edit_exitUnavailableMessageEditModeWithInputBarControl:(NCEditInputBarControl *)editInputBarControl {
+    [self performOnMainThread:^{
+        [editInputBarControl.editInputContainer resignInputViewFirstResponder];
+        self.chatSessionInputBarControl.hidden = NO;
+        void (^showDeletedAlert)(void) = ^{
+            [self edit_showAlert:NCUILocalizedString(@"message_edit_deleted_alert") confirmBlock:nil];
+        };
+        void (^exitEditMode)(void) = ^{
+            [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                                  activateNormal:YES
+                                                      completion:showDeletedAlert];
+        };
+        if (self.fullScreenEditView) {
+            [self edit_exitFullScreenEditView:exitEditMode];
+            return;
+        }
+        exitEditMode();
     }];
 }
 
@@ -367,8 +385,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     [self edit_editMessageModel:messageModel editContent:text mentionedInfo:mentionedInfo isRetry:NO];
 }
 
-// Update a message using a copy of its original content.
-// A nil editContent is a retry and reuses the pending content stored in updateInfo.
+// 编辑消息：基于原内容构造新内容副本后发起更新。
+// editContent 为空表示重发，复用上次保存到 updateInfo 的待更新内容。
 - (void)edit_editMessageModel:(NCMessageModel *)model
                   editContent:(NSString *)editContent
                 mentionedInfo:(nullable NCMentionedInfo *)mentionedInfo
@@ -379,7 +397,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     NCMessageContent *oldContent = model.content;
     NCMessageContent *newContent = nil;
     if (editContent.length == 0) {
-        // Retry with the saved pending content instead of the reverted UI content.
+        // 重发：使用上次保存的待更新内容，避免依赖已被回退的界面内容。
         if (model.updateInfo && model.updateInfo.content) {
             newContent = model.updateInfo.content;
         } else {
@@ -392,7 +410,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         return;
     }
 
-    // Optimistically store the new content and updating state before reloading so layout measures the latest text.
+    // 乐观更新：先把新内容与“编辑中”状态写入 model 并刷新，保证 collectionView 重新测高时读到最新文本。
     long long updateTimestamp = model.updateInfo ? model.updateInfo.timestamp
                                                  : (long long)([[NSDate date] timeIntervalSince1970] * 1000);
     model.updateInfo = [[NCMessageUpdateInfo alloc] initWithTimestamp:updateTimestamp
@@ -408,8 +426,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         [self performOnMainThread:^{
             if (error) {
                 [self edit_showEditErrorAlert:(NCChatUIErrorCode)error.code isRetry:isRetry];
-                // On failure, including offline errors, restore the original display content and hide the edited marker.
-                // Keep the pending content in updateInfo for retry.
+                // 更新失败（含断网）：把界面内容回退为原文——不显示新内容、不显示“已编辑”，
+                // 并把待更新内容保存到 updateInfo，供“重发”重试。
                 NCMessageUpdateInfo *info = model.updateInfo;
                 long long failedTimestamp = info ? info.timestamp
                                                  : (long long)([[NSDate date] timeIntervalSince1970] * 1000);
@@ -421,7 +439,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
                 [self.dataSource edit_refreshUIMessagesEditedStatus:@[model]];
                 return;
             }
-            // On success, refresh from the server response and display the new content with the edited marker.
+            // 成功：以服务端返回的消息刷新，此时才展示新内容与“已编辑”。
             if (updatedMessage) {
                 NCMessageModel *updatedModel = [NCMessageModel modelWithNCMessage:updatedMessage];
                 [self.dataSource edit_refreshUIMessagesEditedStatus:@[updatedModel]];
@@ -430,8 +448,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     }];
 }
 
-// Copy editable content while preserving mentions, extra data, sender information, and other shared fields.
-// This avoids mutating the content object currently displayed by the UI.
+// 基于原内容构造用于编辑的新内容副本，保留 @、扩展、发送者等公共字段，
+// 避免原地修改界面正在使用的 content 对象。
 - (nullable NCMessageContent *)edit_newContentFrom:(NCMessageContent *)oldContent
                                               text:(NSString *)text
                                      mentionedInfo:(nullable NCMentionedInfo *)mentionedInfo {
@@ -939,9 +957,10 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         if (self.navigationController) {
             [self.navigationController.view addSubview:self.fullScreenEditView];
         } else {
-            // Fall back to the key window when no navigation controller is available.
             UIWindow *keyWindow = [self edit_keyWindow];
-            [keyWindow addSubview:self.fullScreenEditView];
+            if (keyWindow) {
+                [keyWindow addSubview:self.fullScreenEditView];
+            }
         }
         
         [self.fullScreenEditView showWithConfig:editInputBarControl.inputBarConfig animation:YES];
@@ -1027,7 +1046,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (!model.updateInfo || !model.updateInfo.content) {
         return;
     }
-    // Retry through the shared update entry; nil editContent reuses the pending content in updateInfo.
+    // 重发走统一入口，editContent 传空即复用 updateInfo 中保存的待更新内容。
     [self edit_editMessageModel:model editContent:@"" mentionedInfo:nil isRetry:YES];
 }
 
@@ -1041,20 +1060,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 }
 
 - (UIWindow *)edit_keyWindow {
-    if (@available(iOS 13.0, *)) {
-        NSSet<UIScene *> *connectedScenes = [UIApplication sharedApplication].connectedScenes;
-        for (UIScene *scene in connectedScenes) {
-            if ([scene isKindOfClass:[UIWindowScene class]]) {
-                UIWindowScene *windowScene = (UIWindowScene *)scene;
-                for (UIWindow *window in windowScene.windows) {
-                    if (window.isKeyWindow) {
-                        return window;
-                    }
-                }
-            }
-        }
-    }
-    return [UIApplication sharedApplication].keyWindow;
+    return [NCChatUIUtility getWindowForView:self.view];
 }
 
 // Executes a block on the main thread.

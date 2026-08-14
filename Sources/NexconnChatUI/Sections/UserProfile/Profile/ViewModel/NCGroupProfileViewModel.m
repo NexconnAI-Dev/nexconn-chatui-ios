@@ -30,6 +30,25 @@ static NSString *NCGroupProfileCurrentUserId(void) {
     return [NCEngine getCurrentUserId] ?: @"";
 }
 
+static BOOL NCGroupProfileOperationInvalidatesCurrentUser(NCGroupOperationEvent *event) {
+    if (event.operation == NCGroupOperationDismiss) {
+        return YES;
+    }
+    if (event.operation != NCGroupOperationKick && event.operation != NCGroupOperationQuit) {
+        return NO;
+    }
+    NSString *currentUserId = NCGroupProfileCurrentUserId();
+    if (currentUserId.length == 0) {
+        return NO;
+    }
+    for (NCGroupMemberInfo *memberInfo in event.memberInfos) {
+        if ([memberInfo.userId isEqualToString:currentUserId]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 @interface NCGroupProfileViewModel ()<NCGroupChannelHandler, NCChannelHandler>
 
 @property (nonatomic, copy) NSString *groupId;
@@ -41,6 +60,8 @@ static NSString *NCGroupProfileCurrentUserId(void) {
 @property (nonatomic, assign) BOOL showGroupFollowsCell;
 @property (nonatomic, copy) NSString *groupEventHandlerId;
 @property (nonatomic, copy) NSString *channelEventHandlerId;
+
+- (void)p_leaveProfileForInvalidGroupOperation;
 
 @end
 
@@ -157,11 +178,28 @@ static NSString *NCGroupProfileCurrentUserId(void) {
 
 - (void)onGroupOperation:(NCGroupOperationEvent *)event {
     if ([event.groupId isEqualToString:self.groupId]) {
-        [self updateProfile];
+        if (NCGroupProfileOperationInvalidatesCurrentUser(event)) {
+            [self p_leaveProfileForInvalidGroupOperation];
+        } else {
+            [self updateProfile];
+        }
     }
 }
 
 #pragma mark -- private
+
+- (void)p_leaveProfileForInvalidGroupOperation {
+    void (^leaveBlock)(void) = ^{
+        UIViewController *viewController = [self.responder currentViewController];
+        [viewController.navigationController popViewControllerAnimated:YES];
+        [NCAlertView showAlertController:nil message:NCUILocalizedString(@"not_in_group") hiddenAfterDelay:1];
+    };
+    if ([NSThread isMainThread]) {
+        leaveBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), leaveBlock);
+    }
+}
 
 - (void)fetchGroupInfo {
     [NCGroupChannel getGroupsInfoWithGroupIds:@[self.groupId]

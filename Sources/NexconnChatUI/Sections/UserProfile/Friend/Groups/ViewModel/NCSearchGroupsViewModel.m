@@ -28,6 +28,7 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 
 @property (nonatomic, strong) NCUIPagingQueryOption *option;
 @property (nonatomic, copy) NSString *keyword;
+@property (nonatomic, assign) NSUInteger searchRequestId;
 @end
 
 @implementation NCSearchGroupsViewModel
@@ -65,7 +66,17 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 - (void)viewController:(UIViewController*)viewController
              tableView:(UITableView *)tableView
           didSelectRow:(NSIndexPath *)indexPath {
-    id<NCCellViewModelProtocol> vm = [self.dataSource objectAtIndex:indexPath.row];
+    id<NCCellViewModelProtocol> vm = [self cellViewModelAtIndexPath:indexPath];
+    if (!vm) {
+        [self reloadData:NO];
+        return;
+    }
+    if ([vm isKindOfClass:[NCGroupInfoCellViewModel class]]) {
+        NCGroupInfo *groupInfo = ((NCGroupInfoCellViewModel *)vm).groupInfo;
+        if (groupInfo.groupId.length == 0) {
+            return;
+        }
+    }
     if ([self.delegate respondsToSelector:@selector(searchGroupsViewModel:viewController:tableView:didSelectRow:cellViewModel:)]) {
         BOOL ret = [self.delegate searchGroupsViewModel:self
                                          viewController:viewController
@@ -84,12 +95,19 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 }
 
 - (NSInteger)numberOfRowsInSection:(NSInteger)section {
+    if (section != 0) {
+        return 0;
+    }
     return self.dataSource.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    id<NCCellViewModelProtocol> vm = [self.dataSource objectAtIndex:indexPath.row];
+    id<NCCellViewModelProtocol> vm = [self cellViewModelAtIndexPath:indexPath];
+    if (!vm) {
+        [self reloadData:NO];
+        return [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+    }
     UITableViewCell *cell = [vm tableView:tableView cellForRowAtIndexPath:indexPath];
     return cell;
 }
@@ -161,14 +179,19 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
         self.option = [NCUIPagingQueryOption new];
         self.option.count = NCSearchGroupInfoMaxCount;
     }
+    NSUInteger requestId = [self beginSearchWithKeyword:keyword];
     [self performOperationQueueBlock:^{
-        [NCGroupManager searchJoinedGroupInfos:keyword option:self.option complete:^(NCUIPagingQueryResult<NCGroupInfo *> * _Nullable result) {
+        NCUIPagingQueryOption *requestOption = self.option;
+        [NCGroupManager searchJoinedGroupInfos:keyword option:requestOption complete:^(NCUIPagingQueryResult<NCGroupInfo *> * _Nullable result) {
+            if (![self isCurrentSearchWithKeyword:keyword requestId:requestId]) {
+                return;
+            }
             if (!result) {
                 [self refreshingFinished:YES withTips:NCUILocalizedString(@"group_list_failed")];
                 return;
             }
             if (result.pageToken.length != 0) {
-                self.option.pageToken = result.pageToken;
+                requestOption.pageToken = result.pageToken;
             }
             NSArray *infos = result.data;
             NSMutableArray *array = [NSMutableArray array];
@@ -187,6 +210,9 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
                 [self removeSeparatorLineIfNeed:@[items]];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (![self isCurrentSearchWithKeyword:keyword requestId:requestId]) {
+                    return;
+                }
                 [self.dataSource addObjectsFromArray:items];
                 [self reloadData:self.dataSource.count == 0];
             });
@@ -205,10 +231,44 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 }
 #pragma mark - Private
 
-- (void)restoreData {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.option.pageToken = nil;
+- (id<NCCellViewModelProtocol>)cellViewModelAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section != 0 || indexPath.row < 0 || indexPath.row >= self.dataSource.count) {
+        return nil;
+    }
+    id vm = self.dataSource[indexPath.row];
+    if (![vm conformsToProtocol:@protocol(NCCellViewModelProtocol)]) {
+        return nil;
+    }
+    return vm;
+}
+
+- (NSUInteger)beginSearchWithKeyword:(NSString *)keyword {
+    @synchronized (self) {
+        self.keyword = [keyword copy];
+        self.searchRequestId += 1;
+        return self.searchRequestId;
+    }
+}
+
+- (void)invalidateSearch {
+    @synchronized (self) {
         self.keyword = nil;
+        self.searchRequestId += 1;
+    }
+}
+
+- (BOOL)isCurrentSearchWithKeyword:(NSString *)keyword requestId:(NSUInteger)requestId {
+    @synchronized (self) {
+        return self.searchRequestId == requestId && [self.keyword isEqualToString:keyword];
+    }
+}
+
+- (void)restoreData {
+    [self invalidateSearch];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.option) {
+            self.option.pageToken = nil;
+        }
         [self.dataSource removeAllObjects];
         // Ask the view controller to reload the list.
         [self reloadData:NO];

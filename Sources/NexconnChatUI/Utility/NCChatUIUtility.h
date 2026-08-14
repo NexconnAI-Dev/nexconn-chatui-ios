@@ -173,6 +173,15 @@
 /// Filters and syncs based on the configured enabledReadReceiptConversationTypeList.
 + (void)syncConversationReadStatusIfEnabled:(NCChannelModel *)conversation;
 
+/// Whether messages sent to the given channel type should request read receipts.
+///
+/// Reflects the configured enabledReadReceiptConversationTypeList switch so that
+/// the send/forward entries share one policy instead of hardcoding channel types.
+///
+/// @param channelType The target channel type.
+/// @return YES if read receipts are enabled for this channel type.
++ (BOOL)shouldNeedReadReceiptForChannelType:(NCChannelType)channelType;
+
 /// Get the pinyin initial letter for a Chinese character.
 ///
 /// @param hanZi The Chinese character string.
@@ -196,6 +205,12 @@
 /// @return The key UIWindow.
 + (UIWindow *)getKeyWindow;
 
+/// Get the window that contains the view.
+///
+/// @param view The view used to resolve the current window.
+/// @return The current UIWindow.
++ (UIWindow *)getWindowForView:(UIView *)view;
+
 /// Whether the application is currently in background state.
 + (BOOL)isApplicationInBackground;
 
@@ -203,6 +218,24 @@
 ///
 /// @return The safe area insets.
 + (UIEdgeInsets)getWindowSafeAreaInsets;
+
+/// Get safe area insets from the window that contains the view.
+///
+/// @param view The view used to resolve the current window.
+/// @return The safe area insets.
++ (UIEdgeInsets)getWindowSafeAreaInsetsForView:(UIView *)view;
+
+/// Get status bar height from the window scene that contains the view.
+///
+/// @param view The view used to resolve the current window scene.
+/// @return The status bar height.
++ (CGFloat)getStatusBarHeightForView:(UIView *)view;
+
+/// Get interface orientation from the window scene that contains the view.
+///
+/// @param view The view used to resolve the current window scene.
+/// @return The current interface orientation.
++ (UIInterfaceOrientation)getInterfaceOrientationForView:(UIView *)view;
 
 /// Fix the image orientation for iOS system images.
 ///

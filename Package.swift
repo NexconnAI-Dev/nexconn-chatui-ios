@@ -11,13 +11,13 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/NexconnAI-Dev/nexconn-chat-sdk-ios.git", exact: "26.3.0")
+        .package(url: "https://github.com/NexconnAI-Dev/nexconn-chat-sdk-ios.git", exact: "26.4.0")
     ],
     targets: [
         .binaryTarget(
             name: "NexconnChatUI",
-            url: "https://downloads.nexconn.ai/release/chatui/ios/26.3.0/NexconnChatUI_26.3.0.zip",
-            checksum: "9047caec826ccb0df436f47305bae7c295a84266a04fd6e548d2304cfadcba89"
+            url: "https://downloads.nexconn.ai/release/chatui/ios/26.4.0/NexconnChatUI_26.4.0.zip",
+            checksum: "da8ec8da35a79e49da33068760424121600d8bb106835f5877d10c7ad11fc013"
         ),
         .target(
             name: "NexconnChatUIWrapper",

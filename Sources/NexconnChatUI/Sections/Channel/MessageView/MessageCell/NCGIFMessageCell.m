@@ -97,7 +97,10 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     // Decide whether to download automatically based on the configured size limit.
     NSInteger maxAutoSize = NCChatUIConfigCenter.message.gifAutoDownloadSizeLimit;
     NSString *localPath = [self.model gifMessageLocalPath];
-    if (localPath && [NCFileUtility isFileExist:localPath]) {
+    if (!(localPath && [NCFileUtility isFileExist:localPath])) {
+        localPath = [NCFileUtility fileLocalPathForRemoteURL:[self.model gifMessageRemoteURL]];
+    }
+    if (localPath.length > 0) {
         [self showGifImageView:localPath];
     } else {
         if ([self.model gifMessageRemoteURL].length > 0 && [self.model gifMessageDataSize] > maxAutoSize * 1024) {
@@ -163,21 +166,21 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (void)downLoadGif {
     [self showView:self.loadingImageView];
-    if (self.currentModel.clientId > 0) {
-        [[NCChatUI shared] downloadMediaMessage:self.currentModel.clientId
+    long currentClientId = self.currentModel.clientId;
+    if (currentClientId > 0) {
+        [[NCChatUI shared] downloadMediaMessage:currentClientId
                                        progress:nil
                                      completion:nil
                                          cancel:nil];
         return;
     }
 
-    __weak typeof(self) weakSelf = self;
-    NSString *mediaUrl = [weakSelf.currentModel gifMessageRemoteURL] ?: @"";
-    NSString *fileName = [NCGIFUtility downloadFileNameForMessageName:[weakSelf.currentModel gifMessageName]
-                                                       mediaURLString:mediaUrl];
+    NSString *mediaUrl = [self.currentModel gifMessageRemoteURL] ?: @"";
+    NSString *fileName = [NCGIFUtility downloadFileNameForMediaURLString:mediaUrl defaultExtension:@"gif"];
     if (mediaUrl.length == 0 || fileName.length == 0) {
         NSDictionary *statusDic = @{
-            @"clientId" : @(weakSelf.currentModel.clientId),
+            @"clientId" : @(currentClientId),
+            @"mediaUrl" : mediaUrl,
             @"type" : @"error",
             @"errorCode" : @(-1)
         };
@@ -190,7 +193,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                            fileName:fileName
                     progressHandler:^(NSInteger progress) {
         NSDictionary *statusDic = @{
-            @"clientId" : @(weakSelf.currentModel.clientId),
+            @"clientId" : @(currentClientId),
+            @"mediaUrl" : mediaUrl,
             @"type" : @"progress",
             @"progress" : @(progress)
         };
@@ -200,7 +204,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     } completionHandler:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
         if (error || mediaPath.length == 0) {
             NSDictionary *statusDic = @{
-                @"clientId" : @(weakSelf.currentModel.clientId),
+                @"clientId" : @(currentClientId),
+                @"mediaUrl" : mediaUrl,
                 @"type" : @"error",
                 @"errorCode" : @(error ? error.code : -1)
             };
@@ -209,8 +214,12 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                                                               userInfo:statusDic];
             return;
         }
+        // URL-based 下载底层不写 URL→本地路径映射，此处补写，供重进详情页 fileLocalPathForRemoteURL: 检测已下载状态
+        // （合并转发详情页的合成消息无持久化 clientId，只能靠该映射恢复）
+        [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:mediaUrl];
         NSDictionary *statusDic = @{
-            @"clientId" : @(weakSelf.currentModel.clientId),
+            @"clientId" : @(currentClientId),
+            @"mediaUrl" : mediaUrl,
             @"type" : @"success",
             @"mediaPath" : mediaPath
         };
@@ -219,7 +228,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                                                           userInfo:statusDic];
     } cancelHandler:^{
         NSDictionary *statusDic = @{
-            @"clientId" : @(weakSelf.currentModel.clientId),
+            @"clientId" : @(currentClientId),
+            @"mediaUrl" : mediaUrl,
             @"type" : @"cancel"
         };
         [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
@@ -229,10 +239,19 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 }
 
 - (void)showGifImageView:(NSString *)localPath {
+    long clientId = self.model.clientId;
+    NSString *mediaUrl = [self.model gifMessageRemoteURL];
+    [self showGifImageView:localPath forClientId:clientId mediaUrl:mediaUrl];
+}
+
+- (void)showGifImageView:(NSString *)localPath forClientId:(long)clientId mediaUrl:(NSString *)mediaUrl {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSData *data = [NSData dataWithContentsOfFile:[NCFileUtility correctedFilePath:localPath]];
         NCGIFImage *gifImage = [NCGIFImage animatedImageWithGIFData:data];
         dispatch_main_async_safe(^{
+            if (![self isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                return;
+            }
             if (gifImage) {
                 self.gifImageView.hidden = NO;
                 self.loadBackButton.hidden = YES;
@@ -243,6 +262,18 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
             }
         });
     });
+}
+
+- (BOOL)isCurrentDownloadStatusForClientId:(long)clientId mediaUrl:(NSString *)mediaUrl {
+    if (clientId > 0) {
+        return self.model.clientId == clientId && self.currentModel.clientId == clientId;
+    }
+    if (mediaUrl.length > 0) {
+        NSString *currentMediaUrl = [self.model gifMessageRemoteURL] ?: @"";
+        NSString *currentModelMediaUrl = [self.currentModel gifMessageRemoteURL] ?: @"";
+        return [currentMediaUrl isEqualToString:mediaUrl] && [currentModelMediaUrl isEqualToString:mediaUrl];
+    }
+    return NO;
 }
 
 - (void)messageCellUpdateSendingStatusEvent:(NSNotification *)notification {
@@ -384,26 +415,43 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 #pragma mark - NSNotification
 - (void)updateDownloadMediaStatus:(NSNotification *)notify {
     NSDictionary *statusDic = notify.userInfo;
-    if (self.model.clientId == [statusDic[@"clientId"] longValue]) {
+    long clientId = [statusDic[@"clientId"] longValue];
+    NSString *mediaUrl = statusDic[@"mediaUrl"];
+    if ([self isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
         if ([statusDic[@"type"] isEqualToString:@"progress"]) {
+            __weak typeof(self) weakSelf = self;
             dispatch_async(dispatch_get_main_queue(), ^{
-                CGFloat progress = (CGFloat)[statusDic[@"progress"] intValue];
-                if (self.gifDownLoadPropressView.hidden) {
-                    [self showView:self.gifDownLoadPropressView];
+                __strong typeof(weakSelf) strongSelf = weakSelf;
+                if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                    return;
                 }
-                [self.gifDownLoadPropressView setProgress:progress];
+                CGFloat progress = (CGFloat)[statusDic[@"progress"] intValue];
+                if (strongSelf.gifDownLoadPropressView.hidden) {
+                    [strongSelf showView:strongSelf.gifDownLoadPropressView];
+                }
+                [strongSelf.gifDownLoadPropressView setProgress:progress];
             });
         } else if ([statusDic[@"type"] isEqualToString:@"success"]) {
+            __weak typeof(self) weakSelf = self;
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self.model setGifMessageLocalPath:statusDic[@"mediaPath"]];
+                __strong typeof(weakSelf) strongSelf = weakSelf;
+                if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                    return;
+                }
+                [strongSelf.model setGifMessageLocalPath:statusDic[@"mediaPath"]];
                 
-                [self showView:self.gifImageView];
-                [self showGifImageView:statusDic[@"mediaPath"]];
+                [strongSelf showView:strongSelf.gifImageView];
+                [strongSelf showGifImageView:statusDic[@"mediaPath"] forClientId:clientId mediaUrl:mediaUrl];
 
             });
         } else if ([statusDic[@"type"] isEqualToString:@"error"]) {
+            __weak typeof(self) weakSelf = self;
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self showView:self.loadfailedImageView];
+                __strong typeof(weakSelf) strongSelf = weakSelf;
+                if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                    return;
+                }
+                [strongSelf showView:strongSelf.loadfailedImageView];
             });
         }
     }

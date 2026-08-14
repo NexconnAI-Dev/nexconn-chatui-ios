@@ -59,7 +59,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (@available(iOS 11.0, *)) {
-        if ([NCChatUIUtility getKeyWindow].safeAreaInsets.bottom > 0) {
+        if ([NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].bottom > 0) {
             _isNotchScreen = YES;
         }
     }
@@ -94,7 +94,7 @@
     [super viewWillDisappear:animated];
     self.navigationController.navigationBarHidden = NO;
     _statusBarHidden = NO;
-    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    [self setNeedsStatusBarAppearanceUpdate];
     if (self.currentIndex < self.messageModelArray.count) {
         self.previousMessageId = self.messageModelArray[self.currentIndex].clientId;
     }
@@ -165,7 +165,7 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
         [strongSelf getOlderMessagesThanModel:resolvedModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *olderModels) {
             [strongSelf getLaterMessagesThanModel:resolvedModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *newerModels) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                // Assemble in ascending receive order: older + anchor + newer. Deduplicate by clientId so the anchor appears once.
+                // 按接收顺序（升序）拼装：更旧 + 锚点 + 更新，clientId 去重保证锚点只出现一次
                 NSMutableArray<NCMessageModel *> *imageArr = [[NSMutableArray alloc] init];
                 [strongSelf appendModels:olderModels toArray:imageArr];
                 [strongSelf appendModels:@[ resolvedModel ] toArray:imageArr];
@@ -261,7 +261,15 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
     return models;
 }
 
-// Compare message identity by clientId first, then messageId.
+- (NSArray<NCMessageModel *> *)chronologicalModelsFromDescendingMessages:(NSArray<NCMessage *> *)messages {
+    NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
+    if (messageModels.count <= 1) {
+        return messageModels;
+    }
+    return [[messageModels reverseObjectEnumerator] allObjects];
+}
+
+// 判断两条消息是否为同一条（clientId 优先，其次 messageId）
 - (BOOL)isSameModel:(NCMessageModel *)a asModel:(NCMessageModel *)b {
     if (!a || !b) {
         return NO;
@@ -276,8 +284,8 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
     return NO;
 }
 
-// Append models to target while skipping messages already present under the identity rules.
-// The underlying by_time query may include the anchor in every result, so deduplication keeps it from appearing twice.
+// 将 models 按去重规则追加到 target（跳过 target 中已存在的相同消息）。
+// 底层 by_time 查询会把锚点时间那条注入到每次结果里，去重保证锚点只出现一次。
 - (void)appendModels:(NSArray<NCMessageModel *> *)models toArray:(NSMutableArray<NCMessageModel *> *)target {
     for (NCMessageModel *model in models) {
         BOOL exists = NO;
@@ -293,7 +301,7 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
     }
 }
 
-// Return only messages not already in the list for paged swipe deduplication.
+// 过滤掉当前列表里已存在的消息，返回真正新增的部分（用于滑动翻页去重）
 - (NSArray<NCMessageModel *> *)modelsExcludingExisting:(NSArray<NCMessageModel *> *)models {
     NSMutableArray<NCMessageModel *> *result = [NSMutableArray array];
     for (NCMessageModel *model in models) {
@@ -315,7 +323,7 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
                             count:(NSInteger)count
                             times:(int)times
                        completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    // Newer messages in ascending order (send_time > anchor).
+    // 更新的消息：升序（send_time > anchor）
     [self queryImageMessagesWithAnchorModel:model count:count isAscending:YES completion:^(NSArray<NCMessage *> *messages) {
         NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
         if (times < 2 && messageModels.count == 0 && messages.count == count && messages.lastObject) {
@@ -335,9 +343,9 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
                             count:(NSInteger)count
                             times:(int)times
                        completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    // Older messages are queried in descending order (send_time < anchor); the database returns them in ascending order.
+    // 更旧的消息按降序查询；展示列表需要保持旧到新的顺序，和 Android 图片预览一致。
     [self queryImageMessagesWithAnchorModel:model count:count isAscending:NO completion:^(NSArray<NCMessage *> *messages) {
-        NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
+        NSArray<NCMessageModel *> *messageModels = [self chronologicalModelsFromDescendingMessages:messages];
         if (times < 2 && messages.count == count && messageModels.count == 0 && messages.lastObject) {
             NCMessageModel *nextModel = [NCMessageModel modelWithNCMessage:messages.lastObject];
             if (nextModel) {
@@ -437,7 +445,6 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
                 }
                 [strongSelf.messageModelArray addObjectsFromArray:newModels];
                 [strongSelf.collectionView insertItemsAtIndexPaths:[indexPathes copy]];
-                [strongSelf.collectionView reloadItemsAtIndexPaths:[indexPathes copy]];
                 [strongSelf.collectionView
                     scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:strongSelf.currentIndex inSection:0]
                            atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
@@ -496,7 +503,7 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
                           count:(NSInteger)count
                           times:(int)times
                      completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    // Page toward newer messages in ascending order.
+    // 向后（更新）翻页：升序
     [self queryImageMessagesWithAnchorModel:model count:count isAscending:YES completion:^(NSArray<NCMessage *> *messages) {
         NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
         if (times < 2 && messageModels.count == 0 && messages.count == count && messages.lastObject) {
@@ -516,9 +523,9 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
                            count:(NSInteger)count
                            times:(int)times
                       completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    // Query older messages in descending order; the database returns ascending results, so no additional reversal is needed.
+    // 向前（更旧）翻页：降序查询后反转为旧到新，再插到列表前端。
     [self queryImageMessagesWithAnchorModel:model count:count isAscending:NO completion:^(NSArray<NCMessage *> *messages) {
-        NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
+        NSArray<NCMessageModel *> *messageModels = [self chronologicalModelsFromDescendingMessages:messages];
         if (times < 2 && messages.count == count && messageModels.count == 0 && messages.lastObject) {
             NCMessageModel *nextModel = [NCMessageModel modelWithNCMessage:messages.lastObject];
             if (nextModel) {
@@ -700,6 +707,5 @@ static NCChannelIdentifier *NCImageChannelIdentifierFromMessageModel(NCMessageMo
                      animations:^{
                          [self setNeedsStatusBarAppearanceUpdate];
                      }];
-    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
 }
 @end

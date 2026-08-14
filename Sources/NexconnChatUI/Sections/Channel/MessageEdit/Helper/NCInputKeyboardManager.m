@@ -14,7 +14,7 @@
 #define SYS_STATUSBAR_HEIGHT 20
 // Additional status bar height while Personal Hotspot is active.
 #define HOTSPOT_STATUSBAR_HEIGHT 20
-#define APP_STATUSBAR_HEIGHT (CGRectGetHeight([UIApplication sharedApplication].statusBarFrame))
+#define APP_STATUSBAR_HEIGHT ([NCChatUIUtility getStatusBarHeightForView:nil])
 #define IS_HOTSPOT_CONNECTED (APP_STATUSBAR_HEIGHT == (SYS_STATUSBAR_HEIGHT + HOTSPOT_STATUSBAR_HEIGHT) ? YES : NO)
 
 @interface NCInputKeyboardManager ()

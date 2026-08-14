@@ -50,9 +50,9 @@
     return self;
 }
 
-// Showing the timestamp increases the cell height and shifts the content down by the timestamp area.
-// When this state changes, invalidate the cached cellSize so layout recalculates it. Otherwise, the
-// timestamp is drawn outside the cached height and the bubble can overlap the next cell.
+// 时间标签的显示与否会改变 cell 高度（显示时内容整体下移一个时间标签区块的高度）。
+// 一旦该状态变化，缓存的 cellSize 便与实际布局不再对应，必须作废以触发重新计算，
+// 否则会出现气泡上下重叠（cell 画了时间标签但高度未包含它，内容溢出压到下一条）。
 - (void)setIsDisplayMessageTime:(BOOL)isDisplayMessageTime {
     if (_isDisplayMessageTime != isDisplayMessageTime) {
         _isDisplayMessageTime = isDisplayMessageTime;
