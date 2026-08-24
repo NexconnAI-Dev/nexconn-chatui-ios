@@ -9,11 +9,11 @@
 //  Modified by Nexconn in 2026.
 //  Base class for refresh controls
 
-#import <UIKit/UIKit.h>
 #import "NCMJRefreshConst.h"
-#import "UIView+NCMJExtension.h"
 #import "UIScrollView+NCMJExtension.h"
 #import "UIScrollView+NCMJRefresh.h"
+#import "UIView+NCMJExtension.h"
+#import <UIKit/UIKit.h>
 
 /** Refresh control state. */
 typedef NS_ENUM(NSInteger, NCMJRefreshState) {
@@ -61,11 +61,14 @@ typedef void (^NCMJRefreshComponentEndRefreshingCompletionBlock)(void);
 - (void)beginRefreshing;
 - (void)beginRefreshingWithCompletionBlock:(void (^)(void))completionBlock;
 /** Completion callback invoked after refresh begins. */
-@property (copy, nonatomic) NCMJRefreshComponentbeginRefreshingCompletionBlock beginRefreshingCompletionBlock;
+@property (copy, nonatomic)
+    NCMJRefreshComponentbeginRefreshingCompletionBlock beginRefreshingCompletionBlock;
 /** Completion callback invoked during the refresh-ending animation. */
-@property (copy, nonatomic) NCMJRefreshComponentEndRefreshingCompletionBlock endRefreshingAnimateCompletionBlock;
+@property (copy, nonatomic)
+    NCMJRefreshComponentEndRefreshingCompletionBlock endRefreshingAnimateCompletionBlock;
 /** Completion callback invoked after refresh ends. */
-@property (copy, nonatomic) NCMJRefreshComponentEndRefreshingCompletionBlock endRefreshingCompletionBlock;
+@property (copy, nonatomic)
+    NCMJRefreshComponentEndRefreshingCompletionBlock endRefreshingCompletionBlock;
 /** Ends the refreshing state. */
 - (void)endRefreshing;
 - (void)endRefreshingWithCompletionBlock:(void (^)(void))completionBlock;

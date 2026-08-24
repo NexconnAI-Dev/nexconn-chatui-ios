@@ -7,9 +7,9 @@
 //
 
 #import "NCChatSessionInputBarControl.h"
-#import "NCEmoticonTabSource.h"
 #import "NCChatUIExtensionPluginItemInfo.h"
 #import "NCChatUIUserInfo.h"
+#import "NCEmoticonTabSource.h"
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
@@ -37,14 +37,15 @@
 - (void)setScheme:(NSString *)scheme forModule:(NSString *)moduleName;
 
 #pragma mark - input bar
-- (NSArray<NCChatUIExtensionPluginItemInfo *> *)getPluginBoardItemInfoList:(NCChannelType)channelType
-                                                            channelId:(NSString *)channelId;
+- (NSArray<NCChatUIExtensionPluginItemInfo *> *)getPluginBoardItemInfoList:
+                                                    (NCChannelType)channelType
+                                                                 channelId:(NSString *)channelId;
 - (NSArray<id<NCEmoticonTabSource>> *)getEmoticonTabList:(NCChannelType)channelType
-                                                channelId:(NSString *)channelId;
+                                               channelId:(NSString *)channelId;
 
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
-  didTouchAddButton:(UIButton *)addButton
-         inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
+    didTouchAddButton:(UIButton *)addButton
+           inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
     didTouchEmotionIconIndex:(int)index
                   inInputBar:(NCChatSessionInputBarControl *)inputBarControl
@@ -52,8 +53,10 @@
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
     didTouchSettingButton:(UIButton *)settingButton
                inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
-- (void)inputTextViewDidChange:(UITextView *)inputTextView inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
-- (void)inputBarStatusDidChange:(KBottomBarStatus)status inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
+- (void)inputTextViewDidChange:(UITextView *)inputTextView
+                    inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
+- (void)inputBarStatusDidChange:(KBottomBarStatus)status
+                     inInputBar:(NCChatSessionInputBarControl *)inputBarControl;
 
 /*!
  Whether the emoticon add button should be displayed.

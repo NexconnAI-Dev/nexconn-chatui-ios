@@ -15,12 +15,14 @@
     [super layoutSubviews];
     self.backgroundColor = NCDynamicColor(@"common_background_color");
     self.imageView.frame = CGRectMake(0, 0, 65, 65);
-    self.imageView.center = CGPointMake(self.imageView.frame.size.width / 2, self.imageView.frame.size.height / 2);
+    self.imageView.center =
+        CGPointMake(self.imageView.frame.size.width / 2, self.imageView.frame.size.height / 2);
     CGRect labelFrame = self.textLabel.frame;
     if ([NCChatUIUtility isRTL]) {
         self.imageView.frame = CGRectMake(self.contentView.frame.size.width - 65, 0, 65, 65);
         labelFrame.origin.x = 0;
-        labelFrame.size.width = self.contentView.frame.size.width - self.imageView.frame.size.width - 12;
+        labelFrame.size.width =
+            self.contentView.frame.size.width - self.imageView.frame.size.width - 12;
         self.textLabel.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
     } else {
         self.textLabel.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
@@ -38,36 +40,41 @@
     self.imageView.contentMode = UIViewContentModeScaleAspectFill;
     UIColor *color = NCDynamicColor(@"text_primary_color");
     if (!color) {
-        color = [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x000000) darkColor:[HEXCOLOR(0xffffff) colorWithAlphaComponent:0.9]];
+        color =
+            [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x000000)
+                                        darkColor:[HEXCOLOR(0xffffff) colorWithAlphaComponent:0.9]];
     }
-    NSMutableAttributedString *nameString =
-        [[NSMutableAttributedString alloc] initWithString:model.albumName
-                                               attributes:@{
-                                                   NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfSecondLevel],
-                                                   NSForegroundColorAttributeName :color
-                                               }];
+    NSMutableAttributedString *nameString = [[NSMutableAttributedString alloc]
+        initWithString:model.albumName
+            attributes:@{
+                NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfSecondLevel],
+                NSForegroundColorAttributeName : color
+            }];
     UIColor *foreColor = NCDynamicColor(@"disabled_color");
     if (!foreColor) {
-        foreColor = [NCChatUIUtility generateDynamicColor:[UIColor lightGrayColor] darkColor:HEXCOLOR(0x585858)];
+        foreColor = [NCChatUIUtility generateDynamicColor:[UIColor lightGrayColor]
+                                                darkColor:HEXCOLOR(0x585858)];
     }
     NSAttributedString *countString = [[NSAttributedString alloc]
         initWithString:[NSString stringWithFormat:@"  (%ld)", model.count]
             attributes:@{
                 NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfSecondLevel],
-                NSForegroundColorAttributeName :foreColor
+                NSForegroundColorAttributeName : foreColor
             }];
     [nameString appendAttributedString:countString];
     self.textLabel.attributedText = nameString;
     if ([model.asset isKindOfClass:[PHFetchResult class]]) {
-        [[NCAssetHelper shareAssetHelper] getThumbnailWithAsset:[model.asset lastObject]
-                                                           size:CGSizeMake(65 * SCREEN_SCALE, 65 * SCREEN_SCALE)
-                                                         result:^(UIImage *thumbnailImage) {
-                                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                                 self.imageView.image = thumbnailImage;
-                                                                 self.textLabel.text = @""; // Resetting the text forces UIKit to refresh the image layout.
-                                                                 self.textLabel.attributedText = nameString;
-                                                             });
-                                                         }];
+        [[NCAssetHelper shareAssetHelper]
+            getThumbnailWithAsset:[model.asset lastObject]
+                             size:CGSizeMake(65 * SCREEN_SCALE, 65 * SCREEN_SCALE)
+                           result:^(UIImage *thumbnailImage) {
+                             dispatch_async(dispatch_get_main_queue(), ^{
+                               self.imageView.image = thumbnailImage;
+                               self.textLabel.text = @""; // Resetting the text forces UIKit to
+                                                          // refresh the image layout.
+                               self.textLabel.attributedText = nameString;
+                             });
+                           }];
     }
 }
 

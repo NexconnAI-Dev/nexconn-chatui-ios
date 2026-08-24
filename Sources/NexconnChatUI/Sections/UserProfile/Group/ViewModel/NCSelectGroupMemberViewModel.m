@@ -7,18 +7,18 @@
 //
 
 #import "NCSelectGroupMemberViewModel.h"
-#import "NCRemoveGroupMemberCellViewModel.h"
-#import "NCGroupManager.h"
 #import "NCAlertView.h"
-#import "NCChatUICommonDefine.h"
 #import "NCChatUI.h"
-@interface NCSelectGroupMemberViewModel ()<NCSearchBarViewModelDelegate>
+#import "NCChatUICommonDefine.h"
+#import "NCGroupManager.h"
+#import "NCRemoveGroupMemberCellViewModel.h"
+@interface NCSelectGroupMemberViewModel () <NCSearchBarViewModelDelegate>
 
-@property (nonatomic, strong) NSMutableArray <NCRemoveGroupMemberCellViewModel *>*mutableMemberList;
+@property (nonatomic, strong) NSMutableArray<NCRemoveGroupMemberCellViewModel *> *mutableMemberList;
 
-@property (nonatomic, strong) NSMutableArray <NCRemoveGroupMemberCellViewModel *>*matchMemberList;
+@property (nonatomic, strong) NSMutableArray<NCRemoveGroupMemberCellViewModel *> *matchMemberList;
 
-@property (nonatomic, strong) NSMutableArray <NSString *>*selectUserIds;
+@property (nonatomic, strong) NSMutableArray<NSString *> *selectUserIds;
 
 @property (nonatomic, strong) NCSearchBarViewModel *searchBarVM;
 
@@ -45,7 +45,8 @@
 
 @dynamic delegate;
 
-+ (instancetype)viewModelWithGroupId:(NSString *)groupId existingUserIds:(NSArray *)existingUserIds{
++ (instancetype)viewModelWithGroupId:(NSString *)groupId
+                     existingUserIds:(NSArray *)existingUserIds {
     NCSelectGroupMemberViewModel *viewModel = [[self.class alloc] init];
     viewModel.groupId = groupId;
     viewModel.existingUserIds = existingUserIds;
@@ -105,31 +106,42 @@
     [self.responder reloadData:NO];
 }
 
-#pragma mark -- NCListViewModelProtocol
+#pragma mark-- NCListViewModelProtocol
 
 - (void)registerCellForTableView:(UITableView *)tableView {
     [NCRemoveGroupMemberCellViewModel registerCellForTableView:tableView];
 }
 
-- (void)viewController:(UIViewController *)viewController tableView:(UITableView *)tableView didSelectRow:(NSIndexPath *)indexPath {
-    NCRemoveGroupMemberCellViewModel *vm = (NCRemoveGroupMemberCellViewModel *)self.memberList[indexPath.row];
-    
-    if ([self.delegate respondsToSelector:@selector(selectGroupMember:viewController:tableView:didSelectRow:cellViewModel:)]) {
-        BOOL intercept = [self.delegate selectGroupMember:self viewController:[self.responder currentViewController] tableView:tableView didSelectRow:indexPath cellViewModel:vm];
+- (void)viewController:(UIViewController *)viewController
+             tableView:(UITableView *)tableView
+          didSelectRow:(NSIndexPath *)indexPath {
+    NCRemoveGroupMemberCellViewModel *vm =
+        (NCRemoveGroupMemberCellViewModel *)self.memberList[indexPath.row];
+
+    if ([self.delegate respondsToSelector:@selector(selectGroupMember:viewController:tableView:
+                                                    didSelectRow:cellViewModel:)]) {
+        BOOL intercept = [self.delegate selectGroupMember:self
+                                           viewController:[self.responder currentViewController]
+                                                tableView:tableView
+                                             didSelectRow:indexPath
+                                            cellViewModel:vm];
         if (intercept) {
             return;
         }
     }
-    
-    if (vm.selectState != NCSelectStateDisable){
-        if ((vm.selectState == NCSelectStateUnselect) && self.selectUserIds.count >= self.maxSelectCount) {
+
+    if (vm.selectState != NCSelectStateDisable) {
+        if ((vm.selectState == NCSelectStateUnselect) &&
+            self.selectUserIds.count >= self.maxSelectCount) {
             if (!self.tip) {
-                self.tip = [NSString stringWithFormat:NCUILocalizedString(@"group_member_select_max_tip"), @(self.maxSelectCount)];
+                self.tip =
+                    [NSString stringWithFormat:NCUILocalizedString(@"group_member_select_max_tip"),
+                                               @(self.maxSelectCount)];
             }
             [NCAlertView showAlertController:nil message:self.tip hiddenAfterDelay:2];
             return;
         }
-        
+
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
         [vm updateCell:cell state:(vm.selectState ? NCSelectStateUnselect : NCSelectStateSelect)];
         if (vm.selectState == NCSelectStateSelect) {
@@ -143,17 +155,19 @@
     }
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCRemoveGroupMemberCellViewModel *cellVM = (NCRemoveGroupMemberCellViewModel *)self.memberList[indexPath.row];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCRemoveGroupMemberCellViewModel *cellVM =
+        (NCRemoveGroupMemberCellViewModel *)self.memberList[indexPath.row];
     UITableViewCell *cell = [cellVM tableView:tableView cellForRowAtIndexPath:indexPath];
-    [self updateCellViewModelSelectState:cellVM complete:^(NCSelectState state) {
-        [cellVM updateCell:cell state:state];
-    }];
+    [self updateCellViewModelSelectState:cellVM
+                                complete:^(NCSelectState state) {
+                                  [cellVM updateCell:cell state:state];
+                                }];
     return cell;
 }
 
-
-#pragma mark -- private
+#pragma mark-- private
 
 - (NSInteger)totalCountForSearchQuery {
     if (![self.searchMembersQuery respondsToSelector:@selector(totalCount)]) {
@@ -187,54 +201,59 @@
     }
     NCSearchGroupMembersQuery *searchQuery = self.searchMembersQuery;
     self.isLoadingSearchMembers = YES;
-    [searchQuery loadNextPageWithCompletion:^(NSArray<NCGroupMemberInfo *> * _Nullable members,
-                                              NCError * _Nullable error) {
-        BOOL queryIsCurrent = self.searchMembersQuery == searchQuery;
-        BOOL keywordIsCurrent = [searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""];
-        if (!queryIsCurrent || !keywordIsCurrent) {
-            if (queryIsCurrent) {
-                self.isLoadingSearchMembers = NO;
+    [searchQuery loadNextPageWithCompletion:^(NSArray<NCGroupMemberInfo *> *_Nullable members,
+                                              NCError *_Nullable error) {
+      BOOL queryIsCurrent = self.searchMembersQuery == searchQuery;
+      BOOL keywordIsCurrent =
+          [searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""];
+      if (!queryIsCurrent || !keywordIsCurrent) {
+          if (queryIsCurrent) {
+              self.isLoadingSearchMembers = NO;
+          }
+          return;
+      }
+      if (error) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.searchMembersQuery != searchQuery ||
+                ![searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""]) {
+                return;
             }
-            return;
-        }
-        if (error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.searchMembersQuery != searchQuery ||
-                    ![searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""]) {
-                    return;
-                }
-                self.isLoadingSearchMembers = NO;
-                if ([self.responder respondsToSelector:@selector(refreshingFinished:withTips:)]) {
-                    [self.responder refreshingFinished:NO withTips:nil];
-                }
-                [self.responder reloadData:self.matchMemberList.count == 0];
-            });
-            return;
-        }
-        NSArray<NCGroupMemberInfo *> *memberList = members ?: @[];
-        self.loadedSearchMemberCount += memberList.count;
-        self.hasMoreSearchMembers = [self searchHasMoreWithCurrentPageCount:memberList.count];
-        NSMutableArray<NSString *> *userIds = [NSMutableArray array];
-        for (NCGroupMemberInfo *member in memberList) {
-            if (member.userId.length > 0) {
-                [userIds addObject:member.userId];
+            self.isLoadingSearchMembers = NO;
+            if ([self.responder respondsToSelector:@selector(refreshingFinished:withTips:)]) {
+                [self.responder refreshingFinished:NO withTips:nil];
             }
-        }
-        [NCGroupManager fetchFriendInfosWithUserIds:userIds.copy complete:^(NSArray<NCFriendInfo *> * _Nullable friendInfos) {
-            NSArray *list = [self getViewModelsWithMembers:memberList friendInfos:friendInfos];
-            if (list.count) {
-                [self removeSeparatorLineIfNeed:@[list]];
-            }
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.searchMembersQuery != searchQuery ||
-                    ![searchKeyword isEqualToString:self.searchBarVM.searchBar.text ?: @""]) {
-                    return;
-                }
-                self.isLoadingSearchMembers = NO;
-                [self.matchMemberList addObjectsFromArray:list];
-                [self.responder reloadData:self.matchMemberList.count == 0];
-            });
-        }];
+            [self.responder reloadData:self.matchMemberList.count == 0];
+          });
+          return;
+      }
+      NSArray<NCGroupMemberInfo *> *memberList = members ?: @[];
+      self.loadedSearchMemberCount += memberList.count;
+      self.hasMoreSearchMembers = [self searchHasMoreWithCurrentPageCount:memberList.count];
+      NSMutableArray<NSString *> *userIds = [NSMutableArray array];
+      for (NCGroupMemberInfo *member in memberList) {
+          if (member.userId.length > 0) {
+              [userIds addObject:member.userId];
+          }
+      }
+      [NCGroupManager
+          fetchFriendInfosWithUserIds:userIds.copy
+                             complete:^(NSArray<NCFriendInfo *> *_Nullable friendInfos) {
+                               NSArray *list = [self getViewModelsWithMembers:memberList
+                                                                  friendInfos:friendInfos];
+                               if (list.count) {
+                                   [self removeSeparatorLineIfNeed:@[ list ]];
+                               }
+                               dispatch_async(dispatch_get_main_queue(), ^{
+                                 if (self.searchMembersQuery != searchQuery ||
+                                     ![searchKeyword
+                                         isEqualToString:self.searchBarVM.searchBar.text ?: @""]) {
+                                     return;
+                                 }
+                                 self.isLoadingSearchMembers = NO;
+                                 [self.matchMemberList addObjectsFromArray:list];
+                                 [self.responder reloadData:self.matchMemberList.count == 0];
+                               });
+                             }];
     }];
 }
 
@@ -246,40 +265,51 @@
     option.pageToken = self.queryResult.pageToken;
     option.count = self.pageCount;
     NCGroupMemberRole role;
-    // The first page includes the owner and admins. Once queryResult exists, later pages load regular members only.
+    // The first page includes the owner and admins. Once queryResult exists, later pages load
+    // regular members only.
     if (self.queryResult) {
         role = NCGroupMemberRoleNormal;
     } else {
         role = NCGroupMemberRoleUndef;
     }
     option.order = YES;
-    [NCGroupManager getGroupMemberInfos:self.groupId option:option role:role complete:^(NCUIPagingQueryResult<NCGroupMemberInfo *> * _Nonnull result) {
-        if (result.data.count == 0) {
-            return;
-        }
-        NSMutableArray<NSString *> *userIds = [NSMutableArray array];
-        for (NCGroupMemberInfo *member in result.data) {
-            if (member.userId.length > 0) {
-                [userIds addObject:member.userId];
-            }
-        }
-        [NCGroupManager fetchFriendInfosWithUserIds:userIds.copy complete:^(NSArray<NCFriendInfo *> * _Nullable friendInfos) {
-            NSArray *list = [self getViewModelsWithMembers:result.data friendInfos:friendInfos];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.queryResult = result;
-                [self.mutableMemberList addObjectsFromArray:list];
-                [self.responder reloadData:NO];
-            });
-        }];
-    }];
+    [NCGroupManager
+        getGroupMemberInfos:self.groupId
+                     option:option
+                       role:role
+                   complete:^(NCUIPagingQueryResult<NCGroupMemberInfo *> *_Nonnull result) {
+                     if (result.data.count == 0) {
+                         return;
+                     }
+                     NSMutableArray<NSString *> *userIds = [NSMutableArray array];
+                     for (NCGroupMemberInfo *member in result.data) {
+                         if (member.userId.length > 0) {
+                             [userIds addObject:member.userId];
+                         }
+                     }
+                     [NCGroupManager
+                         fetchFriendInfosWithUserIds:userIds.copy
+                                            complete:^(
+                                                NSArray<NCFriendInfo *> *_Nullable friendInfos) {
+                                              NSArray *list =
+                                                  [self getViewModelsWithMembers:result.data
+                                                                     friendInfos:friendInfos];
+                                              dispatch_async(dispatch_get_main_queue(), ^{
+                                                self.queryResult = result;
+                                                [self.mutableMemberList addObjectsFromArray:list];
+                                                [self.responder reloadData:NO];
+                                              });
+                                            }];
+                   }];
 }
 
-#pragma mark -- public
+#pragma mark-- public
 
 - (UISearchBar *)configureSearchBar {
     NCSearchBarViewModel *vm = [[NCSearchBarViewModel alloc] init];
     vm.delegate = self;
-    if ([self.delegate respondsToSelector:@selector(selectGroupMember:willLoadSearchBarViewModel:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(selectGroupMember:willLoadSearchBarViewModel:)]) {
         self.searchBarVM = [self.delegate selectGroupMember:self willLoadSearchBarViewModel:vm];
     } else {
         self.searchBarVM = vm;
@@ -288,8 +318,12 @@
 }
 
 - (void)selectionDidDone {
-    if ([self.delegate respondsToSelector:@selector(selectGroupMemberDidSelectComplete:selectUserIds:viewController:)]) {
-        BOOL intercept = [self.delegate selectGroupMemberDidSelectComplete:self selectUserIds:self.selectUserIds viewController:[self.responder currentViewController]];
+    if ([self.delegate respondsToSelector:@selector(selectGroupMemberDidSelectComplete:
+                                                    selectUserIds:viewController:)]) {
+        BOOL intercept = [self.delegate
+            selectGroupMemberDidSelectComplete:self
+                                 selectUserIds:self.selectUserIds
+                                viewController:[self.responder currentViewController]];
         if (intercept) {
             return;
         }
@@ -299,39 +333,44 @@
     }
 }
 
-
-- (NSArray<NCRemoveGroupMemberCellViewModel *> *)getViewModelsWithMembers:(NSArray<NCGroupMemberInfo *> *)members friendInfos:(NSArray<NCFriendInfo *> *)friendInfos {
+- (NSArray<NCRemoveGroupMemberCellViewModel *> *)
+    getViewModelsWithMembers:(NSArray<NCGroupMemberInfo *> *)members
+                 friendInfos:(NSArray<NCFriendInfo *> *)friendInfos {
     NSMutableArray *list = [NSMutableArray array];
     for (NCGroupMemberInfo *member in members) {
         if ([self.hideUserIds containsObject:member.userId]) {
             continue;
         }
-        NCRemoveGroupMemberCellViewModel *cellVM = [[NCRemoveGroupMemberCellViewModel alloc] initWithMember:member];
+        NCRemoveGroupMemberCellViewModel *cellVM =
+            [[NCRemoveGroupMemberCellViewModel alloc] initWithMember:member];
         if (friendInfos.count > 0) {
-            cellVM.remark = [NCGroupManager friendWithUserId:member.userId inFriendInfos:friendInfos].remark;
+            cellVM.remark =
+                [NCGroupManager friendWithUserId:member.userId inFriendInfos:friendInfos].remark;
         }
         [list addObject:cellVM];
     }
-    if ([self.delegate respondsToSelector:@selector(selectGroupMember:willLoadItemsInDataSource:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(selectGroupMember:willLoadItemsInDataSource:)]) {
         list = [self.delegate selectGroupMember:self willLoadItemsInDataSource:list].mutableCopy;
     }
     if (list.count) {
-        [self removeSeparatorLineIfNeed:@[list]];
+        [self removeSeparatorLineIfNeed:@[ list ]];
     }
     return list;
 }
 
-- (void)updateCellViewModelSelectState:(NCRemoveGroupMemberCellViewModel *)cellVM complete:(void(^)(NCSelectState state))complete {
+- (void)updateCellViewModelSelectState:(NCRemoveGroupMemberCellViewModel *)cellVM
+                              complete:(void (^)(NCSelectState state))complete {
     if ([cellVM.member.userId isEqualToString:[NCEngine getCurrentUserId]]) {
         complete(NCSelectStateDisable);
         return;
     }
-    
+
     if ([self.existingUserIds containsObject:cellVM.member.userId]) {
         complete(NCSelectStateDisable);
         return;
     }
-    
+
     if ([self.selectUserIds containsObject:cellVM.member.userId]) {
         complete(NCSelectStateSelect);
         return;
@@ -341,7 +380,7 @@
     return;
 }
 
-#pragma mark -- setter
+#pragma mark-- setter
 
 - (void)setMaxSelectCount:(NSInteger)maxSelectCount {
     if (maxSelectCount < 0) {
@@ -353,7 +392,7 @@
     _maxSelectCount = maxSelectCount;
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NSMutableArray<NSString *> *)selectUserIds {
     if (!_selectUserIds) {

@@ -43,7 +43,8 @@
 
 - (NSUInteger)nc_unsignedIntegerForKey:(id)key {
     id value = [self nc_JSONObjectForKey:key];
-    return [value respondsToSelector:@selector(unsignedIntegerValue)] ? [value unsignedIntegerValue] : 0;
+    return [value respondsToSelector:@selector(unsignedIntegerValue)] ? [value unsignedIntegerValue]
+                                                                      : 0;
 }
 
 - (int)nc_intForKey:(id)key {
@@ -73,7 +74,9 @@
 
 - (unsigned long long)nc_unsignedLongLongIntForKey:(id)key {
     id value = [self nc_JSONObjectForKey:key];
-    return [value respondsToSelector:@selector(unsignedLongLongValue)] ? [value unsignedLongLongValue] : 0;
+    return [value respondsToSelector:@selector(unsignedLongLongValue)]
+               ? [value unsignedLongLongValue]
+               : 0;
 }
 
 - (BOOL)nc_boolForKey:(id)key {

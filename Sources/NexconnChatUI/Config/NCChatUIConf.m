@@ -16,8 +16,7 @@
 @end
 
 @implementation NCChatUIConf
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         self.globalNavigationBarTintColor = [UIColor blackColor];
@@ -69,7 +68,7 @@
         }
     }
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    [dict addEntriesFromDictionary:types?:@{}];
+    [dict addEntriesFromDictionary:types ?: @{}];
     self.fileSuffixDictionary = [dict copy];
     return YES;
 }

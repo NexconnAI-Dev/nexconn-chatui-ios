@@ -7,18 +7,18 @@
 //
 
 #import "NCMessageBaseCell.h"
+#import "NCAlertView.h"
+#import "NCBaseButton.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
 #import "NCMessageSelectionUtility.h"
-#import "NCAlertView.h"
-#import "NCChatUIConfig.h"
-#import "NCBaseButton.h"
-NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificationMessageBaseCellUpdateSendingStatus";
+NSString *const KNotificationMessageBaseCellUpdateSendingStatus =
+    @"KNotificationMessageBaseCellUpdateSendingStatus";
 #define SelectButtonSize CGSizeMake(20, 20)
 #define SelectButtonSpaceLeft 8 // Left inset for the selection button.
 
-@interface NCMessageBaseCell ()
-{
+@interface NCMessageBaseCell () {
     __weak id<NCMessageCellDelegate> _delegate;
 }
 @property (nonatomic, strong) UITapGestureRecognizer *multiSelectTap;
@@ -67,9 +67,10 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
 + (CGSize)sizeForMessageModel:(NCMessageModel *)model
       withCollectionViewWidth:(CGFloat)collectionViewWidth
          referenceExtraHeight:(CGFloat)extraHeight {
-    NCLogReleaseW(@"Warning, you not implement sizeForMessageModel:withCollectionViewWidth:referenceExtraHeight: method for "
-          @"you custom cell %@",
-          NSStringFromClass(self));
+    NCLogReleaseW(@"Warning, you not implement "
+                  @"sizeForMessageModel:withCollectionViewWidth:referenceExtraHeight: method for "
+                  @"you custom cell %@",
+                  NSStringFromClass(self));
     return CGSizeMake(0, 0);
 }
 
@@ -89,10 +90,11 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
 #pragma mark - Private Methods
 
 - (void)setupMessageBaseCellView {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(messageCellUpdateSendingStatusEvent:)
-                                                 name:KNotificationMessageBaseCellUpdateSendingStatus
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(messageCellUpdateSendingStatusEvent:)
+               name:KNotificationMessageBaseCellUpdateSendingStatus
+             object:nil];
     self.model = nil;
     self.baseContentView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.contentView addSubview:_baseContentView];
@@ -100,20 +102,31 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
 
 - (void)setBaseAutoLayout {
     if (self.isDisplayMessageTime) {
-        CGSize timeTextSize_ = [NCChatUIUtility getTextDrawingSize:self.messageTimeLabel.text
-                                                           font:[[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel]
-                                                constrainedSize:CGSizeMake(self.bounds.size.width, TIME_LABEL_HEIGHT)];
+        CGSize timeTextSize_ = [NCChatUIUtility
+            getTextDrawingSize:self.messageTimeLabel.text
+                          font:[[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel]
+               constrainedSize:CGSizeMake(self.bounds.size.width, TIME_LABEL_HEIGHT)];
         timeTextSize_ = CGSizeMake(ceilf(timeTextSize_.width + 10), ceilf(timeTextSize_.height));
 
         self.messageTimeLabel.hidden = NO;
-        [self.messageTimeLabel setFrame:CGRectMake((self.bounds.size.width - timeTextSize_.width) / 2, TIME_LABEL_TOP,
-                                                   timeTextSize_.width, TIME_LABEL_HEIGHT)];
-        [self.baseContentView setFrame:CGRectMake(0, CGRectGetMaxY(self.messageTimeLabel.frame)+TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE, self.bounds.size.width, self.bounds.size.height - CGRectGetMaxY(self.messageTimeLabel.frame)-TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE-BASE_CONTENT_VIEW_BOTTOM)];
+        [self.messageTimeLabel
+            setFrame:CGRectMake((self.bounds.size.width - timeTextSize_.width) / 2, TIME_LABEL_TOP,
+                                timeTextSize_.width, TIME_LABEL_HEIGHT)];
+        [self.baseContentView setFrame:CGRectMake(0,
+                                                  CGRectGetMaxY(self.messageTimeLabel.frame) +
+                                                      TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE,
+                                                  self.bounds.size.width,
+                                                  self.bounds.size.height -
+                                                      CGRectGetMaxY(self.messageTimeLabel.frame) -
+                                                      TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE -
+                                                      BASE_CONTENT_VIEW_BOTTOM)];
     } else {
         if (self.messageTimeLabel) {
             self.messageTimeLabel.hidden = YES;
         }
-        [self.baseContentView setFrame:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height - (BASE_CONTENT_VIEW_BOTTOM))];
+        [self.baseContentView
+            setFrame:CGRectMake(0, 0, self.bounds.size.width,
+                                self.bounds.size.height - (BASE_CONTENT_VIEW_BOTTOM))];
     }
 }
 
@@ -125,7 +138,6 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
 - (void)onChangedMessageMultiSelectStatus:(NSNotification *)notification {
     [self setDataModel:self.model];
 }
-
 
 - (void)updateUIForMultiSelect {
     [self.contentView removeGestureRecognizer:self.multiSelectTap];
@@ -148,11 +160,13 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
     [self updateSelectButtonStatus];
 
     CGRect frame = self.baseContentView.frame;
-    CGFloat selectButtonY = frame.origin.y +
-                            (NCChatUIConfigCenter.ui.globalMessagePortraitSize.height - SelectButtonSize.height) /
-                                2; // Vertically center the selection button relative to the message avatar.
+    CGFloat selectButtonY =
+        frame.origin.y +
+        (NCChatUIConfigCenter.ui.globalMessagePortraitSize.height - SelectButtonSize.height) /
+            2; // Vertically center the selection button relative to the message avatar.
     if (NCMessageDirectionReceive == self.model.messageDirection) {
-        if (frame.origin.x < 3) { // Offset only when the cell has not already been shifted from the leading edge.
+        if (frame.origin.x <
+            3) { // Offset only when the cell has not already been shifted from the leading edge.
             if ([NCChatUIUtility isRTL]) {
                 frame.origin.x = frame.origin.x - 12 - SelectButtonSpaceLeft;
             } else {
@@ -166,7 +180,7 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
         if (NCMessageDirectionReceive == self.model.messageDirection) {
             selectButtonFrame.origin.x = frame.origin.x + frame.size.width - SelectButtonSpaceLeft;
         } else {
-            
+
             selectButtonFrame.origin.x = CGRectGetMaxX(frame) - SelectButtonSpaceLeft - 20;
         }
     }
@@ -186,7 +200,9 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
         [self updateSelectButtonStatus];
     } else {
         if ([NCMessageSelectionUtility sharedManager].selectedMessages.count >= 100) {
-            [NCAlertView showAlertController:nil message:NCUILocalizedString(@"chat_transcripts") cancelTitle:NCUILocalizedString(@"ok")];
+            [NCAlertView showAlertController:nil
+                                     message:NCUILocalizedString(@"chat_transcripts")
+                                 cancelTitle:NCUILocalizedString(@"ok")];
         } else {
             [[NCMessageSelectionUtility sharedManager] addMessageModel:self.model];
             [self updateSelectButtonStatus];
@@ -199,8 +215,8 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
                             ? @"message_cell_select"
                             : @"message_cell_unselect";
     NSString *imgNameKey = [[NCMessageSelectionUtility sharedManager] isContainMessage:self.model]
-                            ? @"channel_msg_cell_select_img"
-                            : @"channel_msg_cell_unselect_img";
+                               ? @"channel_msg_cell_select_img"
+                               : @"channel_msg_cell_unselect_img";
     UIImage *image = NCDynamicImage(imgNameKey);
     [self.selectButton setImage:image forState:UIControlStateNormal];
 }
@@ -210,7 +226,8 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
 - (NCBaseButton *)selectButton {
     if (!_selectButton) {
         _selectButton = [[NCBaseButton alloc] initWithFrame:CGRectZero];
-        [_selectButton setImage:NCDynamicImage(@"channel_msg_cell_unselect_img") forState:UIControlStateNormal];
+        [_selectButton setImage:NCDynamicImage(@"channel_msg_cell_unselect_img")
+                       forState:UIControlStateNormal];
         [_selectButton addTarget:self
                           action:@selector(onSelectMessageEvent)
                 forControlEvents:UIControlEventTouchUpInside];
@@ -224,7 +241,9 @@ NSString *const KNotificationMessageBaseCellUpdateSendingStatus = @"KNotificatio
 
 - (UITapGestureRecognizer *)multiSelectTap {
     if (!_multiSelectTap) {
-        _multiSelectTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(onSelectMessageEvent)];
+        _multiSelectTap =
+            [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                    action:@selector(onSelectMessageEvent)];
         _multiSelectTap.numberOfTapsRequired = 1;
         _multiSelectTap.numberOfTouchesRequired = 1;
     }

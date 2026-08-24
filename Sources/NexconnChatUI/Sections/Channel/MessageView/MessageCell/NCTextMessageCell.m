@@ -7,12 +7,12 @@
 //
 
 #import "NCTextMessageCell.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCMessageCellTool.h"
-#import "NCChatUIConfig.h"
 #import "NCAttributedLabel+Edit.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 #import "NCMessageCell+Edit.h"
+#import "NCMessageCellTool.h"
 #define TEXT_SPACE_LEFT 12
 #define TEXT_SPACE_RIGHT 12
 #define TEXT_SPACE_TOP 9.5
@@ -81,7 +81,8 @@
  @param label The label whose link was selected.
  @param addressComponents The components of the address for the selected link.
  */
-- (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithAddress:(NSDictionary *)addressComponents {
+- (void)attributedLabel:(NCAttributedLabel *)label
+    didSelectLinkWithAddress:(NSDictionary *)addressComponents {
 }
 
 /**
@@ -90,7 +91,8 @@
  @param label The label whose link was selected.
  @param phoneNumber The phone number for the selected link.
  */
-- (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
+- (void)attributedLabel:(NCAttributedLabel *)label
+    didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
     NSString *number = [NCMessageCellTool phoneURLStringWithPhoneNumber:phoneNumber];
     if (!number) {
         return;
@@ -114,27 +116,28 @@
     [self.messageContentView addSubview:self.textLabel];
 }
 
-
 - (void)setAutoLayout {
-    CGSize labelSize = [NCTextMessageCell getTextSize:self.model];//textlabelsize
-    
+    CGSize labelSize = [NCTextMessageCell getTextSize:self.model]; // textlabelsize
+
     float maxWidth = [NCMessageCellTool getMessageContentViewMaxWidth];
     CGFloat bubbleHeight = [NCTextMessageCell getMessageContentHeight:self.model];
     CGFloat bubbleWidth = labelSize.width + TEXT_SPACE_RIGHT + TEXT_SPACE_LEFT;
     if (bubbleWidth >= maxWidth) {
         bubbleWidth = maxWidth;
     }
-    
+
     [self setCSEvaUILayout:bubbleWidth bubbleHeight:bubbleHeight];
 
     self.messageContentView.contentSize = CGSizeMake(bubbleWidth, bubbleHeight);
 
     if (self.model.messageDirection == NCMessageDirectionReceive) {
         [self.textLabel setTextColor:NCDynamicColor(@"text_primary_color")];
-        self.textLabel.frame =  CGRectMake(TEXT_SPACE_LEFT, (bubbleHeight - labelSize.height) / 2, labelSize.width, labelSize.height);
+        self.textLabel.frame = CGRectMake(TEXT_SPACE_LEFT, (bubbleHeight - labelSize.height) / 2,
+                                          labelSize.width, labelSize.height);
     } else {
         [self.textLabel setTextColor:NCDynamicColor(@"text_primary_color")];
-        self.textLabel.frame =  CGRectMake(TEXT_SPACE_LEFT, (bubbleHeight - labelSize.height) / 2, labelSize.width, labelSize.height);
+        self.textLabel.frame = CGRectMake(TEXT_SPACE_LEFT, (bubbleHeight - labelSize.height) / 2,
+                                          labelSize.width, labelSize.height);
     }
 
     NSString *textContent = [self.model textMessageContent];
@@ -146,11 +149,12 @@
 }
 
 - (NSDictionary *)attributeDictionary {
-    return [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:self.model.messageDirection
-                                                             linkColorKey:@"primary_color"];
+    return
+        [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:self.model.messageDirection
+                                                          linkColorKey:@"primary_color"];
 }
 
-- (void)setCSEvaUILayout:(CGFloat)bubbleWidth bubbleHeight:(CGFloat)bubbleHeight{
+- (void)setCSEvaUILayout:(CGFloat)bubbleWidth bubbleHeight:(CGFloat)bubbleHeight {
     [self.acceptBtn removeFromSuperview];
     [self.rejectBtn removeFromSuperview];
     [self.separateLine removeFromSuperview];
@@ -161,7 +165,7 @@
     self.tipLablel = nil;
 }
 
-+ (CGFloat)getMessageContentHeight:(NCMessageModel *)model{
++ (CGFloat)getMessageContentHeight:(NCMessageModel *)model {
     CGSize textMessageSize = [self getTextSize:model];
     // Minimum bubble background height.
     CGFloat messagecontentview_height = textMessageSize.height + TEXT_SPACE_TOP + TEXT_SPACE_BOTTOM;
@@ -172,11 +176,15 @@
     return messagecontentview_height;
 }
 
-+ (CGSize)getTextSize:(NCMessageModel *)model{
-    CGFloat textMaxWidth = [NCMessageCellTool getMessageContentViewMaxWidth] - TEXT_SPACE_LEFT - TEXT_SPACE_RIGHT;
++ (CGSize)getTextSize:(NCMessageModel *)model {
+    CGFloat textMaxWidth =
+        [NCMessageCellTool getMessageContentViewMaxWidth] - TEXT_SPACE_LEFT - TEXT_SPACE_RIGHT;
     CGSize textMessageSize;
     UIFont *font = [[NCChatUIConfig defaultConfig].font fontOfSecondLevel];
-    textMessageSize = [NCMessageEditUtil sizeForText:[model textMessageContent] isEdited:model.hasChanged font:font constrainedSize:CGSizeMake(textMaxWidth, 80000)];
+    textMessageSize = [NCMessageEditUtil sizeForText:[model textMessageContent]
+                                            isEdited:model.hasChanged
+                                                font:font
+                                     constrainedSize:CGSizeMake(textMaxWidth, 80000)];
     if (textMessageSize.width > textMaxWidth) {
         textMessageSize.width = textMaxWidth;
     }
@@ -185,15 +193,15 @@
 }
 
 #pragma mark - Getter & Setter
-- (NCAttributedLabel *)textLabel{
+- (NCAttributedLabel *)textLabel {
     if (!_textLabel) {
         _textLabel = [[NCAttributedLabel alloc] initWithFrame:CGRectZero];
         [_textLabel setFont:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
         _textLabel.numberOfLines = 0;
         [_textLabel setLineBreakMode:NSLineBreakByWordWrapping];
-        if([NCChatUIUtility isRTL]){
+        if ([NCChatUIUtility isRTL]) {
             _textLabel.textAlignment = NSTextAlignmentRight;
-        }else{
+        } else {
             _textLabel.textAlignment = NSTextAlignmentLeft;
         }
         _textLabel.delegate = self;

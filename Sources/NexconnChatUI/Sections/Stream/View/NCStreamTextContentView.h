@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCStreamContentView.h"
+#import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NCStreamTextContentView : NCStreamContentView

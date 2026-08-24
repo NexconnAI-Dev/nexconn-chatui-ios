@@ -7,21 +7,21 @@
 //
 
 #import "NCSightViewController.h"
+#import "NCAlertView.h"
 #import "NCChatUILog.h"
 #import "NCSightActionButton.h"
+#import "NCSightActivityState.h"
+#import "NCSightAdaptiveHeader.h"
 #import "NCSightCapturer.h"
 #import "NCSightPlayerController.h"
+#import "NCSightPlayerOverlay.h"
 #import "NCSightPreviewView.h"
 #import "NCSightRecorder.h"
+#import "NCToastView.h"
+#import <CoreMotion/CoreMotion.h>
 #import <CoreTelephony/CTCall.h>
 #import <CoreTelephony/CTCallCenter.h>
-#import <CoreMotion/CoreMotion.h>
 #import <Photos/Photos.h>
-#import "NCSightAdaptiveHeader.h"
-#import "NCSightActivityState.h"
-#import "NCAlertView.h"
-#import "NCToastView.h"
-#import "NCSightPlayerOverlay.h"
 #define ActionBtnSize 120
 #define BottomSpace 10
 #define OKBtnSize 74
@@ -81,15 +81,17 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (void)dealloc {
     [self.actionButton quit];
-    
+
     [NCSightActivityState sharedState].cameraHolding = NO;
     [self.motionManager stopAccelerometerUpdates];
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIApplicationDidChangeStatusBarOrientationNotification
-                                                  object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:AVCaptureSessionInterruptionEndedNotification
-                                                  object:nil];
+    [[NSNotificationCenter defaultCenter]
+        removeObserver:self
+                  name:UIApplicationDidChangeStatusBarOrientationNotification
+                object:nil];
+    [[NSNotificationCenter defaultCenter]
+        removeObserver:self
+                  name:AVCaptureSessionInterruptionEndedNotification
+                object:nil];
 }
 #pragma mark - Properties
 - (NCSightPreviewView *)sightView {
@@ -102,7 +104,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (NCSightCapturer *)capturer {
     if (!_capturer) {
-        _capturer = [[NCSightCapturer alloc] initWithVideoPreviewPlayer:self.sightView.previewLayer];
+        _capturer =
+            [[NCSightCapturer alloc] initWithVideoPreviewPlayer:self.sightView.previewLayer];
         _capturer.delegate = self;
     }
     return _capturer;
@@ -124,9 +127,12 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (NCBaseButton *)switchCameraBtn {
     if (!_switchCameraBtn) {
-        _switchCameraBtn = [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, CommonBtnSize, CommonBtnSize)];
-        [_switchCameraBtn setImage:NCDynamicImage(@"sight_camera_switch_img") forState:UIControlStateNormal];
-        [_switchCameraBtn setTitleColor:NCDynamicColor(@"control_title_white_color") forState:UIControlStateNormal];
+        _switchCameraBtn =
+            [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, CommonBtnSize, CommonBtnSize)];
+        [_switchCameraBtn setImage:NCDynamicImage(@"sight_camera_switch_img")
+                          forState:UIControlStateNormal];
+        [_switchCameraBtn setTitleColor:NCDynamicColor(@"control_title_white_color")
+                               forState:UIControlStateNormal];
         _switchCameraBtn.backgroundColor = [UIColor clearColor];
         [_switchCameraBtn addTarget:self
                              action:@selector(switchCameraAction:)
@@ -138,9 +144,13 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 - (NCBaseButton *)playBtn {
     if (!_playBtn) {
         _playBtn = [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, OKBtnSize, OKBtnSize)];
-        [_playBtn setImage:NCDynamicImage(@"video_player_play_btn_img") forState:UIControlStateNormal];
-        [_playBtn setImage:NCDynamicImage(@"video_player_pause_btn_img") forState:UIControlStateSelected];
-        [_playBtn addTarget:self action:@selector(playAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_playBtn setImage:NCDynamicImage(@"video_player_play_btn_img")
+                  forState:UIControlStateNormal];
+        [_playBtn setImage:NCDynamicImage(@"video_player_pause_btn_img")
+                  forState:UIControlStateSelected];
+        [_playBtn addTarget:self
+                      action:@selector(playAction:)
+            forControlEvents:UIControlEventTouchUpInside];
         _playBtn.enabled = NO;
     }
     return _playBtn;
@@ -148,7 +158,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (NCSightActionButton *)actionButton {
     if (!_actionButton) {
-        _actionButton = [[NCSightActionButton alloc] initWithFrame:CGRectMake(0, 0, ActionBtnSize, ActionBtnSize)];
+        _actionButton = [[NCSightActionButton alloc]
+            initWithFrame:CGRectMake(0, 0, ActionBtnSize, ActionBtnSize)];
         _actionButton.userInteractionEnabled = NO;
     }
     return _actionButton;
@@ -160,7 +171,9 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
         [_dismissBtn setImage:NCDynamicImage(@"video_player_top_close_button_img")
                      forState:UIControlStateNormal];
         _dismissBtn.backgroundColor = [UIColor clearColor];
-        [_dismissBtn addTarget:self action:@selector(dismissAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_dismissBtn addTarget:self
+                        action:@selector(dismissAction:)
+              forControlEvents:UIControlEventTouchUpInside];
     }
     return _dismissBtn;
 }
@@ -168,8 +181,11 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 - (NCBaseButton *)cancelBtn {
     if (!_cancelBtn) {
         _cancelBtn = [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, OKBtnSize, OKBtnSize)];
-        [_cancelBtn setImage:NCDynamicImage(@"video_player_cancel_btn_img") forState:UIControlStateNormal];
-        [_cancelBtn addTarget:self action:@selector(cancelAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_cancelBtn setImage:NCDynamicImage(@"video_player_cancel_btn_img")
+                    forState:UIControlStateNormal];
+        [_cancelBtn addTarget:self
+                       action:@selector(cancelAction:)
+             forControlEvents:UIControlEventTouchUpInside];
         _cancelBtn.enabled = NO;
     }
     return _cancelBtn;
@@ -178,8 +194,11 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 - (NCBaseButton *)okBtn {
     if (!_okBtn) {
         _okBtn = [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, OKBtnSize, OKBtnSize)];
-        [_okBtn setImage:NCDynamicImage(@"video_player_done_btn_img") forState:UIControlStateNormal];
-        [_okBtn addTarget:self action:@selector(okAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_okBtn setImage:NCDynamicImage(@"video_player_done_btn_img")
+                forState:UIControlStateNormal];
+        [_okBtn addTarget:self
+                      action:@selector(okAction:)
+            forControlEvents:UIControlEventTouchUpInside];
         _okBtn.enabled = NO;
     }
     return _okBtn;
@@ -187,9 +206,10 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (NCSightRecorder *)recorder {
     if (!_recorder) {
-        _recorder = [[NCSightRecorder alloc] initWithVideoSettings:self.capturer.recommendedVideoCompressionSettings
-                                                     audioSettings:self.capturer.recommendedAudioCompressionSettings
-                                                     dispatchQueue:self.capturer.sessionQueue];
+        _recorder = [[NCSightRecorder alloc]
+            initWithVideoSettings:self.capturer.recommendedVideoCompressionSettings
+                    audioSettings:self.capturer.recommendedAudioCompressionSettings
+                    dispatchQueue:self.capturer.sessionQueue];
         _recorder.delegate = self;
     }
     return _recorder;
@@ -200,7 +220,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
         _tipsLable = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 150, 21)];
         _tipsLable.font = [UIFont systemFontOfSize:14.0f];
         _tipsLable.textAlignment = NSTextAlignmentCenter;
-        NSString *text = NCUILocalizedString(@"touch_to_take_a_picture_and_press_andhold_the_recording_video");
+        NSString *text =
+            NCUILocalizedString(@"touch_to_take_a_picture_and_press_andhold_the_recording_video");
         CGSize textSize = [text sizeWithAttributes:@{NSFontAttributeName : _tipsLable.font}];
         _tipsLable.frame = CGRectMake(0, 0, textSize.width, textSize.height);
         _tipsLable.text = text;
@@ -244,11 +265,9 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
                               name:UIApplicationDidEnterBackgroundNotification
                             object:nil];
         [defaultCenter addObserver:self
-                                selector:@selector(sessionInterruptionEnded:)
-                                    name:AVCaptureSessionInterruptionEndedNotification
-                                  object:nil];
-
-
+                          selector:@selector(sessionInterruptionEnded:)
+                              name:AVCaptureSessionInterruptionEndedNotification
+                            object:nil];
     }
     return self;
 }
@@ -262,11 +281,9 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
                               name:UIApplicationDidEnterBackgroundNotification
                             object:nil];
         [defaultCenter addObserver:self
-                                selector:@selector(sessionInterruptionEnded:)
-                                    name:AVCaptureSessionInterruptionEndedNotification
-                                  object:nil];
-
-
+                          selector:@selector(sessionInterruptionEnded:)
+                              name:AVCaptureSessionInterruptionEndedNotification
+                            object:nil];
     }
     return self;
 }
@@ -280,8 +297,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     [self strechToSuperview:self.sightView];
     self.sightView.hidden = YES;
     CGSize screenSize = self.view.bounds.size;
-    self.switchCameraBtn.frame =
-        CGRectMake(screenSize.width - CommonBtnSize - Marging, YOffset, CommonBtnSize, CommonBtnSize);
+    self.switchCameraBtn.frame = CGRectMake(screenSize.width - CommonBtnSize - Marging, YOffset,
+                                            CommonBtnSize, CommonBtnSize);
     [self.view addSubview:self.switchCameraBtn];
 
     [self.view addSubview:self.playerController.view];
@@ -294,7 +311,7 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
     __weak typeof(self) weakSelf = self;
     [self.actionButton setAction:^(NCSightActionState state) {
-        [weakSelf handleActionState:state];
+      [weakSelf handleActionState:state];
     }];
 
     if (NCSightViewControllerCameraCaptureModePhoto == self.captureMode) {
@@ -310,9 +327,10 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     [self.view addSubview:self.tipsLable];
     [self hideSightCaptureControls];
 
-    self.actionButton.center = CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
+    self.actionButton.center =
+        CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
     self.actionButton.accessibilityLabel = @"actionButton";
-    
+
     self.cancelBtn.center = self.actionButton.center;
     self.cancelBtn.accessibilityLabel = @"cancelBtn";
 
@@ -325,7 +343,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     self.dismissBtn.frame = CGRectMake(Marging, YOffset, CommonBtnSize, CommonBtnSize);
     self.dismissBtn.accessibilityLabel = @"dismissBtn";
 
-    self.tipsLable.center = CGPointMake(screenSize.width / 2, self.actionButton.frame.origin.y - 16);
+    self.tipsLable.center =
+        CGPointMake(screenSize.width / 2, self.actionButton.frame.origin.y - 16);
     if (NCSightViewControllerCameraCaptureModeSight == self.captureMode) {
         [self performSelector:@selector(setStatusBarHidden:) withObject:@(YES) afterDelay:0.5];
     }
@@ -334,11 +353,11 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
     /// Dismiss recording when an incoming call arrives.
     [self.callCenter setCallEventHandler:^(CTCall *call) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (call.callState == CTCallStateIncoming) {
-                [weakSelf dismissViewControllerAnimated:NO completion:nil];
-            }
-        });
+      dispatch_async(dispatch_get_main_queue(), ^{
+        if (call.callState == CTCallStateIncoming) {
+            [weakSelf dismissViewControllerAnimated:NO completion:nil];
+        }
+      });
     }];
 
     [self.motionManager startAccelerometerUpdates];
@@ -351,31 +370,34 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 #else
     __weak typeof(self) weakSelf = self;
     [self requestCameraAccessIfNeededWithCompletion:^(BOOL granted) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+          return;
+      }
+      if (!granted) {
+          [strongSelf
+              showCaptureAccessDeniedWithMessage:NCUILocalizedString(@"camera_access_right")];
+          return;
+      }
+      [strongSelf requestMicrophoneAccessIfNeededWithCompletion:^(BOOL granted) {
         __strong typeof(weakSelf) strongSelf = weakSelf;
         if (!strongSelf) {
             return;
         }
         if (!granted) {
-            [strongSelf showCaptureAccessDeniedWithMessage:NCUILocalizedString(@"camera_access_right")];
+            [strongSelf
+                showCaptureAccessDeniedWithMessage:NCUILocalizedString(@"speaker_access_right")];
             return;
         }
-        [strongSelf requestMicrophoneAccessIfNeededWithCompletion:^(BOOL granted) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf) {
-                return;
-            }
-            if (!granted) {
-                [strongSelf showCaptureAccessDeniedWithMessage:NCUILocalizedString(@"speaker_access_right")];
-                return;
-            }
-            [strongSelf startSightCaptureIfPossible];
-        }];
+        [strongSelf startSightCaptureIfPossible];
+      }];
     }];
 #endif
 }
 
 - (void)requestCameraAccessIfNeededWithCompletion:(void (^)(BOOL granted))completion {
-    AVAuthorizationStatus authorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    AVAuthorizationStatus authorizationStatus =
+        [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
     if (AVAuthorizationStatusAuthorized == authorizationStatus) {
         completion(YES);
         return;
@@ -383,9 +405,9 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     if (AVAuthorizationStatusNotDetermined == authorizationStatus) {
         [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo
                                  completionHandler:^(BOOL granted) {
-                                     dispatch_async(dispatch_get_main_queue(), ^{
-                                         completion(granted);
-                                     });
+                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                     completion(granted);
+                                   });
                                  }];
         return;
     }
@@ -410,9 +432,9 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     if (AVAudioSessionRecordPermissionUndetermined == recordPermission &&
         [audioSession respondsToSelector:@selector(requestRecordPermission:)]) {
         [audioSession requestRecordPermission:^(BOOL granted) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                completion(granted);
-            });
+          dispatch_async(dispatch_get_main_queue(), ^{
+            completion(granted);
+          });
         }];
         return;
     }
@@ -424,7 +446,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
         [self showCaptureUnavailable];
         return;
     }
-    if (NCSightViewControllerCameraCaptureModeSight == self.captureMode && self.callCenter.currentCalls.count > 0) {
+    if (NCSightViewControllerCameraCaptureModeSight == self.captureMode &&
+        self.callCenter.currentCalls.count > 0) {
         [self showCaptureUnavailable];
         return;
     }
@@ -507,7 +530,7 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     _statusBarHidden = [hidden boolValue];
     [UIView animateWithDuration:0.25
                      animations:^{
-                         [self setNeedsStatusBarAppearanceUpdate];
+                       [self setNeedsStatusBarAppearanceUpdate];
                      }];
 }
 
@@ -527,10 +550,11 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 #pragma mark - Helpers
 - (void)registerNotification {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(didChangeDeviceOrientationNotification:)
-                                                 name:UIApplicationDidChangeStatusBarOrientationNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(didChangeDeviceOrientationNotification:)
+               name:UIApplicationDidChangeStatusBarOrientationNotification
+             object:nil];
 }
 
 - (void)didChangeDeviceOrientationNotification:(NSNotification *)notification {
@@ -540,23 +564,29 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (void)updateSubViewsAutolayout {
     CGSize screenSize = self.view.bounds.size;
-    self.switchCameraBtn.frame =
-        CGRectMake(screenSize.width - CommonBtnSize - Marging, YOffset, CommonBtnSize, CommonBtnSize);
-    self.actionButton.center = CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
+    self.switchCameraBtn.frame = CGRectMake(screenSize.width - CommonBtnSize - Marging, YOffset,
+                                            CommonBtnSize, CommonBtnSize);
+    self.actionButton.center =
+        CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
     if (self.actionButton.hidden) {
         self.cancelBtn.center = CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
-        self.okBtn.center = CGPointMake(screenSize.width - 65.5, screenSize.height - ActionBtnSize - BottomSpace);
+        self.okBtn.center =
+            CGPointMake(screenSize.width - 65.5, screenSize.height - ActionBtnSize - BottomSpace);
     } else {
-        self.cancelBtn.center = CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
-        self.okBtn.center = CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
+        self.cancelBtn.center =
+            CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
+        self.okBtn.center =
+            CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
     }
     self.playBtn.center = self.actionButton.center;
-    self.tipsLable.center = CGPointMake(screenSize.width / 2, self.actionButton.frame.origin.y - 16);
+    self.tipsLable.center =
+        CGPointMake(screenSize.width / 2, self.actionButton.frame.origin.y - 16);
 }
 
 - (void)setVideoOrientation {
     if ([[UIDevice currentDevice].model containsString:@"iPad"]) {
-        UIInterfaceOrientation interfaceOrientation = [NCChatUIUtility getInterfaceOrientationForView:self.view];
+        UIInterfaceOrientation interfaceOrientation =
+            [NCChatUIUtility getInterfaceOrientationForView:self.view];
         AVCaptureVideoOrientation orientation = (AVCaptureVideoOrientation)interfaceOrientation;
         if (interfaceOrientation == UIInterfaceOrientationLandscapeLeft) {
             orientation = AVCaptureVideoOrientationLandscapeLeft;
@@ -571,25 +601,27 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     view.translatesAutoresizingMaskIntoConstraints = NO;
     NSArray *formats = @[ @"H:|[view]|", @"V:|[view]|" ];
     for (NSString *each in formats) {
-        NSArray *constraints =
-            [NSLayoutConstraint constraintsWithVisualFormat:each options:0 metrics:nil views:@{
-                @"view" : view
-            }];
+        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
+                                                                       options:0
+                                                                       metrics:nil
+                                                                         views:@{@"view" : view}];
         [self.view addConstraints:constraints];
     }
 }
 
 - (void)showStillImage:(UIImage *)image {
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.stillImageView.image = image;
-        self.stillImageView.hidden = NO;
+      self.stillImageView.image = image;
+      self.stillImageView.hidden = NO;
     });
 }
 
 - (void)handleActionState:(NCSightActionState)states {
     NSString *mediaType = AVMediaTypeVideo;
-    AVAuthorizationStatus authorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:mediaType];
-    if (authorizationStatus == AVAuthorizationStatusRestricted || authorizationStatus == AVAuthorizationStatusDenied) {
+    AVAuthorizationStatus authorizationStatus =
+        [AVCaptureDevice authorizationStatusForMediaType:mediaType];
+    if (authorizationStatus == AVAuthorizationStatusRestricted ||
+        authorizationStatus == AVAuthorizationStatusDenied) {
         self.actionButton.userInteractionEnabled = NO;
         return;
     }
@@ -634,8 +666,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     AVCaptureVideoOrientation orientation = orientationBaseOnAcceleration(acceleration);
     [self.capturer captureStillImage:orientation
                           completion:^(UIImage *image) {
-                              [weakSelf showOkCancelBtnWithAnimation:NO];
-                              [weakSelf showStillImage:image];
+                            [weakSelf showOkCancelBtnWithAnimation:NO];
+                            [weakSelf showStillImage:image];
                           }];
 }
 
@@ -682,23 +714,27 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 - (void)showOkCancelBtnWithAnimation:(BOOL)showPlayBtn {
     self.actionButton.hidden = YES;
     [UIView animateWithDuration:AnimateDuration
-                     animations:^{
-        CGSize screenSize = [UIScreen mainScreen].bounds.size;
-        if ([NCChatUIUtility isRTL]) {
-            self.okBtn.center = CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
-            self.cancelBtn.center = CGPointMake(screenSize.width - 65.5, screenSize.height - ActionBtnSize - BottomSpace);
-        } else {
-            self.cancelBtn.center = CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
-            self.okBtn.center = CGPointMake(screenSize.width - 65.5, screenSize.height - ActionBtnSize - BottomSpace);
+        animations:^{
+          CGSize screenSize = [UIScreen mainScreen].bounds.size;
+          if ([NCChatUIUtility isRTL]) {
+              self.okBtn.center =
+                  CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
+              self.cancelBtn.center = CGPointMake(screenSize.width - 65.5,
+                                                  screenSize.height - ActionBtnSize - BottomSpace);
+          } else {
+              self.cancelBtn.center =
+                  CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
+              self.okBtn.center = CGPointMake(screenSize.width - 65.5,
+                                              screenSize.height - ActionBtnSize - BottomSpace);
+          }
         }
-    }
         completion:^(BOOL finished) {
-            self.playBtn.hidden = !showPlayBtn;
-            self.cancelBtn.hidden = NO;
-            self.okBtn.hidden = NO;
-            self.playBtn.enabled = YES;
-            self.okBtn.enabled = YES;
-            self.cancelBtn.enabled = YES;
+          self.playBtn.hidden = !showPlayBtn;
+          self.cancelBtn.hidden = NO;
+          self.okBtn.hidden = NO;
+          self.playBtn.enabled = YES;
+          self.okBtn.enabled = YES;
+          self.cancelBtn.enabled = YES;
         }];
 }
 
@@ -708,14 +744,16 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     self.playBtn.hidden = YES;
     [UIView animateWithDuration:AnimateDuration
         animations:^{
-            CGSize screenSize = [UIScreen mainScreen].bounds.size;
-            self.cancelBtn.center = CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
-            self.okBtn.center = CGPointMake(screenSize.width - 65.5, screenSize.height - ActionBtnSize - BottomSpace);
+          CGSize screenSize = [UIScreen mainScreen].bounds.size;
+          self.cancelBtn.center =
+              CGPointMake(65.5, screenSize.height - ActionBtnSize - BottomSpace);
+          self.okBtn.center =
+              CGPointMake(screenSize.width - 65.5, screenSize.height - ActionBtnSize - BottomSpace);
         }
         completion:^(BOOL finished) {
-            // Recording failed; leave only the cancel button visible.
-            self.cancelBtn.hidden = NO;
-            self.cancelBtn.enabled = YES;
+          // Recording failed; leave only the cancel button visible.
+          self.cancelBtn.hidden = NO;
+          self.cancelBtn.enabled = YES;
         }];
     [self resetCapture];
     [NCToastView showToast:NCUILocalizedString(@"sight_capture_failed") rootView:self.view];
@@ -723,12 +761,13 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 
 - (void)hideTipsLabel {
     __weak typeof(self) weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        if (!weakSelf.isRecording) {
-            weakSelf.tipsLable.text = @"";
-            weakSelf.tipsLable.backgroundColor = [UIColor clearColor];
-        }
-    });
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(),
+                   ^{
+                     if (!weakSelf.isRecording) {
+                         weakSelf.tipsLable.text = @"";
+                         weakSelf.tipsLable.backgroundColor = [UIColor clearColor];
+                     }
+                   });
 }
 
 - (void)showTipsLabel {
@@ -746,7 +785,9 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 - (void)updateTimeLabelWithEndTime:(NSTimeInterval)endTime {
     NSTimeInterval current = endTime;
     long seconds = round(current - self.beginTime);
-    seconds = seconds > self.actionButton.canRecordMaxDuration ? self.actionButton.canRecordMaxDuration : seconds;
+    seconds = seconds > self.actionButton.canRecordMaxDuration
+                  ? self.actionButton.canRecordMaxDuration
+                  : seconds;
     NSString *tipsText = 0 == seconds ? @"" : [NSString stringWithFormat:@"%ld\"", (long)seconds];
     self.tipsLable.text = tipsText;
 }
@@ -788,42 +829,47 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     self.okBtn.hidden = YES;
     [UIView animateWithDuration:AnimateDuration
         animations:^{
-            CGSize screenSize = [UIScreen mainScreen].bounds.size;
-            self.cancelBtn.center = CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
-            self.okBtn.center = CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
+          CGSize screenSize = [UIScreen mainScreen].bounds.size;
+          self.cancelBtn.center =
+              CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
+          self.okBtn.center =
+              CGPointMake(screenSize.width / 2, screenSize.height - ActionBtnSize - BottomSpace);
         }
         completion:^(BOOL finished) {
-            self.playBtn.hidden = NO;
-            self.actionButton.hidden = NO;
-            self.dismissBtn.hidden = NO;
-            self.stillImageView.hidden = YES;
-            self.playBtn.selected = NO;
+          self.playBtn.hidden = NO;
+          self.actionButton.hidden = NO;
+          self.dismissBtn.hidden = NO;
+          self.stillImageView.hidden = YES;
+          self.playBtn.selected = NO;
 #if !(TARGET_OS_SIMULATOR)
-            [self.playerController resetSightPlayer];
-            [self.capturer resetAudioSession];
-            [self.capturer resetSessionInput];
+          [self.playerController resetSightPlayer];
+          [self.capturer resetAudioSession];
+          [self.capturer resetSessionInput];
 #endif
-            self.playerController.view.hidden = YES;
+          self.playerController.view.hidden = YES;
         }];
-    
 }
 
 - (void)okAction:(UIButton *)sender {
     if (!self.stillImageView.hidden) {
         [self.capturer stopRunning];
-        if ([self.delegate respondsToSelector:@selector(sightViewController:didFinishCapturingStillImage:)]) {
+        if ([self.delegate
+                respondsToSelector:@selector(sightViewController:didFinishCapturingStillImage:)]) {
             self.stillImageView.hidden = YES;
-            [self.delegate sightViewController:self didFinishCapturingStillImage:self.stillImageView.image];
+            [self.delegate sightViewController:self
+                  didFinishCapturingStillImage:self.stillImageView.image];
         }
     } else {
         [self.capturer stopRunning];
         [self.playerController resetSightPlayer];
         [self.playerController.view removeFromSuperview];
-        if ([self.delegate respondsToSelector:@selector(sightViewController:didWriteSightAtURL:thumbnail:duration:)]) {
+        if ([self.delegate respondsToSelector:@selector(sightViewController:didWriteSightAtURL:
+                                                        thumbnail:duration:)]) {
 
             long seconds = round(self.endTime - self.beginTime);
-            seconds =
-                seconds > self.actionButton.canRecordMaxDuration ? self.actionButton.canRecordMaxDuration : seconds;
+            seconds = seconds > self.actionButton.canRecordMaxDuration
+                          ? self.actionButton.canRecordMaxDuration
+                          : seconds;
             [self.delegate sightViewController:self
                             didWriteSightAtURL:self.outputUrl
                                      thumbnail:self.sightThumbnail
@@ -831,15 +877,17 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
             // Save the short video to the photo library.
             if (self.outputUrl) {
                 PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
-                [photoLibrary performChanges:^{
-                    [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:self.outputUrl];
-                }
+                [photoLibrary
+                    performChanges:^{
+                      [PHAssetChangeRequest
+                          creationRequestForAssetFromVideoAtFileURL:self.outputUrl];
+                    }
                     completionHandler:^(BOOL success, NSError *_Nullable error) {
-                        if (success) {
-                            NCLogI(@"NexconnChatUI small video saved to album");
-                        } else {
-                            NCLogE(@"NexconnChatUI failed to save small video to album");
-                        }
+                      if (success) {
+                          NCLogI(@"NexconnChatUI small video saved to album");
+                      } else {
+                          NCLogE(@"NexconnChatUI failed to save small video to album");
+                      }
                     }];
             }
         }
@@ -864,11 +912,11 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
         [self sightFailed];
         return;
     }
-    NSDictionary *dic = @{AVURLAssetPreferPreciseDurationAndTimingKey:@(YES)};
+    NSDictionary *dic = @{AVURLAssetPreferPreciseDurationAndTimingKey : @(YES)};
     AVURLAsset *audioAsset = [AVURLAsset URLAssetWithURL:outputURL options:dic];
     CMTime audioDuration = audioAsset.duration;
     Float64 audioDurationSeconds = CMTimeGetSeconds(audioDuration);
-    
+
     // Read the recorded asset duration for an accurate final value.
     self.endTime = self.beginTime + audioDurationSeconds;
     [self updateTimeLabelWithEndTime:self.endTime];
@@ -909,14 +957,13 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     if (0 == duration) {
         self.playBtn.hidden = YES;
         [self takeAPhoto];
-    }else {
+    } else {
         // Show the failure state when recording reached at least one second.
         [self sightFailed];
     }
-    if ([self.delegate respondsToSelector:@selector(sightViewController:didWriteFailedWith:status:)]) {
-        [self.delegate sightViewController:self
-                        didWriteFailedWith:error
-                                    status:status];
+    if ([self.delegate
+            respondsToSelector:@selector(sightViewController:didWriteFailedWith:status:)]) {
+        [self.delegate sightViewController:self didWriteFailedWith:error status:status];
     }
 }
 
@@ -926,7 +973,8 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
 }
 
 - (void)focusDidfinish:(CGPoint)point {
-    CGPoint interestPoint = [self.sightView.previewLayer pointForCaptureDevicePointOfInterest:point];
+    CGPoint interestPoint =
+        [self.sightView.previewLayer pointForCaptureDevicePointOfInterest:point];
     [self.sightView showFocusBoxAnimationAtPoint:interestPoint];
     self.actionButton.userInteractionEnabled = YES;
 }
@@ -947,8 +995,7 @@ AVCaptureVideoOrientation orientationBaseOnAcceleration(CMAcceleration accelerat
     self.playBtn.selected = NO;
 }
 
-- (void)sessionInterruptionEnded:(NSNotification*)notification
-{
+- (void)sessionInterruptionEnded:(NSNotification *)notification {
 #if !(TARGET_OS_SIMULATOR)
     [self.capturer resetAudioSession];
     [self.capturer resetSessionInput];

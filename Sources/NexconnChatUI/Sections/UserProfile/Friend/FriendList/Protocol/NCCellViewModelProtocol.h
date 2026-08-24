@@ -8,9 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-
 NS_ASSUME_NONNULL_BEGIN
-typedef void(^NCPermanentCellViewModelBlock)(UIViewController *);
+typedef void (^NCPermanentCellViewModelBlock)(UIViewController *);
 /// Cell view model protocol
 @protocol NCCellViewModelProtocol <NSObject>
 @optional
@@ -28,7 +27,8 @@ typedef void(^NCPermanentCellViewModelBlock)(UIViewController *);
 /// @param tableView tableView
 /// @param indexPath indexPath
 /// @return The cell height
-- (CGFloat)tableView:(nonnull UITableView *)tableView heightForRowAtIndexPath:(nonnull NSIndexPath *)indexPath;
+- (CGFloat)tableView:(nonnull UITableView *)tableView
+    heightForRowAtIndexPath:(nonnull NSIndexPath *)indexPath;
 
 /// Handles cell tap
 ///

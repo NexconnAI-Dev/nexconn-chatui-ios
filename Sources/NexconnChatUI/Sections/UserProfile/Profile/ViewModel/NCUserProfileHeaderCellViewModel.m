@@ -7,14 +7,16 @@
 //
 
 #import "NCUserProfileHeaderCellViewModel.h"
-#import "NCUserProfileHeaderCell.h"
 #import "NCChatUICommonDefine.h"
 #import "NCUserOnlineStatusUtil.h"
+#import "NCUserProfileHeaderCell.h"
 
 #define NCUserProfileHeaderCellHeight 82
 
 @implementation NCUserProfileHeaderCellViewModel
-- (instancetype)initWithPortrait:(NSString *)portrait name:(NSString *)name remark:(NSString *)remark {
+- (instancetype)initWithPortrait:(NSString *)portrait
+                            name:(NSString *)name
+                          remark:(NSString *)remark {
     self = [super init];
     if (self) {
         self.portrait = portrait;
@@ -24,11 +26,15 @@
     return self;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCUserProfileHeaderCell *cell = [tableView dequeueReusableCellWithIdentifier:NCUserProfileHeaderCellIdentifier forIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCUserProfileHeaderCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCUserProfileHeaderCellIdentifier
+                                        forIndexPath:indexPath];
     if (self.remark.length > 0) {
         cell.remarkLabel.text = self.remark;
-        cell.nameLabel.text = [NSString stringWithFormat:@"%@: %@",NCUILocalizedString(@"name"), self.name];
+        cell.nameLabel.text =
+            [NSString stringWithFormat:@"%@: %@", NCUILocalizedString(@"name"), self.name];
     } else {
         cell.remarkLabel.text = self.name;
     }

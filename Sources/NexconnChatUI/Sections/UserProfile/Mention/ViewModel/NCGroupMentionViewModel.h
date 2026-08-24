@@ -7,26 +7,25 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCGroupMemberCellViewModel.h"
-#import "NCSearchBarViewModel.h"
-#import "NCListViewModelProtocol.h"
 #import "NCChatUIUserInfo.h"
+#import "NCGroupMemberCellViewModel.h"
+#import "NCListViewModelProtocol.h"
+#import "NCSearchBarViewModel.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 // @all userId
-extern NSString  * _Nonnull const NCMentionAllUsersID;
+extern NSString *_Nonnull const NCMentionAllUsersID;
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NCGroupMentionViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCGroupMentionViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Data source
-@property (nonatomic, strong, readonly) NSArray <NCGroupMemberCellViewModel *>*memberList;
+@property (nonatomic, strong, readonly) NSArray<NCGroupMemberCellViewModel *> *memberList;
 
 /// Number of members loaded per page. Defaults to 50, range: (0, 100].
 @property (nonatomic, assign, setter=setPageCount:) NSInteger pageCount;
 
 /// Group identifier
 @property (nonatomic, copy, readonly) NSString *groupId;
-
 
 /// Creates an `NCGroupMentionViewModel` instance
 + (instancetype)viewModelWithGroupId:(NSString *)groupId

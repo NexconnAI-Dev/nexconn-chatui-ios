@@ -7,8 +7,8 @@
 //
 
 #import "NCMenuItemView.h"
-#import "NCMenuItem.h"
 #import "NCChatUICommonDefine.h"
+#import "NCMenuItem.h"
 
 @interface NCMenuItemView ()
 
@@ -41,7 +41,7 @@
     _iconImageView = [[UIImageView alloc] init];
     _iconImageView.contentMode = UIViewContentModeScaleAspectFit;
     _iconImageView.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     // Create the title label.
     _titleLabel = [[UILabel alloc] init];
     _titleLabel.font = [UIFont systemFontOfSize:12];
@@ -49,38 +49,40 @@
     _titleLabel.textAlignment = NSTextAlignmentCenter;
     _titleLabel.numberOfLines = 2; // Allow the title to wrap.
     _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     // Arrange the icon and title vertically.
-    _stackView = [[UIStackView alloc] initWithArrangedSubviews:@[_iconImageView, _titleLabel]];
+    _stackView = [[UIStackView alloc] initWithArrangedSubviews:@[ _iconImageView, _titleLabel ]];
     _stackView.axis = UILayoutConstraintAxisVertical;
     _stackView.alignment = UIStackViewAlignmentCenter; // Center the icon and text horizontally.
     _stackView.distribution = UIStackViewDistributionFill;
     _stackView.spacing = 6;
     _stackView.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     [self addSubview:_stackView];
-    
+
     // Pin the stack to the top and horizontal edges while allowing content-driven height.
     [NSLayoutConstraint activateConstraints:@[
         // Top and horizontal alignment
         [_stackView.topAnchor constraintEqualToAnchor:self.topAnchor constant:8],
         [_stackView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:4],
         [_stackView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-4],
-        
+
         // Fixed icon size
         [_iconImageView.widthAnchor constraintEqualToConstant:24],
         [_iconImageView.heightAnchor constraintEqualToConstant:24]
     ]];
-    
+
     // Use a lower-priority bottom bound so the content determines the height.
-    NSLayoutConstraint *bottomConstraint = [_stackView.bottomAnchor constraintLessThanOrEqualToAnchor:self.bottomAnchor constant:-8];
+    NSLayoutConstraint *bottomConstraint =
+        [_stackView.bottomAnchor constraintLessThanOrEqualToAnchor:self.bottomAnchor constant:-8];
     bottomConstraint.priority = UILayoutPriorityDefaultHigh;
     bottomConstraint.active = YES;
-    
+
     // Add tap handling.
-    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    UITapGestureRecognizer *tapGesture =
+        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
     [self addGestureRecognizer:tapGesture];
-    
+
     // Configure the background and corner radius.
     self.backgroundColor = [UIColor clearColor];
     self.layer.cornerRadius = 8;
@@ -94,19 +96,23 @@
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
     // Animate tap feedback before invoking the action.
-    [UIView animateWithDuration:0.1 animations:^{
-        self.transform = CGAffineTransformMakeScale(0.95, 0.95);
-        self.backgroundColor = NCDynamicColor(@"selected_background_color");
-    } completion:^(BOOL finished) {
-        [UIView animateWithDuration:0.1 animations:^{
-            self.transform = CGAffineTransformIdentity;
-            self.backgroundColor = [UIColor clearColor];
-        } completion:^(BOOL finished) {
-            if (self.actionHandler) {
-                self.actionHandler();
-            }
+    [UIView animateWithDuration:0.1
+        animations:^{
+          self.transform = CGAffineTransformMakeScale(0.95, 0.95);
+          self.backgroundColor = NCDynamicColor(@"selected_background_color");
+        }
+        completion:^(BOOL finished) {
+          [UIView animateWithDuration:0.1
+              animations:^{
+                self.transform = CGAffineTransformIdentity;
+                self.backgroundColor = [UIColor clearColor];
+              }
+              completion:^(BOOL finished) {
+                if (self.actionHandler) {
+                    self.actionHandler();
+                }
+              }];
         }];
-    }];
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -125,4 +131,3 @@
 }
 
 @end
-

@@ -99,8 +99,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Destroys resources, resets state, and stops playback. Equivalent to resetSightPlayer:YES below.
 
-  @discussion This method does not stop the download. After the download completes, the video file is cached but not played.
-  @discussion Due to an App Store review warning, the original reset method was renamed to resetSightPlayer.
+  @discussion This method does not stop the download. After the download completes, the video file
+ is cached but not played.
+  @discussion Due to an App Store review warning, the original reset method was renamed to
+ resetSightPlayer.
  */
 - (void)resetSightPlayer;
 
@@ -109,8 +111,10 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param inactivateAudioSession Sets AVAudioSession inactive.
 
- @discussion This method does not stop the download. After the download completes, the video file is cached but not played.
- @discussion Due to an App Store review warning, the original reset: method was renamed to resetSightPlayer:.
+ @discussion This method does not stop the download. After the download completes, the video file is
+ cached but not played.
+ @discussion Due to an App Store review warning, the original reset: method was renamed to
+ resetSightPlayer:.
  */
 - (void)resetSightPlayer:(BOOL)inactivateAudioSession;
 

@@ -36,8 +36,9 @@
 
 - (void)saveCurrentUserInterfaceStyle {
     if (@available(iOS 13.0, *)) {
-        [[NSUserDefaults standardUserDefaults] setObject:@(UITraitCollection.currentTraitCollection.userInterfaceStyle)
-                                                  forKey:@"NCCurrentUserInterfaceStyle"];
+        [[NSUserDefaults standardUserDefaults]
+            setObject:@(UITraitCollection.currentTraitCollection.userInterfaceStyle)
+               forKey:@"NCCurrentUserInterfaceStyle"];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
 }

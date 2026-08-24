@@ -71,24 +71,27 @@
                                                                 multiplier:1.0f
                                                                   constant:0]];
 
-    NSDictionary *views = NSDictionaryOfVariableBindings(_selectedImageView, _fileNameLabel, _fileIconImageView);
+    NSDictionary *views =
+        NSDictionaryOfVariableBindings(_selectedImageView, _fileNameLabel, _fileIconImageView);
 
-    [self addConstraints:[NSLayoutConstraint
-                             constraintsWithVisualFormat:
-                                 @"H:|-10-[_selectedImageView(20)]-17-[_fileIconImageView(36)]-10-[_fileNameLabel]-10-|"
-                                                 options:kNilOptions
-                                                 metrics:nil
-                                                   views:views]];
-
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_selectedImageView(20)]"
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:
+                                                 @"H:|-10-[_selectedImageView(20)]-17-[_"
+                                                 @"fileIconImageView(36)]-10-[_fileNameLabel]-10-|"
                                                                  options:kNilOptions
                                                                  metrics:nil
                                                                    views:views]];
 
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_fileIconImageView(36)]"
-                                                                 options:kNilOptions
-                                                                 metrics:nil
-                                                                   views:views]];
+    [self
+        addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_selectedImageView(20)]"
+                                                               options:kNilOptions
+                                                               metrics:nil
+                                                                 views:views]];
+
+    [self
+        addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_fileIconImageView(36)]"
+                                                               options:kNilOptions
+                                                               metrics:nil
+                                                                 views:views]];
 
     [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_fileNameLabel(21)]"
                                                                  options:kNilOptions

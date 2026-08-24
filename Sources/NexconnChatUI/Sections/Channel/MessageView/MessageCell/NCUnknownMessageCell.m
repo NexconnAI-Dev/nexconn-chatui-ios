@@ -7,9 +7,9 @@
 //
 
 #import "NCUnknownMessageCell.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 @implementation NCUnknownMessageCell
 
 #pragma mark - Life Cycle
@@ -41,14 +41,16 @@
            dataDetectorEnabled:NO];
 
     NSString *__text = self.messageLabel.text;
-    CGSize __textSize = [NCChatUIUtility getTextDrawingSize:__text
-                                                    font:[[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
-                                         constrainedSize:CGSizeMake(maxMessageLabelWidth, MAXFLOAT)];
+    CGSize __textSize =
+        [NCChatUIUtility getTextDrawingSize:__text
+                                       font:[[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
+                            constrainedSize:CGSizeMake(maxMessageLabelWidth, MAXFLOAT)];
     __textSize = CGSizeMake(ceilf(__textSize.width), ceilf(__textSize.height));
     CGSize __labelSize = CGSizeMake(__textSize.width + 5, __textSize.height + 6);
 
-    self.messageLabel.frame = CGRectMake((self.baseContentView.bounds.size.width - __labelSize.width) / 2.0f, 0,
-                                         __labelSize.width, __labelSize.height);
+    self.messageLabel.frame =
+        CGRectMake((self.baseContentView.bounds.size.width - __labelSize.width) / 2.0f, 0,
+                   __labelSize.width, __labelSize.height);
 }
 
 #pragma mark - Private Methods

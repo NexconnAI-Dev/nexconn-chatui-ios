@@ -8,5 +8,5 @@
 
 #import <UIKit/UIKit.h>
 
-@interface NCPageControl : UIPageControl 
+@interface NCPageControl : UIPageControl
 @end

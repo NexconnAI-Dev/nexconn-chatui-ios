@@ -7,9 +7,9 @@
 //
 
 #import "NCChannelTitleView.h"
-#import "NCOnlineStatusView.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCOnlineStatusView.h"
 
 @interface NCChannelTitleView ()
 
@@ -36,16 +36,18 @@
 
 - (void)setupView {
     [self addSubview:self.contentStackView];
-    
+
     // Add the status indicator and title to the horizontal stack.
     [self.contentStackView addArrangedSubview:self.onlineStatusView];
     [self.contentStackView addArrangedSubview:self.titleLabel];
-    
+
     // Pin the stack view to this view.
     self.contentStackView.translatesAutoresizingMaskIntoConstraints = NO;
     [NSLayoutConstraint activateConstraints:@[
-        [self.contentStackView.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.leadingAnchor],
-        [self.contentStackView.trailingAnchor constraintLessThanOrEqualToAnchor:self.trailingAnchor],
+        [self.contentStackView.leadingAnchor
+            constraintGreaterThanOrEqualToAnchor:self.leadingAnchor],
+        [self.contentStackView.trailingAnchor
+            constraintLessThanOrEqualToAnchor:self.trailingAnchor],
         [self.contentStackView.topAnchor constraintEqualToAnchor:self.topAnchor],
         [self.contentStackView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
         [self.contentStackView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor]
@@ -64,7 +66,8 @@
 }
 
 - (CGSize)intrinsicContentSize {
-    CGSize stackSize = [self.contentStackView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    CGSize stackSize =
+        [self.contentStackView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
     return stackSize;
 }
 
@@ -106,4 +109,3 @@
 }
 
 @end
-

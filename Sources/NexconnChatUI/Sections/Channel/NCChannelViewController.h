@@ -6,21 +6,21 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseButton.h"
+#import "NCBaseCollectionView.h"
+#import "NCBaseImageView.h"
 #import "NCBaseViewController.h"
-#import "NCChatSessionInputBarControl.h"
 #import "NCChannelModel.h"
+#import "NCChatSessionInputBarControl.h"
+#import "NCChatUIUserInfo.h"
+#import "NCEditInputBarControl.h"
 #import "NCEmojiBoardView.h"
+#import "NCFullScreenEditView.h"
 #import "NCMessageBaseCell.h"
 #import "NCMessageModel.h"
 #import "NCPluginBoardView.h"
-#import <UIKit/UIKit.h>
 #import "NCReferencingView.h"
-#import "NCBaseCollectionView.h"
-#import "NCBaseButton.h"
-#import "NCBaseImageView.h"
-#import "NCEditInputBarControl.h"
-#import "NCFullScreenEditView.h"
-#import "NCChatUIUserInfo.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -33,18 +33,19 @@ NS_ASSUME_NONNULL_BEGIN
 typedef enum : NSUInteger {
     /// Load messages regardless of remote sync success or failure.
     NCChannelLoadMessageTypeAlways,
-    
+
     /// Ask whether to load local messages when remote sync fails.
     NCChannelLoadMessageTypeAsk,
-    
+
     /// Load messages only after remote sync succeeds.
     NCChannelLoadMessageTypeOnlySuccess,
 } NCChannelLoadMessageType;
 
 /// Channel page view controller.
 @interface NCChannelViewController
-    : NCBaseViewController <UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout,
-                            UIGestureRecognizerDelegate, UIScrollViewDelegate>
+    : NCBaseViewController <UICollectionViewDelegate, UICollectionViewDataSource,
+                            UICollectionViewDelegateFlowLayout, UIGestureRecognizerDelegate,
+                            UIScrollViewDelegate>
 
 #pragma mark - Initialization
 
@@ -67,16 +68,18 @@ typedef enum : NSUInteger {
 
 /// Current channel context for this page.
 /// This value is created from the latest channelType/channelId/subChannelId on each access.
-/// It is intended for subclasses and page collaborators to reuse the page's current channel context.
-/// The returned object may be nil when the current page context does not contain enough information to build a channel.
-/// The underlying context object is not cached to avoid stale state after page context changes.
+/// It is intended for subclasses and page collaborators to reuse the page's current channel
+/// context. The returned object may be nil when the current page context does not contain enough
+/// information to build a channel. The underlying context object is not cached to avoid stale state
+/// after page context changes.
 @property (nonatomic, strong, nullable, readonly) NCBaseChannel *currentChannel;
 
 /// Current channel identifier context for this page.
 /// This value is created from the latest channelType/channelId/subChannelId on each access.
-/// It is intended for subclasses and page collaborators to reuse the page's current channel context.
-/// The returned object may be nil when the current page context does not contain enough information to build a channel identifier.
-/// The underlying context object is not cached to avoid stale state after page context changes.
+/// It is intended for subclasses and page collaborators to reuse the page's current channel
+/// context. The returned object may be nil when the current page context does not contain enough
+/// information to build a channel identifier. The underlying context object is not cached to avoid
+/// stale state after page context changes.
 @property (nonatomic, strong, nullable, readonly) NCChannelIdentifier *currentChannelIdentifier;
 
 #pragma mark - Channel Page Properties
@@ -95,8 +98,8 @@ typedef enum : NSUInteger {
 
 #pragma mark Unread Count in Navigation Back Button
 
-/// Array of channel types to count unread messages for (displayed in the navigation bar back button).
-/// Specifies which channel types contribute to the unread count shown in the back button.
+/// Array of channel types to count unread messages for (displayed in the navigation bar back
+/// button). Specifies which channel types contribute to the unread count shown in the back button.
 /// (OC should wrap NCChannelType in NSNumber to build the Array)
 @property (nonatomic, strong, nullable) NSArray *displayChannelTypeArray;
 
@@ -106,20 +109,20 @@ typedef enum : NSUInteger {
 
 #pragma mark Top-Right Unread Message Count
 
-/// Whether to show an unread message indicator in the top-right corner when unread count exceeds 10.
-/// Default is NO.
-/// When enabled, if unread messages exceed 10, an indicator appears in the top-right corner after entering the channel.
+/// Whether to show an unread message indicator in the top-right corner when unread count
+/// exceeds 10. Default is NO. When enabled, if unread messages exceed 10, an indicator appears in
+/// the top-right corner after entering the channel.
 @property (nonatomic, assign) BOOL enableUnreadMessageIcon;
-
 
 #pragma mark Top-Right Unread Mentioned Count
 
 /// Whether to show unread mentioned (@) message count in the top-right corner.
 ///
 /// Default is YES.
-/// When a channel receives many messages (more than one screen), an indicator appears in the top-right corner
-/// showing the unread mentioned count. Tapping it scrolls to the earliest unread mentioned message and decrements
-/// the count. Subsequent taps reduce the count based on visible mentioned messages.
+/// When a channel receives many messages (more than one screen), an indicator appears in the
+/// top-right corner showing the unread mentioned count. Tapping it scrolls to the earliest unread
+/// mentioned message and decrements the count. Subsequent taps reduce the count based on visible
+/// mentioned messages.
 @property (nonatomic, assign) BOOL enableUnreadMentionedIcon;
 
 /// Unread message count for this channel.
@@ -135,7 +138,6 @@ typedef enum : NSUInteger {
 /// Label for the top-right mentioned (@) message count.
 @property (nonatomic, strong) UILabel *unReadMentionedLabel;
 
-
 @property (nonatomic, strong) NCBaseImageView *unreadRightBottomIcon;
 
 /// Button for the top-right mentioned (@) message count.
@@ -143,12 +145,13 @@ typedef enum : NSUInteger {
 
 #pragma mark Bottom-Right Unread Message Count
 
-/// Whether to show a new message indicator in the bottom-right corner when new messages arrive below the current view.
+/// Whether to show a new message indicator in the bottom-right corner when new messages arrive
+/// below the current view.
 ///
 /// Default is NO.
 /// When enabled, if the user is scrolled to the bottom, new messages auto-update;
-/// if the user is viewing earlier messages, a new message indicator appears in the bottom-right corner.
-/// Tapping it scrolls to the bottom.
+/// if the user is viewing earlier messages, a new message indicator appears in the bottom-right
+/// corner. Tapping it scrolls to the bottom.
 @property (nonatomic, assign) BOOL enableNewComingMessageIcon;
 
 /// Label for the bottom-right unread message count.
@@ -166,10 +169,11 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong, nullable) NCFullScreenEditView *fullScreenEditView;
 
 /// Whether to disable system emoji. Set this right after creating NCChannelViewController.
-@property (nonatomic, assign) BOOL  disableSystemEmoji;
+@property (nonatomic, assign) BOOL disableSystemEmoji;
 
 /// Default input mode for the input bar.
-/// Default is NCChatSessionInputBarInputText (text input mode). Set this after [super viewWillAppear:animated].
+/// Default is NCChatSessionInputBarInputText (text input mode). Set this after [super
+/// viewWillAppear:animated].
 @property (nonatomic) NCChatSessionInputBarInputType defaultInputType;
 
 /// Extension display area for the channel page.
@@ -221,16 +225,17 @@ typedef enum : NSUInteger {
 /// Set this before viewDidLoad.
 @property (nonatomic, assign) int defaultMessageCount;
 
-
 /// Number of messages to fetch from remote on pull-to-refresh after entering the channel page.
 /// Default is 10. Value must be in range (1, 100].
 /// Set this before viewDidLoad.
-@property (nonatomic, assign) int defaultRemoteHistoryMessageCount __attribute__((deprecated("Deprecated. Use defaultMessageCount instead.")));
+@property (nonatomic, assign) int defaultRemoteHistoryMessageCount
+    __attribute__((deprecated("Deprecated. Use defaultMessageCount instead.")));
 
 /// Number of messages to load from local database on pull-to-refresh. Default is 10.
 /// Set this before viewDidLoad.
 /// From version 5.2.4 and later, use defaultRemoteHistoryMessageCount for message count.
-@property (nonatomic, assign) int defaultLocalHistoryMessageCount __attribute__((deprecated("Deprecated. Use defaultMessageCount instead.")));
+@property (nonatomic, assign) int defaultLocalHistoryMessageCount
+    __attribute__((deprecated("Deprecated. Use defaultMessageCount instead.")));
 
 /// Message loading type.
 ///
@@ -243,7 +248,8 @@ typedef enum : NSUInteger {
 /// Only has valid values when allowsMessageCellSelection is YES.
 @property (nonatomic, strong, readonly) NSArray<NCMessageModel *> *selectedMessages;
 
-/// Whether message cells are in multi-select editing mode. If YES, cells show multi-select style; if NO, the page returns to its initial state.
+/// Whether message cells are in multi-select editing mode. If YES, cells show multi-select style;
+/// if NO, the page returns to its initial state.
 @property (nonatomic, assign) BOOL allowsMessageCellSelection;
 
 /// Toolbar view at the bottom of the page during multi-select editing mode.
@@ -252,7 +258,6 @@ typedef enum : NSUInteger {
 /// Show an error alert and leave the current channel page.
 /// @param errorInfo The error message.
 - (void)alertErrorAndLeft:(NSString *)errorInfo;
-
 
 #pragma mark - UI Actions
 
@@ -276,15 +281,17 @@ typedef enum : NSUInteger {
 /// When the receiver is offline and push is enabled, a remote push notification is sent.
 /// The push contains pushContent (for display) and pushData (non-displayed data).
 /// For built-in message types, if pushContent is nil, the default push format is used.
-/// For custom message types, you must set pushContent to define push content; otherwise no push is sent.
+/// For custom message types, you must set pushContent to define push content; otherwise no push is
+/// sent.
 - (void)sendMessage:(NCMessageContent *)messageContent pushContent:(nullable NSString *)pushContent;
 
 /// Send a media message (upload image or file to the app-specified server).
 /// @param messageContent The message content.
 /// @param pushContent    Remote push content shown when the receiver is offline.
 /// @param appUpload      Whether to upload to the app-specified server.
-/// Set appUpload to YES and implement the uploadMedia:uploadListener: callback to upload media to your own server.
-/// In the callback, upload the media and notify the SDK of progress via the uploadListener.
+/// Set appUpload to YES and implement the uploadMedia:uploadListener: callback to upload media to
+/// your own server. In the callback, upload the media and notify the SDK of progress via the
+/// uploadListener.
 - (void)sendMediaMessage:(NCMediaMessageContent *)messageContent
              pushContent:(nullable NSString *)pushContent
                appUpload:(BOOL)appUpload;
@@ -293,19 +300,22 @@ typedef enum : NSUInteger {
 /// @param message        The media message entity (image or file message).
 /// @param uploadListener The SDK upload progress listener.
 /// Required when sending media via sendMediaMessage:pushContent:appUpload:.
-- (void)uploadMedia:(NCMessage *)message uploadListener:(NCUploadMediaStatusListener *)uploadListener;
+- (void)uploadMedia:(NCMessage *)message
+     uploadListener:(NCUploadMediaStatusListener *)uploadListener;
 
 /// Cancel uploading a media message.
 /// @param model        The media message model (file message).
 /// When sending media via sendMediaMessage:pushContent:appUpload: (uploading to app server),
-/// override this method to cancel your upload and call the uploadListener's cancelBlock to notify the SDK.
+/// override this method to cancel your upload and call the uploadListener's cancelBlock to notify
+/// the SDK.
 - (void)cancelUploadMedia:(NCMessageModel *)model;
 
 /// Resend a message.
 /// @param messageContent The message content.
-/// When a message fails to send and the user taps the error indicator, the original local message is deleted
-/// and this method is called to resend the content.
-- (void)resendMessage:(NCMessageContent *)messageContent __deprecated_msg("Use resendMessageWithModel instead");
+/// When a message fails to send and the user taps the error indicator, the original local message
+/// is deleted and this method is called to resend the content.
+- (void)resendMessage:(NCMessageContent *)messageContent
+    __deprecated_msg("Use resendMessageWithModel instead");
 
 /// Resend a message.
 /// @param model The message model.
@@ -350,7 +360,10 @@ typedef enum : NSUInteger {
 /// Callback after a message is sent.
 /// @param status          Send status. 0 = success, non-0 = failure.
 /// @param messageContent   The message content.
-- (void)didSendMessage:(NSInteger)status content:(NCMessageContent *)messageContent __deprecated_msg("Use - (void)didSendMessageModel:(NSInteger)status model:(NCMessageModel *)messageModel instead");
+- (void)didSendMessage:(NSInteger)status
+               content:(NCMessageContent *)messageContent
+    __deprecated_msg("Use - (void)didSendMessageModel:(NSInteger)status model:(NCMessageModel "
+                     "*)messageModel instead");
 
 /// Callback after a message is sent.
 /// @param status          Send status. 0 = success, non-0 = failure.
@@ -371,7 +384,6 @@ typedef enum : NSUInteger {
 /// @param cell        The message cell.
 /// @param indexPath   The index path of the cell's data model in the data source.
 - (void)willDisplayMessageCell:(NCMessageBaseCell *)cell atIndexPath:(NSIndexPath *)indexPath;
-
 
 /// Callback when a message is about to be selected in multi-select mode.
 /// @param model The message cell data model.
@@ -397,13 +409,13 @@ typedef enum : NSUInteger {
 /// Register a custom message cell.
 /// @param cellClass     The custom message cell class.
 /// @param messageType   Message type identifier (objectName).
-/// Override sizeForMessageModel:withCollectionViewWidth:referenceExtraHeight: in your cell to calculate the cell height.
-/// Register custom message cells inside the registerCustomCellsAndMessages method of your channel page subclass.
-/// Do not register in other methods to avoid rendering timing issues.
-/// Prefer using NCMessageType constants or the +messageType value from custom message classes to avoid hard-coded strings.
-/// For example:
-/// [self registerClass:[NCTextMessageCell class] forMessageType:NCMessageType.text];
-/// [self registerClass:[MyCustomMessageCell class] forMessageType:[MyCustomMessage messageType]];
+/// Override sizeForMessageModel:withCollectionViewWidth:referenceExtraHeight: in your cell to
+/// calculate the cell height. Register custom message cells inside the
+/// registerCustomCellsAndMessages method of your channel page subclass. Do not register in other
+/// methods to avoid rendering timing issues. Prefer using NCMessageType constants or the
+/// +messageType value from custom message classes to avoid hard-coded strings. For example: [self
+/// registerClass:[NCTextMessageCell class] forMessageType:NCMessageType.text]; [self
+/// registerClass:[MyCustomMessageCell class] forMessageType:[MyCustomMessage messageType]];
 - (void)registerClass:(Class)cellClass forMessageType:(NSString *)messageType;
 
 /// Callback for displaying an unregistered message cell.
@@ -411,9 +423,10 @@ typedef enum : NSUInteger {
 /// @param indexPath       The index path of the cell's data model in the data source.
 /// @return The cell to display for unregistered messages.
 /// Set showUnkownMessage to YES before using this callback.
-/// Use this to pre-define display for unrecognized messages in older versions (e.g., prompt to upgrade).
+/// Use this to pre-define display for unrecognized messages in older versions (e.g., prompt to
+/// upgrade).
 - (NCMessageBaseCell *)ncUnknownChannelCollectionView:(UICollectionView *)collectionView
-                                   cellForItemAtIndexPath:(NSIndexPath *)indexPath;
+                               cellForItemAtIndexPath:(NSIndexPath *)indexPath;
 
 /// Callback for the size of an unregistered message cell.
 /// @param collectionView          The current CollectionView.
@@ -422,17 +435,16 @@ typedef enum : NSUInteger {
 /// @return The size for the unregistered message cell.
 /// Set showUnkownMessage to YES before using this callback.
 - (CGSize)ncUnknownChannelCollectionView:(UICollectionView *)collectionView
-                                      layout:(UICollectionViewLayout *)collectionViewLayout
-                      sizeForItemAtIndexPath:(NSIndexPath *)indexPath;
+                                  layout:(UICollectionViewLayout *)collectionViewLayout
+                  sizeForItemAtIndexPath:(NSIndexPath *)indexPath;
 
 #pragma mark - Tap Event Callbacks
 
 /// Callback when message content in a cell is tapped.
 /// @param model The message cell data model.
-/// The SDK has default handling for built-in messages (images, voice, location, etc.) such as viewing and playback.
-/// Call super when overriding to preserve SDK default behavior.
+/// The SDK has default handling for built-in messages (images, voice, location, etc.) such as
+/// viewing and playback. Call super when overriding to preserve SDK default behavior.
 - (void)didTapMessageCell:(NCMessageModel *)model;
-
 
 /// Callback when message content in a cell is long-pressed.
 /// @param model The message cell data model.
@@ -507,15 +519,18 @@ typedef enum : NSUInteger {
 /// Callback when "@" is typed in the input bar, about to show the user picker.
 /// @param selectedBlock Callback after a user is selected.
 /// @param cancelBlock   Callback when selection is cancelled.
-/// Override this method to present a custom user picker. Call selectedBlock with the selected UserInfo when done.
+/// Override this method to present a custom user picker. Call selectedBlock with the selected
+/// UserInfo when done.
 - (void)showChooseUserViewController:(void (^)(NCChatUIUserInfo *selectedUserInfo))selectedBlock
                               cancel:(void (^)(void))cancelBlock;
 
 /// Callback for message forwarding.
 /// @param index            0 = forward individually, 1 = forward as combined message.
 /// @param completedBlock   Return the list of channels to forward to.
-/// Override this to present a custom channel picker. Call completedBlock with the selected channels when done.
-- (void)forwardMessage:(NSInteger)index completed:(void (^)(NSArray<NCBaseChannel *> *conversationList))completedBlock;
+/// Override this to present a custom channel picker. Call completedBlock with the selected channels
+/// when done.
+- (void)forwardMessage:(NSInteger)index
+             completed:(void (^)(NSArray<NCBaseChannel *> *conversationList))completedBlock;
 
 - (void)addMentionedUserToCurrentInput:(NCChatUIUserInfo *)userInfo;
 

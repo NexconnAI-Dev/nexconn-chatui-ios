@@ -7,9 +7,9 @@
 //
 
 #import "NCViewModelAdapterCenter.h"
-#import "NCReadWriteLock.h"
 #import "NCBaseViewModel.h"
-@interface NCViewModelAdapterCenter()
+#import "NCReadWriteLock.h"
+@interface NCViewModelAdapterCenter ()
 
 @property (nonatomic, strong) NSMapTable *delegates;
 @property (nonatomic, strong) NCReadWriteLock *lock;
@@ -17,29 +17,27 @@
 @end
 
 @implementation NCViewModelAdapterCenter
- 
+
 + (instancetype)sharedInstance {
     static id instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
+      instance = [[self alloc] init];
     });
     return instance;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
-        self.delegates =  [NSMapTable mapTableWithKeyOptions:NSMapTableStrongMemory
-                                                valueOptions:NSMapTableWeakMemory];
+        self.delegates = [NSMapTable mapTableWithKeyOptions:NSMapTableStrongMemory
+                                               valueOptions:NSMapTableWeakMemory];
         self.lock = [[NCReadWriteLock alloc] init];
     }
     return self;
 }
 
 #pragma mark - Private
-
 
 - (BOOL)registerDelegate:(id)delegate forViewModelClass:(Class)cls {
     if (![cls isSubclassOfClass:[NCBaseViewModel class]]) {
@@ -48,7 +46,7 @@
     NSString *identifier = NSStringFromClass(cls);
     if (identifier) {
         [self.lock performWriteLockBlock:^{
-            [self.delegates setObject:delegate forKey:identifier];
+          [self.delegates setObject:delegate forKey:identifier];
         }];
         return YES;
     }
@@ -61,9 +59,9 @@
     }
     NSString *identifier = NSStringFromClass(cls);
     if (identifier) {
-       __block id delegate = nil;
-        [self.lock  performReadLockBlock:^{
-            delegate = [self.delegates objectForKey:identifier];
+        __block id delegate = nil;
+        [self.lock performReadLockBlock:^{
+          delegate = [self.delegates objectForKey:identifier];
         }];
         return delegate;
     }
@@ -76,7 +74,6 @@
     NCViewModelAdapterCenter *instance = [NCViewModelAdapterCenter sharedInstance];
     return [instance registerDelegate:delegate forViewModelClass:cls];
 }
-
 
 + (id)delegateForViewModelClass:(Class)cls {
     NCViewModelAdapterCenter *instance = [NCViewModelAdapterCenter sharedInstance];

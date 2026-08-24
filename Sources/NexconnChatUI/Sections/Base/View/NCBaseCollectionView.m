@@ -9,17 +9,16 @@
 #import "NCBaseCollectionView.h"
 #import "NCSemanticContext.h"
 @implementation NCBaseCollectionView
-- (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout{
+- (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout {
     self = [super initWithFrame:frame collectionViewLayout:layout];
-    if(self){
+    if (self) {
         if ([NCSemanticContext isRTL]) {
             self.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-        }else{
+        } else {
             self.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
         }
     }
     return self;
 }
-
 
 @end

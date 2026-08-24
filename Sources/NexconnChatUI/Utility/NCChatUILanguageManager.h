@@ -11,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Language manager.
- 
+
 /// Finds and caches language resources to improve localized string lookup performance.
 @interface NCChatUILanguageManager : NSObject
 
@@ -27,8 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Reloads the language context when the language changes.
 ///
 /// **Note:**
-/// This method is triggered automatically when `[NCChatUIConfig defaultConfig].ui.preferredLanguage`
-/// changes, so manual calls are usually unnecessary.
+/// This method is triggered automatically when `[NCChatUIConfig
+/// defaultConfig].ui.preferredLanguage` changes, so manual calls are usually unnecessary.
 - (void)reloadLanguageContext;
 
 @end

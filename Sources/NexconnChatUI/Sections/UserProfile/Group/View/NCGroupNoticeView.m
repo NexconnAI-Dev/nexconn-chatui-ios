@@ -12,30 +12,36 @@
 #define NCGroupNoticeViewTipBottom 30
 #define NCGroupNoticeViewTextTop 10
 #define NCGroupNoticeViewTextHeight 200
-@interface NCGroupNoticeView()
+@interface NCGroupNoticeView ()
 @property (nonatomic, strong) NSLayoutConstraint *textViewHeightConstraint;
 @end
 
 @implementation NCGroupNoticeView
 - (void)setupConstraints {
     [super setupConstraints];
-    self.textViewHeightConstraint = [self.textView.heightAnchor constraintEqualToConstant:NCGroupNoticeViewTextHeight];
+    self.textViewHeightConstraint =
+        [self.textView.heightAnchor constraintEqualToConstant:NCGroupNoticeViewTextHeight];
     [NSLayoutConstraint activateConstraints:@[
-          [self.textView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:NCUserManagementViewPadding],
-          [self.textView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-NCUserManagementViewPadding],
-          [self.textView.topAnchor constraintEqualToAnchor:self.topAnchor constant:NCGroupNoticeViewTextTop],
-          self.textViewHeightConstraint,
-          [self.emptyLabel.leadingAnchor constraintEqualToAnchor:self.textView.leadingAnchor],
-          [self.emptyLabel.trailingAnchor constraintEqualToAnchor:self.textView.trailingAnchor],
-          [self.emptyLabel.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
+        [self.textView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                    constant:NCUserManagementViewPadding],
+        [self.textView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                     constant:-NCUserManagementViewPadding],
+        [self.textView.topAnchor constraintEqualToAnchor:self.topAnchor
+                                                constant:NCGroupNoticeViewTextTop],
+        self.textViewHeightConstraint,
+        [self.emptyLabel.leadingAnchor constraintEqualToAnchor:self.textView.leadingAnchor],
+        [self.emptyLabel.trailingAnchor constraintEqualToAnchor:self.textView.trailingAnchor],
+        [self.emptyLabel.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
 
-          [self.emptyImageView.bottomAnchor constraintEqualToAnchor:self.emptyLabel.topAnchor constant:-NCGroupNoticeViewTextTop],
-          [self.emptyImageView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
-          
-          [self.tipLabel.leadingAnchor constraintEqualToAnchor:self.textView.leadingAnchor],
-          [self.tipLabel.trailingAnchor constraintEqualToAnchor:self.textView.trailingAnchor],
-          [self.tipLabel.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-NCGroupNoticeViewTipBottom],
-        ]];
+        [self.emptyImageView.bottomAnchor constraintEqualToAnchor:self.emptyLabel.topAnchor
+                                                         constant:-NCGroupNoticeViewTextTop],
+        [self.emptyImageView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
+
+        [self.tipLabel.leadingAnchor constraintEqualToAnchor:self.textView.leadingAnchor],
+        [self.tipLabel.trailingAnchor constraintEqualToAnchor:self.textView.trailingAnchor],
+        [self.tipLabel.bottomAnchor constraintEqualToAnchor:self.bottomAnchor
+                                                   constant:-NCGroupNoticeViewTipBottom],
+    ]];
 }
 
 - (void)showEmptylabel:(BOOL)show {
@@ -49,15 +55,15 @@
     if (!canEdit) {
         self.textView.backgroundColor = [UIColor clearColor];
         self.textViewHeightConstraint.active = NO;
-        [NSLayoutConstraint activateConstraints:@[
-            [self.textView.bottomAnchor constraintEqualToAnchor:self.tipLabel.topAnchor constant:-19]
-        ]];
+        [NSLayoutConstraint activateConstraints:@[ [self.textView.bottomAnchor
+                                                    constraintEqualToAnchor:self.tipLabel.topAnchor
+                                                                   constant:-19] ]];
     }
     [self setNeedsLayout];
     [self layoutIfNeeded];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setupView {
     [super setupView];
@@ -68,7 +74,7 @@
     [self addSubview:self.emptyLabel];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCPlaceholderTextView *)textView {
     if (!_textView) {

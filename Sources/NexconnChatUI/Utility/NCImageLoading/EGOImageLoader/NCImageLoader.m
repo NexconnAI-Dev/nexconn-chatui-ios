@@ -25,11 +25,11 @@
 //
 
 #import "NCImageLoader.h"
-#import <NexconnChatUI/NCChatUILog.h>
 #import "NCCache.h"
 #import "NCImageLoadConnection.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import <CommonCrypto/CommonDigest.h>
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <NexconnChatUI/NCChatUILog.h>
 
 static NCImageLoader *__imageLoader;
 
@@ -56,8 +56,7 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
     }
 }
 
-
-//#define maxImageSize 1024 * 1024 * 5
+// #define maxImageSize 1024 * 1024 * 5
 
 #if __EGOIL_USE_BLOCKS
 #define kNoStyle @"EGOImageLoader-nostyle"
@@ -68,8 +67,9 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
 #endif
 
 #if __EGOIL_USE_NOTIF
-#define kImageNotificationLoaded(s) [@"kEGOImageLoaderNotificationLoaded-" stringByAppendingString:keyForURL(s, nil)]
-#define kImageNotificationLoadFailed(s)                                                                                \
+#define kImageNotificationLoaded(s)                                                                \
+    [@"kEGOImageLoaderNotificationLoaded-" stringByAppendingString:keyForURL(s, nil)]
+#define kImageNotificationLoadFailed(s)                                                            \
     [@"kEGOImageLoaderNotificationLoadFailed-" stringByAppendingString:keyForURL(s, nil)]
 #endif
 
@@ -149,7 +149,9 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
 
 - (void)cancelLoadForURL:(NSURL *)aURL {
     NCImageLoadConnection *connection = [self loadingConnectionForURL:aURL];
-    [NSObject cancelPreviousPerformRequestsWithTarget:connection selector:@selector(start) object:nil];
+    [NSObject cancelPreviousPerformRequestsWithTarget:connection
+                                             selector:@selector(start)
+                                               object:nil];
     [connection cancel];
     [self cleanUpConnection:connection];
 }
@@ -224,14 +226,19 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
 }
 
 - (void)removeObserver:(id<NCImageLoaderObserver>)observer forURL:(NSURL *)aURL {
-    [[NSNotificationCenter defaultCenter] removeObserver:observer name:kImageNotificationLoaded(aURL) object:self];
-    [[NSNotificationCenter defaultCenter] removeObserver:observer name:kImageNotificationLoadFailed(aURL) object:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:observer
+                                                    name:kImageNotificationLoaded(aURL)
+                                                  object:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:observer
+                                                    name:kImageNotificationLoadFailed(aURL)
+                                                  object:self];
 }
 
 #endif
 
 #if __EGOIL_USE_BLOCKS
-- (void)loadImageForURL:(NSURL *)aURL completion:(void (^)(UIImage *image, NSURL *imageURL, NSError *error))completion {
+- (void)loadImageForURL:(NSURL *)aURL
+             completion:(void (^)(UIImage *image, NSURL *imageURL, NSError *error))completion {
     [self loadImageForURL:aURL style:nil styler:nil completion:completion];
 }
 
@@ -243,15 +250,16 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
 
     if (anImage) {
         completion(anImage, aURL, nil);
-    } else if (!anImage && styler && style && (anImage = [[EGOCache currentCache] imageForKey:keyForURL(aURL, nil)])) {
+    } else if (!anImage && styler && style &&
+               (anImage = [[EGOCache currentCache] imageForKey:keyForURL(aURL, nil)])) {
         dispatch_async(kStylerQueue, ^{
-            UIImage *image = styler(anImage);
-            [[EGOCache currentCache] setImage:image
-                                       forKey:keyForURL(aURL, style)
-                          withTimeoutInterval:[NCCache currentCache].defaultTimeoutInterval];
-            dispatch_async(kCompletionsQueue, ^{
-                completion(image, aURL, nil);
-            });
+          UIImage *image = styler(anImage);
+          [[EGOCache currentCache] setImage:image
+                                     forKey:keyForURL(aURL, style)
+                        withTimeoutInterval:[NCCache currentCache].defaultTimeoutInterval];
+          dispatch_async(kCompletionsQueue, ^{
+            completion(image, aURL, nil);
+          });
         });
     } else {
         EGOImageLoadConnection *connection = [self loadImageForURL:aURL];
@@ -285,8 +293,10 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
 }
 
 - (UIImage *)scaleImage:(UIImage *)image toScale:(float)scaleSize {
-    UIGraphicsBeginImageContext(CGSizeMake(image.size.width * scaleSize, image.size.height * scaleSize));
-    [image drawInRect:CGRectMake(0, 0, image.size.width * scaleSize, image.size.height * scaleSize)];
+    UIGraphicsBeginImageContext(
+        CGSizeMake(image.size.width * scaleSize, image.size.height * scaleSize));
+    [image
+        drawInRect:CGRectMake(0, 0, image.size.width * scaleSize, image.size.height * scaleSize)];
     UIImage *scaledImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return scaledImage;
@@ -304,20 +314,18 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
             errDomain = NSURLErrorDomain;
         }
         NSError *error = [NSError errorWithDomain:errDomain code:406 userInfo:nil];
-        NCLogE(@"image load error, imageUrl:%@, image type is illegal",connection.imageURL);
-        
-#if __EGOIL_USE_NOTIF
-        NSNotification *notification =
-            [NSNotification notificationWithName:kImageNotificationLoadFailed(connection.imageURL)
-                                          object:self
-                                        userInfo:@{
-                                            @"error" : error,
-                                            @"imageURL" : connection.imageURL
-                                        }];
+        NCLogE(@"image load error, imageUrl:%@, image type is illegal", connection.imageURL);
 
-        [[NSNotificationCenter defaultCenter] performSelectorOnMainThread:@selector(postNotification:)
-                                                               withObject:notification
-                                                            waitUntilDone:YES];
+#if __EGOIL_USE_NOTIF
+        NSNotification *notification = [NSNotification
+            notificationWithName:kImageNotificationLoadFailed(connection.imageURL)
+                          object:self
+                        userInfo:@{@"error" : error, @"imageURL" : connection.imageURL}];
+
+        [[NSNotificationCenter defaultCenter]
+            performSelectorOnMainThread:@selector(postNotification:)
+                             withObject:notification
+                          waitUntilDone:YES];
 #endif
 
 #if __EGOIL_USE_BLOCKS
@@ -327,8 +335,8 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
     } else {
         NSData *originalImageData = targetData;
         [[NCCache currentCache] setData:targetData
-                                     forKey:keyForURL(connection.imageURL, nil)
-                        withTimeoutInterval:[NCCache currentCache].defaultTimeoutInterval];
+                                 forKey:keyForURL(connection.imageURL, nil)
+                    withTimeoutInterval:[NCCache currentCache].defaultTimeoutInterval];
         [connectionsLock lock];
         [currentConnections removeObjectForKey:connection.imageURL];
 
@@ -344,9 +352,10 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
                                             @"originalImageData" : originalImageData
                                         }];
 
-        [[NSNotificationCenter defaultCenter] performSelectorOnMainThread:@selector(postNotification:)
-                                                               withObject:notification
-                                                            waitUntilDone:YES];
+        [[NSNotificationCenter defaultCenter]
+            performSelectorOnMainThread:@selector(postNotification:)
+                             withObject:notification
+                          waitUntilDone:YES];
 #endif
 
 #if __EGOIL_USE_BLOCKS
@@ -363,16 +372,13 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
     self.currentConnections = [currentConnections copy];
     [connectionsLock unlock];
 
-    NCLogE(@"image load error, imageUrl:%@,error:%@",connection.imageURL, error);
-    
+    NCLogE(@"image load error, imageUrl:%@,error:%@", connection.imageURL, error);
+
 #if __EGOIL_USE_NOTIF
-    NSNotification *notification =
-        [NSNotification notificationWithName:kImageNotificationLoadFailed(connection.imageURL)
-                                      object:self
-                                    userInfo:@{
-                                        @"error" : error,
-                                        @"imageURL" : connection.imageURL
-                                    }];
+    NSNotification *notification = [NSNotification
+        notificationWithName:kImageNotificationLoadFailed(connection.imageURL)
+                      object:self
+                    userInfo:@{@"error" : error, @"imageURL" : connection.imageURL}];
 
     [[NSNotificationCenter defaultCenter] performSelectorOnMainThread:@selector(postNotification:)
                                                            withObject:notification
@@ -395,12 +401,13 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
 
     NSURL *imageURL = connection.imageURL;
 
-    void (^callCompletions)(UIImage *anImage, NSArray *completions) = ^(UIImage *anImage, NSArray *completions) {
-        dispatch_async(kCompletionsQueue, ^{
-            for (void (^completion)(UIImage *image, NSURL *imageURL, NSError *error) in completions) {
-                completion(anImage, connection.imageURL, error);
-            }
-        });
+    void (^callCompletions)(UIImage *anImage, NSArray *completions) = ^(UIImage *anImage,
+                                                                        NSArray *completions) {
+      dispatch_async(kCompletionsQueue, ^{
+        for (void (^completion)(UIImage *image, NSURL *imageURL, NSError *error) in completions) {
+            completion(anImage, connection.imageURL, error);
+        }
+      });
     };
 
     for (NSString *styleKey in connection.handlers) {
@@ -408,11 +415,11 @@ inline static NSString *keyForURL(NSURL *url, NSString *style) {
         UIImage * (^styler)(UIImage *image) = [handler objectForKey:kStylerKey];
         if (!error && image && styler) {
             dispatch_async(kStylerQueue, ^{
-                UIImage *anImage = styler(image);
-                [[EGOCache currentCache] setImage:anImage
-                                           forKey:keyForURL(imageURL, styleKey)
-                              withTimeoutInterval:[NCCache currentCache].defaultTimeoutInterval];
-                callCompletions(anImage, [handler objectForKey:kCompletionsKey]);
+              UIImage *anImage = styler(image);
+              [[EGOCache currentCache] setImage:anImage
+                                         forKey:keyForURL(imageURL, styleKey)
+                            withTimeoutInterval:[NCCache currentCache].defaultTimeoutInterval];
+              callCompletions(anImage, [handler objectForKey:kCompletionsKey]);
             });
         } else {
             callCompletions(image, [handler objectForKey:kCompletionsKey]);

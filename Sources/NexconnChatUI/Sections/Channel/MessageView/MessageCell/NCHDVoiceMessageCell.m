@@ -10,10 +10,10 @@
 #import "NCChatUI.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIUtility.h"
-#import "NCVoicePlayer.h"
-#import "NCHDVoiceMsgDownloadManager.h"
 #import "NCHDVoiceMsgDownloadInfo.h"
+#import "NCHDVoiceMsgDownloadManager.h"
 #import "NCMessageCellTool.h"
+#import "NCVoicePlayer.h"
 
 static NSTimer *hq_previousAnimationTimer = nil;
 static UIImageView *hq_previousPlayVoiceImageView = nil;
@@ -24,7 +24,7 @@ static NCMessageDirection hq_previousMessageDirection;
 #define Play_Voice_View_Width 16
 static CGFloat const kAudioBubbleMinWidth = 70.0f;
 static CGFloat const kAudioBubbleMaxWidth = 180.0f;
-@interface NCMessageCell()
+@interface NCMessageCell ()
 - (void)messageContentViewFrameDidChanged;
 @end
 
@@ -45,7 +45,6 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
 @property (nonatomic, strong) NSTimer *animationTimer;
 @property (nonatomic) int animationIndex;
 @property (nonatomic, strong) NCVoicePlayer *voicePlayer;
-
 
 @end
 
@@ -133,18 +132,18 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     [self disableCurrentAnimationTimer];
 }
 
-
 #pragma mark - Notification
 
-- (void)registerNotification{
+- (void)registerNotification {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(resetActiveEventInBackgroundMode)
                                                  name:UIApplicationDidEnterBackgroundNotification
                                                object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(resetByExtensionModelEvents)
-                                                 name:@"NCUIExtensionModelResetVoicePlayingNotification"
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(resetByExtensionModelEvents)
+               name:@"NCUIExtensionModelResetVoicePlayingNotification"
+             object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(voiceWillPlay:)
                                                  name:kNotificationVoiceWillPlayNotification
@@ -176,10 +175,13 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
             [self indicatorHiding];
             [self showFailedStatusView];
         } else if (status == NCHQDownloadStatusSuccess) {
-            [self.model setHQVoiceMessageLocalPath:[NCMessageModel hqVoiceMessageLocalPathFromMessage:info.hqVoiceMsg]];
+            [self.model
+                setHQVoiceMessageLocalPath:[NCMessageModel
+                                               hqVoiceMessageLocalPathFromMessage:info.hqVoiceMsg]];
             [self indicatorHiding];
             [self hideFailedStatusView];
-            if (NCMessageDirectionReceive == self.model.messageDirection && !self.model.receivedStatusInfo.isListened) {
+            if (NCMessageDirectionReceive == self.model.messageDirection &&
+                !self.model.receivedStatusInfo.isListened) {
                 [self.voiceUnreadTagView setHidden:NO];
             }
         }
@@ -201,7 +203,6 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     }
 }
 
-
 #pragma mark - Private Methods
 
 - (void)initialize {
@@ -209,11 +210,11 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     self.messageContentView.accessibilityLabel = @"messageContentView";
     [self.messageContentView addSubview:self.playVoiceView];
     [self.messageContentView addSubview:self.voiceDurationLabel];
-    
+
     [self registerNotification];
 }
 
-- (void)resetAnimationTimer{
+- (void)resetAnimationTimer {
     if (self.voicePlayer.messageClientId == self.model.clientId) {
         if ((self.voicePlayer.isPlaying)) {
             [self disableCurrentAnimationTimer];
@@ -224,26 +225,28 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     }
 }
 
-- (void)setMessageInfo{
+- (void)setMessageInfo {
     if ([self.model hqVoiceMessageDuration] > 0) {
-        self.voiceDurationLabel.text = [NSString stringWithFormat:@"%ld''", [self.model hqVoiceMessageDuration]];
+        self.voiceDurationLabel.text =
+            [NSString stringWithFormat:@"%ld''", [self.model hqVoiceMessageDuration]];
     } else {
         NCLogD(@"[NexconnChatUI]: NCMessageModel.content is NOT NCHDVoiceMessage object");
     }
 }
 
-- (CGFloat)getBubbleWidth:(long)duration{
+- (CGFloat)getBubbleWidth:(long)duration {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CGFloat audioBubbleWidth =
-        kAudioBubbleMinWidth +
-        (kAudioBubbleMaxWidth - kAudioBubbleMinWidth) * duration / NCChatUIConfigCenter.message.maxVoiceDuration;
+        kAudioBubbleMinWidth + (kAudioBubbleMaxWidth - kAudioBubbleMinWidth) * duration /
+                                   NCChatUIConfigCenter.message.maxVoiceDuration;
 #pragma clang diagnostic pop
-    audioBubbleWidth = audioBubbleWidth > kAudioBubbleMaxWidth ? kAudioBubbleMaxWidth : audioBubbleWidth;
+    audioBubbleWidth =
+        audioBubbleWidth > kAudioBubbleMaxWidth ? kAudioBubbleMaxWidth : audioBubbleWidth;
     return audioBubbleWidth;
 }
 
-- (void)updateSubViewsLayout{
+- (void)updateSubViewsLayout {
     CGFloat audioBubbleWidth = [self getBubbleWidth:[self.model hqVoiceMessageDuration]];
     CGFloat voiceHeight = NCChatUIConfigCenter.ui.globalMessagePortraitSize.height;
     self.messageContentView.contentSize = CGSizeMake(audioBubbleWidth, voiceHeight);
@@ -252,37 +255,52 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
             self.playVoiceView.image = NCDynamicImage(@"channel_msg_cell_receive_voice_3_img");
             [self.voiceDurationLabel setTextColor:NCDynamicColor(@"text_primary_color")];
             self.voiceDurationLabel.textAlignment = NSTextAlignmentLeft;
-            self.playVoiceView.frame = CGRectMake(12, (voiceHeight - Play_Voice_View_Width)/2, Play_Voice_View_Width, Play_Voice_View_Width);
-            self.voiceDurationLabel.frame = CGRectMake(CGRectGetMaxX(self.playVoiceView.frame) + 8, 0, audioBubbleWidth - (CGRectGetMaxX(self.playVoiceView.frame) + 8), voiceHeight);
+            self.playVoiceView.frame = CGRectMake(12, (voiceHeight - Play_Voice_View_Width) / 2,
+                                                  Play_Voice_View_Width, Play_Voice_View_Width);
+            self.voiceDurationLabel.frame = CGRectMake(
+                CGRectGetMaxX(self.playVoiceView.frame) + 8, 0,
+                audioBubbleWidth - (CGRectGetMaxX(self.playVoiceView.frame) + 8), voiceHeight);
         } else {
             self.voiceDurationLabel.textAlignment = NSTextAlignmentRight;
-            self.playVoiceView.frame = CGRectMake(self.messageContentView.frame.size.width-12-Play_Voice_View_Width, (voiceHeight - Play_Voice_View_Width)/2, Play_Voice_View_Width, Play_Voice_View_Width);
-            self.voiceDurationLabel.frame = CGRectMake(12, 0, CGRectGetMinX(self.playVoiceView.frame) - 20, voiceHeight);
+            self.playVoiceView.frame =
+                CGRectMake(self.messageContentView.frame.size.width - 12 - Play_Voice_View_Width,
+                           (voiceHeight - Play_Voice_View_Width) / 2, Play_Voice_View_Width,
+                           Play_Voice_View_Width);
+            self.voiceDurationLabel.frame =
+                CGRectMake(12, 0, CGRectGetMinX(self.playVoiceView.frame) - 20, voiceHeight);
             [self.voiceDurationLabel setTextColor:NCDynamicColor(@"text_primary_color")];
             self.playVoiceView.image = NCDynamicImage(@"channel_msg_cell_send_voice_3_img");
         }
     } else {
-        
+
         if (self.model.messageDirection == NCMessageDirectionSend) {
             self.voiceDurationLabel.textAlignment = NSTextAlignmentRight;
-            self.playVoiceView.frame = CGRectMake(self.messageContentView.frame.size.width-12-Play_Voice_View_Width, (voiceHeight - Play_Voice_View_Width)/2, Play_Voice_View_Width, Play_Voice_View_Width);
-            self.voiceDurationLabel.frame = CGRectMake(12, 0, CGRectGetMinX(self.playVoiceView.frame) - 20, voiceHeight);
+            self.playVoiceView.frame =
+                CGRectMake(self.messageContentView.frame.size.width - 12 - Play_Voice_View_Width,
+                           (voiceHeight - Play_Voice_View_Width) / 2, Play_Voice_View_Width,
+                           Play_Voice_View_Width);
+            self.voiceDurationLabel.frame =
+                CGRectMake(12, 0, CGRectGetMinX(self.playVoiceView.frame) - 20, voiceHeight);
             [self.voiceDurationLabel setTextColor:NCDynamicColor(@"text_primary_color")];
             self.playVoiceView.image = NCDynamicImage(@"channel_msg_cell_send_voice_3_img");
-        }else{
+        } else {
             self.playVoiceView.image = NCDynamicImage(@"channel_msg_cell_receive_voice_3_img");
             [self.voiceDurationLabel setTextColor:NCDynamicColor(@"text_primary_color")];
             self.voiceDurationLabel.textAlignment = NSTextAlignmentLeft;
-            self.playVoiceView.frame = CGRectMake(12, (voiceHeight - Play_Voice_View_Width)/2, Play_Voice_View_Width, Play_Voice_View_Width);
-            self.voiceDurationLabel.frame = CGRectMake(CGRectGetMaxX(self.playVoiceView.frame) + 8, 0, audioBubbleWidth - (CGRectGetMaxX(self.playVoiceView.frame) + 8), voiceHeight);
+            self.playVoiceView.frame = CGRectMake(12, (voiceHeight - Play_Voice_View_Width) / 2,
+                                                  Play_Voice_View_Width, Play_Voice_View_Width);
+            self.voiceDurationLabel.frame = CGRectMake(
+                CGRectGetMaxX(self.playVoiceView.frame) + 8, 0,
+                audioBubbleWidth - (CGRectGetMaxX(self.playVoiceView.frame) + 8), voiceHeight);
         }
     }
-    
+
     [self addVoiceUnreadTagView];
 }
 
-- (void)updateVoiceDownloadStatusView{
-    if (self.model.messageDirection == NCMessageDirectionSend && self.model.sentStatus != NCMessageSentStatusSent) {
+- (void)updateVoiceDownloadStatusView {
+    if (self.model.messageDirection == NCMessageDirectionSend &&
+        self.model.sentStatus != NCMessageSentStatusSent) {
         return;
     }
     // 聊天页面和合并转发页面均复用该 cell，合并转发内的消息 clientId <= 0
@@ -290,13 +308,18 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
         return;
     }
     if ([self.model hqVoiceMessageLocalPath].length <= 0) {
-        NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageClientId:self.model.clientId];
-        [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-            (void)error;
-            if (message) {
-                [[NCHDVoiceMsgDownloadManager defaultManager] pushVoiceMsgs:@[ message ] priority:YES];
-            }
-        }];
+        NCGetMessageByIdParams *params =
+            [[NCGetMessageByIdParams alloc] initWithMessageClientId:self.model.clientId];
+        [NCBaseChannel
+            getMessageByIdWithParams:params
+                          completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                            (void)error;
+                            if (message) {
+                                [[NCHDVoiceMsgDownloadManager defaultManager]
+                                    pushVoiceMsgs:@[ message ]
+                                         priority:YES];
+                            }
+                          }];
         if ([[NCChatUI shared] getCurrentNetworkStatus] == NCChatUINetworkStatusNotReachable) {
             [self indicatorHiding];
             [self showFailedStatusView];
@@ -315,7 +338,7 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     [self disableCurrentAnimationTimer];
 }
 
-- (void)addVoiceUnreadTagView{
+- (void)addVoiceUnreadTagView {
     [self.voiceUnreadTagView removeFromSuperview];
     self.voiceUnreadTagView.image = nil;
     [self.voiceUnreadTagView setHidden:YES];
@@ -327,7 +350,11 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
             x = CGRectGetMinX(self.messageContentView.frame) - 8 - voice_Unread_View_Width;
         }
         if (NO == self.model.receivedStatusInfo.isListened) {
-            self.voiceUnreadTagView = [[NCBaseImageView alloc] initWithFrame:CGRectMake(x, self.messageContentView.frame.origin.y + (voiceHeight-voice_Unread_View_Width)/2, voice_Unread_View_Width, voice_Unread_View_Width)];
+            self.voiceUnreadTagView = [[NCBaseImageView alloc]
+                initWithFrame:CGRectMake(x,
+                                         self.messageContentView.frame.origin.y +
+                                             (voiceHeight - voice_Unread_View_Width) / 2,
+                                         voice_Unread_View_Width, voice_Unread_View_Width)];
             self.voiceUnreadTagView.accessibilityLabel = @"voiceUnreadTagView";
             if ([self.model hqVoiceMessageLocalPath].length > 0) {
                 [self.voiceUnreadTagView setHidden:NO];
@@ -360,8 +387,11 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
                 x = CGRectGetMinX(self.messageContentView.frame) - 8 - voice_Unread_View_Width;
             }
             if (NO == self.model.receivedStatusInfo.isListened) {
-                self.voiceUnreadTagView.frame = CGRectMake(x, self.messageContentView.frame.origin.y + (voiceHeight-voice_Unread_View_Width)/2, voice_Unread_View_Width, voice_Unread_View_Width);
-                
+                self.voiceUnreadTagView.frame =
+                    CGRectMake(x,
+                               self.messageContentView.frame.origin.y +
+                                   (voiceHeight - voice_Unread_View_Width) / 2,
+                               voice_Unread_View_Width, voice_Unread_View_Width);
             }
         }
     }
@@ -414,11 +444,12 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
         //                                       voiceData:_voiceMessage.wavAudioData
         //                                        observer:self];
         NSError *error;
-        NSData *wavAudioData =
-            [[NSData alloc] initWithContentsOfFile:localPath options:NSDataReadingMappedAlways error:&error];
+        NSData *wavAudioData = [[NSData alloc] initWithContentsOfFile:localPath
+                                                              options:NSDataReadingMappedAlways
+                                                                error:&error];
         //        NSData *wavAudioData = [NSData dataWithContentsOfFile:_voiceMessage.localPath];
         BOOL bPlay = [self.voicePlayer playVoice:self.model.channelType
-                                        channelId:self.model.channelId
+                                       channelId:self.model.channelId
                                  messageClientId:self.model.clientId
                                        voiceData:wavAudioData
                                         observer:self];
@@ -434,35 +465,36 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
         }
         self.statusContentView.hidden = NO;
         [self indicatorAnimating];
-        void (^completion)(NSString * _Nullable, NCError * _Nullable) = ^(NSString * _Nullable mediaPath,
-                                                                          NCError * _Nullable error) {
-            if (error || mediaPath.length == 0) {
-                dispatch_async(dispatch_get_main_queue(), ^{
+        void (^completion)(NSString *_Nullable, NCError *_Nullable) =
+            ^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+              if (error || mediaPath.length == 0) {
+                  dispatch_async(dispatch_get_main_queue(), ^{
                     [self indicatorHiding];
                     [self showFailedStatusView];
-                });
-                return;
-            }
-            dispatch_async(dispatch_get_main_queue(), ^{
+                  });
+                  return;
+              }
+              dispatch_async(dispatch_get_main_queue(), ^{
                 [self.model setHQVoiceMessageLocalPath:mediaPath];
                 [self indicatorHiding];
                 [self hideFailedStatusView];
-                if (NCMessageDirectionReceive == self.model.messageDirection && !self.model.receivedStatusInfo.isListened) {
+                if (NCMessageDirectionReceive == self.model.messageDirection &&
+                    !self.model.receivedStatusInfo.isListened) {
                     [self.voiceUnreadTagView setHidden:NO];
                 }
                 [self startPlayingVoiceData];
-            });
-        };
+              });
+            };
         void (^cancel)(void) = ^{
-            [self indicatorHiding];
+          [self indicatorHiding];
         };
         if (self.model.clientId > 0) {
             [[NCChatUI shared] downloadMediaMessage:self.model.clientId
-                progress:^(int progress) {
+                                           progress:^(int progress) {
 
-                }
-              completion:completion
-                  cancel:cancel];
+                                           }
+                                         completion:completion
+                                             cancel:cancel];
         } else if ([self.model hqVoiceMessageRemoteURL].length > 0 &&
                    [self.model hqVoiceMessageDownloadFileName].length > 0) {
             [[NCChatUI shared] downloadMediaFile:[self.model hqVoiceMessageDownloadFileName]
@@ -481,43 +513,44 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
 
 - (void)showFailedStatusView {
     // Sender-side voice messages already have a local audio file and need no download handling.
-//    if (self.model.messageDirection == MessageDirection_RECEIVE) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.messageFailedStatusView) {
-                self.statusContentView.hidden = NO;
-                self.messageFailedStatusView.hidden = NO;
-            }
-        });
-//    }
+    //    if (self.model.messageDirection == MessageDirection_RECEIVE) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (self.messageFailedStatusView) {
+          self.statusContentView.hidden = NO;
+          self.messageFailedStatusView.hidden = NO;
+      }
+    });
+    //    }
 }
 
 - (void)hideFailedStatusView {
     // Sender-side voice messages already have a local audio file and need no download handling.
-//    if (self.model.messageDirection == MessageDirection_RECEIVE) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.messageFailedStatusView) {
-                self.messageFailedStatusView.hidden = YES;
-            }
-        });
-//    }
+    //    if (self.model.messageDirection == MessageDirection_RECEIVE) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (self.messageFailedStatusView) {
+          self.messageFailedStatusView.hidden = YES;
+      }
+    });
+    //    }
 }
 
 - (void)indicatorAnimating {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.messageActivityIndicatorView && NCMessageDirectionReceive == self.model.messageDirection) {
-            self.statusContentView.hidden = NO;
-            self.messageActivityIndicatorView.hidden = NO;
-            [self.messageActivityIndicatorView startAnimating];
-        }
+      if (self.messageActivityIndicatorView &&
+          NCMessageDirectionReceive == self.model.messageDirection) {
+          self.statusContentView.hidden = NO;
+          self.messageActivityIndicatorView.hidden = NO;
+          [self.messageActivityIndicatorView startAnimating];
+      }
     });
 }
 
 - (void)indicatorHiding {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.messageActivityIndicatorView) {
-            self.messageActivityIndicatorView.hidden = YES;
-            [self.messageActivityIndicatorView stopAnimating];
-        }
+      if (self.messageActivityIndicatorView) {
+          self.messageActivityIndicatorView.hidden = YES;
+          [self.messageActivityIndicatorView stopAnimating];
+      }
     });
 }
 
@@ -528,11 +561,12 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
 }
 
 - (void)enableCurrentAnimationTimer {
-    self.animationTimer = [NSTimer scheduledTimerWithTimeInterval:0.5
-                                                           target:self
-                                                         selector:@selector(scheduleAnimationOperation)
-                                                         userInfo:nil
-                                                          repeats:YES];
+    self.animationTimer =
+        [NSTimer scheduledTimerWithTimeInterval:0.5
+                                         target:self
+                                       selector:@selector(scheduleAnimationOperation)
+                                       userInfo:nil
+                                        repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:self.animationTimer forMode:NSRunLoopCommonModes];
     [self.animationTimer fire];
 
@@ -540,7 +574,6 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     hq_previousPlayVoiceImageView = self.playVoiceView;
     hq_previousMessageDirection = self.model.messageDirection;
 }
-
 
 /**
  *  Implement the animation operation
@@ -552,12 +585,15 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
     NSString *playingIndicatorIndex;
     NSString *playingIndicatorIndexKey;
     if (NCMessageDirectionSend == self.model.messageDirection) {
-        playingIndicatorIndex = [NSString stringWithFormat:@"to_voice_%d", (self.animationIndex % 4)];
-        playingIndicatorIndexKey = [NSString stringWithFormat:@"channel_msg_cell_send_voice_%d_img", (self.animationIndex % 4)];
+        playingIndicatorIndex =
+            [NSString stringWithFormat:@"to_voice_%d", (self.animationIndex % 4)];
+        playingIndicatorIndexKey = [NSString
+            stringWithFormat:@"channel_msg_cell_send_voice_%d_img", (self.animationIndex % 4)];
     } else {
-        playingIndicatorIndex = [NSString stringWithFormat:@"from_voice_%d", (self.animationIndex % 4)];
-        playingIndicatorIndexKey = [NSString stringWithFormat:@"channel_msg_cell_receive_voice_%d_img", (self.animationIndex % 4)];
-
+        playingIndicatorIndex =
+            [NSString stringWithFormat:@"from_voice_%d", (self.animationIndex % 4)];
+        playingIndicatorIndexKey = [NSString
+            stringWithFormat:@"channel_msg_cell_receive_voice_%d_img", (self.animationIndex % 4)];
     }
     NCLogD(@"playingIndicatorIndex > %@", playingIndicatorIndex);
     UIImage *image = NCDynamicImage(playingIndicatorIndexKey);
@@ -596,9 +632,11 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
          */
         if (hq_previousPlayVoiceImageView) {
             if (NCMessageDirectionSend == self.model.messageDirection) {
-                hq_previousPlayVoiceImageView.image = NCDynamicImage(@"channel_msg_cell_send_voice_3_img");
+                hq_previousPlayVoiceImageView.image =
+                    NCDynamicImage(@"channel_msg_cell_send_voice_3_img");
             } else {
-                hq_previousPlayVoiceImageView.image = NCDynamicImage(@"channel_msg_cell_receive_voice_3_img");
+                hq_previousPlayVoiceImageView.image =
+                    NCDynamicImage(@"channel_msg_cell_receive_voice_3_img");
             }
             hq_previousPlayVoiceImageView = nil;
             hq_previousMessageDirection = 0;
@@ -608,21 +646,21 @@ static CGFloat const kAudioBubbleMaxWidth = 180.0f;
 
 #pragma mark - Getter
 
-- (NCVoicePlayer *)voicePlayer{
+- (NCVoicePlayer *)voicePlayer {
     if (!_voicePlayer) {
         _voicePlayer = [NCVoicePlayer defaultPlayer];
     }
     return _voicePlayer;
 }
 
-- (NCBaseImageView *)playVoiceView{
+- (NCBaseImageView *)playVoiceView {
     if (!_playVoiceView) {
         _playVoiceView = [[NCBaseImageView alloc] initWithFrame:CGRectZero];
     }
     return _playVoiceView;
 }
 
-- (UILabel *)voiceDurationLabel{
+- (UILabel *)voiceDurationLabel {
     if (!_voiceDurationLabel) {
         _voiceDurationLabel = [[UILabel alloc] initWithFrame:CGRectZero];
         _voiceDurationLabel.textAlignment = NSTextAlignmentLeft;

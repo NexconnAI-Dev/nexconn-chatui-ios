@@ -70,11 +70,13 @@
     if (self.state != NCMJRefreshStateIdle || !self.automaticallyRefresh || self.ncmj_y == 0)
         return;
 
-    if (_scrollView.ncmj_insetT + _scrollView.ncmj_contentH > _scrollView.ncmj_h) { // Content exceeds one screen.
-        // Use the scroll view's content height instead of the footer position in this threshold calculation.
+    if (_scrollView.ncmj_insetT + _scrollView.ncmj_contentH >
+        _scrollView.ncmj_h) { // Content exceeds one screen.
+        // Use the scroll view's content height instead of the footer position in this threshold
+        // calculation.
         if (_scrollView.ncmj_offsetY >= _scrollView.ncmj_contentH - _scrollView.ncmj_h +
-                                          self.ncmj_h * self.triggerAutomaticallyRefreshPercent + _scrollView.ncmj_insetB -
-                                          self.ncmj_h) {
+                                            self.ncmj_h * self.triggerAutomaticallyRefreshPercent +
+                                            _scrollView.ncmj_insetB - self.ncmj_h) {
             // Ignore downward movement to avoid duplicate triggers as the drag ends.
             CGPoint old = [change[@"old"] CGPointValue];
             CGPoint new = [ change[@"new"] CGPointValue ];
@@ -94,13 +96,15 @@
         return;
 
     UIGestureRecognizerState panState = _scrollView.panGestureRecognizer.state;
-    if (panState == UIGestureRecognizerStateEnded) {                               // The drag ended.
-        if (_scrollView.ncmj_insetT + _scrollView.ncmj_contentH <= _scrollView.ncmj_h) { // Content fits within one screen.
-            if (_scrollView.ncmj_offsetY >= -_scrollView.ncmj_insetT) {                // The user dragged upward.
+    if (panState == UIGestureRecognizerStateEnded) { // The drag ended.
+        if (_scrollView.ncmj_insetT + _scrollView.ncmj_contentH <=
+            _scrollView.ncmj_h) { // Content fits within one screen.
+            if (_scrollView.ncmj_offsetY >= -_scrollView.ncmj_insetT) { // The user dragged upward.
                 [self beginRefreshing];
             }
         } else { // Content exceeds one screen.
-            if (_scrollView.ncmj_offsetY >= _scrollView.ncmj_contentH + _scrollView.ncmj_insetB - _scrollView.ncmj_h) {
+            if (_scrollView.ncmj_offsetY >=
+                _scrollView.ncmj_contentH + _scrollView.ncmj_insetB - _scrollView.ncmj_h) {
                 [self beginRefreshing];
             }
         }

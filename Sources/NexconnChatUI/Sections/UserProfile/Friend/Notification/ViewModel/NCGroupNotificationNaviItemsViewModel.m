@@ -7,11 +7,11 @@
 //
 
 #import "NCGroupNotificationNaviItemsViewModel.h"
+#import "NCButton.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIUtility.h"
-#import "NCButton.h"
 
-@interface NCGroupNotificationNaviItemsViewModel()
+@interface NCGroupNotificationNaviItemsViewModel ()
 @property (nonatomic, strong) UIView *coverView;
 @end
 
@@ -21,12 +21,12 @@
 - (NSArray *)rightNavigationBarItems {
     NCButton *btn = [[NCButton alloc] init];
     [btn addTarget:self
-            action:@selector(rightBarItemClicked:)
-  forControlEvents:UIControlEventTouchUpInside];
+                  action:@selector(rightBarItemClicked:)
+        forControlEvents:UIControlEventTouchUpInside];
     UIImage *image = NCDynamicImage(@"friend_apply_more_img");
     [btn setImage:image forState:UIControlStateNormal];
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithCustomView:btn];
-    return @[item];
+    return @[ item ];
 }
 
 - (void)rightBarItemClicked:(id)sender {
@@ -77,19 +77,11 @@
     UIColor *color = NCDynamicColor(@"text_primary_color");
     [btn setTitleColor:color forState:UIControlStateNormal];
 
-    [btn addTarget:self
-            action:@selector(btnClick:)
-  forControlEvents:UIControlEventTouchUpOutside];
-    [btn addTarget:self
-            action:@selector(touchDown:)
-  forControlEvents:UIControlEventTouchDown];
-    [btn addTarget:self
-            action:@selector(touchCancel:)
-  forControlEvents:UIControlEventTouchCancel];
+    [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpOutside];
+    [btn addTarget:self action:@selector(touchDown:) forControlEvents:UIControlEventTouchDown];
+    [btn addTarget:self action:@selector(touchCancel:) forControlEvents:UIControlEventTouchCancel];
     btn.tag = category;
-    [btn addTarget:self
-            action:@selector(btnClick:)
-  forControlEvents:UIControlEventTouchUpInside];
+    [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
     return btn;
 }
 
@@ -97,20 +89,21 @@
     CGFloat width = 160;
     CGFloat height = 201;
     CGFloat yOffset = CGRectGetMaxY(self.responder.navigationController.navigationBar.frame);
-    UIView *panel = [[UIView alloc] init];;
+    UIView *panel = [[UIView alloc] init];
+    ;
     panel.backgroundColor = NCDynamicColor(@"common_background_color");
     panel.layer.cornerRadius = 6;
     panel.layer.masksToBounds = YES;
     panel.translatesAutoresizingMaskIntoConstraints = NO;
     [containerView addSubview:panel];
-    
+
     UIStackView *stackView = [[UIStackView alloc] init];
     stackView.axis = UILayoutConstraintAxisVertical;
     stackView.alignment = UIStackViewAlignmentFill;
     stackView.distribution = UIStackViewDistributionFillEqually;
     stackView.translatesAutoresizingMaskIntoConstraints = NO;
     [panel addSubview:stackView];
-    
+
     [NSLayoutConstraint activateConstraints:@[
         [panel.trailingAnchor constraintEqualToAnchor:containerView.trailingAnchor constant:-16],
         [panel.topAnchor constraintEqualToAnchor:containerView.topAnchor constant:yOffset],
@@ -122,18 +115,17 @@
         [stackView.topAnchor constraintEqualToAnchor:panel.topAnchor constant:16],
         [stackView.bottomAnchor constraintEqualToAnchor:panel.bottomAnchor constant:-16]
     ]];
-    
-    NSString *all = NCUILocalizedString(@"group_notification_all") ?:@"";
-    NSString *confirm = NCUILocalizedString(@"group_notification_to_be_confirm") ?:@"";
-    NSString *agree = NCUILocalizedString(@"group_notification_agreed") ?:@"";
-    NSString *expired = NCUILocalizedString(@"group_notification_expired") ?:@"";
-    NSArray *titles = @[all, confirm, agree, expired];
-    for (int i = 0; i< titles.count; i++) {
+
+    NSString *all = NCUILocalizedString(@"group_notification_all") ?: @"";
+    NSString *confirm = NCUILocalizedString(@"group_notification_to_be_confirm") ?: @"";
+    NSString *agree = NCUILocalizedString(@"group_notification_agreed") ?: @"";
+    NSString *expired = NCUILocalizedString(@"group_notification_expired") ?: @"";
+    NSArray *titles = @[ all, confirm, agree, expired ];
+    for (int i = 0; i < titles.count; i++) {
         UIButton *btn = [self createButton:titles[i] category:i];
         [stackView addArrangedSubview:btn];
     }
 }
-
 
 - (UIView *)coverView {
     if (!_coverView) {
@@ -141,8 +133,8 @@
         UIView *view = [[UIView alloc] initWithFrame:window.bounds];
         view.translatesAutoresizingMaskIntoConstraints = NO;
         view.backgroundColor = NCDynamicColor(@"mask_color");
-        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                                              action:@selector(removeCoverView)];
+        UITapGestureRecognizer *tap =
+            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(removeCoverView)];
         [view addGestureRecognizer:tap];
         [self configureSheetView:view];
         _coverView = view;
@@ -150,4 +142,3 @@
     return _coverView;
 }
 @end
-

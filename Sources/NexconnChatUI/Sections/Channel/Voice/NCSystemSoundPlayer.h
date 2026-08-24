@@ -19,7 +19,8 @@ typedef void (^NCSystemSoundPlayerCompletion)(BOOL complete);
 
 - (void)setSystemSoundPath:(NSString *)path;
 
-- (void)playSoundByMessage:(NCMessage *)message completeBlock:(NCSystemSoundPlayerCompletion)completion;
+- (void)playSoundByMessage:(NCMessage *)message
+             completeBlock:(NCSystemSoundPlayerCompletion)completion;
 
 /// Sets the channel whose ringing should be ignored.
 - (void)setIgnoreChannelType:(NCChannelType)channelType channelId:(NSString *)channelId;

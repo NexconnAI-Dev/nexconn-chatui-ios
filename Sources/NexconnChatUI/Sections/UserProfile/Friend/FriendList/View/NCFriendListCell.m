@@ -7,11 +7,11 @@
 //
 
 #import "NCFriendListCell.h"
-#import "NCImageView.h"
 #import "NCChatUICommonDefine.h"
-NSString  * const NCFriendListCellIdentifier = @"NCFriendListCellIdentifier";
+#import "NCImageView.h"
+NSString *const NCFriendListCellIdentifier = @"NCFriendListCellIdentifier";
 
-@interface NCFriendListCell()
+@interface NCFriendListCell ()
 @property (nonatomic, strong) UIView *line;
 @end
 
@@ -31,18 +31,17 @@ NSString  * const NCFriendListCellIdentifier = @"NCFriendListCellIdentifier";
 - (void)setupView {
     [super setupView];
     self.line = [UIView new];
-    self.line.backgroundColor = NCDynamicColor(@"line_background_color");;
-//    [self.contentView addSubview:self.line];
+    self.line.backgroundColor = NCDynamicColor(@"line_background_color");
+    ;
+    //    [self.contentView addSubview:self.line];
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat width = self.contentView.bounds.size.width;
     CGFloat height = self.contentView.bounds.size.height;
-    self.line.frame = CGRectMake(CGRectGetMaxX(self.portraitImageView.frame),
-                                 height-1,
-                                 width-CGRectGetMaxX(self.portraitImageView.frame),
-                                 1);
+    self.line.frame = CGRectMake(CGRectGetMaxX(self.portraitImageView.frame), height - 1,
+                                 width - CGRectGetMaxX(self.portraitImageView.frame), 1);
 }
 
 - (void)showPortrait:(NSString *)url {

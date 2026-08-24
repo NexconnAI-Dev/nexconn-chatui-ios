@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseTableViewController.h"
+#import <UIKit/UIKit.h>
 
 @protocol NCAlbumListViewControllerDelegate;
 @interface NCAlbumListTableViewController : NCBaseTableViewController

@@ -8,9 +8,9 @@
 
 #import "NCCombineMessageCell.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCCombineMessageUtility.h"
 #import "NCMessageCellTool.h"
-#import "NCChatUIConfig.h"
 #define NCCOMBINECELLWIDTH 230.0f
 #define NCCOMBINEBACKVIEWLEFT 12.0f
 #define NCCOMBINETITLELABLETOP 6.0f
@@ -22,7 +22,10 @@
 #define NCCOMBINEHISTORYLABELTOPSPACE 4.0f
 #define NCCOMBINEHISTORYLABELHEIGHT 16.5f
 #define NCCOMBINEHISTORYLABELBOTTOMSPACE 6.0f
-#define NCCOMBINECELLHEIGHTOVERCONTENTLABEL (NCCOMBINETITLELABLETOP + NCCOMBINETITLELABLEHEIGHT + NCCOMBINECONTENTLABELTOPSPACE + NCCOMBINELINEVIEWTOPSPACE + NCCOMBINELINEVIEWHEIGHT + NCCOMBINEHISTORYLABELTOPSPACE + NCCOMBINEHISTORYLABELHEIGHT + NCCOMBINEHISTORYLABELBOTTOMSPACE)
+#define NCCOMBINECELLHEIGHTOVERCONTENTLABEL                                                        \
+    (NCCOMBINETITLELABLETOP + NCCOMBINETITLELABLEHEIGHT + NCCOMBINECONTENTLABELTOPSPACE +          \
+     NCCOMBINELINEVIEWTOPSPACE + NCCOMBINELINEVIEWHEIGHT + NCCOMBINEHISTORYLABELTOPSPACE +         \
+     NCCOMBINEHISTORYLABELHEIGHT + NCCOMBINEHISTORYLABELBOTTOMSPACE)
 #define CONTENTLINESPACE 5
 
 @interface NCMessageModel (NCCombineMessageCell)
@@ -87,13 +90,13 @@
     self.titleLabel.text = title;
     NSString *summaryContent = [model combineMessageSummaryContent] ?: @"";
     NSMutableAttributedString *attriString =
-    [[NSMutableAttributedString alloc] initWithString:summaryContent];
+        [[NSMutableAttributedString alloc] initWithString:summaryContent];
     NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
     [paragraphStyle setLineSpacing:CONTENTLINESPACE]; // Set the line spacing.
     paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
-    if([NCChatUIUtility isRTL]){
+    if ([NCChatUIUtility isRTL]) {
         paragraphStyle.alignment = NSTextAlignmentRight;
-    }else{
+    } else {
         paragraphStyle.alignment = NSTextAlignmentLeft;
     }
     [attriString addAttribute:NSParagraphStyleAttributeName
@@ -108,9 +111,11 @@
 + (CGFloat)calculateCellHeight:(NCMessageModel *)model {
     CGFloat height = NCCOMBINECELLHEIGHTOVERCONTENTLABEL;
     NSString *summary = [model combineMessageSummaryContent];
-    CGSize size = [self getTextDrawingSize:summary
-                                      font:[[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel]
-                           constrainedSize:CGSizeMake(NCCOMBINECELLWIDTH - 25, 9999) lineSpace:CONTENTLINESPACE];
+    CGSize size =
+        [self getTextDrawingSize:summary
+                            font:[[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel]
+                 constrainedSize:CGSizeMake(NCCOMBINECELLWIDTH - 25, 9999)
+                       lineSpace:CONTENTLINESPACE];
     height += ceilf(size.height);
     if (height > NCCOMBINECELLHEIGHTOVERCONTENTLABEL + NCCOMBINECONTENTLABELSINGLEHEIGHT * 4) {
         height = NCCOMBINECELLHEIGHTOVERCONTENTLABEL + NCCOMBINECONTENTLABELSINGLEHEIGHT * 4;
@@ -118,26 +123,33 @@
     return height;
 }
 
-+ (CGSize)getTextDrawingSize:(NSString *)text font:(UIFont *)font constrainedSize:(CGSize)constrainedSize lineSpace:(NSInteger)lineSpace{
++ (CGSize)getTextDrawingSize:(NSString *)text
+                        font:(UIFont *)font
+             constrainedSize:(CGSize)constrainedSize
+                   lineSpace:(NSInteger)lineSpace {
     if (text.length <= 0) {
         return CGSizeZero;
     }
 
     if ([text respondsToSelector:@selector(boundingRectWithSize:options:attributes:context:)]) {
         NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
-        // NSStringDrawingUsesLineFragmentOrigin enables width-constrained line layout, so an explicit lineBreakMode is unnecessary.
-        // paragraphStyle.lineBreakMode = NSLineBreakByCharWrapping;
+        // NSStringDrawingUsesLineFragmentOrigin enables width-constrained line layout, so an
+        // explicit lineBreakMode is unnecessary. paragraphStyle.lineBreakMode =
+        // NSLineBreakByCharWrapping;
         paragraphStyle.lineSpacing = lineSpace;
-        NSDictionary *attributes = @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle};
+        NSDictionary *attributes =
+            @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle};
 
         return [text boundingRectWithSize:constrainedSize
-                                  options:(NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
+                                  options:(NSStringDrawingTruncatesLastVisibleLine |
+                                           NSStringDrawingUsesLineFragmentOrigin |
+                                           NSStringDrawingUsesFontLeading)
                                attributes:attributes
-                                  context:nil].size;
+                                  context:nil]
+            .size;
     }
     return CGSizeZero;
 }
-
 
 - (void)initialize {
     [self showBubbleBackgroundView:YES];
@@ -160,25 +172,33 @@
 }
 
 - (void)autoLayoutSubViews {
-    if(self.model.messageDirection == NCMessageDirectionReceive){
-        [self.titleLabel setTextColor: NCDynamicColor(@"text_primary_color")];
+    if (self.model.messageDirection == NCMessageDirectionReceive) {
+        [self.titleLabel setTextColor:NCDynamicColor(@"text_primary_color")];
         self.lineLable.backgroundColor = NCDynamicColor(@"line_background_color");
         self.contentLabel.textColor = NCDynamicColor(@"text_secondary_color");
-        self.historyLabel.textColor =
-        NCDynamicColor(@"text_secondary_color");
-    }else{
+        self.historyLabel.textColor = NCDynamicColor(@"text_secondary_color");
+    } else {
         [self.titleLabel setTextColor:NCDynamicColor(@"text_primary_color")];
         self.lineLable.backgroundColor = NCDynamicColor(@"line_background_color");
         self.contentLabel.textColor = NCDynamicColor(@"text_secondary_color");
         self.historyLabel.textColor = NCDynamicColor(@"text_secondary_color");
     }
-    self.backView.frame = CGRectMake(NCCOMBINEBACKVIEWLEFT, 0,
-                                     self.messageContentView.frame.size.width - NCCOMBINEBACKVIEWLEFT * 2,
-                                     self.messageContentView.frame.size.height);
-    self.titleLabel.frame = CGRectMake(0, NCCOMBINETITLELABLETOP, self.backView.frame.size.width, NCCOMBINETITLELABLEHEIGHT);
-    self.contentLabel.frame = CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame)+NCCOMBINECONTENTLABELTOPSPACE, self.backView.frame.size.width, self.messageContentView.frame.size.height - NCCOMBINECELLHEIGHTOVERCONTENTLABEL);
-    self.lineLable.frame = CGRectMake(0, CGRectGetMaxY(self.contentLabel.frame) + NCCOMBINELINEVIEWTOPSPACE, self.backView.frame.size.width, NCCOMBINELINEVIEWHEIGHT);
-    self.historyLabel.frame = CGRectMake(0, CGRectGetMaxY(self.lineLable.frame) + NCCOMBINEHISTORYLABELTOPSPACE, self.backView.frame.size.width, NCCOMBINEHISTORYLABELHEIGHT);
+    self.backView.frame =
+        CGRectMake(NCCOMBINEBACKVIEWLEFT, 0,
+                   self.messageContentView.frame.size.width - NCCOMBINEBACKVIEWLEFT * 2,
+                   self.messageContentView.frame.size.height);
+    self.titleLabel.frame = CGRectMake(0, NCCOMBINETITLELABLETOP, self.backView.frame.size.width,
+                                       NCCOMBINETITLELABLEHEIGHT);
+    self.contentLabel.frame =
+        CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame) + NCCOMBINECONTENTLABELTOPSPACE,
+                   self.backView.frame.size.width,
+                   self.messageContentView.frame.size.height - NCCOMBINECELLHEIGHTOVERCONTENTLABEL);
+    self.lineLable.frame =
+        CGRectMake(0, CGRectGetMaxY(self.contentLabel.frame) + NCCOMBINELINEVIEWTOPSPACE,
+                   self.backView.frame.size.width, NCCOMBINELINEVIEWHEIGHT);
+    self.historyLabel.frame =
+        CGRectMake(0, CGRectGetMaxY(self.lineLable.frame) + NCCOMBINEHISTORYLABELTOPSPACE,
+                   self.backView.frame.size.width, NCCOMBINEHISTORYLABELHEIGHT);
 }
 
 - (void)longPressed:(id)sender {

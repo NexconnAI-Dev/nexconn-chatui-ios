@@ -6,16 +6,15 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCChannelModel.h"
+#import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NCRRSDataContext : NSObject
 
 /// Refreshes cached data when needed.
 /// - Parameter conversations: Channel list.
-+ (void)refreshConversationsCachedIfNeeded:(NSArray <NCChannelModel *>*)conversations;
-
++ (void)refreshConversationsCachedIfNeeded:(NSArray<NCChannelModel *> *)conversations;
 
 /// Refreshes the cache with channel receipt info.
 /// - Parameter infoList: Receipt info.

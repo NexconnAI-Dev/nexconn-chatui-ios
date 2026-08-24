@@ -19,7 +19,8 @@ static NSString *const reuseIdentifier = @"Cell";
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self updateRTLUI];
-    [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:reuseIdentifier];
+    [self.collectionView registerClass:[UICollectionViewCell class]
+            forCellWithReuseIdentifier:reuseIdentifier];
 }
 
 - (void)viewWillLayoutSubviews {
@@ -34,16 +35,17 @@ static NSString *const reuseIdentifier = @"Cell";
 
 - (void)saveCurrentUserInterfaceStyle {
     if (@available(iOS 13.0, *)) {
-        [[NSUserDefaults standardUserDefaults] setObject:@(UITraitCollection.currentTraitCollection.userInterfaceStyle)
-                                                  forKey:@"NCCurrentUserInterfaceStyle"];
+        [[NSUserDefaults standardUserDefaults]
+            setObject:@(UITraitCollection.currentTraitCollection.userInterfaceStyle)
+               forKey:@"NCCurrentUserInterfaceStyle"];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
 }
 
-- (void)updateRTLUI{
+- (void)updateRTLUI {
     if ([NCChatUIUtility isRTL]) {
         self.collectionView.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-    }else{
+    } else {
         self.collectionView.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
     }
 }

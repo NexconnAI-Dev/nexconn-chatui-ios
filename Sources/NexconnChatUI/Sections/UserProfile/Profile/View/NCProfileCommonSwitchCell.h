@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-UIKIT_EXTERN NSString * _Nullable const NCProfileCommonSwitchCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCProfileCommonSwitchCellIdentifier;
 
 @protocol NCProfileCommonSwitchCellDelegate <NSObject>
 

@@ -7,9 +7,9 @@
 //
 
 #import "NCGroupFollowCellViewModel.h"
-#import "NCGroupFollowCell.h"
 #import "NCAlertView.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupFollowCell.h"
 
 @interface NCGroupFollowCellViewModel ()
 @property (nonatomic, strong) NCGroupMemberInfo *memberInfo;
@@ -17,7 +17,8 @@
 
 @implementation NCGroupFollowCellViewModel
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:NCGroupFollowCell.class forCellReuseIdentifier:NCGroupFollowCellIdentifier];
+    [tableView registerClass:NCGroupFollowCell.class
+        forCellReuseIdentifier:NCGroupFollowCellIdentifier];
 }
 
 - (instancetype)initWithMember:(NCGroupMemberInfo *)memberInfo {
@@ -28,8 +29,10 @@
     return self;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCGroupFollowCell *cell = [tableView dequeueReusableCellWithIdentifier:NCGroupFollowCellIdentifier];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCGroupFollowCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCGroupFollowCellIdentifier];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.portraitImageView.imageURL = [NSURL URLWithString:self.memberInfo.avatarUrl];
     if (self.remark.length > 0) {
@@ -40,9 +43,9 @@
         cell.nameLabel.text = self.memberInfo.name;
     }
     [cell setActionBlock:^{
-        if ([self.delegate respondsToSelector:@selector(actionButtonDidClick:)]) {
-            [self.delegate actionButtonDidClick:self];
-        }
+      if ([self.delegate respondsToSelector:@selector(actionButtonDidClick:)]) {
+          [self.delegate actionButtonDidClick:self];
+      }
     }];
     cell.actionButton.hidden = self.hiddenButton;
     cell.actionButton.userInteractionEnabled = !self.hiddenButton;

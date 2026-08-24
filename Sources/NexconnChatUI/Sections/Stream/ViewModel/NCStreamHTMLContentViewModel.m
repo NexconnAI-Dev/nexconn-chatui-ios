@@ -10,7 +10,7 @@
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 
-@interface NCStreamMarkdownContentViewModel()
+@interface NCStreamMarkdownContentViewModel ()
 - (NSString *)coverHtmlContent;
 
 @end
@@ -23,13 +23,13 @@
 
 - (NSString *)javascriptStringForHeight {
     NSString *js = @"(function() { "
-                   "var body = document.body;"
-                   "var html = document.documentElement;"
-                   "return Math.max("
-                   "body.scrollHeight, body.offsetHeight,"
-                   "html.offsetHeight"
-                   ");"
-                   "})();";
+                    "var body = document.body;"
+                    "var html = document.documentElement;"
+                    "return Math.max("
+                    "body.scrollHeight, body.offsetHeight,"
+                    "html.offsetHeight"
+                    ");"
+                    "})();";
     return js;
 }
 @end

@@ -29,9 +29,9 @@ static NSString *NCFileMD5(NSString *value) {
 static NSString *NCFileEnsureDirectory(NSString *path) {
     if (path.length > 0) {
         [[NSFileManager defaultManager] createDirectoryAtPath:path
-                                 withIntermediateDirectories:YES
-                                                  attributes:nil
-                                                       error:nil];
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:nil];
     }
     return path;
 }
@@ -42,7 +42,8 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
     if (string.length == 0) {
         return nil;
     }
-    return [[NSData alloc] initWithBase64EncodedString:string options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    return [[NSData alloc] initWithBase64EncodedString:string
+                                               options:NSDataBase64DecodingIgnoreUnknownCharacters];
 }
 
 + (BOOL)isLocalPath:(NSString *)path {
@@ -63,20 +64,24 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
     if (localPath.length == 0) {
         return nil;
     }
-    NSString *path = [localPath hasPrefix:@"file://"] ? [NSURL URLWithString:localPath].path : localPath;
-    NSArray<NSString *> *sandboxComponents = @[@"/Documents/", @"/Library/", @"/tmp/"];
+    NSString *path =
+        [localPath hasPrefix:@"file://"] ? [NSURL URLWithString:localPath].path : localPath;
+    NSArray<NSString *> *sandboxComponents = @[ @"/Documents/", @"/Library/", @"/tmp/" ];
     for (NSString *component in sandboxComponents) {
         NSRange range = [path rangeOfString:component];
         if (range.location != NSNotFound) {
-            return [NSHomeDirectory() stringByAppendingString:[path substringFromIndex:range.location]];
+            return [NSHomeDirectory()
+                stringByAppendingString:[path substringFromIndex:range.location]];
         }
     }
     return path;
 }
 
 + (NSString *)imageCacheRootDirectory {
-    NSString *cacheRoot = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    return NCFileEnsureDirectory([cacheRoot stringByAppendingPathComponent:NCFileCacheRootDirectoryName]);
+    NSString *cacheRoot =
+        NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    return NCFileEnsureDirectory(
+        [cacheRoot stringByAppendingPathComponent:NCFileCacheRootDirectoryName]);
 }
 
 + (UIImage *)imageByScalingAndCropSize:(UIImage *)image targetSize:(CGSize)targetSize {
@@ -93,8 +98,7 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
     CGFloat scaleFactor = MAX(widthFactor, heightFactor);
     CGSize scaledSize = CGSizeMake(imageSize.width * scaleFactor, imageSize.height * scaleFactor);
     CGRect drawRect = CGRectMake((targetSize.width - scaledSize.width) * 0.5,
-                                 (targetSize.height - scaledSize.height) * 0.5,
-                                 scaledSize.width,
+                                 (targetSize.height - scaledSize.height) * 0.5, scaledSize.width,
                                  scaledSize.height);
 
     UIGraphicsBeginImageContextWithOptions(targetSize, NO, image.scale);
@@ -110,7 +114,8 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
 
 + (BOOL)isFileExist:(NSString *)path {
     NSString *correctedPath = [self correctedFilePath:path];
-    return correctedPath.length > 0 && [[NSFileManager defaultManager] fileExistsAtPath:correctedPath];
+    return correctedPath.length > 0 &&
+           [[NSFileManager defaultManager] fileExistsAtPath:correctedPath];
 }
 
 + (NSString *)fileLocalPathForRemoteURL:(NSString *)remoteURL {
@@ -118,7 +123,8 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
     if (fileKey.length == 0) {
         return nil;
     }
-    NSDictionary *pathMap = [[NSUserDefaults standardUserDefaults] dictionaryForKey:NCFileLocalPathMapDefaultsKey];
+    NSDictionary *pathMap =
+        [[NSUserDefaults standardUserDefaults] dictionaryForKey:NCFileLocalPathMapDefaultsKey];
     NSString *localPath = [self correctedFilePath:pathMap[fileKey]];
     if (localPath.length > 0 && [[NSFileManager defaultManager] fileExistsAtPath:localPath]) {
         return localPath;
@@ -132,7 +138,9 @@ static NSString *NCFileEnsureDirectory(NSString *path) {
         return;
     }
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *pathMap = [[defaults dictionaryForKey:NCFileLocalPathMapDefaultsKey] mutableCopy] ?: [NSMutableDictionary dictionary];
+    NSMutableDictionary *pathMap =
+        [[defaults dictionaryForKey:NCFileLocalPathMapDefaultsKey] mutableCopy]
+            ?: [NSMutableDictionary dictionary];
     if (localPath.length > 0) {
         pathMap[fileKey] = localPath;
     } else {

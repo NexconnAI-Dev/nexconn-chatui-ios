@@ -6,11 +6,11 @@
 //
 
 #import "NCChannelModel+Display.h"
-#import "NCChatUIConfig.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
-#import "NCUserInfoCacheManager.h"
+#import "NCChatUIConfig.h"
 #import "NCChatUIUserInfo.h"
+#import "NCChatUIUtility.h"
+#import "NCUserInfoCacheManager.h"
 
 @implementation NCChannelModel (Display)
 
@@ -21,7 +21,8 @@
         return self.dataManagementInfo.name;
     }
     if ([self isChannelType:NCChannelTypeGroup]) {
-        NCChatUIGroup *groupInfo = [[NCUserInfoCacheManager sharedManager] getGroupInfo:self.channelId];
+        NCChatUIGroup *groupInfo =
+            [[NCUserInfoCacheManager sharedManager] getGroupInfo:self.channelId];
         return groupInfo.groupName;
     }
     NCChatUIUserInfo *userInfo = [self nc_displayManagedUserInfo:self.channelId];
@@ -40,7 +41,8 @@
 
 - (NSString *)conversationCachedPortraitUri {
     if ([self isChannelType:NCChannelTypeGroup]) {
-        NCChatUIGroup *groupInfo = [[NCUserInfoCacheManager sharedManager] getGroupInfo:self.channelId];
+        NCChatUIGroup *groupInfo =
+            [[NCUserInfoCacheManager sharedManager] getGroupInfo:self.channelId];
         return groupInfo.avatarUrl;
     }
     NCChatUIUserInfo *userInfo = [self nc_displayManagedUserInfo:self.channelId];
@@ -52,7 +54,7 @@
         return nil;
     }
     NCChatUIUserInfo *groupMemberUserInfo = [self nc_displayManagedGroupMemberInfo:self.senderUserId
-                                                                            groupId:self.channelId];
+                                                                           groupId:self.channelId];
     NCChatUIUserInfo *baseUserInfo = [self nc_displayManagedUserInfo:self.senderUserId];
     NCGroupMemberInfo *groupMemberInfo = groupMemberUserInfo.memberInfo;
     NSString *memberNickname = groupMemberInfo.nickname;
@@ -77,30 +79,32 @@
         return NCUILocalizedString(@"unknown_message_cell_tip");
     }
     return [NCChatUIUtility formatMessage:self.latestMessage
-                              channelId:self.channelId
-                      channelType:channelType];
+                                channelId:self.channelId
+                              channelType:channelType];
 }
 
 #pragma mark - Configuration Lookup
 
 - (BOOL)isReadReceiptEnabledForCurrentChannelType {
     NSInteger channelType = [self nc_displayConversationTypeValue];
-    return [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(channelType)];
+    return [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+        containsObject:@(channelType)];
 }
 
 #pragma mark - Private Methods
 
 - (NSInteger)nc_displayConversationTypeValue {
     switch (self.channelType) {
-        case NCChannelTypeDirect:
-        case NCChannelTypeGroup:
-        case NCChannelTypeSystem:
-        case NCChannelTypeCommunity:
-            return (NSInteger)self.channelType;
-        case NCChannelTypeOpen:
-        default:
-            // Open and unknown channel types have no equivalent; preserve the invalid value used by the existing behavior.
-            return -1;
+    case NCChannelTypeDirect:
+    case NCChannelTypeGroup:
+    case NCChannelTypeSystem:
+    case NCChannelTypeCommunity:
+        return (NSInteger)self.channelType;
+    case NCChannelTypeOpen:
+    default:
+        // Open and unknown channel types have no equivalent; preserve the invalid value used by the
+        // existing behavior.
+        return -1;
     }
 }
 
@@ -116,7 +120,8 @@
     if (userId.length == 0 || groupId.length == 0) {
         return nil;
     }
-    NCChatUIUserInfo *groupMemberUserInfo = [[NCUserInfoCacheManager sharedManager] getUserInfo:userId inGroupId:groupId];
+    NCChatUIUserInfo *groupMemberUserInfo =
+        [[NCUserInfoCacheManager sharedManager] getUserInfo:userId inGroupId:groupId];
     return groupMemberUserInfo ?: [self nc_displayManagedUserInfo:userId];
 }
 

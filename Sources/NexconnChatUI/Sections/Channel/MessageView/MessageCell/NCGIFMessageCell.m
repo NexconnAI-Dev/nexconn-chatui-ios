@@ -8,15 +8,15 @@
 
 #import "NCGIFMessageCell.h"
 #import "NCChatUI.h"
-#import "NCChatUIUtility.h"
-#import "NCGIFImage.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
+#import "NCFileUtility.h"
+#import "NCGIFImage.h"
 #import "NCGIFMessageProgressView.h"
 #import "NCGIFUtility.h"
 #import "NCMessageCellTool.h"
-#import "NCChatUIConfig.h"
 #import "NCResendManager.h"
-#import "NCFileUtility.h"
 #define GIFLOADIMAGEWIDTH 36.0f
 #define GIFLABLEWIGHT 40.0f
 #define GIFLABLEHEIGHT 10.0f
@@ -103,7 +103,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     if (localPath.length > 0) {
         [self showGifImageView:localPath];
     } else {
-        if ([self.model gifMessageRemoteURL].length > 0 && [self.model gifMessageDataSize] > maxAutoSize * 1024) {
+        if ([self.model gifMessageRemoteURL].length > 0 &&
+            [self.model gifMessageDataSize] > maxAutoSize * 1024) {
             // Require a tap when the GIF exceeds the limit.
             [self showView:self.needLoadImageView];
         } else {
@@ -113,18 +114,19 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     }
 
     [self updateStatusContentView:self.model];
-    if (model.sentStatus == NCMessageSentStatusSending || [[NCResendManager sharedManager] needResend:self.model.clientId]) {
+    if (model.sentStatus == NCMessageSentStatusSending ||
+        [[NCResendManager sharedManager] needResend:self.model.clientId]) {
         [self showProgressView];
     } else {
         [self hiddenProgressView];
     }
 }
 
-- (void)updateStatusContentView:(NCMessageModel *)model{
+- (void)updateStatusContentView:(NCMessageModel *)model {
     [super updateStatusContentView:model];
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        weakSelf.messageActivityIndicatorView.hidden = YES;
+      weakSelf.messageActivityIndicatorView.hidden = YES;
     });
 }
 
@@ -133,12 +135,11 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 - (void)initialize {
     [self.messageContentView addSubview:self.gifImageView];
     [self.messageContentView addSubview:self.loadBackButton];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(updateDownloadMediaStatus:)
                                                  name:NCUIDispatchDownloadMediaNotification
                                                object:nil];
-
 }
 
 - (void)prepareForReuse {
@@ -176,7 +177,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     }
 
     NSString *mediaUrl = [self.currentModel gifMessageRemoteURL] ?: @"";
-    NSString *fileName = [NCGIFUtility downloadFileNameForMediaURLString:mediaUrl defaultExtension:@"gif"];
+    NSString *fileName = [NCGIFUtility downloadFileNameForMediaURLString:mediaUrl
+                                                        defaultExtension:@"gif"];
     if (mediaUrl.length == 0 || fileName.length == 0) {
         NSDictionary *statusDic = @{
             @"clientId" : @(currentClientId),
@@ -184,58 +186,65 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
             @"type" : @"error",
             @"errorCode" : @(-1)
         };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:NCUIDispatchDownloadMediaNotification
+                          object:nil
+                        userInfo:statusDic];
         return;
     }
     [NCBaseChannel downloadMediaUrl:mediaUrl
-                           fileName:fileName
-                    progressHandler:^(NSInteger progress) {
-        NSDictionary *statusDic = @{
-            @"clientId" : @(currentClientId),
-            @"mediaUrl" : mediaUrl,
-            @"type" : @"progress",
-            @"progress" : @(progress)
-        };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
-    } completionHandler:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-        if (error || mediaPath.length == 0) {
-            NSDictionary *statusDic = @{
-                @"clientId" : @(currentClientId),
-                @"mediaUrl" : mediaUrl,
-                @"type" : @"error",
-                @"errorCode" : @(error ? error.code : -1)
-            };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            return;
+        fileName:fileName
+        progressHandler:^(NSInteger progress) {
+          NSDictionary *statusDic = @{
+              @"clientId" : @(currentClientId),
+              @"mediaUrl" : mediaUrl,
+              @"type" : @"progress",
+              @"progress" : @(progress)
+          };
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCUIDispatchDownloadMediaNotification
+                            object:nil
+                          userInfo:statusDic];
         }
-        // URL-based 下载底层不写 URL→本地路径映射，此处补写，供重进详情页 fileLocalPathForRemoteURL: 检测已下载状态
-        // （合并转发详情页的合成消息无持久化 clientId，只能靠该映射恢复）
-        [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:mediaUrl];
-        NSDictionary *statusDic = @{
-            @"clientId" : @(currentClientId),
-            @"mediaUrl" : mediaUrl,
-            @"type" : @"success",
-            @"mediaPath" : mediaPath
-        };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
-    } cancelHandler:^{
-        NSDictionary *statusDic = @{
-            @"clientId" : @(currentClientId),
-            @"mediaUrl" : mediaUrl,
-            @"type" : @"cancel"
-        };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
-    }];
+        completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+          if (error || mediaPath.length == 0) {
+              NSDictionary *statusDic = @{
+                  @"clientId" : @(currentClientId),
+                  @"mediaUrl" : mediaUrl,
+                  @"type" : @"error",
+                  @"errorCode" : @(error ? error.code : -1)
+              };
+              [[NSNotificationCenter defaultCenter]
+                  postNotificationName:NCUIDispatchDownloadMediaNotification
+                                object:nil
+                              userInfo:statusDic];
+              return;
+          }
+          // URL-based 下载底层不写 URL→本地路径映射，此处补写，供重进详情页
+          // fileLocalPathForRemoteURL: 检测已下载状态 （合并转发详情页的合成消息无持久化
+          // clientId，只能靠该映射恢复）
+          [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:mediaUrl];
+          NSDictionary *statusDic = @{
+              @"clientId" : @(currentClientId),
+              @"mediaUrl" : mediaUrl,
+              @"type" : @"success",
+              @"mediaPath" : mediaPath
+          };
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCUIDispatchDownloadMediaNotification
+                            object:nil
+                          userInfo:statusDic];
+        }
+        cancelHandler:^{
+          NSDictionary *statusDic =
+              @{@"clientId" : @(currentClientId),
+                @"mediaUrl" : mediaUrl,
+                @"type" : @"cancel"};
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCUIDispatchDownloadMediaNotification
+                            object:nil
+                          userInfo:statusDic];
+        }];
 }
 
 - (void)showGifImageView:(NSString *)localPath {
@@ -244,23 +253,25 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     [self showGifImageView:localPath forClientId:clientId mediaUrl:mediaUrl];
 }
 
-- (void)showGifImageView:(NSString *)localPath forClientId:(long)clientId mediaUrl:(NSString *)mediaUrl {
+- (void)showGifImageView:(NSString *)localPath
+             forClientId:(long)clientId
+                mediaUrl:(NSString *)mediaUrl {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSData *data = [NSData dataWithContentsOfFile:[NCFileUtility correctedFilePath:localPath]];
-        NCGIFImage *gifImage = [NCGIFImage animatedImageWithGIFData:data];
-        dispatch_main_async_safe(^{
-            if (![self isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
-                return;
-            }
-            if (gifImage) {
-                self.gifImageView.hidden = NO;
-                self.loadBackButton.hidden = YES;
-                self.loadingImageView.hidden = YES;
-                self.gifImageView.animatedImage = gifImage;
-            } else {
-                NCLogD(@"[NexconnChatUI]: NCMessageModel.content is NOT NCGIFMessage object");
-            }
-        });
+      NSData *data = [NSData dataWithContentsOfFile:[NCFileUtility correctedFilePath:localPath]];
+      NCGIFImage *gifImage = [NCGIFImage animatedImageWithGIFData:data];
+      dispatch_main_async_safe(^{
+        if (![self isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+            return;
+        }
+        if (gifImage) {
+            self.gifImageView.hidden = NO;
+            self.loadBackButton.hidden = YES;
+            self.loadingImageView.hidden = YES;
+            self.gifImageView.animatedImage = gifImage;
+        } else {
+            NCLogD(@"[NexconnChatUI]: NCMessageModel.content is NOT NCGIFMessage object");
+        }
+      });
     });
 }
 
@@ -271,7 +282,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     if (mediaUrl.length > 0) {
         NSString *currentMediaUrl = [self.model gifMessageRemoteURL] ?: @"";
         NSString *currentModelMediaUrl = [self.currentModel gifMessageRemoteURL] ?: @"";
-        return [currentMediaUrl isEqualToString:mediaUrl] && [currentModelMediaUrl isEqualToString:mediaUrl];
+        return [currentMediaUrl isEqualToString:mediaUrl] &&
+               [currentModelMediaUrl isEqualToString:mediaUrl];
     }
     return NO;
 }
@@ -292,7 +304,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
             }
         } else if ([notifyModel.actionName isEqualToString:CONVERSATION_CELL_STATUS_SEND_SUCCESS]) {
             [self hiddenProgressView];
-        } else if ([notifyModel.actionName isEqualToString:CONVERSATION_CELL_STATUS_SEND_PROGRESS]) {
+        } else if ([notifyModel.actionName
+                       isEqualToString:CONVERSATION_CELL_STATUS_SEND_PROGRESS]) {
             [self showProgressView];
             [self.progressView updateProgress:progress];
         }
@@ -304,8 +317,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     if (self.loadBackButton.hidden) {
         self.loadBackButton.hidden = NO;
     }
-    self.sizeLabel.center =
-        CGPointMake(self.loadBackButton.center.x, self.loadBackButton.center.y + 10 + GIFLOADIMAGEWIDTH / 2);
+    self.sizeLabel.center = CGPointMake(self.loadBackButton.center.x,
+                                        self.loadBackButton.center.y + 10 + GIFLOADIMAGEWIDTH / 2);
     NSString *size = [self getGIFSize:[self.model gifMessageDataSize]];
     if (size.length > 0) {
         self.sizeLabel.hidden = NO;
@@ -398,14 +411,14 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     self.sizeLabel.hidden = YES;
 }
 
-- (void)showProgressView{
+- (void)showProgressView {
     if (self.progressView.hidden) {
         self.progressView.hidden = NO;
         [self.progressView startAnimating];
     }
 }
 
-- (void)hiddenProgressView{
+- (void)hiddenProgressView {
     if (!self.progressView.hidden) {
         self.progressView.hidden = YES;
         [self.progressView stopAnimating];
@@ -421,37 +434,38 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
         if ([statusDic[@"type"] isEqualToString:@"progress"]) {
             __weak typeof(self) weakSelf = self;
             dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
-                    return;
-                }
-                CGFloat progress = (CGFloat)[statusDic[@"progress"] intValue];
-                if (strongSelf.gifDownLoadPropressView.hidden) {
-                    [strongSelf showView:strongSelf.gifDownLoadPropressView];
-                }
-                [strongSelf.gifDownLoadPropressView setProgress:progress];
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                  return;
+              }
+              CGFloat progress = (CGFloat)[statusDic[@"progress"] intValue];
+              if (strongSelf.gifDownLoadPropressView.hidden) {
+                  [strongSelf showView:strongSelf.gifDownLoadPropressView];
+              }
+              [strongSelf.gifDownLoadPropressView setProgress:progress];
             });
         } else if ([statusDic[@"type"] isEqualToString:@"success"]) {
             __weak typeof(self) weakSelf = self;
             dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
-                    return;
-                }
-                [strongSelf.model setGifMessageLocalPath:statusDic[@"mediaPath"]];
-                
-                [strongSelf showView:strongSelf.gifImageView];
-                [strongSelf showGifImageView:statusDic[@"mediaPath"] forClientId:clientId mediaUrl:mediaUrl];
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                  return;
+              }
+              [strongSelf.model setGifMessageLocalPath:statusDic[@"mediaPath"]];
 
+              [strongSelf showView:strongSelf.gifImageView];
+              [strongSelf showGifImageView:statusDic[@"mediaPath"]
+                               forClientId:clientId
+                                  mediaUrl:mediaUrl];
             });
         } else if ([statusDic[@"type"] isEqualToString:@"error"]) {
             __weak typeof(self) weakSelf = self;
             dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
-                    return;
-                }
-                [strongSelf showView:strongSelf.loadfailedImageView];
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              if (![strongSelf isCurrentDownloadStatusForClientId:clientId mediaUrl:mediaUrl]) {
+                  return;
+              }
+              [strongSelf showView:strongSelf.loadfailedImageView];
             });
         }
     }
@@ -492,7 +506,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (NCBaseImageView *)needLoadImageView {
     if (!_needLoadImageView) {
-        _needLoadImageView = [[NCBaseImageView alloc] initWithFrame:CGRectMake(0, 0, GIFLOADIMAGEWIDTH, GIFLOADIMAGEWIDTH)];
+        _needLoadImageView = [[NCBaseImageView alloc]
+            initWithFrame:CGRectMake(0, 0, GIFLOADIMAGEWIDTH, GIFLOADIMAGEWIDTH)];
         _needLoadImageView.image = NCDynamicImage(@"channel_msg_cell_gif_needload_img");
         _needLoadImageView.hidden = YES;
         _needLoadImageView.tag = 1;
@@ -503,7 +518,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (NCBaseImageView *)loadingImageView {
     if (!_loadingImageView) {
-        _loadingImageView = [[NCBaseImageView alloc] initWithFrame:CGRectMake(0, 0, GIFLOADIMAGEWIDTH, GIFLOADIMAGEWIDTH)];
+        _loadingImageView = [[NCBaseImageView alloc]
+            initWithFrame:CGRectMake(0, 0, GIFLOADIMAGEWIDTH, GIFLOADIMAGEWIDTH)];
         _loadingImageView.image = NCDynamicImage(@"channel_msg_cell_gif_loading_img");
         _loadingImageView.hidden = YES;
         _loadingImageView.tag = 2;
@@ -514,8 +530,10 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (NCGIFMessageProgressView *)gifDownLoadPropressView {
     if (!_gifDownLoadPropressView) {
-        _gifDownLoadPropressView = [[NCGIFMessageProgressView alloc] initWithFrame:CGRectMake(0, 0, 36, 36)];
-        _gifDownLoadPropressView.backgroundColor = [UIColor colorWithPatternImage:NCDynamicImage(@"channel_msg_cell_gif_loadprogress_img")];
+        _gifDownLoadPropressView =
+            [[NCGIFMessageProgressView alloc] initWithFrame:CGRectMake(0, 0, 36, 36)];
+        _gifDownLoadPropressView.backgroundColor = [UIColor
+            colorWithPatternImage:NCDynamicImage(@"channel_msg_cell_gif_loadprogress_img")];
         _gifDownLoadPropressView.tag = 3;
         _gifDownLoadPropressView.hidden = YES;
         [self.loadBackButton addSubview:_gifDownLoadPropressView];
@@ -525,8 +543,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (NCBaseImageView *)loadfailedImageView {
     if (!_loadfailedImageView) {
-        _loadfailedImageView =
-            [[NCBaseImageView alloc] initWithFrame:CGRectMake(0, 0, GIFLOADIMAGEWIDTH, GIFLOADIMAGEWIDTH)];
+        _loadfailedImageView = [[NCBaseImageView alloc]
+            initWithFrame:CGRectMake(0, 0, GIFLOADIMAGEWIDTH, GIFLOADIMAGEWIDTH)];
         _loadfailedImageView.image = NCDynamicImage(@"channel_msg_cell_gif_loadfailed_img");
         _loadfailedImageView.hidden = YES;
         _loadfailedImageView.tag = 4;
@@ -537,7 +555,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (UILabel *)sizeLabel {
     if (!_sizeLabel) {
-        _sizeLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, GIFLABLEWIGHT, GIFLABLEHEIGHT)];
+        _sizeLabel =
+            [[UILabel alloc] initWithFrame:CGRectMake(0, 0, GIFLABLEWIGHT, GIFLABLEHEIGHT)];
         _sizeLabel.font = [[NCChatUIConfig defaultConfig].font fontOfAssistantLevel];
         _sizeLabel.numberOfLines = 1;
         _sizeLabel.textAlignment = NSTextAlignmentCenter;

@@ -5,12 +5,12 @@
 //  Created by nexconn-ios on 10/4/26.
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
-#import <UIKit/UIKit.h>
-#import "NCListViewModelProtocol.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCBaseViewModel.h"
-#import "NCNavigationItemsViewModel.h"
 #import "NCBaseCellViewModel.h"
+#import "NCBaseViewModel.h"
+#import "NCListViewModelProtocol.h"
+#import "NCNavigationItemsViewModel.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 @class NCGroupNotificationViewModel;
@@ -23,13 +23,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return The data source processed by the app, or `nil` to use the default
 ///
 - (NSArray *_Nullable)groupNotificationViewModel:(NCGroupNotificationViewModel *)viewModel
-      willLoadItemsInDataSource:(NSArray *_Nullable)dataSource;
+                       willLoadItemsInDataSource:(NSArray *_Nullable)dataSource;
 
 /// Configures custom right navigation items
 /// @param viewModel viewModel
 /// @return Custom navigation items view model, or `nil` to use the default
 ///
-- (NCNavigationItemsViewModel *_Nullable)willConfigureRightNavigationItemsForGroupNotificationViewModel:(NCGroupNotificationViewModel *)viewModel;
+- (NCNavigationItemsViewModel *_Nullable)
+    willConfigureRightNavigationItemsForGroupNotificationViewModel:
+        (NCGroupNotificationViewModel *)viewModel;
 
 /// Called when the user taps a cell
 ///   - viewModel: viewModel
@@ -40,14 +42,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupNotificationViewModel:(NCGroupNotificationViewModel *)viewModel
-                    viewController:(UIViewController*)viewController
+                    viewController:(UIViewController *)viewController
                          tableView:(UITableView *)tableView
                       didSelectRow:(NSIndexPath *)indexPath
                      cellViewModel:(NCBaseCellViewModel *)cellViewModel;
 @end
 
-
-@interface NCGroupNotificationViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCGroupNotificationViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Delegate
 @property (nonatomic, weak) id<NCGroupNotificationViewModelDelegate> delegate;
@@ -68,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)fetchData;
 
 /// Binds the responder
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder;
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder;
 
 /// Cell height
 ///   - tableView: tableView

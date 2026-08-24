@@ -13,7 +13,7 @@
 #ifndef NCUPinYin_h
 #define NCUPinYin_h
 
-//#include <stdio.h>
+// #include <stdio.h>
 #define ALPHA @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#"
 char pinyinFirstLetter(unsigned short hanzi);
 

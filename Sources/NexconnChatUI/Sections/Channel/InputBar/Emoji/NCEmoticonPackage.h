@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseScrollView.h"
 #import "NCEmojiBoardView.h"
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "NCBaseScrollView.h"
 @interface NCEmoticonPackage : NSObject
 
 /// Unique identifier of the emoticon package.

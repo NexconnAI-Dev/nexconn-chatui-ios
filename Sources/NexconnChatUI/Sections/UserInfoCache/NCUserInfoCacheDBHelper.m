@@ -30,14 +30,20 @@ int const NCUIStorageVersion = 6;
 - (void)createDBTableIfNeed {
     if ([self.workingDB open]) {
         [self updateDBVersionIfNeed:NCUIStorageVersion];
-        [self.workingDB executeUpdate:@"CREATE TABLE IF NOT EXISTS USER_INFO(user_id TEXT PRIMARY KEY, name TEXT, alias TEXT, "
+        [self.workingDB executeUpdate:@"CREATE TABLE IF NOT EXISTS USER_INFO(user_id TEXT PRIMARY "
+                                      @"KEY, name TEXT, alias TEXT, "
                                       @"avatar_url TEXT, extra TEXT)"];
-        [self.workingDB executeUpdate:@"CREATE TABLE IF NOT EXISTS CONVERSATION_USER_INFO(conversation_type INTEGER, "
-                                      @"target_id TEXT, user_id TEXT, name TEXT, alias TEXT, avatar_url TEXT, extra TEXT,  PRIMARY "
-                                      @"KEY(conversation_type, target_id, user_id))"];
         [self.workingDB
-            executeUpdate:@"CREATE TABLE IF NOT EXISTS CONVERSATION_INFO(conversation_type INTEGER, target_id TEXT, "
-                          @"name TEXT, avatar_url TEXT, extra TEXT, PRIMARY KEY(conversation_type, target_id))"];
+            executeUpdate:
+                @"CREATE TABLE IF NOT EXISTS CONVERSATION_USER_INFO(conversation_type INTEGER, "
+                @"target_id TEXT, user_id TEXT, name TEXT, alias TEXT, avatar_url TEXT, extra "
+                @"TEXT,  PRIMARY "
+                @"KEY(conversation_type, target_id, user_id))"];
+        [self.workingDB
+            executeUpdate:@"CREATE TABLE IF NOT EXISTS CONVERSATION_INFO(conversation_type "
+                          @"INTEGER, target_id TEXT, "
+                          @"name TEXT, avatar_url TEXT, extra TEXT, PRIMARY KEY(conversation_type, "
+                          @"target_id))"];
     } else {
         self.workingDB = nil;
     }
@@ -45,7 +51,8 @@ int const NCUIStorageVersion = 6;
 
 - (void)updateDBVersionIfNeed:(int)version {
     if ([self.workingDB open]) {
-        [self.workingDB executeUpdate:@"CREATE TABLE IF NOT EXISTS VERSION(version INTEGER PRIMARY KEY)"];
+        [self.workingDB
+            executeUpdate:@"CREATE TABLE IF NOT EXISTS VERSION(version INTEGER PRIMARY KEY)"];
         int oldVersion = 0;
         NCFMResultSet *resultSet = [self.workingDB executeQuery:@"SELECT * FROM VERSION"];
         if ([resultSet next]) {
@@ -60,7 +67,8 @@ int const NCUIStorageVersion = 6;
                 [self.workingDB executeUpdate:@"DROP TABLE IF EXISTS CONVERSATION_INFO"];
             }
             [self.workingDB executeUpdate:@"DELETE FROM VERSION"];
-            [self.workingDB executeUpdate:@"INSERT OR REPLACE INTO VERSION (version) VALUES(?)", @(version)];
+            [self.workingDB
+                executeUpdate:@"INSERT OR REPLACE INTO VERSION (version) VALUES(?)", @(version)];
         }
     }
 }
@@ -79,11 +87,12 @@ int const NCUIStorageVersion = 6;
 #pragma mark - ConversationInfo DB
 
 - (NCChannelInfo *)selectConversationInfoFromDB:(NCChannelType)channelType
-                                            channelId:(NSString *)channelId {
+                                      channelId:(NSString *)channelId {
     if ([self.workingDB open]) {
         NCFMResultSet *resultSet = [self.workingDB
-            executeQuery:@"SELECT * FROM CONVERSATION_INFO WHERE conversation_type = ? AND target_id = ?",
-                         @(channelType), channelId];
+            executeQuery:
+                @"SELECT * FROM CONVERSATION_INFO WHERE conversation_type = ? AND target_id = ?",
+                @(channelType), channelId];
         if ([resultSet next]) {
             NCChannelInfo *dbConversationInfo = [[NCChannelInfo alloc] init];
             dbConversationInfo.channelType = [resultSet intForColumn:@"conversation_type"];
@@ -123,20 +132,24 @@ int const NCUIStorageVersion = 6;
 }
 
 - (void)replaceConversationInfoFromDB:(NCChannelInfo *)conversationInfo
-                     channelType:(NCChannelType)channelType
-                             channelId:(NSString *)channelId {
+                          channelType:(NCChannelType)channelType
+                            channelId:(NSString *)channelId {
     if ([self.workingDB open]) {
-        [self.workingDB executeUpdate:@"INSERT OR REPLACE INTO CONVERSATION_INFO (conversation_type, target_id, name, "
-                                      @"avatar_url, extra) VALUES(?, ?, ?, ?, ?)",
-                                      @(channelType), channelId, conversationInfo.name,
-                                      conversationInfo.avatarUrl, conversationInfo.extra];
+        [self.workingDB
+            executeUpdate:
+                @"INSERT OR REPLACE INTO CONVERSATION_INFO (conversation_type, target_id, name, "
+                @"avatar_url, extra) VALUES(?, ?, ?, ?, ?)",
+                @(channelType), channelId, conversationInfo.name, conversationInfo.avatarUrl,
+                conversationInfo.extra];
     }
 }
 
 - (void)deleteConversationInfoFromDB:(NCChannelType)channelType channelId:(NSString *)channelId {
     if ([self.workingDB open]) {
-        [self.workingDB executeUpdate:@"DELETE FROM CONVERSATION_INFO WHERE conversation_type = ? AND target_id = ?",
-                                      @(channelType), channelId];
+        [self.workingDB
+            executeUpdate:
+                @"DELETE FROM CONVERSATION_INFO WHERE conversation_type = ? AND target_id = ?",
+                @(channelType), channelId];
     }
 }
 
@@ -149,13 +162,13 @@ int const NCUIStorageVersion = 6;
 #pragma mark - ConversationUserInfo DB
 
 - (NCChatUIUserInfo *)selectUserInfoFromDB:(NSString *)userId
-                    channelType:(NCChannelType)channelType
-                            channelId:(NSString *)channelId {
+                               channelType:(NCChannelType)channelType
+                                 channelId:(NSString *)channelId {
     if ([self.workingDB open]) {
-        NCFMResultSet *resultSet = [self.workingDB
-            executeQuery:
-                @"SELECT * FROM CONVERSATION_USER_INFO WHERE conversation_type = ? AND target_id = ? AND user_id = ?",
-                @(channelType), channelId, userId];
+        NCFMResultSet *resultSet =
+            [self.workingDB executeQuery:@"SELECT * FROM CONVERSATION_USER_INFO WHERE "
+                                         @"conversation_type = ? AND target_id = ? AND user_id = ?",
+                                         @(channelType), channelId, userId];
         if ([resultSet next]) {
             NCChatUIUserInfo *dbUserInfo = [[NCChatUIUserInfo alloc] init];
             dbUserInfo.userId = [resultSet stringForColumn:@"user_id"];
@@ -177,7 +190,8 @@ int const NCUIStorageVersion = 6;
 - (NSArray *)selectAllConversationUserInfoFromDB {
     if ([self.workingDB open]) {
         NSMutableArray *dbConversationUserInfoList = [[NSMutableArray alloc] init];
-        NCFMResultSet *resultSet = [self.workingDB executeQuery:@"SELECT * FROM CONVERSATION_USER_INFO"];
+        NCFMResultSet *resultSet =
+            [self.workingDB executeQuery:@"SELECT * FROM CONVERSATION_USER_INFO"];
         while ([resultSet next]) {
             NCChatUIUserInfo *dbUserInfo = [[NCChatUIUserInfo alloc] init];
             dbUserInfo.userId = [resultSet stringForColumn:@"user_id"];
@@ -196,23 +210,25 @@ int const NCUIStorageVersion = 6;
 
 - (void)replaceUserInfoFromDB:(NCChatUIUserInfo *)userInfo
                     forUserId:(NSString *)userId
-             channelType:(NCChannelType)channelType
-                     channelId:(NSString *)channelId {
+                  channelType:(NCChannelType)channelType
+                    channelId:(NSString *)channelId {
     if ([self.workingDB open]) {
-        [self.workingDB executeUpdate:@"INSERT OR REPLACE INTO CONVERSATION_USER_INFO (conversation_type, target_id, "
-                                      @"user_id, name, alias, avatar_url, extra) VALUES(?, ?, ?, ?, ?, ?, ?)",
-                                      @(channelType), channelId, userId, userInfo.name, userInfo.alias, userInfo.avatarUrl, userInfo.extra];
+        [self.workingDB
+            executeUpdate:
+                @"INSERT OR REPLACE INTO CONVERSATION_USER_INFO (conversation_type, target_id, "
+                @"user_id, name, alias, avatar_url, extra) VALUES(?, ?, ?, ?, ?, ?, ?)",
+                @(channelType), channelId, userId, userInfo.name, userInfo.alias,
+                userInfo.avatarUrl, userInfo.extra];
     }
 }
 
 - (void)deleteConversationUserInfoFromDB:(NSString *)userId
-                        channelType:(NCChannelType)channelType
-                                channelId:(NSString *)channelId {
+                             channelType:(NCChannelType)channelType
+                               channelId:(NSString *)channelId {
     if ([self.workingDB open]) {
-        [self.workingDB
-            executeUpdate:
-                @"DELETE FROM CONVERSATION_USER_INFO WHERE conversation_type = ? AND target_id = ? AND user_id = ?",
-                @(channelType), channelId, userId];
+        [self.workingDB executeUpdate:@"DELETE FROM CONVERSATION_USER_INFO WHERE conversation_type "
+                                      @"= ? AND target_id = ? AND user_id = ?",
+                                      @(channelType), channelId, userId];
     }
 }
 
@@ -268,9 +284,10 @@ int const NCUIStorageVersion = 6;
 
 - (void)replaceUserInfoFromDB:(NCChatUIUserInfo *)userInfo forUserId:(NSString *)userId {
     if ([self.workingDB open]) {
-        [self.workingDB
-            executeUpdate:@"INSERT OR REPLACE INTO USER_INFO (user_id, name, alias, avatar_url, extra) VALUES(?, ?, ?, ?, ?)",
-                          userId, userInfo.name, userInfo.alias, userInfo.avatarUrl, userInfo.extra ?: @""];
+        [self.workingDB executeUpdate:@"INSERT OR REPLACE INTO USER_INFO (user_id, name, alias, "
+                                      @"avatar_url, extra) VALUES(?, ?, ?, ?, ?)",
+                                      userId, userInfo.name, userInfo.alias, userInfo.avatarUrl,
+                                      userInfo.extra ?: @""];
     }
 }
 

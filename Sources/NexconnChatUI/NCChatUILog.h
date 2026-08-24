@@ -28,19 +28,12 @@ NS_INLINE NSString *NCChatUILogFileName(const char *path) {
     return shortName ?: @"";
 }
 
-NS_INLINE void NCChatUILogOutput(NSString *level,
-                                 const char *file,
-                                 int line,
-                                 const char *functionName,
-                                 NSString *format,
-                                 ...) NS_FORMAT_FUNCTION(5, 6);
+NS_INLINE void NCChatUILogOutput(NSString *level, const char *file, int line,
+                                 const char *functionName, NSString *format, ...)
+    NS_FORMAT_FUNCTION(5, 6);
 
-NS_INLINE void NCChatUILogWrite(NSString *level,
-                                const char *file,
-                                int line,
-                                const char *functionName,
-                                NSString *format,
-                                va_list args) {
+NS_INLINE void NCChatUILogWrite(NSString *level, const char *file, int line,
+                                const char *functionName, NSString *format, va_list args) {
     if (format.length == 0) {
         return;
     }
@@ -61,24 +54,15 @@ NS_INLINE void NCChatUILogWrite(NSString *level,
     static os_log_t chatUILog;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        chatUILog = os_log_create("com.nexconn.chatui", "sdk");
+      chatUILog = os_log_create("com.nexconn.chatui", "sdk");
     });
-    os_log_with_type(chatUILog,
-                     logType,
+    os_log_with_type(chatUILog, logType,
                      "[NCChatUI][%{public}@][%{public}@:%{public}d][%{public}@] %{public}@",
-                     logLevel,
-                     shortFileName,
-                     line,
-                     funcName,
-                     message);
+                     logLevel, shortFileName, line, funcName, message);
 }
 
-NS_INLINE void NCChatUILogOutput(NSString *level,
-                                 const char *file,
-                                 int line,
-                                 const char *functionName,
-                                 NSString *format,
-                                 ...) {
+NS_INLINE void NCChatUILogOutput(NSString *level, const char *file, int line,
+                                 const char *functionName, NSString *format, ...) {
 #if NCCHATUI_LOG_ENABLE
     va_list args;
     va_start(args, format);
@@ -93,19 +77,12 @@ NS_INLINE void NCChatUILogOutput(NSString *level,
 #endif
 }
 
-NS_INLINE void NCChatUILogOutputAlways(NSString *level,
-                                       const char *file,
-                                       int line,
-                                       const char *functionName,
-                                       NSString *format,
-                                       ...) NS_FORMAT_FUNCTION(5, 6);
+NS_INLINE void NCChatUILogOutputAlways(NSString *level, const char *file, int line,
+                                       const char *functionName, NSString *format, ...)
+    NS_FORMAT_FUNCTION(5, 6);
 
-NS_INLINE void NCChatUILogOutputAlways(NSString *level,
-                                       const char *file,
-                                       int line,
-                                       const char *functionName,
-                                       NSString *format,
-                                       ...) {
+NS_INLINE void NCChatUILogOutputAlways(NSString *level, const char *file, int line,
+                                       const char *functionName, NSString *format, ...) {
     va_list args;
     va_start(args, format);
     NCChatUILogWrite(level, file, line, functionName, format, args);
@@ -113,48 +90,63 @@ NS_INLINE void NCChatUILogOutputAlways(NSString *level,
 }
 
 #ifndef NCLogReleaseW
-#define NCLogReleaseW(format, ...)                                                                                     \
+#define NCLogReleaseW(format, ...)                                                                 \
     NCChatUILogOutputAlways(@"W", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
 #endif
 
 #if NCCHATUI_LOG_ENABLE
 #ifndef NCLogD
-#define NCLogD(format, ...) NCChatUILogOutput(@"D", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
+#define NCLogD(format, ...)                                                                        \
+    NCChatUILogOutput(@"D", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
 #endif
 
 #ifndef NCLogI
-#define NCLogI(format, ...) NCChatUILogOutput(@"I", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
+#define NCLogI(format, ...)                                                                        \
+    NCChatUILogOutput(@"I", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
 #endif
 
 #ifndef NCLogW
-#define NCLogW(format, ...) NCChatUILogOutput(@"W", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
+#define NCLogW(format, ...)                                                                        \
+    NCChatUILogOutput(@"W", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
 #endif
 
 #ifndef NCLogE
-#define NCLogE(format, ...) NCChatUILogOutput(@"E", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
+#define NCLogE(format, ...)                                                                        \
+    NCChatUILogOutput(@"E", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
 #endif
 
 #ifndef NCLogF
-#define NCLogF(format, ...) NCChatUILogOutput(@"F", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
+#define NCLogF(format, ...)                                                                        \
+    NCChatUILogOutput(@"F", __FILE__, __LINE__, __PRETTY_FUNCTION__, (format), ##__VA_ARGS__)
 #endif
 #else
 #ifndef NCLogD
-#define NCLogD(format, ...) do { } while (0)
+#define NCLogD(format, ...)                                                                        \
+    do {                                                                                           \
+    } while (0)
 #endif
 
 #ifndef NCLogI
-#define NCLogI(format, ...) do { } while (0)
+#define NCLogI(format, ...)                                                                        \
+    do {                                                                                           \
+    } while (0)
 #endif
 
 #ifndef NCLogW
-#define NCLogW(format, ...) do { } while (0)
+#define NCLogW(format, ...)                                                                        \
+    do {                                                                                           \
+    } while (0)
 #endif
 
 #ifndef NCLogE
-#define NCLogE(format, ...) do { } while (0)
+#define NCLogE(format, ...)                                                                        \
+    do {                                                                                           \
+    } while (0)
 #endif
 
 #ifndef NCLogF
-#define NCLogF(format, ...) do { } while (0)
+#define NCLogF(format, ...)                                                                        \
+    do {                                                                                           \
+    } while (0)
 #endif
 #endif

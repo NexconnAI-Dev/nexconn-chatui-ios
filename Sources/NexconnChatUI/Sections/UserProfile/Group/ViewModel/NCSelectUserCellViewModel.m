@@ -9,7 +9,6 @@
 #import "NCSelectUserCellViewModel.h"
 #import "NCSelectUserCell.h"
 
-
 @interface NCSelectUserCellViewModel ()
 @property (nonatomic, strong) NCFriendInfo *friendInfo;
 @property (nonatomic, assign) BOOL select;
@@ -19,7 +18,7 @@
 
 @implementation NCSelectUserCellViewModel
 
-- (instancetype)initWithFriend:(NCFriendInfo *)friendInfo groupId:(nonnull NSString *)groupId{
+- (instancetype)initWithFriend:(NCFriendInfo *)friendInfo groupId:(nonnull NSString *)groupId {
     self = [super init];
     if (self) {
         self.friendInfo = friendInfo;
@@ -37,13 +36,16 @@
 }
 
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:NCSelectUserCell.class forCellReuseIdentifier:NCSelectUserCellIdentifier];
+    [tableView registerClass:NCSelectUserCell.class
+        forCellReuseIdentifier:NCSelectUserCellIdentifier];
 }
 
-#pragma mark -- NCCellViewModelProtocol
+#pragma mark-- NCCellViewModelProtocol
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCSelectUserCell *cell = [tableView dequeueReusableCellWithIdentifier:NCSelectUserCellIdentifier];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCSelectUserCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCSelectUserCellIdentifier];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.portraitImageView.imageURL = [NSURL URLWithString:self.friendInfo.avatarUrl];
     if (self.friendInfo.remark.length > 0) {

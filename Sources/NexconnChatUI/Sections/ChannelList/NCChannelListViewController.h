@@ -6,18 +6,19 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseTableView.h"
 #import "NCBaseViewController.h"
 #import "NCChannelListBaseCell.h"
 #import "NCChannelModel.h"
 #import "NCChatUIThemeDefine.h"
 #import <UIKit/UIKit.h>
-#import "NCBaseTableView.h"
 @class NCNetworkIndicatorView;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// The channel list view controller.
-@interface NCChannelListViewController : NCBaseViewController <UITableViewDataSource, UITableViewDelegate>
+@interface NCChannelListViewController
+    : NCBaseViewController <UITableViewDataSource, UITableViewDelegate>
 
 #pragma mark - Initialization
 
@@ -45,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// When enabled, pinned channels are returned before unpinned channels.
 /// When disabled, all channels are sorted by timestamp only.
-@property(nonatomic, assign) BOOL topPriority;
+@property (nonatomic, assign) BOOL topPriority;
 
 #pragma mark - List Properties
 
@@ -61,10 +62,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Network Status Indicator
 
-/// Whether to show a network-unavailable banner in the table view header when disconnected. Defaults to `YES`.
+/// Whether to show a network-unavailable banner in the table view header when disconnected.
+/// Defaults to `YES`.
 @property (nonatomic, assign) BOOL isShowNetworkIndicatorView;
 
-/// Whether to show a "connecting" indicator in the navigation bar during automatic reconnection. Defaults to `NO`.
+/// Whether to show a "connecting" indicator in the navigation bar during automatic reconnection.
+/// Defaults to `NO`.
 @property (nonatomic, assign) BOOL showConnectingStatusOnNavigatorBar;
 
 #pragma mark - Appearance
@@ -135,7 +138,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param dataSource The incremental data source (elements are `NCChannelModel` objects).
 /// @return The modified data source.
-- (NSMutableArray<NCChannelModel *> *)willReloadTableData:(NSMutableArray<NCChannelModel *> *)dataSource;
+- (NSMutableArray<NCChannelModel *> *)willReloadTableData:
+    (NSMutableArray<NCChannelModel *> *)dataSource;
 
 /// Called just before a cell is displayed.
 ///
@@ -143,7 +147,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param cell The cell about to be displayed.
 /// @param indexPath The index path of the cell.
-- (void)willDisplayConversationTableCell:(NCChannelListBaseCell *)cell atIndexPath:(NSIndexPath *)indexPath;
+- (void)willDisplayConversationTableCell:(NCChannelListBaseCell *)cell
+                             atIndexPath:(NSIndexPath *)indexPath;
 
 /// Called when a cell's state (e.g., read status) changes.
 ///
@@ -160,26 +165,28 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param indexPath The index path.
 /// @return A custom cell to display.
 - (NCChannelListBaseCell *)ncChannelListTableView:(UITableView *)tableView
-                                 cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+                            cellForRowAtIndexPath:(NSIndexPath *)indexPath;
 
 /// Returns the height for a custom channel list cell.
 ///
 /// @param tableView The table view.
 /// @param indexPath The index path.
 /// @return The cell height.
-- (CGFloat)ncChannelListTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
+- (CGFloat)ncChannelListTableView:(UITableView *)tableView
+          heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 
 /// Called when a custom channel cell is deleted via swipe.
 ///
 /// Override to customize delete behavior. To confirm deletion, use the channel API to remove
-/// the channel or its messages, and update `conversationListDataSource` and `conversationListTableView`.
+/// the channel or its messages, and update `conversationListDataSource` and
+/// `conversationListTableView`.
 ///
 /// @param tableView The table view.
 /// @param editingStyle The editing style (defaults to `UITableViewCellEditingStyleDelete`).
 /// @param indexPath The index path.
 - (void)ncChannelListTableView:(UITableView *)tableView
-                commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
-                 forRowAtIndexPath:(NSIndexPath *)indexPath;
+            commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
+             forRowAtIndexPath:(NSIndexPath *)indexPath;
 
 #pragma mark - Refresh
 

@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 /// cellViewModel
-@interface NCGroupFollowCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCGroupFollowCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 /// Group member.
 @property (nonatomic, strong, readonly) NCGroupMemberInfo *memberInfo;
 

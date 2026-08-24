@@ -8,7 +8,7 @@
 
 #import "NCPaddingTableViewCell.h"
 
-extern NSString  * const NCSightFileBrowserCellIdentifier;
+extern NSString *const NCSightFileBrowserCellIdentifier;
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NCSightFileBrowserCell : NCPaddingTableViewCell

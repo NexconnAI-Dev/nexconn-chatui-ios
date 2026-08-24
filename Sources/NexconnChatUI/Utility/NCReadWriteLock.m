@@ -10,7 +10,7 @@
 // Imports
 #import <pthread.h>
 
-@interface NCReadWriteLock()
+@interface NCReadWriteLock ()
 @property (nonatomic, assign) pthread_rwlock_t rwlock;
 @end
 

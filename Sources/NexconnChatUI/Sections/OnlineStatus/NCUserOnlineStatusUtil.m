@@ -14,11 +14,9 @@
 
 + (BOOL)shouldDisplayOnlineStatus {
     NCAppSettings *appSettings = [NCEngine getAppSettings];
-    if (NCChatUIConfigCenter.ui.enableUserOnlineStatus
-        && (appSettings.isOnlineStatusSubscribeEnable
-            || appSettings.isFriendOnlineStatusSubscribeEnable
-            )
-        ) {
+    if (NCChatUIConfigCenter.ui.enableUserOnlineStatus &&
+        (appSettings.isOnlineStatusSubscribeEnable ||
+         appSettings.isFriendOnlineStatusSubscribeEnable)) {
         return YES;
     }
     return NO;

@@ -7,7 +7,7 @@
 //
 
 #import "NCStackTableViewCell.h"
-UIKIT_EXTERN NSString * _Nullable const NCGroupMemberAdditionalCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCGroupMemberAdditionalCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

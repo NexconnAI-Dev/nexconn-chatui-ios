@@ -44,33 +44,47 @@
 
 - (NSData *)dataForKey:(NSString *)key;
 - (void)setData:(NSData *)data forKey:(NSString *)key;
-- (void)setData:(NSData *)data forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)setData:(NSData *)data
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 
 - (NSString *)stringForKey:(NSString *)key;
 - (void)setString:(NSString *)aString forKey:(NSString *)key;
-- (void)setString:(NSString *)aString forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)setString:(NSString *)aString
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 
 #if TARGET_OS_IPHONE
 - (UIImage *)imageForKey:(NSString *)key;
 - (NSData *)imageDataForKey:(NSString *)key;
 - (void)setImage:(UIImage *)anImage forKey:(NSString *)key;
-- (void)setImage:(UIImage *)anImage forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)setImage:(UIImage *)anImage
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 #else
 - (NSImage *)imageForKey:(NSString *)key;
 - (void)setImage:(NSImage *)anImage forKey:(NSString *)key;
-- (void)setImage:(NSImage *)anImage forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)setImage:(NSImage *)anImage
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 #endif
 
 - (NSData *)plistForKey:(NSString *)key;
 - (void)setPlist:(id)plistObject forKey:(NSString *)key;
-- (void)setPlist:(id)plistObject forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)setPlist:(id)plistObject
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 
 - (void)copyFilePath:(NSString *)filePath asKey:(NSString *)key;
-- (void)copyFilePath:(NSString *)filePath asKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)copyFilePath:(NSString *)filePath
+                  asKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 
 - (id<NSCoding>)objectForKey:(NSString *)key;
 - (void)setObject:(id<NSCoding>)anObject forKey:(NSString *)key;
-- (void)setObject:(id<NSCoding>)anObject forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval;
+- (void)setObject:(id<NSCoding>)anObject
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval;
 
 @property (nonatomic, assign) NSTimeInterval defaultTimeoutInterval; // Default is 30 day
 @end

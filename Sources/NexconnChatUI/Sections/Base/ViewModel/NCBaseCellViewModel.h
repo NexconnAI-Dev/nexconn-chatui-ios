@@ -6,14 +6,14 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCCellViewModelProtocol.h"
+#import <Foundation/Foundation.h>
 
 extern NSInteger const NCUserManagementCellHeight;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NCBaseCellViewModel : NSObject<NCCellViewModelProtocol>
+@interface NCBaseCellViewModel : NSObject <NCCellViewModelProtocol>
 @property (nonatomic, assign) BOOL hideSeparatorLine;
 @end
 

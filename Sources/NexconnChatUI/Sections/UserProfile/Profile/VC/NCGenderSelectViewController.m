@@ -7,18 +7,15 @@
 //
 
 #import "NCGenderSelectViewController.h"
-#import "NCProfileGenderViewModel.h"
-#import "NCBaseTableView.h"
 #import "NCBaseButton.h"
+#import "NCBaseTableView.h"
 #import "NCChatUICommonDefine.h"
+#import "NCProfileGenderViewModel.h"
 
 #define NCGenderSelectViewControllerConfirmWidth 100
 #define NCGenderSelectViewControllerConfirmHeight 40
 
-@interface NCGenderSelectViewController ()<
-UITableViewDelegate,
-UITableViewDataSource
->
+@interface NCGenderSelectViewController () <UITableViewDelegate, UITableViewDataSource>
 
 @property (nonatomic, strong) NCProfileGenderViewModel *viewModel;
 
@@ -50,13 +47,18 @@ UITableViewDataSource
 }
 
 - (void)setNavigationBarItems {
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
-    
+    self.navigationItem.rightBarButtonItem =
+        [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
+
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
@@ -66,35 +68,38 @@ UITableViewDataSource
     [self.viewModel updateUserProfileGender:self];
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.viewModel.dataSource.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NCProfileGenderCellViewModel *cellViewModel = self.viewModel.dataSource[indexPath.row];
     return [cellViewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- UITableViewDelegate
+#pragma mark-- UITableViewDelegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
-
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [self.viewModel.dataSource[indexPath.row] tableView:tableView heightForRowAtIndexPath:indexPath];
+    return [self.viewModel.dataSource[indexPath.row] tableView:tableView
+                                       heightForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCBaseTableView *)genderView {
     if (!_genderView) {
-        _genderView = [[NCBaseTableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
+        _genderView = [[NCBaseTableView alloc] initWithFrame:CGRectZero
+                                                       style:UITableViewStyleGrouped];
         _genderView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
-        _genderView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 15)];
+        _genderView.tableHeaderView =
+            [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 15)];
         _genderView.sectionHeaderHeight = 0;
         _genderView.separatorStyle = UITableViewCellSeparatorStyleNone;
         if (@available(iOS 15.0, *)) {
@@ -110,8 +115,11 @@ UITableViewDataSource
     if (!_confirmButton) {
         _confirmButton = [NCBaseButton buttonWithType:UIButtonTypeCustom];
         [_confirmButton setTitle:NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color") forState:(UIControlStateNormal)];
-        [_confirmButton addTarget:self action:@selector(confirmButtonDidClick) forControlEvents:UIControlEventTouchUpInside];
+        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color")
+                             forState:(UIControlStateNormal)];
+        [_confirmButton addTarget:self
+                           action:@selector(confirmButtonDidClick)
+                 forControlEvents:UIControlEventTouchUpInside];
         [_confirmButton.titleLabel setFont:[UIFont systemFontOfSize:15]];
         _confirmButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
     }

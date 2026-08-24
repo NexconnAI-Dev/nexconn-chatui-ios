@@ -7,18 +7,17 @@
 //
 
 #import "NCApplyFriendCell.h"
-#import "NCImageView.h"
-#import <CoreText/CoreText.h>
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
+#import "NCImageView.h"
+#import <CoreText/CoreText.h>
 
-NSString  * const NCFriendApplyCellIdentifier = @"NCFriendApplyCellIdentifier";
+NSString *const NCFriendApplyCellIdentifier = @"NCFriendApplyCellIdentifier";
 NSInteger const NCFriendApplyCellMargin = 10;
 NSInteger const NCFriendApplyCellPortraitWidth = 32;
 
-
-@interface NCApplyFriendCell()<NCSizeCalculateLabelDelegate>
+@interface NCApplyFriendCell () <NCSizeCalculateLabelDelegate>
 
 /// Bottom container: subtitle and btnExpan.
 @property (nonatomic, strong) UIStackView *bottomStackView;
@@ -32,31 +31,30 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
 
 @implementation NCApplyFriendCell
 
-
 - (void)setupView {
     [super setupView];
     self.selectionStyle = UITableViewCellSelectionStyleNone;
     [self.paddingContainerView addSubview:self.contentStackView];
-    
+
     [self.contentStackView addArrangedSubview:self.portraitImageView];
     [self.contentStackView addArrangedSubview:self.rightStackView];
-    
+
     [self.rightStackView addArrangedSubview:self.topStackView];
     [self.topStackView addArrangedSubview:self.labName];
     [self.topStackView addArrangedSubview:self.labStatus];
-    
+
     [self.rightStackView addArrangedSubview:self.bottomStackView];
     [self.bottomStackView addArrangedSubview:self.labRemark];
-    
+
     UIView *viewHolder = [UIView new];
     viewHolder.translatesAutoresizingMaskIntoConstraints = NO;
     [viewHolder addSubview:self.btnExpand];
     [NSLayoutConstraint activateConstraints:@[
-            [self.btnExpand.leadingAnchor constraintEqualToAnchor:viewHolder.leadingAnchor],
-            [self.btnExpand.trailingAnchor constraintEqualToAnchor:viewHolder.trailingAnchor],
-            [self.btnExpand.topAnchor constraintEqualToAnchor:viewHolder.topAnchor],
-            [self.btnExpand.bottomAnchor constraintEqualToAnchor:viewHolder.bottomAnchor]
-        ]];
+        [self.btnExpand.leadingAnchor constraintEqualToAnchor:viewHolder.leadingAnchor],
+        [self.btnExpand.trailingAnchor constraintEqualToAnchor:viewHolder.trailingAnchor],
+        [self.btnExpand.topAnchor constraintEqualToAnchor:viewHolder.topAnchor],
+        [self.btnExpand.bottomAnchor constraintEqualToAnchor:viewHolder.bottomAnchor]
+    ]];
     [self.bottomStackView addArrangedSubview:viewHolder];
 }
 
@@ -65,16 +63,25 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
     [self updateLineViewConstraints:NCUserManagementImageCellLineLeading
                            trailing:-NCUserManagementImageCellLineTrailing];
     [NSLayoutConstraint activateConstraints:@[
-           [self.contentStackView.leadingAnchor constraintEqualToAnchor:self.paddingContainerView.leadingAnchor constant:NCUserManagementPadding],
-           [self.contentStackView.trailingAnchor constraintEqualToAnchor:self.paddingContainerView.trailingAnchor constant:-NCUserManagementPadding],
-           [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor constant:NCFriendApplyCellMargin],
-           [self.contentStackView.bottomAnchor constraintEqualToAnchor:self.paddingContainerView.bottomAnchor constant:-NCFriendApplyCellMargin],
-           
-           [self.portraitImageView.widthAnchor constraintEqualToConstant:NCFriendApplyCellPortraitWidth],
-           [self.portraitImageView.heightAnchor constraintEqualToConstant:NCFriendApplyCellPortraitWidth],
-           [self.topStackView.heightAnchor constraintEqualToConstant:34]
-           
-       ]];
+        [self.contentStackView.leadingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.leadingAnchor
+                           constant:NCUserManagementPadding],
+        [self.contentStackView.trailingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.trailingAnchor
+                           constant:-NCUserManagementPadding],
+        [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor
+                                                        constant:NCFriendApplyCellMargin],
+        [self.contentStackView.bottomAnchor
+            constraintEqualToAnchor:self.paddingContainerView.bottomAnchor
+                           constant:-NCFriendApplyCellMargin],
+
+        [self.portraitImageView.widthAnchor
+            constraintEqualToConstant:NCFriendApplyCellPortraitWidth],
+        [self.portraitImageView.heightAnchor
+            constraintEqualToConstant:NCFriendApplyCellPortraitWidth],
+        [self.topStackView.heightAnchor constraintEqualToConstant:34]
+
+    ]];
 }
 
 - (void)showPortrait:(NSString *)url {
@@ -91,20 +98,19 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
     [self showPortrait:viewModel.application.avatarUrl];
     self.labRemark.text = self.viewModel.application.extra;
     switch (viewModel.application.applicationStatus) {
-        case NCFriendApplicationStatusAccepted:
-            self.labStatus.text = NCUILocalizedString(@"friend_application_accepted");
-            break;
-        case NCFriendApplicationStatusRefused:
-            self.labStatus.text = NCUILocalizedString(@"friend_application_refused");
-            break;
-        case NCFriendApplicationStatusExpired:
-            self.labStatus.text = NCUILocalizedString(@"friend_application_expired");
-            break;
-        default:
-            self.labStatus.text = NCUILocalizedString(@"friend_application_un_handled");
-            break;
+    case NCFriendApplicationStatusAccepted:
+        self.labStatus.text = NCUILocalizedString(@"friend_application_accepted");
+        break;
+    case NCFriendApplicationStatusRefused:
+        self.labStatus.text = NCUILocalizedString(@"friend_application_refused");
+        break;
+    case NCFriendApplicationStatusExpired:
+        self.labStatus.text = NCUILocalizedString(@"friend_application_expired");
+        break;
+    default:
+        self.labStatus.text = NCUILocalizedString(@"friend_application_un_handled");
+        break;
     }
-    
 }
 
 - (void)btnExpandClick:(id)sender {
@@ -113,10 +119,8 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
 
 #pragma mark - NCSizeCalculateLabelDelegate
 
-- (void)labelLayoutFinished:(UILabel *)label
-                 natureSize:(CGSize)natureSize {
-    BOOL ret = [self.viewModel shouldHideExpandButton:label.bounds.size
-                                           natureSize:natureSize];
+- (void)labelLayoutFinished:(UILabel *)label natureSize:(CGSize)natureSize {
+    BOOL ret = [self.viewModel shouldHideExpandButton:label.bounds.size natureSize:natureSize];
     self.btnExpand.hidden = ret;
 }
 #pragma mark - GETTER
@@ -126,12 +130,13 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
         _portraitImageView = [NCImageView new];
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-            _portraitImageView.layer.cornerRadius = NCFriendApplyCellPortraitWidth/2;
+            _portraitImageView.layer.cornerRadius = NCFriendApplyCellPortraitWidth / 2;
         } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
         _portraitImageView.layer.masksToBounds = YES;
-        [_portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+        [_portraitImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
         _portraitImageView.translatesAutoresizingMaskIntoConstraints = NO;
     }
     return _portraitImageView;
@@ -142,8 +147,10 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
         UILabel *lab = [UILabel new];
         lab.font = [UIFont boldSystemFontOfSize:17];
         lab.translatesAutoresizingMaskIntoConstraints = NO;
-        [lab setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
-        [lab setContentCompressionResistancePriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentHuggingPriority:UILayoutPriorityDefaultLow
+                               forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         _labName = lab;
     }
     return _labName;
@@ -165,14 +172,14 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
     return _labRemark;
 }
 
-
 - (UILabel *)labStatus {
     if (!_labStatus) {
         UILabel *lab = [UILabel new];
         lab.textColor = NCDynamicColor(@"text_primary_color");
         lab.font = [UIFont systemFontOfSize:13];
         lab.translatesAutoresizingMaskIntoConstraints = NO;
-        [lab setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [lab setContentHuggingPriority:UILayoutPriorityRequired
                                forAxis:UILayoutConstraintAxisHorizontal];
         _labStatus = lab;
@@ -188,12 +195,13 @@ NSInteger const NCFriendApplyCellPortraitWidth = 32;
         btn.hidden = YES;
         btn.titleLabel.font = [UIFont systemFontOfSize:14];
         [btn addTarget:self
-                action:@selector(btnExpandClick:)
-      forControlEvents:UIControlEventTouchUpInside];
+                      action:@selector(btnExpandClick:)
+            forControlEvents:UIControlEventTouchUpInside];
         [btn setTitleColor:NCDynamicColor(@"primary_color") forState:UIControlStateNormal];
         [btn sizeToFit];
         btn.translatesAutoresizingMaskIntoConstraints = NO;
-        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [btn setContentHuggingPriority:UILayoutPriorityRequired
                                forAxis:UILayoutConstraintAxisHorizontal];
         _btnExpand = btn;

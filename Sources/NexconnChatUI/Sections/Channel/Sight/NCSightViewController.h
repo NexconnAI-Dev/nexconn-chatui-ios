@@ -6,15 +6,16 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCSightAdaptiveHeader.h"
+#import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 
 @class NCSightViewController;
 @protocol NCSightViewControllerDelegate;
 
 typedef NS_ENUM(NSInteger, NCSightViewControllerCameraCaptureMode) {
-    NCSightViewControllerCameraCaptureModeSight, /// Record short videos or take photos. This is the default mode.
+    NCSightViewControllerCameraCaptureModeSight, /// Record short videos or take photos. This is the
+                                                 /// default mode.
     NCSightViewControllerCameraCaptureModePhoto  // Take photos only.
 };
 
@@ -40,7 +41,8 @@ typedef NS_ENUM(NSInteger, NCSightViewControllerCameraCaptureMode) {
  @param sightVC Video preview view controller instance.
  @param image Still image object.
  */
-- (void)sightViewController:(NCSightViewController *)sightVC didFinishCapturingStillImage:(UIImage *)image;
+- (void)sightViewController:(NCSightViewController *)sightVC
+    didFinishCapturingStillImage:(UIImage *)image;
 
 /**
  Called when the user chooses to send a recorded short video.
@@ -62,7 +64,7 @@ typedef NS_ENUM(NSInteger, NCSightViewControllerCameraCaptureMode) {
 /// @param status AVAssetWriter status.
 - (void)sightViewController:(NCSightViewController *)sightVC
          didWriteFailedWith:(NSError *)error
-                  status:(NSInteger)status;
+                     status:(NSInteger)status;
 @end
 
 NS_ASSUME_NONNULL_END

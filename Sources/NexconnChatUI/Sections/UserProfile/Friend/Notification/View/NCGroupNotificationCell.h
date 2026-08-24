@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCPaddingTableViewCell.h"
 #import "NCGroupNotificationCellViewModel.h"
+#import "NCPaddingTableViewCell.h"
 @class NCImageView;
-UIKIT_EXTERN NSString * _Nullable const NCGroupNotificationCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCGroupNotificationCellIdentifier;
 UIKIT_EXTERN NSInteger const NCGroupNotificationCellHorizontalMargin;
 UIKIT_EXTERN NSInteger const NCGroupNotificationCellPortraitWidth;
 UIKIT_EXTERN NSInteger const NCGroupNotificationCellVerticalMargin;

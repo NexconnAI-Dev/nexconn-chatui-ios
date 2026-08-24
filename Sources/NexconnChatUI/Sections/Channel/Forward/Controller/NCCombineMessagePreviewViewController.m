@@ -7,13 +7,13 @@
 //
 
 #import "NCCombineMessagePreviewViewController.h"
+#import "NCAlertView.h"
+#import "NCBaseImageView.h"
 #import "NCChatUI.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
-#import "NCBaseImageView.h"
 #import "NCFileUtility.h"
 #import "NCMenuItem.h"
-#import "NCAlertView.h"
 
 #define TIPVIEWWIDTH 140.0f
 
@@ -25,8 +25,10 @@ static const NSUInteger NCCombinePreviewMaxNestingDepth = 10;
 
 @interface NCCombineMessagePreviewViewController ()
 
-/// The combined preview expects `messageModel.content` to be an `NCCombineMessage`; this only narrows the runtime type.
-- (nullable NCCombineMessage *)combineMessageFromMessageContent:(nullable NCMessageContent *)content;
+/// The combined preview expects `messageModel.content` to be an `NCCombineMessage`; this only
+/// narrows the runtime type.
+- (nullable NCCombineMessage *)combineMessageFromMessageContent:
+    (nullable NCMessageContent *)content;
 
 @property (nonatomic, strong) NCMessageModel *messageModel;
 @property (nonatomic, copy) NSString *navTitle;
@@ -62,8 +64,7 @@ static const NSUInteger NCCombinePreviewMaxNestingDepth = 10;
     NSArray<NSString *> *nameList = message.nameList;
     if (nameList.count > 1) {
         return [NSString stringWithFormat:NCUILocalizedString(@"chat_history_title_x_and_y"),
-                                          nameList.firstObject ?: @"",
-                                          nameList.lastObject ?: @""];
+                                          nameList.firstObject ?: @"", nameList.lastObject ?: @""];
     }
     if (nameList.count == 1) {
         return [NSString stringWithFormat:NCUILocalizedString(@"chat_history_title_x"),
@@ -73,15 +74,19 @@ static const NSUInteger NCCombinePreviewMaxNestingDepth = 10;
 }
 
 - (instancetype)initWithMessageModel:(NCMessageModel *)messageModel navTitle:(NSString *)navTitle {
-    NSString *previewTargetId =
-        [NSString stringWithFormat:@"%@-%ld", NCCombinePreviewTargetIdPrefix, messageModel.clientId];
+    NSString *previewTargetId = [NSString
+        stringWithFormat:@"%@-%ld", NCCombinePreviewTargetIdPrefix, messageModel.clientId];
     self = [super initWithChannelType:NCChannelTypeSystem channelId:previewTargetId];
     if (self) {
         self.messageModel = messageModel;
-        NCCombineMessage *combineMessage = [self combineMessageFromMessageContent:messageModel.content];
-        self.navTitle = navTitle.length > 0 ? navTitle : [self.class combinePreviewTitleFromMessage:combineMessage];
+        NCCombineMessage *combineMessage =
+            [self combineMessageFromMessageContent:messageModel.content];
+        self.navTitle = navTitle.length > 0
+                            ? navTitle
+                            : [self.class combinePreviewTitleFromMessage:combineMessage];
         self.combinePreviewNestingDepth = 1;
-        NSString *rootFingerprint = [self combinePreviewFingerprintForCombineMessage:combineMessage];
+        NSString *rootFingerprint =
+            [self combinePreviewFingerprintForCombineMessage:combineMessage];
         self.ancestorCombineFingerprints = rootFingerprint.length > 0 ? @[ rootFingerprint ] : @[];
     }
     return self;
@@ -113,7 +118,7 @@ static const NSUInteger NCCombinePreviewMaxNestingDepth = 10;
 
 #pragma mark - Override
 
-- (void)setupDraft:(void (^ _Nullable)(BOOL editValid))completion {
+- (void)setupDraft:(void (^_Nullable)(BOOL editValid))completion {
     if (completion) {
         completion(NO);
     }
@@ -143,25 +148,27 @@ static const NSUInteger NCCombinePreviewMaxNestingDepth = 10;
 
 - (BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView {
     if ([self.messageCollectionView numberOfItemsInSection:0] > 0) {
-        [self.messageCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]
-                                                       atScrollPosition:UICollectionViewScrollPositionTop
-                                                               animated:YES];
+        [self.messageCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0
+                                                                               inSection:0]
+                                           atScrollPosition:UICollectionViewScrollPositionTop
+                                                   animated:YES];
     }
     return NO;
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView
-                  layout:(UICollectionViewLayout *)collectionViewLayout
-referenceSizeForHeaderInSection:(NSInteger)section {
+                             layout:(UICollectionViewLayout *)collectionViewLayout
+    referenceSizeForHeaderInSection:(NSInteger)section {
     return CGSizeMake(collectionView.bounds.size.width, 0);
 }
 
 - (NSArray<UIMenuItem *> *)getLongTouchMessageCellMenuList:(NCMessageModel *)model {
     if ([model.content isKindOfClass:[NCTextMessage class]] ||
         [model.content isKindOfClass:[NCReferenceMessage class]]) {
-        UIMenuItem *copyItem = [[NCMenuItem alloc] initWithTitle:NCUILocalizedString(@"copy")
-                                                           image:NCDynamicImage(@"channel_menu_item_copy_img")
-                                                          action:@selector(onCopyMessage:)];
+        UIMenuItem *copyItem =
+            [[NCMenuItem alloc] initWithTitle:NCUILocalizedString(@"copy")
+                                        image:NCDynamicImage(@"channel_menu_item_copy_img")
+                                       action:@selector(onCopyMessage:)];
         return @[ copyItem ];
     }
     return @[];
@@ -174,12 +181,12 @@ referenceSizeForHeaderInSection:(NSInteger)section {
         alertControllerWithTitle:nil
                          message:NCUILocalizedString(@"message_delete_for_all_alert")
                   preferredStyle:UIAlertControllerStyleAlert];
-    [alertController
-        addAction:[UIAlertAction actionWithTitle:NCUILocalizedString(@"confirm")
-                                           style:UIAlertActionStyleDefault
-                                         handler:^(UIAlertAction *_Nonnull action) {
-                                             [self.navigationController popViewControllerAnimated:YES];
-                                         }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:NCUILocalizedString(@"confirm")
+                                                        style:UIAlertActionStyleDefault
+                                                      handler:^(UIAlertAction *_Nonnull action) {
+                                                        [self.navigationController
+                                                            popViewControllerAnimated:YES];
+                                                      }]];
     [self.navigationController presentViewController:alertController animated:YES completion:nil];
 }
 
@@ -188,26 +195,27 @@ referenceSizeForHeaderInSection:(NSInteger)section {
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-        BOOL isCurrentMessageDeletedForAll = NO;
-        for (NCMessage *message in messages) {
-            if (message.clientId == self.messageModel.clientId) {
-                isCurrentMessageDeletedForAll = YES;
-                break;
-            }
-        }
-        if (isCurrentMessageDeletedForAll) {
-            if ([self isViewLoaded] && self.view.window != nil) {
-                [self showDeletedMessageForAllDialog];
-            } else {
-                self.displayDeletedMessageForAllDialog = YES;
-            }
-        }
+      BOOL isCurrentMessageDeletedForAll = NO;
+      for (NCMessage *message in messages) {
+          if (message.clientId == self.messageModel.clientId) {
+              isCurrentMessageDeletedForAll = YES;
+              break;
+          }
+      }
+      if (isCurrentMessageDeletedForAll) {
+          if ([self isViewLoaded] && self.view.window != nil) {
+              [self showDeletedMessageForAllDialog];
+          } else {
+              self.displayDeletedMessageForAllDialog = YES;
+          }
+      }
     });
 }
 
 #pragma mark - Private
 
-- (nullable NCCombineMessage *)combineMessageFromMessageContent:(nullable NCMessageContent *)content {
+- (nullable NCCombineMessage *)combineMessageFromMessageContent:
+    (nullable NCMessageContent *)content {
     if ([content isKindOfClass:[NCCombineMessage class]]) {
         return (NCCombineMessage *)content;
     }
@@ -237,12 +245,13 @@ referenceSizeForHeaderInSection:(NSInteger)section {
 
 - (void)showNestedCombinePreviewLimitTip {
     [NCAlertView showAlertController:nil
-                            message:NCUILocalizedString(@"combine_message_nesting_limit")
-                   hiddenAfterDelay:1
-                   inViewController:self];
+                             message:NCUILocalizedString(@"combine_message_nesting_limit")
+                    hiddenAfterDelay:1
+                    inViewController:self];
 }
 
-- (nullable NSString *)combinePreviewFingerprintForCombineMessage:(nullable NCCombineMessage *)combineMessage {
+- (nullable NSString *)combinePreviewFingerprintForCombineMessage:
+    (nullable NCCombineMessage *)combineMessage {
     if (!combineMessage) {
         return nil;
     }
@@ -275,14 +284,16 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     // this preview, which would otherwise loop forever on cyclic/repeated payloads.
     NCCombineMessage *childMessage = [self combineMessageFromMessageContent:childModel.content];
     NSString *childFingerprint = [self combinePreviewFingerprintForCombineMessage:childMessage];
-    if (childFingerprint.length > 0 && [self.ancestorCombineFingerprints containsObject:childFingerprint]) {
+    if (childFingerprint.length > 0 &&
+        [self.ancestorCombineFingerprints containsObject:childFingerprint]) {
         return NO;
     }
     return YES;
 }
 
 - (void)loadPreviewMessages {
-    NCCombineMessage *combineMessage = [self combineMessageFromMessageContent:self.messageModel.content];
+    NCCombineMessage *combineMessage =
+        [self combineMessageFromMessageContent:self.messageModel.content];
     if (!combineMessage) {
         [self showLoadFailedTipView];
         return;
@@ -294,7 +305,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     if (combineMessage.jsonMsgKey.length > 0) {
         if (combineMessage.localPath.length > 0 &&
             [[NSFileManager defaultManager] fileExistsAtPath:combineMessage.localPath]) {
-            [self loadPreviewMessagesFromLocalPath:combineMessage.localPath combineMessage:combineMessage];
+            [self loadPreviewMessagesFromLocalPath:combineMessage.localPath
+                                    combineMessage:combineMessage];
         } else if (combineMessage.remoteUrl.length > 0) {
             [self downloadPreviewMessagesForCombineMessage];
         } else {
@@ -310,25 +322,28 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     }
 }
 
-- (void)loadPreviewMessagesFromLocalPath:(NSString *)localPath combineMessage:(NCCombineMessage *)combineMessage {
+- (void)loadPreviewMessagesFromLocalPath:(NSString *)localPath
+                          combineMessage:(NCCombineMessage *)combineMessage {
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSData *data = [NSData dataWithContentsOfFile:localPath];
-        id jsonObject = data.length > 0
-                            ? [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil]
-                            : nil;
-        if (![jsonObject isKindOfClass:[NSArray class]]) {
-            dispatch_main_async_safe(^{
-                [weakSelf showLoadFailedTipView];
-            });
-            return;
-        }
-        [weakSelf reloadWithPreviewMessageList:(NSArray *)jsonObject combineMessage:combineMessage];
+      NSData *data = [NSData dataWithContentsOfFile:localPath];
+      id jsonObject = data.length > 0 ? [NSJSONSerialization JSONObjectWithData:data
+                                                                        options:kNilOptions
+                                                                          error:nil]
+                                      : nil;
+      if (![jsonObject isKindOfClass:[NSArray class]]) {
+          dispatch_main_async_safe(^{
+            [weakSelf showLoadFailedTipView];
+          });
+          return;
+      }
+      [weakSelf reloadWithPreviewMessageList:(NSArray *)jsonObject combineMessage:combineMessage];
     });
 }
 
 - (void)downloadPreviewMessagesForCombineMessage {
-    NCCombineMessage *combineMessage = [self combineMessageFromMessageContent:self.messageModel.content];
+    NCCombineMessage *combineMessage =
+        [self combineMessageFromMessageContent:self.messageModel.content];
     if (!combineMessage) {
         [self showLoadFailedTipView];
         return;
@@ -336,35 +351,37 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     [self showLoadingTipView];
     __weak typeof(self) weakSelf = self;
     void (^successHandler)(NSString *) = ^(NSString *mediaPath) {
-        dispatch_main_async_safe(^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf) {
-                return;
-            }
-            NCCombineMessage *currentCombineMessage =
-                [strongSelf combineMessageFromMessageContent:strongSelf.messageModel.content] ?: combineMessage;
-            currentCombineMessage.localPath = mediaPath;
-            [strongSelf loadPreviewMessagesFromLocalPath:mediaPath combineMessage:currentCombineMessage];
-        });
+      dispatch_main_async_safe(^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) {
+            return;
+        }
+        NCCombineMessage *currentCombineMessage =
+            [strongSelf combineMessageFromMessageContent:strongSelf.messageModel.content]
+                ?: combineMessage;
+        currentCombineMessage.localPath = mediaPath;
+        [strongSelf loadPreviewMessagesFromLocalPath:mediaPath
+                                      combineMessage:currentCombineMessage];
+      });
     };
     void (^failedHandler)(void) = ^{
-        dispatch_main_async_safe(^{
-            [weakSelf showLoadFailedTipView];
-        });
+      dispatch_main_async_safe(^{
+        [weakSelf showLoadFailedTipView];
+      });
     };
     if (self.messageModel.clientId > 0) {
         [[NCChatUI shared] downloadMediaMessage:self.messageModel.clientId
             progress:^(int progress) {
             }
-          completion:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-                if (mediaPath.length > 0 && !error) {
-                    successHandler(mediaPath);
-                    return;
-                }
-                failedHandler();
+            completion:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+              if (mediaPath.length > 0 && !error) {
+                  successHandler(mediaPath);
+                  return;
+              }
+              failedHandler();
             }
             cancel:^{
-                failedHandler();
+              failedHandler();
             }];
         return;
     }
@@ -374,19 +391,19 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     }
     NSString *fileName = [self fallbackDownloadFileNameForCombineMessage:combineMessage];
     [[NCChatUI shared] downloadMediaFile:fileName
-                                mediaUrl:combineMessage.remoteUrl
-                                progress:^(int progress) {
-                                }
-                              completion:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-                                  if (mediaPath.length > 0 && !error) {
-                                      successHandler(mediaPath);
-                                      return;
-                                  }
-                                  failedHandler();
-                              }
-                                  cancel:^{
-                                      failedHandler();
-                                  }];
+        mediaUrl:combineMessage.remoteUrl
+        progress:^(int progress) {
+        }
+        completion:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+          if (mediaPath.length > 0 && !error) {
+              successHandler(mediaPath);
+              return;
+          }
+          failedHandler();
+        }
+        cancel:^{
+          failedHandler();
+        }];
 }
 
 - (void)reloadWithPreviewMessageList:(NSArray<NSDictionary *> *)messageList
@@ -395,26 +412,29 @@ referenceSizeForHeaderInSection:(NSInteger)section {
         [self previewModelsFromMessageList:messageList combineMessage:combineMessage];
     [self figureOutPreviewConversationDataRepository:previewModels];
     dispatch_main_async_safe(^{
-        self.channelDataRepository = previewModels;
-        [self stopAnimation];
-        self.loadingTipView.hidden = YES;
-        self.loadFailedTipView.hidden = YES;
-        [self.messageCollectionView reloadData];
-        [self scrollToFirstMessageIfNeededAnimated:NO];
+      self.channelDataRepository = previewModels;
+      [self stopAnimation];
+      self.loadingTipView.hidden = YES;
+      self.loadFailedTipView.hidden = YES;
+      [self.messageCollectionView reloadData];
+      [self scrollToFirstMessageIfNeededAnimated:NO];
     });
 }
 
-- (NSMutableArray<NCMessageModel *> *)previewModelsFromMessageList:(NSArray<NSDictionary *> *)messageList
-                                                    combineMessage:(NCCombineMessage *)combineMessage {
+- (NSMutableArray<NCMessageModel *> *)
+    previewModelsFromMessageList:(NSArray<NSDictionary *> *)messageList
+                  combineMessage:(NCCombineMessage *)combineMessage {
     NSMutableArray<NCMessageModel *> *previewModels = [NSMutableArray array];
-    [messageList enumerateObjectsUsingBlock:^(NSDictionary *dictionary, NSUInteger index, BOOL *stop) {
-        (void)stop;
-        NCMessageModel *messageModel =
-            [self previewModelFromDictionary:dictionary previewIndex:index combineMessage:combineMessage];
-        if (messageModel) {
-            [previewModels addObject:messageModel];
-        }
-    }];
+    [messageList
+        enumerateObjectsUsingBlock:^(NSDictionary *dictionary, NSUInteger index, BOOL *stop) {
+          (void)stop;
+          NCMessageModel *messageModel = [self previewModelFromDictionary:dictionary
+                                                             previewIndex:index
+                                                           combineMessage:combineMessage];
+          if (messageModel) {
+              [previewModels addObject:messageModel];
+          }
+        }];
     return previewModels;
 }
 
@@ -431,13 +451,15 @@ referenceSizeForHeaderInSection:(NSInteger)section {
         return nil;
     }
 
-    NCMessageContent *previewContent = [NCMessageBridgeHelper messageContentFromMessageType:objectName
-                                                                           contentDictionary:contentDictionary];
+    NCMessageContent *previewContent =
+        [NCMessageBridgeHelper messageContentFromMessageType:objectName
+                                           contentDictionary:contentDictionary];
     if (!previewContent) {
         return nil;
     }
     NCChannelType channelType = combineMessage.channelType;
-    NSString *channelId = [self stringValueFromObject:dictionary[@"channelId"]] ?: (self.messageModel.channelId ?: @"");
+    NSString *channelId = [self stringValueFromObject:dictionary[@"channelId"]]
+                              ?: (self.messageModel.channelId ?: @"");
     NSString *senderUserId = [self stringValueFromObject:dictionary[@"fromUserId"]] ?: @"";
     long long sentTime = [self longLongValueFromObject:dictionary[@"timestamp"]];
     NCMessageModel *model = [[NCMessageModel alloc] init];
@@ -450,7 +472,9 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     model.clientId = [self syntheticPreviewMessageClientIdForIndex:previewIndex sentTime:sentTime];
     model.messageId = [NSString stringWithFormat:@"%lld", sentTime];
     NSString *currentUserId = [NCEngine getCurrentUserId] ?: @"";
-    model.messageDirection = [senderUserId isEqualToString:currentUserId] ? NCMessageDirectionSend : NCMessageDirectionReceive;
+    model.messageDirection = [senderUserId isEqualToString:currentUserId]
+                                 ? NCMessageDirectionSend
+                                 : NCMessageDirectionReceive;
     model.hasChanged = [self boolValueFromObject:dictionary[@"hasChanged"]];
     if ([previewContent isKindOfClass:[NCHDVoiceMessage class]]) {
         model.receivedStatusInfo.isListened = YES;
@@ -458,7 +482,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     return model;
 }
 
-- (long)syntheticPreviewMessageClientIdForIndex:(NSUInteger)previewIndex sentTime:(long long)sentTime {
+- (long)syntheticPreviewMessageClientIdForIndex:(NSUInteger)previewIndex
+                                       sentTime:(long long)sentTime {
     long long parentSeed = llabs((long long)self.messageModel.clientId);
     if (parentSeed == 0) {
         parentSeed = llabs(self.messageModel.sentTime);
@@ -467,7 +492,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
         parentSeed = llabs(sentTime);
     }
 
-    long long syntheticClientId = -((parentSeed % 1000000000000LL) * 1000LL + (long long)previewIndex + 1);
+    long long syntheticClientId =
+        -((parentSeed % 1000000000000LL) * 1000LL + (long long)previewIndex + 1);
     if (syntheticClientId == 0) {
         syntheticClientId = -((long long)previewIndex + 1);
     }
@@ -487,7 +513,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
         if (interval / 1000 <= 3 * 60) {
             if (currentModel.isDisplayMessageTime && currentModel.cellSize.height > 0) {
                 CGSize size = currentModel.cellSize;
-                size.height = MAX(0, size.height - [self previewTimeLabelIncrementForModel:currentModel]);
+                size.height =
+                    MAX(0, size.height - [self previewTimeLabelIncrementForModel:currentModel]);
                 currentModel.cellSize = size;
             }
             currentModel.isDisplayMessageTime = NO;
@@ -533,7 +560,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
     if (combineMessage.name.length > 0) {
         fileName = combineMessage.name;
     } else {
-        NSString *lastPathComponent = [[NSURL URLWithString:combineMessage.remoteUrl ?: @""] lastPathComponent];
+        NSString *lastPathComponent =
+            [[NSURL URLWithString:combineMessage.remoteUrl ?: @""] lastPathComponent];
         if (lastPathComponent.length > 0) {
             fileName = lastPathComponent;
         } else {
@@ -549,7 +577,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
 
 - (void)scrollToFirstMessageIfNeededAnimated:(BOOL)animated {
     if ([self.messageCollectionView numberOfItemsInSection:0] > 0) {
-        [self.messageCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]
+        [self.messageCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0
+                                                                               inSection:0]
                                            atScrollPosition:UICollectionViewScrollPositionTop
                                                    animated:animated];
     }
@@ -577,7 +606,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
 }
 
 - (void)startAnimation {
-    CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    CABasicAnimation *rotationAnimation =
+        [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
     rotationAnimation.toValue = @(M_PI * 2.0);
     rotationAnimation.duration = 1.5;
     rotationAnimation.cumulative = YES;
@@ -602,7 +632,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
 
 - (NCBaseImageView *)loadingImageView {
     if (!_loadingImageView) {
-        _loadingImageView = [[NCBaseImageView alloc] initWithFrame:CGRectMake((TIPVIEWWIDTH - 27) / 2, 0, 27, 27)];
+        _loadingImageView =
+            [[NCBaseImageView alloc] initWithFrame:CGRectMake((TIPVIEWWIDTH - 27) / 2, 0, 27, 27)];
         _loadingImageView.image = NCDynamicImage(@"channel_msg_combine_loading_img");
     }
     return _loadingImageView;
@@ -632,7 +663,8 @@ referenceSizeForHeaderInSection:(NSInteger)section {
 
 - (NCBaseImageView *)loadFailedImageView {
     if (!_loadFailedImageView) {
-        _loadFailedImageView = [[NCBaseImageView alloc] initWithFrame:CGRectMake((TIPVIEWWIDTH - 45) / 2, 0, 45, 54)];
+        _loadFailedImageView =
+            [[NCBaseImageView alloc] initWithFrame:CGRectMake((TIPVIEWWIDTH - 45) / 2, 0, 45, 54)];
         _loadFailedImageView.image = NCDynamicImage(@"combine_msg_preview_failed_img");
         _loadFailedImageView.userInteractionEnabled = NO;
     }

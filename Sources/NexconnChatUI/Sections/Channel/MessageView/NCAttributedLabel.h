@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseLabel.h"
+#import <UIKit/UIKit.h>
 /**
  *  NCAttributedDataSource
  */
@@ -50,19 +50,24 @@
  */
 @interface NCAttributedLabel : NCBaseLabel <NCAttributedDataSource, UIGestureRecognizerDelegate>
 /**
- * Customize text font colors by setting attributeDataSource, attributeDictionary, or highlightedAttributeDictionary
+ * Customize text font colors by setting attributeDataSource, attributeDictionary, or
+ * highlightedAttributeDictionary
  */
 @property (nonatomic, strong) id<NCAttributedDataSource> attributeDataSource;
 /**
- * Use attributedStrings to add tap events to specific characters, e.g. to modify text message content in the channel list
- *  -(void)willDisplayConversationTableCell:(NCMessageBaseCell *)cell atIndexPath:(NSIndexPath *)indexPath{
+ * Use attributedStrings to add tap events to specific characters, e.g. to modify text message
+ *content in the channel list
+ *  -(void)willDisplayConversationTableCell:(NCMessageBaseCell *)cell atIndexPath:(NSIndexPath
+ **)indexPath{
  *
  *   if ([cell isKindOfClass:[NCTextMessageCell class]]) {
  *      NCTextMessageCell *newCell = (NCTextMessageCell *)cell;
  *      if (newCell.textLabel.text.length>3) {
- *          NSTextCheckingResult *textCheckingResult = [NSTextCheckingResult linkCheckingResultWithRange:(NSMakeRange(0,
- *3)) URL:[NSURL URLWithString:@"http://www.baidu.com"]]; [newCell.textLabel.attributedStrings
- *addObject:textCheckingResult]; [newCell.textLabel setTextHighlighted:YES atPoint:CGPointMake(0, 3)];
+ *          NSTextCheckingResult *textCheckingResult = [NSTextCheckingResult
+ *linkCheckingResultWithRange:(NSMakeRange(0, 3)) URL:[NSURL
+ *URLWithString:@"http://www.baidu.com"]]; [newCell.textLabel.attributedStrings
+ *addObject:textCheckingResult]; [newCell.textLabel setTextHighlighted:YES atPoint:CGPointMake(0,
+ *3)];
  *       }
  *    }
  *}
@@ -133,7 +138,8 @@
  @param label       Current label
  @param phoneNumber Tapped URL
  */
-- (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber;
+- (void)attributedLabel:(NCAttributedLabel *)label
+    didSelectLinkWithPhoneNumber:(NSString *)phoneNumber;
 
 /*!
  Callback for tapping the label

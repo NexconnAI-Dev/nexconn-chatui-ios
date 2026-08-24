@@ -6,12 +6,12 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import "NCMessageReadDetailViewConfig.h"
 #import "NCMessageModel.h"
 #import "NCMessageReadDetailCellViewModel.h"
 #import "NCMessageReadDetailDefine.h"
+#import "NCMessageReadDetailViewConfig.h"
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -54,10 +54,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign, readonly) NCMessageReadDetailTabType currentTabType;
 
 /// List of users who have read
-@property (nonatomic, strong, readonly) NSMutableArray<NCMessageReadDetailCellViewModel *> *readUserList;
+@property (nonatomic, strong, readonly)
+    NSMutableArray<NCMessageReadDetailCellViewModel *> *readUserList;
 
 /// List of users who have not read
-@property (nonatomic, strong, readonly) NSMutableArray<NCMessageReadDetailCellViewModel *> *unreadUserList;
+@property (nonatomic, strong, readonly)
+    NSMutableArray<NCMessageReadDetailCellViewModel *> *unreadUserList;
 
 /// Initializes the view model
 /// @param messageModel The message model
@@ -88,13 +90,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param tabType The tab type
 /// @param section The section index
 /// @return The number of rows
-- (NSInteger)numberOfRowsForTabType:(NCMessageReadDetailTabType)tabType inSection:(NSInteger)section;
+- (NSInteger)numberOfRowsForTabType:(NCMessageReadDetailTabType)tabType
+                          inSection:(NSInteger)section;
 
 /// Returns the cell view model for the specified tab and index
 /// @param tabType The tab type
 /// @param index The index
 /// @return The cell view model, or `nil` if the index is out of bounds
-- (NCMessageReadDetailCellViewModel *)cellViewModelForTabType:(NCMessageReadDetailTabType)tabType atIndex:(NSInteger)index;
+- (NCMessageReadDetailCellViewModel *)cellViewModelForTabType:(NCMessageReadDetailTabType)tabType
+                                                      atIndex:(NSInteger)index;
 
 /// Returns the cell height for the specified tab and index
 /// @param tabType The tab type

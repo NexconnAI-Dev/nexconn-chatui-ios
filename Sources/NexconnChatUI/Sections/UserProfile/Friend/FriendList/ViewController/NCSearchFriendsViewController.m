@@ -7,18 +7,18 @@
 //
 
 #import "NCSearchFriendsViewController.h"
-#import "NCFriendListView.h"
-#import "NCChatUICommonDefine.h"
 #import "NCAlertView.h"
-@interface NCSearchFriendsViewController ()<UITableViewDelegate, UITableViewDataSource,NCListViewModelResponder>
+#import "NCChatUICommonDefine.h"
+#import "NCFriendListView.h"
+@interface NCSearchFriendsViewController () <UITableViewDelegate, UITableViewDataSource,
+                                             NCListViewModelResponder>
 
 @property (nonatomic, strong) NCSearchFriendsViewModel *viewModel;
 @property (nonatomic, strong) NCFriendListView *listView;
 @end
 
 @implementation NCSearchFriendsViewController
-- (instancetype)initWithViewModel:(NCSearchFriendsViewModel *)viewModel
-{
+- (instancetype)initWithViewModel:(NCSearchFriendsViewModel *)viewModel {
     self = [super init];
     if (self) {
         [viewModel bindResponder:self];
@@ -45,7 +45,11 @@
     [self configureSearchBar];
     [self configureRightNaviItems];
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)leftBarButtonItemPressed {
@@ -71,16 +75,12 @@
 }
 
 - (void)showTips:(NSString *)tips {
-    [NCAlertView showAlertController:nil
-                             message:tips
-                    hiddenAfterDelay:2];
+    [NCAlertView showAlertController:nil message:tips hiddenAfterDelay:2];
 }
 
 #pragma mark - UITableViewDelegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self.viewModel viewController:self
-                         tableView:tableView
-                      didSelectRow:indexPath];
+    [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
 #pragma mark - UITableViewDataSource
@@ -93,9 +93,9 @@
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return  [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {

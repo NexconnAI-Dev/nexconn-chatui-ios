@@ -24,10 +24,11 @@
 - (NCChannelInfo *)getConversationInfo:(NCChannelType)channelType channelId:(NSString *)channelId;
 
 - (void)updateConversationInfo:(NCChannelInfo *)conversationInfo
-              channelType:(NCChannelType)channelType
-                      channelId:(NSString *)channelId;
+                   channelType:(NCChannelType)channelType
+                     channelId:(NSString *)channelId;
 
-- (void)clearConversationInfoNetworkCacheOnly:(NCChannelType)channelType channelId:(NSString *)channelId;
+- (void)clearConversationInfoNetworkCacheOnly:(NCChannelType)channelType
+                                    channelId:(NSString *)channelId;
 
 - (void)clearConversationInfo:(NCChannelType)channelType channelId:(NSString *)channelId;
 

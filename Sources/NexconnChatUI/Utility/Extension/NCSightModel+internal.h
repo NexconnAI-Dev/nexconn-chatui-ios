@@ -9,7 +9,7 @@
 #ifndef NCSightModel_internal_h
 #define NCSightModel_internal_h
 #import "NCSightPlayerController+ChatUI.h"
-@interface NCSightModel()
+@interface NCSightModel ()
 @property (nonatomic, strong) NCSightPlayerController *playerController;
 @end
 

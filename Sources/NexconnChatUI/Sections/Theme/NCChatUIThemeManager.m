@@ -8,10 +8,10 @@
 
 #import "NCChatUIThemeManager.h"
 #import "NCChatUIBuiltInThemes.h"
-#import "NCReadWriteLock.h"
 #import "NCChatUIUtility.h"
+#import "NCReadWriteLock.h"
 
-@interface NCChatUIThemeManager() {
+@interface NCChatUIThemeManager () {
     NCChatUIBuiltInThemeType _innerThemesType;
     NCChatUITheme *_currentTheme;
 }
@@ -42,7 +42,7 @@
     static NCChatUIThemeManager *instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
+      instance = [[self alloc] init];
     });
     return instance;
 }
@@ -76,9 +76,9 @@
 }
 
 + (BOOL)changeCustomTheme:(NCChatUITheme *)theme
-         baseOnTheme:(NCChatUIBuiltInThemeType)innerThemesType {
+              baseOnTheme:(NCChatUIBuiltInThemeType)innerThemesType {
     return [[NCChatUIThemeManager sharedInstance] changeCustomTheme:theme
-                                                       baseOnTheme:innerThemesType];
+                                                        baseOnTheme:innerThemesType];
 }
 
 + (UIColor *)dynamicColor:(NSString *)colorKey {
@@ -107,9 +107,9 @@
     }
 
     [self.lock performWriteLockBlock:^{
-        if (![self.delegates containsObject:delegate]) {
-            [self.delegates addObject:delegate];
-        }
+      if (![self.delegates containsObject:delegate]) {
+          [self.delegates addObject:delegate];
+      }
     }];
 }
 
@@ -121,9 +121,9 @@
     }
 
     [self.lock performWriteLockBlock:^{
-        if ([self.delegates containsObject:delegate]) {
-            [self.delegates removeObject:delegate];
-        }
+      if ([self.delegates containsObject:delegate]) {
+          [self.delegates removeObject:delegate];
+      }
     }];
 }
 
@@ -135,7 +135,7 @@
 ///   - innerThemesType: Built-in theme used for missing resources.
 /// - Returns: Whether the requested built-in theme is supported.
 - (BOOL)changeCustomTheme:(NCChatUITheme *)theme
-         baseOnTheme:(NCChatUIBuiltInThemeType)innerThemesType {
+              baseOnTheme:(NCChatUIBuiltInThemeType)innerThemesType {
     // Validate the built-in theme type.
     if (![self isValidInnerThemesType:innerThemesType]) {
         return NO;
@@ -152,7 +152,8 @@
             // The custom theme is unchanged; update only the base theme.
             self.innerThemesType = innerThemesType;
         } else {
-            // Update the base without notifying, then set the custom theme and send one notification.
+            // Update the base without notifying, then set the custom theme and send one
+            // notification.
             _innerThemesType = innerThemesType;
             self.currentTheme = theme;
         }
@@ -163,7 +164,8 @@
 #pragma mark - Dynamic Resource Access
 
 /// Resolves a color from the active theme.
-/// Without a custom theme, the built-in color follows light and dark mode; a missing custom color uses the built-in light color.
+/// Without a custom theme, the built-in color follows light and dark mode; a missing custom color
+/// uses the built-in light color.
 /// - Parameter colorKey: Theme color key.
 /// - Returns: The resolved color, or clear when unavailable.
 - (UIColor *)dynamicColor:(NSString *)colorKey {
@@ -215,7 +217,8 @@
 }
 
 /// Resolves an image from the active theme.
-/// A missing custom image uses the built-in light image; without a custom theme, the built-in image follows light and dark mode.
+/// A missing custom image uses the built-in light image; without a custom theme, the built-in image
+/// follows light and dark mode.
 /// - Parameter imageKey: Theme image key.
 /// - Returns: The resolved image, or nil when unavailable.
 - (UIImage *)dynamicImage:(NSString *)imageKey {
@@ -232,7 +235,6 @@
     }
 
     return image;
-
 }
 
 #pragma mark - Private Methods
@@ -253,13 +255,12 @@
 - (void)noticeThemeChanged {
     __block NSArray *delegates = nil;
     [self.lock performReadLockBlock:^{
-        delegates = [self.delegates allObjects];
+      delegates = [self.delegates allObjects];
     }];
 
     for (id<NCChatUIThemeDelegate> delegate in delegates) {
         if ([delegate respondsToSelector:@selector(themeDidChanged:baseOnTheme:)]) {
-            [delegate themeDidChanged:self.currentTheme
-                         baseOnTheme:self.innerThemesType];
+            [delegate themeDidChanged:self.currentTheme baseOnTheme:self.innerThemesType];
         }
     }
 }

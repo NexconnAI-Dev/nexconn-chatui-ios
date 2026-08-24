@@ -7,8 +7,8 @@
 //
 
 #import "NCGroupNoticeViewModel.h"
-#import "NCChatUICommonDefine.h"
 #import "NCAlertView.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIErrorCode.h"
 @interface NCGroupNoticeViewModel ()
 
@@ -33,29 +33,42 @@
     return self;
 }
 
-- (void)updateNotice:(NSString *)notice inViewController:(nonnull UIViewController *)viewController{
-    NSString *trimmed = [notice stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+- (void)updateNotice:(NSString *)notice
+    inViewController:(nonnull UIViewController *)viewController {
+    NSString *trimmed =
+        [notice stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (trimmed.length == 0) {
         return;
     }
     NCGroupInfo *group = [self updatedGroupWithNotice:notice];
-    if ([self.delegate respondsToSelector:@selector(groupNoticeWillUpdate:viewModel:inViewController:)]) {
-        BOOL intercept = [self.delegate groupNoticeWillUpdate:group viewModel:self inViewController:viewController];
+    if ([self.delegate
+            respondsToSelector:@selector(groupNoticeWillUpdate:viewModel:inViewController:)]) {
+        BOOL intercept = [self.delegate groupNoticeWillUpdate:group
+                                                    viewModel:self
+                                             inViewController:viewController];
         if (intercept) {
             return;
         }
     }
-    [NCAlertView showAlertController:nil message:NCUILocalizedString(@"group_notice_update_alert") actionTitles:nil cancelTitle:NCUILocalizedString(@"cancel") confirmTitle:NCUILocalizedString(@"confirm") preferredStyle:(UIAlertControllerStyleAlert) actionsBlock:nil cancelBlock:nil confirmBlock:^{
-        [self updateGroup:group inViewController:viewController];
-    } inViewController:viewController];
-    
+    [NCAlertView showAlertController:nil
+                             message:NCUILocalizedString(@"group_notice_update_alert")
+                        actionTitles:nil
+                         cancelTitle:NCUILocalizedString(@"cancel")
+                        confirmTitle:NCUILocalizedString(@"confirm")
+                      preferredStyle:(UIAlertControllerStyleAlert)actionsBlock:nil
+                         cancelBlock:nil
+                        confirmBlock:^{
+                          [self updateGroup:group inViewController:viewController];
+                        }
+                    inViewController:viewController];
 }
 
 - (BOOL)canSaveNotice:(NSString *)notice {
     if (!self.canEdit) {
         return NO;
     }
-    NSString *trimmed = [notice stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *trimmed =
+        [notice stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (trimmed.length == 0) {
         return NO;
     }
@@ -76,13 +89,15 @@
     return nil;
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (BOOL)canEditProfile {
-    if (self.group.groupInfoEditPermission == NCGroupOperationPermissionOwner && self.group.role == NCGroupMemberRoleOwner) {
+    if (self.group.groupInfoEditPermission == NCGroupOperationPermissionOwner &&
+        self.group.role == NCGroupMemberRoleOwner) {
         return YES;
     }
-    if (self.group.groupInfoEditPermission == NCGroupOperationPermissionOwnerOrAdmin && (self.group.role == NCGroupMemberRoleOwner || self.group.role == NCGroupMemberRoleAdmin)) {
+    if (self.group.groupInfoEditPermission == NCGroupOperationPermissionOwnerOrAdmin &&
+        (self.group.role == NCGroupMemberRoleOwner || self.group.role == NCGroupMemberRoleAdmin)) {
         return YES;
     }
     if (self.group.groupInfoEditPermission == NCGroupOperationPermissionEveryone) {
@@ -114,33 +129,43 @@
     return group;
 }
 
-- (void)updateGroup:(NCGroupInfo *)group inViewController:(nonnull UIViewController *)viewController {
+- (void)updateGroup:(NCGroupInfo *)group
+    inViewController:(nonnull UIViewController *)viewController {
     [self loadingWithTip:NCUILocalizedString(@"saving")];
     NCGroupChannel *channel = [[NCGroupChannel alloc] initWithChannelId:group.groupId];
     NCUpdateGroupInfoParams *params = [NCUpdateGroupInfoParams new];
     params.notice = group.notice;
-    [channel updateInfoWithParams:params completion:^(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self stopLoading];
-            if (!error) {
-                self.group = group;
-                if ([self.delegate respondsToSelector:@selector(groupNoticeDidUpdate:viewModel:inViewController:)]) {
-                    BOOL intercept = [self.delegate groupNoticeDidUpdate:group viewModel:self inViewController:viewController];
-                    if (intercept) {
-                        return;
-                    }
-                }
-                [viewController.navigationController popViewControllerAnimated:YES];
-                [NCAlertView showAlertController:nil message:NCUILocalizedString(@"group_notice_success") hiddenAfterDelay:2];
-                return;
-            }
-            NSString *tips = NCUILocalizedString(@"set_failed");
-            if (error.code == NCChatUIErrorCodeInformationAuditFailed) {
-                tips = NCUILocalizedString(@"content_contains_sensitive");
-            }
+    [channel
+        updateInfoWithParams:params
+                  completion:^(NSArray<NSString *> *_Nullable errorKeys, NCError *_Nullable error) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [self stopLoading];
+                      if (!error) {
+                          self.group = group;
+                          if ([self.delegate
+                                  respondsToSelector:@selector(groupNoticeDidUpdate:viewModel:
+                                                               inViewController:)]) {
+                              BOOL intercept = [self.delegate groupNoticeDidUpdate:group
+                                                                         viewModel:self
+                                                                  inViewController:viewController];
+                              if (intercept) {
+                                  return;
+                              }
+                          }
+                          [viewController.navigationController popViewControllerAnimated:YES];
+                          [NCAlertView
+                              showAlertController:nil
+                                          message:NCUILocalizedString(@"group_notice_success")
+                                 hiddenAfterDelay:2];
+                          return;
+                      }
+                      NSString *tips = NCUILocalizedString(@"set_failed");
+                      if (error.code == NCChatUIErrorCodeInformationAuditFailed) {
+                          tips = NCUILocalizedString(@"content_contains_sensitive");
+                      }
 
-            [NCAlertView showAlertController:nil message:tips hiddenAfterDelay:2];
-        });
-    }];
+                      [NCAlertView showAlertController:nil message:tips hiddenAfterDelay:2];
+                    });
+                  }];
 }
 @end

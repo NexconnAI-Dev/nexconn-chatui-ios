@@ -7,19 +7,13 @@
 //
 
 #import "NCCombineMessageUtility.h"
-#import "NCMessageModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCMessageModel.h"
 
 static NSArray<NSString *> *NCForwardWhiteListBase(BOOL includeReference) {
     NSMutableArray<NSString *> *whiteList = [@[
-        NCMessageType.text,
-        @"RC:CardMsg",
-        NCMessageType.shortVideo,
-        NCMessageType.image,
-        NCMessageType.file,
-        NCMessageType.combine,
-        NCMessageType.hdVoice,
-        NCMessageType.gif
+        NCMessageType.text, @"RC:CardMsg", NCMessageType.shortVideo, NCMessageType.image,
+        NCMessageType.file, NCMessageType.combine, NCMessageType.hdVoice, NCMessageType.gif
     ] mutableCopy];
 
     if (includeReference) {
@@ -56,9 +50,8 @@ static NSArray<NSString *> *NCForwardWhiteListBase(BOOL includeReference) {
         title = NCUILocalizedString(@"group_chat_history_title");
     } else {
         if (nameList.count > 1) {
-            title =
-                [NSString stringWithFormat:NCUILocalizedString(@"chat_history_title_x_and_y"),
-                                           [nameList firstObject], [nameList lastObject]];
+            title = [NSString stringWithFormat:NCUILocalizedString(@"chat_history_title_x_and_y"),
+                                               [nameList firstObject], [nameList lastObject]];
         } else if (nameList.count == 1) {
             title = [NSString stringWithFormat:NCUILocalizedString(@"chat_history_title_x"),
                                                [nameList firstObject]];
@@ -116,7 +109,8 @@ static NSArray<NSString *> *NCForwardWhiteListBase(BOOL includeReference) {
             return NO;
         }
         // Messages that were not sent successfully cannot be forwarded.
-        if (model.sentStatus == NCMessageSentStatusSending || model.sentStatus == NCMessageSentStatusFailed ||
+        if (model.sentStatus == NCMessageSentStatusSending ||
+            model.sentStatus == NCMessageSentStatusFailed ||
             model.sentStatus == NCMessageSentStatusCanceled) {
             return NO;
         }
@@ -128,7 +122,8 @@ static NSArray<NSString *> *NCForwardWhiteListBase(BOOL includeReference) {
     return YES;
 }
 // Message types allowed for individual forwarding.
-+ (BOOL)allSelectedOneByOneForwordMessagesAreLegal:(NSArray<NCMessageModel *> *)allSelectedMessages {
++ (BOOL)allSelectedOneByOneForwordMessagesAreLegal:
+    (NSArray<NCMessageModel *> *)allSelectedMessages {
     if (!allSelectedMessages) {
         return NO;
     }
@@ -137,7 +132,8 @@ static NSArray<NSString *> *NCForwardWhiteListBase(BOOL includeReference) {
             return NO;
         }
         // Messages that were not sent successfully cannot be forwarded.
-        if (model.sentStatus == NCMessageSentStatusSending || model.sentStatus == NCMessageSentStatusFailed ||
+        if (model.sentStatus == NCMessageSentStatusSending ||
+            model.sentStatus == NCMessageSentStatusFailed ||
             model.sentStatus == NCMessageSentStatusCanceled) {
             return NO;
         }

@@ -11,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Friend list permanent cell
-@interface NCFriendListPermanentCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCFriendListPermanentCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 
 /// Initializes the instance
 - (instancetype)initWithTitle:(NSString *)title

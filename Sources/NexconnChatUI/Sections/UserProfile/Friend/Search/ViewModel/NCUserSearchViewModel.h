@@ -7,9 +7,9 @@
 //
 
 #import "NCBaseViewModel.h"
+#import "NCCellViewModelProtocol.h"
 #import "NCListViewModelProtocol.h"
 #import "NCNavigationItemsViewModel.h"
-#import "NCCellViewModelProtocol.h"
 #import "NCSearchUserProfileViewModel.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
@@ -21,27 +21,31 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param viewModel viewModel
 /// @return Custom navigation items view model, or `nil` to use the default
 ///
-- (NCNavigationItemsViewModel *_Nullable)willConfigureRightNavigationItemsForUserSearchViewModel:(NCUserSearchViewModel *)viewModel;
+- (NCNavigationItemsViewModel *_Nullable)willConfigureRightNavigationItemsForUserSearchViewModel:
+    (NCUserSearchViewModel *)viewModel;
 
 /// Configures custom search functionality
 /// @param viewModel viewModel
 /// @return Custom search view model, or `nil` to use the default
 ///
-- (NCSearchUserProfileViewModel *_Nullable)willConfigureSearchBarViewModelForUserSearchViewModel:(NCUserSearchViewModel *)viewModel;
+- (NCSearchUserProfileViewModel *_Nullable)willConfigureSearchBarViewModelForUserSearchViewModel:
+    (NCUserSearchViewModel *)viewModel;
 
 /// Triggers the user search event
 ///   - viewModel: viewModel
 /// @param text The search keyword
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
-- (BOOL)userSearchViewModel:(NCUserSearchViewModel *)viewModel searchUserProfileWithText:(NSString *)text;
+- (BOOL)userSearchViewModel:(NCUserSearchViewModel *)viewModel
+    searchUserProfileWithText:(NSString *)text;
 
 /// Displays the user detail
 ///   - viewModel: viewModel
 /// @param profile The user info
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
-- (BOOL)userSearchViewModel:(NCUserSearchViewModel *)viewModel showUserProfile:(NCUserProfile *)profile;
+- (BOOL)userSearchViewModel:(NCUserSearchViewModel *)viewModel
+            showUserProfile:(NCUserProfile *)profile;
 @end
 
 /// User search view model
@@ -57,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (UISearchBar *)configureSearchBarForViewController:(UIViewController *)viewController;
 
 /// Binds the responder
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder;
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder;
 
 /// Ends editing mode
 - (void)endEditingState;

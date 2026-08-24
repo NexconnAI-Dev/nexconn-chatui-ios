@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCChatUIUserInfo.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,7 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameter manager The state manager instance.
 /// - Parameter userId The user ID.
 /// - Returns The user information object.
-- (nullable NCChatUIUserInfo *)inputStateManager:(NCInputStateManager *)manager getUserInfoForUserId:(NSString *)userId;
+- (nullable NCChatUIUserInfo *)inputStateManager:(NCInputStateManager *)manager
+                            getUserInfoForUserId:(NSString *)userId;
 
 @optional
 /// Notifies that @mention information changed.
@@ -62,7 +63,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly, nullable) NCMentionedInfo *mentionedInfo;
 
 /// Gets the current @mention range information.
-@property (nonatomic, strong, readonly, nullable) NSArray<NCMentionedStringRangeInfo *> *mentionedRangeInfo;
+@property (nonatomic, strong, readonly, nullable)
+    NSArray<NCMentionedStringRangeInfo *> *mentionedRangeInfo;
 
 #pragma mark - Initialization
 
@@ -84,7 +86,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Inserts an @mentioned user, with symbolRequest support.
 /// - Parameter userInfo The user information.
-/// - Parameter symbolRequest Whether to insert the @ symbol. YES inserts @ plus username; NO inserts only the username, assuming @ already exists.
+/// - Parameter symbolRequest Whether to insert the @ symbol. YES inserts @ plus username; NO
+/// inserts only the username, assuming @ already exists.
 - (void)insertMentionedUser:(NCChatUIUserInfo *)userInfo symbolRequest:(BOOL)symbolRequest;
 
 /// Sets @mention information.
@@ -101,4 +104,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-NS_ASSUME_NONNULL_END 
+NS_ASSUME_NONNULL_END

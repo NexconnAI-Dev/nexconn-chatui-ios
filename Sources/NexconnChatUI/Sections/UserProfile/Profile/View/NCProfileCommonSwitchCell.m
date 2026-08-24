@@ -9,8 +9,7 @@
 #import "NCProfileCommonSwitchCell.h"
 #import "NCChatUICommonDefine.h"
 
-
-NSString  * const NCProfileCommonSwitchCellIdentifier = @"NCProfileCommonSwitchCellIdentifier";
+NSString *const NCProfileCommonSwitchCellIdentifier = @"NCProfileCommonSwitchCellIdentifier";
 
 @implementation NCProfileCommonSwitchCell
 
@@ -31,7 +30,9 @@ NSString  * const NCProfileCommonSwitchCellIdentifier = @"NCProfileCommonSwitchC
     if (!_switchView) {
         _switchView = [[UISwitch alloc] init];
         _switchView.onTintColor = NCDynamicColor(@"success_color");
-        [_switchView addTarget:self action:@selector(switchValueChanged:) forControlEvents:UIControlEventValueChanged];
+        [_switchView addTarget:self
+                        action:@selector(switchValueChanged:)
+              forControlEvents:UIControlEventValueChanged];
         _switchView.translatesAutoresizingMaskIntoConstraints = NO;
     }
     return _switchView;

@@ -9,48 +9,48 @@
 #import "NCMessageReadDetailViewModel.h"
 #import "NCChatUI.h"
 #import "NCChatUIErrorCode.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCUserInfoCacheManager.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
-// TODO: This still derives the NC identifier and channel from NCMessageModel. Remove it when message details own NC context directly.
+// TODO: This still derives the NC identifier and channel from NCMessageModel. Remove it when
+// message details own NC context directly.
 static NCChannelIdentifier *NCChannelIdentifierFromMessageModel(NCMessageModel *messageModel) {
     NSString *channelId = messageModel.channelId ?: @"";
     switch (messageModel.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
-                                                          channelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
-                                                          channelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
-                                                          channelId:channelId];
-        case NCChannelTypeCommunity:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeCommunity
-                                                          channelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
+                                                      channelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
+                                                      channelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
+                                                      channelId:channelId];
+    case NCChannelTypeCommunity:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeCommunity
+                                                      channelId:channelId];
+    default:
+        return nil;
     }
 }
 
 static NCBaseChannel *NCChannelFromMessageModel(NCMessageModel *messageModel) {
     NSString *channelId = messageModel.channelId ?: @"";
     switch (messageModel.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCDirectChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCGroupChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCSystemChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeCommunity:
-            return [[NCCommunityChannel alloc] initWithChannelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCDirectChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCGroupChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCSystemChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeCommunity:
+        return [[NCCommunityChannel alloc] initWithChannelId:channelId];
+    default:
+        return nil;
     }
 }
 
-static NCChatUIUserInfo *NCReadDetailManagedUserInfo(NSString *userId,
-                                                     NCChannelType channelType,
+static NCChatUIUserInfo *NCReadDetailManagedUserInfo(NSString *userId, NCChannelType channelType,
                                                      NSString *channelId) {
     if (userId.length == 0) {
         return nil;
@@ -107,10 +107,10 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
         _messageModel = messageModel;
         _config = config ?: [[NCMessageReadDetailViewConfig alloc] init];
         _currentTabType = NCMessageReadDetailTabTypeRead;
-        
+
         _readUserList = [NSMutableArray array];
         _unreadUserList = [NSMutableArray array];
-        
+
         _isLoadingRead = NO;
         _isLoadingUnread = NO;
     }
@@ -125,9 +125,9 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
     if (self.currentTabType == tabType) {
         return;
     }
-    
+
     self.currentTabType = tabType;
-    
+
     // Load the read list when switching to it for the first time.
     if (tabType == NCMessageReadDetailTabTypeRead) {
         if (self.readUserList.count == 0 && self.readUsersQuery == nil) {
@@ -145,9 +145,9 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
 - (void)loadData {
     // Use existing readReceiptInfo first; if absent, fetch it from the current NCBaseChannel.
     [self loadReadReceiptInfo:^{
-        // Load the read and unread lists concurrently.
-        [self loadReadUsers];
-        [self loadUnreadUsers];
+      // Load the read and unread lists concurrently.
+      [self loadReadUsers];
+      [self loadUnreadUsers];
     }];
 }
 
@@ -166,7 +166,7 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
     if (isLoading) {
         return;
     }
-    
+
     // Mark the selected list as loading.
     if (isRead) {
         self.isLoadingRead = YES;
@@ -189,7 +189,8 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
 
     NCMessagesReadReceiptUsersQuery *query = isRead ? self.readUsersQuery : self.unreadUsersQuery;
     if (!query) {
-        NCChannelIdentifier *channelIdentifier = NCChannelIdentifierFromMessageModel(self.messageModel);
+        NCChannelIdentifier *channelIdentifier =
+            NCChannelIdentifierFromMessageModel(self.messageModel);
         if (!channelIdentifier || self.messageModel.messageId.length == 0) {
             if (isRead) {
                 self.isLoadingRead = NO;
@@ -198,12 +199,14 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
             }
             return;
         }
-        NCMessagesReadReceiptUsersQueryParams *params = [[NCMessagesReadReceiptUsersQueryParams alloc] init];
+        NCMessagesReadReceiptUsersQueryParams *params =
+            [[NCMessagesReadReceiptUsersQueryParams alloc] init];
         params.channelIdentifier = channelIdentifier;
         params.messageId = self.messageModel.messageId;
         params.pageSize = self.config.pageSize;
         params.isAscending = NO;
-        params.status = isRead ? NCMessageReadReceiptStatusResponded : NCMessageReadReceiptStatusUnresponded;
+        params.status =
+            isRead ? NCMessageReadReceiptStatusResponded : NCMessageReadReceiptStatusUnresponded;
         query = [NCBaseChannel createMessagesReadReceiptUsersQueryWithParams:params];
         if (isRead) {
             self.readUsersQuery = query;
@@ -211,55 +214,53 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
             self.unreadUsersQuery = query;
         }
     }
-    
+
     __weak typeof(self) weakSelf = self;
-    [query loadNextPageWithCompletion:^(NCMessageReadReceiptUsersPageResult * _Nullable page,
-                                        NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) return;
-        
-        // Clear the loading state.
-        if (isRead) {
-            strongSelf.isLoadingRead = NO;
-        } else {
-            strongSelf.isLoadingUnread = NO;
-        }
-        
-        if (error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [strongSelf.responder updateUserListForTabType:tabType isEmpty:YES hasMoreData:NO];
-            });
-            return;
-        }
+    [query loadNextPageWithCompletion:^(NCMessageReadReceiptUsersPageResult *_Nullable page,
+                                        NCError *_Nullable error) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf)
+          return;
 
-        NSMutableArray<NCMessageReadDetailCellViewModel *> *userList = 
-            isRead ? strongSelf.readUserList : strongSelf.unreadUserList;
+      // Clear the loading state.
+      if (isRead) {
+          strongSelf.isLoadingRead = NO;
+      } else {
+          strongSelf.isLoadingUnread = NO;
+      }
 
-        for (NCMessageReadReceiptUser *user in page.data) {
-            NCChatUIUserInfo *userInfo =
-                NCReadDetailManagedUserInfo(user.userId,
-                                            strongSelf.messageModel.channelType,
-                                            strongSelf.messageModel.channelId);
+      if (error) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [strongSelf.responder updateUserListForTabType:tabType isEmpty:YES hasMoreData:NO];
+          });
+          return;
+      }
 
-            NCMessageReadDetailCellViewModel *cellVM =
-            [[NCMessageReadDetailCellViewModel alloc] initWithUserInfo:userInfo
-                                                                  readTime:user.timestamp];
-            [userList addObject:cellVM];
-        }
+      NSMutableArray<NCMessageReadDetailCellViewModel *> *userList =
+          isRead ? strongSelf.readUserList : strongSelf.unreadUserList;
 
-        if (isRead) {
-            strongSelf.hasMoreReadUsers = userList.count < query.totalCount;
-        } else {
-            strongSelf.hasMoreUnreadUsers = userList.count < query.totalCount;
-        }
+      for (NCMessageReadReceiptUser *user in page.data) {
+          NCChatUIUserInfo *userInfo = NCReadDetailManagedUserInfo(
+              user.userId, strongSelf.messageModel.channelType, strongSelf.messageModel.channelId);
 
-        BOOL hasMoreData = isRead ? strongSelf.hasMoreReadUsers : strongSelf.hasMoreUnreadUsers;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [strongSelf.responder updateUserListForTabType:tabType 
-                                              isEmpty:(userList.count == 0) 
-                                          hasMoreData:hasMoreData];
-        });
-    
+          NCMessageReadDetailCellViewModel *cellVM =
+              [[NCMessageReadDetailCellViewModel alloc] initWithUserInfo:userInfo
+                                                                readTime:user.timestamp];
+          [userList addObject:cellVM];
+      }
+
+      if (isRead) {
+          strongSelf.hasMoreReadUsers = userList.count < query.totalCount;
+      } else {
+          strongSelf.hasMoreUnreadUsers = userList.count < query.totalCount;
+      }
+
+      BOOL hasMoreData = isRead ? strongSelf.hasMoreReadUsers : strongSelf.hasMoreUnreadUsers;
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [strongSelf.responder updateUserListForTabType:tabType
+                                               isEmpty:(userList.count == 0)
+                                           hasMoreData:hasMoreData];
+      });
     }];
 }
 
@@ -274,14 +275,14 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
 
 - (void)loadReadReceiptInfo:(void (^)(void))completion {
     void (^safeCompletion)(void) = ^(void) {
-        !completion ?: completion();
+      !completion ?: completion();
     };
     // Reuse readReceiptInfo already attached to the message model.
     if (self.messageModel.readReceiptInfo) {
         safeCompletion();
         return;
     }
-    
+
     NCBaseChannel *channel = NCChannelFromMessageModel(self.messageModel);
     if (!channel || self.messageModel.messageId.length == 0) {
         safeCompletion();
@@ -289,45 +290,57 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
     }
 
     __weak typeof(self) weakSelf = self;
-    [channel getMessageReadReceiptInfoWithMessageIds:@[self.messageModel.messageId]
-                                          completion:^(NSArray<NCMessageReadReceiptInfo *> * _Nullable infoList,
-                                                       NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) return;
-        
-        // Retry throttled or temporarily empty responses.
-        void (^retryBlock)(void) = ^(void){
-            if (strongSelf.readInfoRetryCount < kNCReadReceiptMaxRetryCount) {
-                strongSelf.readInfoRetryCount++;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNCReadReceiptRetryDelay), dispatch_get_main_queue(), ^{
-                    [strongSelf loadReadReceiptInfo:completion];
-                });
-            } else {
-                safeCompletion();
-            }
-        };
-        
-        if (error.code == NCChatUIErrorCodeRequestOverFrequency) {
-            retryBlock();
-            return;
-        }
-        
-        if (!error) {
-            // Apply a successful response on the main queue.
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (infoList.count > 0) {
-                    strongSelf.readInfoRetryCount = 0; // Reset after a successful response.
-                    NCMessageReadReceiptInfo *info = infoList.firstObject;
-                    strongSelf.messageModel.readReceiptInfo = info;
-                    [strongSelf.responder updateTabViewWithReadCount:info.readCount unreadCount:info.unreadCount];
-                    safeCompletion();
-                } else {
-                    // The first request may return no data, so retry it.
-                    retryBlock();
-                }
-            });
-        }
-    }];
+    [channel
+        getMessageReadReceiptInfoWithMessageIds:@[ self.messageModel.messageId ]
+                                     completion:^(
+                                         NSArray<NCMessageReadReceiptInfo *> *_Nullable infoList,
+                                         NCError *_Nullable error) {
+                                       __strong typeof(weakSelf) strongSelf = weakSelf;
+                                       if (!strongSelf)
+                                           return;
+
+                                       // Retry throttled or temporarily empty responses.
+                                       void (^retryBlock)(void) = ^(void) {
+                                         if (strongSelf.readInfoRetryCount <
+                                             kNCReadReceiptMaxRetryCount) {
+                                             strongSelf.readInfoRetryCount++;
+                                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                                                          kNCReadReceiptRetryDelay),
+                                                            dispatch_get_main_queue(), ^{
+                                                              [strongSelf
+                                                                  loadReadReceiptInfo:completion];
+                                                            });
+                                         } else {
+                                             safeCompletion();
+                                         }
+                                       };
+
+                                       if (error.code == NCChatUIErrorCodeRequestOverFrequency) {
+                                           retryBlock();
+                                           return;
+                                       }
+
+                                       if (!error) {
+                                           // Apply a successful response on the main queue.
+                                           dispatch_async(dispatch_get_main_queue(), ^{
+                                             if (infoList.count > 0) {
+                                                 strongSelf.readInfoRetryCount =
+                                                     0; // Reset after a successful response.
+                                                 NCMessageReadReceiptInfo *info =
+                                                     infoList.firstObject;
+                                                 strongSelf.messageModel.readReceiptInfo = info;
+                                                 [strongSelf.responder
+                                                     updateTabViewWithReadCount:info.readCount
+                                                                    unreadCount:info.unreadCount];
+                                                 safeCompletion();
+                                             } else {
+                                                 // The first request may return no data, so retry
+                                                 // it.
+                                                 retryBlock();
+                                             }
+                                           });
+                                       }
+                                     }];
 }
 
 #pragma mark - utils
@@ -355,29 +368,30 @@ static const NSTimeInterval kNCReadReceiptRetryDelay = (1 * NSEC_PER_SEC);
     return 1;
 }
 
-- (NSInteger)numberOfRowsForTabType:(NCMessageReadDetailTabType)tabType inSection:(NSInteger)section {
-    NSArray<NCMessageReadDetailCellViewModel *> *userList = tabType == NCMessageReadDetailTabTypeRead
-        ? self.readUserList
-        : self.unreadUserList;
-    
+- (NSInteger)numberOfRowsForTabType:(NCMessageReadDetailTabType)tabType
+                          inSection:(NSInteger)section {
+    NSArray<NCMessageReadDetailCellViewModel *> *userList =
+        tabType == NCMessageReadDetailTabTypeRead ? self.readUserList : self.unreadUserList;
+
     return userList.count;
 }
 
-- (NCMessageReadDetailCellViewModel *)cellViewModelForTabType:(NCMessageReadDetailTabType)tabType atIndex:(NSInteger)index {
-    NSArray<NCMessageReadDetailCellViewModel *> *userList = tabType == NCMessageReadDetailTabTypeRead
-        ? self.readUserList
-        : self.unreadUserList;
-    
+- (NCMessageReadDetailCellViewModel *)cellViewModelForTabType:(NCMessageReadDetailTabType)tabType
+                                                      atIndex:(NSInteger)index {
+    NSArray<NCMessageReadDetailCellViewModel *> *userList =
+        tabType == NCMessageReadDetailTabTypeRead ? self.readUserList : self.unreadUserList;
+
     // Guard against an out-of-bounds index.
     if (index < 0 || index >= userList.count) {
         return nil;
     }
-    
+
     return userList[index];
 }
 
 - (CGFloat)cellHeightForTabType:(NCMessageReadDetailTabType)tabType atIndex:(NSInteger)index {
-    NCMessageReadDetailCellViewModel *cellViewModel = [self cellViewModelForTabType:tabType atIndex:index];
+    NCMessageReadDetailCellViewModel *cellViewModel = [self cellViewModelForTabType:tabType
+                                                                            atIndex:index];
     return cellViewModel ? cellViewModel.cellHeight : 0;
 }
 

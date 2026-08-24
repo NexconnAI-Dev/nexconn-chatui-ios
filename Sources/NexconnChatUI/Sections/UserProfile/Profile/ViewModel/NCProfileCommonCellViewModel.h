@@ -7,8 +7,8 @@
 //
 
 #import "NCProfileCellViewModel.h"
-#import <UIKit/UIKit.h>
 #import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 /// Cell type
 typedef NS_ENUM(NSUInteger, NCUProfileCellType) {

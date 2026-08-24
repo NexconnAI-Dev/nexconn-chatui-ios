@@ -7,10 +7,10 @@
 //
 
 #import "NCApplyNaviItemsViewModel.h"
+#import "NCButton.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIUtility.h"
-#import "NCButton.h"
-@interface NCApplyNaviItemsViewModel()
+@interface NCApplyNaviItemsViewModel ()
 @property (nonatomic, strong) UIView *coverView;
 @end
 
@@ -20,12 +20,12 @@
 - (NSArray *)rightNavigationBarItems {
     NCButton *btn = [[NCButton alloc] init];
     [btn addTarget:self
-            action:@selector(rightBarItemClicked:)
-  forControlEvents:UIControlEventTouchUpInside];
+                  action:@selector(rightBarItemClicked:)
+        forControlEvents:UIControlEventTouchUpInside];
     UIImage *image = NCDynamicImage(@"friend_apply_more_img");
     [btn setImage:image forState:UIControlStateNormal];
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithCustomView:btn];
-    return @[item];
+    return @[ item ];
 }
 
 - (void)rightBarItemClicked:(id)sender {
@@ -74,19 +74,11 @@
     [btn setTitleColor:color forState:UIControlStateNormal];
     btn.translatesAutoresizingMaskIntoConstraints = NO;
     btn.tag = category;
-    [btn addTarget:self
-            action:@selector(btnClick:)
-  forControlEvents:UIControlEventTouchUpInside];
-    
-    [btn addTarget:self
-            action:@selector(btnClick:)
-  forControlEvents:UIControlEventTouchUpOutside];
-    [btn addTarget:self
-            action:@selector(touchDown:)
-  forControlEvents:UIControlEventTouchDown];
-    [btn addTarget:self
-            action:@selector(touchCancel:)
-  forControlEvents:UIControlEventTouchCancel];
+    [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+
+    [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpOutside];
+    [btn addTarget:self action:@selector(touchDown:) forControlEvents:UIControlEventTouchDown];
+    [btn addTarget:self action:@selector(touchCancel:) forControlEvents:UIControlEventTouchCancel];
     return btn;
 }
 
@@ -95,7 +87,8 @@
     CGFloat height = 181;
 
     CGFloat yOffset = CGRectGetMaxY(self.responder.navigationController.navigationBar.frame);
-    UIView *panel = [[UIView alloc] init];;
+    UIView *panel = [[UIView alloc] init];
+    ;
     panel.backgroundColor = NCDynamicColor(@"common_background_color");
     panel.layer.cornerRadius = 10;
     panel.layer.masksToBounds = YES;
@@ -107,7 +100,7 @@
     stackView.alignment = UIStackViewAlignmentFill;
     stackView.distribution = UIStackViewDistributionFillEqually;
     stackView.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     [panel addSubview:stackView];
     [NSLayoutConstraint activateConstraints:@[
         [panel.trailingAnchor constraintEqualToAnchor:containerView.trailingAnchor constant:-16],
@@ -120,16 +113,15 @@
         [stackView.topAnchor constraintEqualToAnchor:panel.topAnchor constant:16],
         [stackView.bottomAnchor constraintEqualToAnchor:panel.bottomAnchor constant:-16]
     ]];
-    NSString *all = NCUILocalizedString(@"friend_application_all") ?:@"";
-    NSString *received = NCUILocalizedString(@"friend_application_received") ?:@"";
-    NSString *sent = NCUILocalizedString(@"friend_application_sent") ?:@"";
-    NSArray *titles = @[all, received, sent];
-    for (int i = 0; i< titles.count; i++) {
+    NSString *all = NCUILocalizedString(@"friend_application_all") ?: @"";
+    NSString *received = NCUILocalizedString(@"friend_application_received") ?: @"";
+    NSString *sent = NCUILocalizedString(@"friend_application_sent") ?: @"";
+    NSArray *titles = @[ all, received, sent ];
+    for (int i = 0; i < titles.count; i++) {
         UIButton *btn = [self createButton:titles[i] category:i];
         [stackView addArrangedSubview:btn];
     }
 }
-
 
 - (UIView *)coverView {
     if (!_coverView) {
@@ -137,8 +129,8 @@
         UIView *view = [[UIView alloc] initWithFrame:window.bounds];
         view.backgroundColor = NCDynamicColor(@"mask_color");
         view.translatesAutoresizingMaskIntoConstraints = NO;
-        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                                              action:@selector(removeCoverView)];
+        UITapGestureRecognizer *tap =
+            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(removeCoverView)];
         [view addGestureRecognizer:tap];
         [self configureSheetView:view];
         _coverView = view;

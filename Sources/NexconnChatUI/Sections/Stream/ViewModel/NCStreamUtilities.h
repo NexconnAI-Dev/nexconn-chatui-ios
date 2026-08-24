@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCMessageModel.h"
+#import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 extern NSUInteger const NCStreamMessageCellLoadingLimit;
 @interface NCStreamSummaryModel : NSObject

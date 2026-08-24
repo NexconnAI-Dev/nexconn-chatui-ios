@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseImageView.h"
 #import "NCChannelModel.h"
 #import <UIKit/UIKit.h>
-#import "NCBaseImageView.h"
 @interface NCChannelListDetailContentView : UIView
 
 @property (nonatomic, strong) UILabel *hightlineLabel;

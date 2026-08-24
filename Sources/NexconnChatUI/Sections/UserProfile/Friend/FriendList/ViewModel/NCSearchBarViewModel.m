@@ -6,11 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-
 #import "NCSearchBarViewModel.h"
-#import "NCSearchBar.h"
 #import "NCChatUICommonDefine.h"
-@interface NCSearchBarViewModel()<UISearchBarDelegate,UISearchControllerDelegate> {
+#import "NCSearchBar.h"
+@interface NCSearchBarViewModel () <UISearchBarDelegate, UISearchControllerDelegate> {
 
     BOOL _inSearching;
 }
@@ -19,12 +18,10 @@
 @property (nonatomic, copy) NSString *keyword;
 @end
 
-
 @implementation NCSearchBarViewModel
 @dynamic delegate;
 
-- (instancetype)initWithResponder:(UIViewController *)responder
-{
+- (instancetype)initWithResponder:(UIViewController *)responder {
     self = [super init];
     if (self) {
         self.responder = responder;
@@ -76,7 +73,8 @@
 - (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar {
     BOOL shoudBegin = YES;
     if ([self.delegate respondsToSelector:@selector(searchBarShouldBeginEditing:)]) {
-        shoudBegin = [self.delegate searchBarShouldBeginEditing:searchBar];;
+        shoudBegin = [self.delegate searchBarShouldBeginEditing:searchBar];
+        ;
     }
     if (!shoudBegin) {
         return NO;
@@ -89,7 +87,7 @@
             break;
         }
     }
-   
+
     return YES;
 }
 
@@ -101,7 +99,6 @@
     [searchBar resignFirstResponder];
 }
 
-
 #pragma mark - Getter & Setter
 
 - (void)setInSearching:(BOOL)inSearching {
@@ -112,7 +109,6 @@
         }
     }
 }
-
 
 - (UISearchBar *)createSearchBar {
     CGFloat height = 44;

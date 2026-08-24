@@ -7,13 +7,13 @@
 //
 
 #import "NCFullScreenEditView.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCEmojiBoardView.h"
 
 #define Height_EmojiBoardView 223.5f
 
-@interface NCFullScreenEditView ()<NCEditInputBarControlDelegate, NCEditInputBarControlDataSource>
+@interface NCFullScreenEditView () <NCEditInputBarControlDelegate, NCEditInputBarControlDataSource>
 
 /// Background dimming view.
 @property (nonatomic, strong) UIView *backgroundView;
@@ -59,12 +59,12 @@
 - (void)setupUI {
     // Start transparent and dim the background during presentation.
     self.backgroundColor = [UIColor clearColor];
-    
+
     self.backgroundView = [[UIView alloc] init];
     self.backgroundView.backgroundColor = NCDynamicColor(@"common_background_color");
     self.backgroundView.translatesAutoresizingMaskIntoConstraints = NO;
     [self addSubview:self.backgroundView];
-    
+
     // Create the spacer used by the keyboard and emoji panel.
     self.bottomPlaceholderView = [[UIView alloc] init];
     self.bottomPlaceholderView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -75,7 +75,7 @@
     CGFloat safeAreaTop = [NCChatUIUtility getWindowSafeAreaInsets].top;
     CGFloat safeAreaBottom = [NCChatUIUtility getWindowSafeAreaInsets].bottom;
     CGFloat topOffset = safeAreaTop;
-    
+
     // Pin the background view to all edges.
     [NSLayoutConstraint activateConstraints:@[
         [self.backgroundView.topAnchor constraintEqualToAnchor:self.topAnchor constant:topOffset],
@@ -83,17 +83,20 @@
         [self.backgroundView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
         [self.backgroundView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor]
     ]];
-    
+
     // Pin the spacer to the bottom edge.
-    self.bottomPlaceholderConstraint = [self.bottomPlaceholderView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-safeAreaBottom];
-    self.bottomPlaceholderHeightConstraint = [self.bottomPlaceholderView.heightAnchor constraintEqualToConstant:0];
+    self.bottomPlaceholderConstraint =
+        [self.bottomPlaceholderView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor
+                                                                constant:-safeAreaBottom];
+    self.bottomPlaceholderHeightConstraint =
+        [self.bottomPlaceholderView.heightAnchor constraintEqualToConstant:0];
     [NSLayoutConstraint activateConstraints:@[
         [self.bottomPlaceholderView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
         [self.bottomPlaceholderView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
         self.bottomPlaceholderConstraint,
         self.bottomPlaceholderHeightConstraint,
     ]];
-    
+
     // Position the edit input bar above the spacer.
     [self setupEditInputContainerConstraints];
 }
@@ -101,17 +104,19 @@
 - (void)setupEditInputContainerConstraints {
     // Use Auto Layout for the edit input bar.
     self.editInputBarControl.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     // Add the input bar to the background view before activating constraints.
     [self.backgroundView addSubview:self.editInputBarControl];
-    
-    self.editInputBarControlBottomConstraint = [self.editInputBarControl.bottomAnchor 
-                                               constraintEqualToAnchor:self.bottomPlaceholderView.topAnchor];
-    
+
+    self.editInputBarControlBottomConstraint = [self.editInputBarControl.bottomAnchor
+        constraintEqualToAnchor:self.bottomPlaceholderView.topAnchor];
+
     [NSLayoutConstraint activateConstraints:@[
         [self.editInputBarControl.topAnchor constraintEqualToAnchor:self.backgroundView.topAnchor],
-        [self.editInputBarControl.leadingAnchor constraintEqualToAnchor:self.backgroundView.leadingAnchor],
-        [self.editInputBarControl.trailingAnchor constraintEqualToAnchor:self.backgroundView.trailingAnchor],
+        [self.editInputBarControl.leadingAnchor
+            constraintEqualToAnchor:self.backgroundView.leadingAnchor],
+        [self.editInputBarControl.trailingAnchor
+            constraintEqualToAnchor:self.backgroundView.trailingAnchor],
         self.editInputBarControlBottomConstraint
     ]];
 }
@@ -124,14 +129,16 @@
         // Begin below the viewport with a transparent background.
         self.transform = CGAffineTransformMakeTranslation(0, CGRectGetHeight(self.bounds));
         self.backgroundColor = [UIColor clearColor];
-        
-        [UIView animateWithDuration:0.3 animations:^{
-            // Slide the editor in while dimming the background.
-            self.transform = CGAffineTransformIdentity;
-            self.backgroundColor = NCMASKCOLOR(0x000000, 0.5);
-        } completion:^(BOOL finished) {
-            [self.editInputBarControl restoreFocus];
-        }];
+
+        [UIView animateWithDuration:0.3
+            animations:^{
+              // Slide the editor in while dimming the background.
+              self.transform = CGAffineTransformIdentity;
+              self.backgroundColor = NCMASKCOLOR(0x000000, 0.5);
+            }
+            completion:^(BOOL finished) {
+              [self.editInputBarControl restoreFocus];
+            }];
     } else {
         // Apply the final visible state immediately.
         self.backgroundColor = NCMASKCOLOR(0x000000, 0.5);
@@ -139,23 +146,27 @@
     }
 }
 
-- (void)hideWithAnimation:(BOOL)animated completion:(void(^_Nullable)(void))completion {
+- (void)hideWithAnimation:(BOOL)animated completion:(void (^_Nullable)(void))completion {
     // Dismiss the input responder before hiding the editor.
     [self.editInputBarControl.editInputContainer resignInputViewFirstResponder];
-    
+
     self.backgroundColor = [UIColor clearColor];
-    
+
     if (animated) {
-        [UIView animateWithDuration:0.2 animations:^{
-            // Slide the editor out while clearing the background.
-            self.transform = CGAffineTransformMakeTranslation(0, CGRectGetHeight(self.bounds));
-        } completion:^(BOOL finished) {
-            [self removeFromSuperview];
-            if (completion) completion();
-        }];
+        [UIView animateWithDuration:0.2
+            animations:^{
+              // Slide the editor out while clearing the background.
+              self.transform = CGAffineTransformMakeTranslation(0, CGRectGetHeight(self.bounds));
+            }
+            completion:^(BOOL finished) {
+              [self removeFromSuperview];
+              if (completion)
+                  completion();
+            }];
     } else {
         [self removeFromSuperview];
-        if (completion) completion();
+        if (completion)
+            completion();
     }
 }
 
@@ -167,7 +178,8 @@
     }
 }
 
-- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl didConfirmWithText:(NSString *)text {
+- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+         didConfirmWithText:(NSString *)text {
     if ([self.delegate respondsToSelector:@selector(fullScreenEditView:didConfirmWithText:)]) {
         [self.delegate fullScreenEditView:self didConfirmWithText:text];
     }
@@ -187,7 +199,8 @@
     }
 }
 
-- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl shouldChangeFrame:(CGRect)frame {
+- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+          shouldChangeFrame:(CGRect)frame {
     // Match the spacer height to the requested bottom-bar frame.
     self.bottomPlaceholderHeightConstraint.constant = frame.size.height;
     [self layoutIfNeeded];
@@ -210,6 +223,5 @@
     }
     return _editInputBarControl;
 }
-
 
 @end

@@ -28,12 +28,14 @@
 
 + (NCChatUIUserInfo *)cachedUserInfoForChannelType:(NCChannelType)channelType
                                          channelId:(NSString *)channelId
-                                       senderUserId:(NSString *)senderUserId;
+                                      senderUserId:(NSString *)senderUserId;
 + (NCChatUIUserInfo *)groupUserInfoWithUserId:(NSString *)userId groupId:(NSString *)groupId;
-+ (NCChatUIUserInfo *)groupDisplayUserInfoWithGroupMemberUserInfo:(NCChatUIUserInfo *)groupMemberUserInfo
++ (NCChatUIUserInfo *)groupDisplayUserInfoWithGroupMemberUserInfo:
+                          (NCChatUIUserInfo *)groupMemberUserInfo
                                                      baseUserInfo:(NCChatUIUserInfo *)baseUserInfo
                                                            userId:(NSString *)userId;
-+ (NCChatUIUserInfo *)userInfoFromSenderUserInfo:(NCUserInfo *)senderUserInfo senderUserId:(NSString *)senderUserId;
++ (NCChatUIUserInfo *)userInfoFromSenderUserInfo:(NCUserInfo *)senderUserInfo
+                                    senderUserId:(NSString *)senderUserId;
 
 @end
 
@@ -51,13 +53,15 @@
                                    channelId:(NSString *)channelId
                                 senderUserId:(NSString *)senderUserId
                               senderUserInfo:(NCUserInfo *)senderUserInfo {
-    NSString *resolvedSenderUserId = [self resolvedSenderUserIdWithMessageSenderUserId:senderUserId
-                                                                        senderUserInfo:senderUserInfo];
+    NSString *resolvedSenderUserId =
+        [self resolvedSenderUserIdWithMessageSenderUserId:senderUserId
+                                           senderUserInfo:senderUserInfo];
     NCChatUIUserInfo *userInfo = [self cachedUserInfoForChannelType:channelType
                                                           channelId:channelId
-                                                        senderUserId:resolvedSenderUserId];
+                                                       senderUserId:resolvedSenderUserId];
     if (!userInfo) {
-        userInfo = [self userInfoFromSenderUserInfo:senderUserInfo senderUserId:resolvedSenderUserId];
+        userInfo = [self userInfoFromSenderUserInfo:senderUserInfo
+                                       senderUserId:resolvedSenderUserId];
     }
     return userInfo;
 }
@@ -78,7 +82,8 @@
     if (userId.length == 0 || groupId.length == 0) {
         return nil;
     }
-    NCChatUIUserInfo *groupMemberUserInfo = [[NCUserInfoCacheManager sharedManager] getUserInfo:userId inGroupId:groupId];
+    NCChatUIUserInfo *groupMemberUserInfo =
+        [[NCUserInfoCacheManager sharedManager] getUserInfo:userId inGroupId:groupId];
     NCChatUIUserInfo *baseUserInfo = [[NCUserInfoCacheManager sharedManager] getUserInfo:userId];
     if (!groupMemberUserInfo) {
         return baseUserInfo;
@@ -88,7 +93,8 @@
                                                       userId:userId];
 }
 
-+ (NCChatUIUserInfo *)groupDisplayUserInfoWithGroupMemberUserInfo:(NCChatUIUserInfo *)groupMemberUserInfo
++ (NCChatUIUserInfo *)groupDisplayUserInfoWithGroupMemberUserInfo:
+                          (NCChatUIUserInfo *)groupMemberUserInfo
                                                      baseUserInfo:(NCChatUIUserInfo *)baseUserInfo
                                                            userId:(NSString *)userId {
     NCChatUIUserInfo *displayUserInfo = [NCChatUIUserInfo new];
@@ -96,37 +102,47 @@
     if (groupMemberInfo) {
         displayUserInfo.memberInfo = groupMemberInfo;
         displayUserInfo.name = groupMemberInfo.name;
-        displayUserInfo.alias = baseUserInfo.alias.length > 0 ? baseUserInfo.alias : groupMemberInfo.nickname;
+        displayUserInfo.alias =
+            baseUserInfo.alias.length > 0 ? baseUserInfo.alias : groupMemberInfo.nickname;
     } else {
         displayUserInfo.userId = groupMemberUserInfo.userId;
         displayUserInfo.name = groupMemberUserInfo.name;
-        displayUserInfo.alias = baseUserInfo.alias.length > 0 ? baseUserInfo.alias : groupMemberUserInfo.alias;
+        displayUserInfo.alias =
+            baseUserInfo.alias.length > 0 ? baseUserInfo.alias : groupMemberUserInfo.alias;
         displayUserInfo.avatarUrl = groupMemberUserInfo.avatarUrl;
         displayUserInfo.extra = groupMemberUserInfo.extra;
     }
     if (displayUserInfo.userId.length == 0) {
-        displayUserInfo.userId = groupMemberUserInfo.userId.length > 0 ? groupMemberUserInfo.userId : userId;
+        displayUserInfo.userId =
+            groupMemberUserInfo.userId.length > 0 ? groupMemberUserInfo.userId : userId;
     }
     if (displayUserInfo.name.length == 0) {
-        displayUserInfo.name = groupMemberUserInfo.name.length > 0 ? groupMemberUserInfo.name : baseUserInfo.name;
+        displayUserInfo.name =
+            groupMemberUserInfo.name.length > 0 ? groupMemberUserInfo.name : baseUserInfo.name;
     }
     if (displayUserInfo.alias.length == 0) {
-        displayUserInfo.alias = groupMemberUserInfo.alias.length > 0 ? groupMemberUserInfo.alias : baseUserInfo.alias;
+        displayUserInfo.alias =
+            groupMemberUserInfo.alias.length > 0 ? groupMemberUserInfo.alias : baseUserInfo.alias;
     }
     if (displayUserInfo.avatarUrl.length == 0) {
-        displayUserInfo.avatarUrl = groupMemberUserInfo.avatarUrl.length > 0 ? groupMemberUserInfo.avatarUrl : baseUserInfo.avatarUrl;
+        displayUserInfo.avatarUrl = groupMemberUserInfo.avatarUrl.length > 0
+                                        ? groupMemberUserInfo.avatarUrl
+                                        : baseUserInfo.avatarUrl;
     }
     if (displayUserInfo.extra.length == 0) {
-        displayUserInfo.extra = groupMemberUserInfo.extra.length > 0 ? groupMemberUserInfo.extra : baseUserInfo.extra;
+        displayUserInfo.extra =
+            groupMemberUserInfo.extra.length > 0 ? groupMemberUserInfo.extra : baseUserInfo.extra;
     }
     return displayUserInfo;
 }
 
-+ (NCChatUIUserInfo *)userInfoFromSenderUserInfo:(NCUserInfo *)senderUserInfo senderUserId:(NSString *)senderUserId {
++ (NCChatUIUserInfo *)userInfoFromSenderUserInfo:(NCUserInfo *)senderUserInfo
+                                    senderUserId:(NSString *)senderUserId {
     if (!senderUserInfo) {
         return nil;
     }
-    if (senderUserId.length > 0 && senderUserInfo.userId.length > 0 && ![senderUserId isEqualToString:senderUserInfo.userId]) {
+    if (senderUserId.length > 0 && senderUserInfo.userId.length > 0 &&
+        ![senderUserId isEqualToString:senderUserInfo.userId]) {
         return nil;
     }
     NCChatUIUserInfo *userInfo = [NCChatUIUserInfo new];

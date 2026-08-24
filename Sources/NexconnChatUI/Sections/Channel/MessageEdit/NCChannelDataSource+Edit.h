@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Updates referenced message edit statuses, including recalled or deleted states.
 - (void)edit_setUIReferenceMessagesEditStatus:(NCReferenceMessageStatus)status
-                        forMessageIds:(NSArray<NSString *> *)messageIds;
+                                forMessageIds:(NSArray<NSString *> *)messageIds;
 
 /// Refreshes the edited status for messages.
 - (void)edit_refreshUIMessagesEditedStatus:(NSArray<NCMessageModel *> *)models;

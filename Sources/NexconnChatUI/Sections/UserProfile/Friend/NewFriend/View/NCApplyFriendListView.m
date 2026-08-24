@@ -7,12 +7,12 @@
 //
 
 #import "NCApplyFriendListView.h"
+#import "NCBaseTableView.h"
 #import "NCChatUICommonDefine.h"
 #import "NCMJRefreshAutoNormalFooter.h"
 #import "NCNetworkIndicatorView.h"
-#import "NCBaseTableView.h"
 
-@interface NCApplyFriendListView()
+@interface NCApplyFriendListView ()
 @property (nonatomic, strong) NCMJRefreshAutoNormalFooter *footer;
 @property (nonatomic, strong) NCNetworkIndicatorView *networkIndicatorView;
 /** Callback target. */
@@ -47,8 +47,9 @@
 }
 
 - (NCMJRefreshAutoNormalFooter *)footer {
-    if(!_footer) {
-        _footer = [NCMJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(loadMore)];
+    if (!_footer) {
+        _footer = [NCMJRefreshAutoNormalFooter footerWithRefreshingTarget:self
+                                                         refreshingAction:@selector(loadMore)];
         _footer.refreshingTitleHidden = YES;
     }
     return _footer;

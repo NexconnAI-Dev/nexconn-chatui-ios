@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCPaddingTableViewCell.h"
 #import "NCGroupMembersCollectionView.h"
+#import "NCPaddingTableViewCell.h"
 
-UIKIT_EXTERN NSString  * _Nonnull const NCGroupProfileMembersCellIdentifier;
+UIKIT_EXTERN NSString *_Nonnull const NCGroupProfileMembersCellIdentifier;
 
 #define NCGroupProfileMembersCellTextTopSpace 9
 #define NCGroupProfileMembersCellTextBottomSpace (NCGroupProfileMembersCellTextTopSpace * 2)

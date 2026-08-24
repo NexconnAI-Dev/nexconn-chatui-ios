@@ -64,10 +64,10 @@
 
         CGRect rectToDraw = CGRectInset(rect, kMarginToDrawInside, kMarginToDrawInside);
 
-        UIBezierPath *borderPath =
-            [UIBezierPath bezierPathWithRoundedRect:rectToDraw
-                                  byRoundingCorners:(UIRectCorner)UIRectCornerAllCorners
-                                        cornerRadii:CGSizeMake(kbubbleTipCornerRadius, kbubbleTipCornerRadius)];
+        UIBezierPath *borderPath = [UIBezierPath
+            bezierPathWithRoundedRect:rectToDraw
+                    byRoundingCorners:(UIRectCorner)UIRectCornerAllCorners
+                          cornerRadii:CGSizeMake(kbubbleTipCornerRadius, kbubbleTipCornerRadius)];
 
         /* Background and shadow */
         CGContextSaveGState(ctx);
@@ -99,16 +99,17 @@
             CGContextSetFillColorWithColor(ctx, self.bubbleTipTextColor.CGColor);
             CGContextSetShadowWithColor(ctx, self.bubbleTipTextShadowOffset, 1.0,
                                         self.bubbleTipTextShadowColor.CGColor);
-            
+
             CGRect textFrame = rectToDraw;
             CGSize textSize = [self sizeOfTextForCurrentSettings];
-            
+
             textFrame.size.height = textSize.height;
-            textFrame.origin.y = rectToDraw.origin.y + (rectToDraw.size.height - textFrame.size.height) / 2.0f;
+            textFrame.origin.y =
+                rectToDraw.origin.y + (rectToDraw.size.height - textFrame.size.height) / 2.0f;
             NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
             paragraphStyle.lineBreakMode = NSLineBreakByCharWrapping;
             paragraphStyle.alignment = NSTextAlignmentCenter;
-            
+
             [self.bubbleTipText drawInRect:textFrame
                             withAttributes:@{
                                 NSFontAttributeName : self.bubbleTipTextFont,
@@ -120,7 +121,7 @@
     }
 }
 
-- (void)layoutSubviews{
+- (void)layoutSubviews {
     [super layoutSubviews];
     if (self.msgCount == 0) {
         [self setHidden:YES];
@@ -128,8 +129,9 @@
     }
     // return;
     CGRect newFrame = self.frame;
-    CGRect superviewFrame =
-        CGRectIsEmpty(_frameToPositionInRelationWith) ? self.superview.frame : _frameToPositionInRelationWith;
+    CGRect superviewFrame = CGRectIsEmpty(_frameToPositionInRelationWith)
+                                ? self.superview.frame
+                                : _frameToPositionInRelationWith;
 
     CGFloat textWidth = [self sizeOfTextForCurrentSettings].width;
 
@@ -192,8 +194,8 @@
 
     newFrame.origin.x += _bubbleTipPositionAdjustment.x;
     newFrame.origin.y += _bubbleTipPositionAdjustment.y;
-    
-    if(NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_RECTANGLE) {
+
+    if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_RECTANGLE) {
         newFrame.origin.y -= 5;
     }
 
@@ -204,7 +206,8 @@
 
 #pragma mark - Public Methods
 
-- (instancetype)initWithParentView:(UIView *)parentView alignment:(NCMessageBubbleTipViewAlignment)alignment {
+- (instancetype)initWithParentView:(UIView *)parentView
+                         alignment:(NCMessageBubbleTipViewAlignment)alignment {
     if ((self = [self initWithFrame:CGRectZero])) {
         [self _init];
         self.bubbleTipAlignment = alignment;
@@ -248,7 +251,8 @@
 }
 
 - (CGSize)sizeOfTextForCurrentSettings {
-    CGSize __size = [self.bubbleTipText sizeWithAttributes:@{NSFontAttributeName : self.bubbleTipTextFont}];
+    CGSize __size =
+        [self.bubbleTipText sizeWithAttributes:@{NSFontAttributeName : self.bubbleTipTextFont}];
     if (self.bubbleTipText.length == 1) {
         __size.width = 10;
     }
@@ -274,39 +278,49 @@
 
         switch (bubbleTipAlignment) {
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_LEFT:
-            self.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
+            self.autoresizingMask =
+                UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_RIGHT:
-            self.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin;
+            self.autoresizingMask =
+                UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_CENTER:
-            self.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin |
+            self.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin |
+                                    UIViewAutoresizingFlexibleLeftMargin |
                                     UIViewAutoresizingFlexibleRightMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_CENTER_LEFT:
-            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin |
+            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin |
+                                    UIViewAutoresizingFlexibleBottomMargin |
                                     UIViewAutoresizingFlexibleRightMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_CENTER_RIGHT:
-            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin |
+            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin |
+                                    UIViewAutoresizingFlexibleBottomMargin |
                                     UIViewAutoresizingFlexibleLeftMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_BOTTOM_LEFT:
-            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
+            self.autoresizingMask =
+                UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_BOTTOM_RIGHT:
-            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin;
+            self.autoresizingMask =
+                UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_BOTTOM_CENTER:
-            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin |
+            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin |
+                                    UIViewAutoresizingFlexibleLeftMargin |
                                     UIViewAutoresizingFlexibleRightMargin;
             break;
         case NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_CENTER:
-            self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin |
-                                    UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
+            self.autoresizingMask =
+                UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin |
+                UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
             break;
         default:
-            NSAssert(NO, @"Unimplemented JSbubbleTipAligment type %d", (int)self.bubbleTipAlignment);
+            NSAssert(NO, @"Unimplemented JSbubbleTipAligment type %d",
+                     (int)self.bubbleTipAlignment);
         }
 
         [self setNeedsLayout];
@@ -362,6 +376,5 @@
         [self setNeedsDisplay];
     }
 }
-
 
 @end

@@ -12,10 +12,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,45 +28,37 @@
 #import "NCMMDocument.h"
 #import "NCMMDocument_Private.h"
 
-
 @interface NCMMDocument ()
 @property (copy, nonatomic) NSArray *elements;
 @end
 
-@implementation NCMMDocument
-{
+@implementation NCMMDocument {
     NSMutableArray *_elements;
 }
 
 #pragma mark - Public Methods
 
-+ (id)documentWithMarkdown:(NSString *)markdown
-{
++ (id)documentWithMarkdown:(NSString *)markdown {
     return [[self.class alloc] initWithMarkdown:markdown];
 }
 
-- (id)initWithMarkdown:(NSString *)markdown
-{
+- (id)initWithMarkdown:(NSString *)markdown {
     self = [super init];
-    
-    if (self)
-    {
+
+    if (self) {
         _markdown = markdown;
         _elements = [NSMutableArray new];
     }
-    
+
     return self;
 }
 
-
 #pragma mark - Private Methods
 
-- (void)addElement:(NCMMElement *)anElement
-{
+- (void)addElement:(NCMMElement *)anElement {
     [self willChangeValueForKey:@"elements"];
     [_elements addObject:anElement];
     [self didChangeValueForKey:@"elements"];
 }
-
 
 @end

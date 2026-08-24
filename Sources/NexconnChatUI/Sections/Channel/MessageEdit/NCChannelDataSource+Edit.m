@@ -7,11 +7,11 @@
 //
 
 #import "NCChannelDataSource+Edit.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCChannelViewController.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIErrorCode.h"
 #import "NCMessageModel+Edit.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 @interface NCChannelDataSource (EditLifecyclePrivate)
 @property (nonatomic, strong) NSMutableSet *referenceRefreshContexts;
@@ -40,10 +40,10 @@
 @implementation NCChannelDataSource (Edit)
 
 - (void)edit_refreshReferenceMessage:(NSArray<NCMessage *> *)messages
-                            complete:(void (^)(NSArray<NCMessage *> * _Nonnull))complete {
+                            complete:(void (^)(NSArray<NCMessage *> *_Nonnull))complete {
 
-    if (self.chatVC.channelType != NCChannelTypeDirect
-        && self.chatVC.channelType != NCChannelTypeGroup) {
+    if (self.chatVC.channelType != NCChannelTypeDirect &&
+        self.chatVC.channelType != NCChannelTypeGroup) {
         if (complete) {
             complete(messages);
         }
@@ -52,7 +52,8 @@
     // Select reference messages from the result set.
     NSMutableArray *referenceMessages = [NSMutableArray array];
     for (NCMessage *message in messages) {
-        NSString *messageId = [NCMessageModel edit_refreshableReferenceMessageUIdFromMessage:message];
+        NSString *messageId =
+            [NCMessageModel edit_refreshableReferenceMessageUIdFromMessage:message];
         if (messageId.length > 0) {
             [referenceMessages addObject:messageId];
         }
@@ -74,24 +75,28 @@
     NCRefreshReferenceMessageParams *params =
         [[NCRefreshReferenceMessageParams alloc] initWithChannelIdentifier:channelIdentifier
                                                                 messageIds:referenceMessages];
-    
+
     NCReferenceRefreshContext *context =
         [self edit_createReferenceRefreshContextWithMessages:messages complete:complete];
     [self edit_addReferenceRefreshContext:context];
 
-    [NCBaseChannel refreshReferenceMessageWithParams:params localMessageHandler:^(NSArray<NCMessageResult *> * _Nonnull results) {
-        [self edit_handleLocalResults:results context:context];
-    } remoteMessageHandler:^(NSArray<NCMessageResult *> * _Nonnull results) {
-        [self edit_handleRemoteResults:results context:context];
-    } errorHandler:^(NCError * _Nullable error) {
-        NCChatUIErrorCode code = error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeMessageResponseTimeout;
-        [self edit_handleError:code context:context];
-    }];
+    [NCBaseChannel refreshReferenceMessageWithParams:params
+        localMessageHandler:^(NSArray<NCMessageResult *> *_Nonnull results) {
+          [self edit_handleLocalResults:results context:context];
+        }
+        remoteMessageHandler:^(NSArray<NCMessageResult *> *_Nonnull results) {
+          [self edit_handleRemoteResults:results context:context];
+        }
+        errorHandler:^(NCError *_Nullable error) {
+          NCChatUIErrorCode code =
+              error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeMessageResponseTimeout;
+          [self edit_handleError:code context:context];
+        }];
 }
 
 // Apply updated referenced-message state by message ID, then refresh affected list items.
 - (void)edit_setUIReferenceMessagesEditStatus:(NCReferenceMessageStatus)status
-                        forMessageIds:(NSArray<NSString *> *)messageIds {
+                                forMessageIds:(NSArray<NSString *> *)messageIds {
     if (messageIds.count == 0) {
         return;
     }
@@ -111,7 +116,7 @@
         return;
     }
     dispatch_main_async_safe(^{
-        [self.chatVC.messageCollectionView reloadItemsAtIndexPaths:indexPaths];
+      [self.chatVC.messageCollectionView reloadItemsAtIndexPaths:indexPaths];
     });
 }
 
@@ -119,31 +124,35 @@
     if (models.count == 0 || self.chatVC.channelDataRepository.count == 0) {
         return;
     }
-    
-    NSDictionary<NSString *, NCMessageModel *> *newMessageDict = [self edit_buildUIdToModelDict:models];
+
+    NSDictionary<NSString *, NCMessageModel *> *newMessageDict =
+        [self edit_buildUIdToModelDict:models];
     if (newMessageDict.count == 0) {
         return;
     }
 
     void (^updateCallback)(void) = ^{
-        BOOL shouldKeepBottomAfterReload = [self isAtTheBottomOfTableView];
-        NSArray<NCMessageModel *> *repository = self.chatVC.channelDataRepository;
-        NSMutableDictionary<NSString *, NSNumber *> *uidToIndex = [NSMutableDictionary dictionaryWithCapacity:repository.count];
-        NSMutableDictionary<NSString *, NSMutableIndexSet *> *referUidToIndexes = [NSMutableDictionary dictionary];
+      BOOL shouldKeepBottomAfterReload = [self isAtTheBottomOfTableView];
+      NSArray<NCMessageModel *> *repository = self.chatVC.channelDataRepository;
+      NSMutableDictionary<NSString *, NSNumber *> *uidToIndex =
+          [NSMutableDictionary dictionaryWithCapacity:repository.count];
+      NSMutableDictionary<NSString *, NSMutableIndexSet *> *referUidToIndexes =
+          [NSMutableDictionary dictionary];
 
-        [self edit_buildRepositoryIndexes:repository
-                               uidToIndex:uidToIndex
-                        referUidToIndexes:referUidToIndexes];
+      [self edit_buildRepositoryIndexes:repository
+                             uidToIndex:uidToIndex
+                      referUidToIndexes:referUidToIndexes];
 
-        NSIndexSet *needUpdateIndexes = [self edit_applyUpdatesWithNewMessageDict:newMessageDict
-                                                                       repository:repository
-                                                                       uidToIndex:uidToIndex
-                                                                referUidToIndexes:referUidToIndexes];
-        if (needUpdateIndexes.count > 0) {
-            [self reloadCollectionViewAtIndexes:needUpdateIndexes keepBottomIfNeeded:shouldKeepBottomAfterReload];
-        }
+      NSIndexSet *needUpdateIndexes = [self edit_applyUpdatesWithNewMessageDict:newMessageDict
+                                                                     repository:repository
+                                                                     uidToIndex:uidToIndex
+                                                              referUidToIndexes:referUidToIndexes];
+      if (needUpdateIndexes.count > 0) {
+          [self reloadCollectionViewAtIndexes:needUpdateIndexes
+                           keepBottomIfNeeded:shouldKeepBottomAfterReload];
+      }
     };
-    
+
     // Perform collection view updates on the main thread.
     if ([NSThread isMainThread]) {
         updateCallback();
@@ -157,21 +166,22 @@
 - (nullable NCChannelIdentifier *)edit_channelIdentifier {
     NSString *channelId = self.chatVC.channelId ?: @"";
     switch (self.chatVC.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
-                                                          channelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
-                                                          channelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
-                                                          channelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
+                                                      channelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
+                                                      channelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
+                                                      channelId:channelId];
+    default:
+        return nil;
     }
 }
 
-- (BOOL)edit_isNewMessageModel:(NCMessageModel *)newModel olderThanCurrentModel:(NCMessageModel *)currentModel {
+- (BOOL)edit_isNewMessageModel:(NCMessageModel *)newModel
+         olderThanCurrentModel:(NCMessageModel *)currentModel {
     long long currentTimestamp = currentModel.updateInfo.timestamp;
     if (currentTimestamp <= 0) {
         return NO;
@@ -184,11 +194,13 @@
 }
 
 // Build a messageId-to-model lookup table.
-- (NSDictionary<NSString *, NCMessageModel *> *)edit_buildUIdToModelDict:(NSArray<NCMessageModel *> *)models {
+- (NSDictionary<NSString *, NCMessageModel *> *)edit_buildUIdToModelDict:
+    (NSArray<NCMessageModel *> *)models {
     if (models.count == 0) {
         return @{};
     }
-    NSMutableDictionary<NSString *, NCMessageModel *> *dict = [NSMutableDictionary dictionaryWithCapacity:models.count];
+    NSMutableDictionary<NSString *, NCMessageModel *> *dict =
+        [NSMutableDictionary dictionaryWithCapacity:models.count];
     for (NCMessageModel *model in models) {
         if (model.messageId.length > 0 && model.content) {
             dict[model.messageId] = model;
@@ -200,7 +212,8 @@
 // Build messageId-to-index and referenced-messageId-to-index-set lookup tables.
 - (void)edit_buildRepositoryIndexes:(NSArray<NCMessageModel *> *)repository
                          uidToIndex:(NSMutableDictionary<NSString *, NSNumber *> *)uidToIndex
-                  referUidToIndexes:(NSMutableDictionary<NSString *, NSMutableIndexSet *> *)referUidToIndexes {
+                  referUidToIndexes:
+                      (NSMutableDictionary<NSString *, NSMutableIndexSet *> *)referUidToIndexes {
     for (NSUInteger idx = 0; idx < repository.count; idx++) {
         NCMessageModel *model = repository[idx];
         if (model.messageId.length > 0) {
@@ -219,55 +232,58 @@
 }
 
 // Apply message updates and return the affected indexes.
-- (NSIndexSet *)edit_applyUpdatesWithNewMessageDict:(NSDictionary<NSString *, NCMessageModel *> *)newMessageDict
-                                         repository:(NSArray<NCMessageModel *> *)repository
-                                         uidToIndex:(NSDictionary<NSString *, NSNumber *> *)uidToIndex
-                                  referUidToIndexes:(NSDictionary<NSString *, NSMutableIndexSet *> *)referUidToIndexes {
+- (NSIndexSet *)
+    edit_applyUpdatesWithNewMessageDict:(NSDictionary<NSString *, NCMessageModel *> *)newMessageDict
+                             repository:(NSArray<NCMessageModel *> *)repository
+                             uidToIndex:(NSDictionary<NSString *, NSNumber *> *)uidToIndex
+                      referUidToIndexes:
+                          (NSDictionary<NSString *, NSMutableIndexSet *> *)referUidToIndexes {
     NSMutableIndexSet *needUpdateIndexes = [NSMutableIndexSet indexSet];
-    
-    [newMessageDict enumerateKeysAndObjectsUsingBlock:^(NSString *uid, NCMessageModel *newModel, BOOL *stop) {
-        NSNumber *indexNumber = uidToIndex[uid];
-        if (indexNumber) {
-            NSUInteger idx = indexNumber.unsignedIntegerValue;
-            NCMessageModel *oldModel = repository[idx];
-            if ([self edit_isNewMessageModel:newModel olderThanCurrentModel:oldModel]) {
-                return;
-            }
 
-            if ([oldModel edit_hasReferenceMessage] && [newModel edit_hasReferenceMessage]) {
-                NCReferenceMessageStatus oldStatus = [oldModel edit_referenceMessageStatus];
-                NCReferenceMessageStatus newStatus = [newModel edit_referenceMessageStatus];
-                if (oldStatus > newStatus) {
-                    [newModel edit_setReferenceMessageStatus:oldStatus];
-                }
-            }
-            
-            oldModel.content = newModel.content;
-            oldModel.updateInfo = newModel.updateInfo;
-            oldModel.hasChanged = newModel.hasChanged;
-            oldModel.cellSize = CGSizeZero;
-            [needUpdateIndexes addIndex:idx];
-        }
-        
-        NSMutableIndexSet *refIndexes = referUidToIndexes[uid];
-        if (refIndexes.count > 0) {
-            [refIndexes enumerateIndexesUsingBlock:^(NSUInteger refIdx, BOOL *stopRef) {
+    [newMessageDict
+        enumerateKeysAndObjectsUsingBlock:^(NSString *uid, NCMessageModel *newModel, BOOL *stop) {
+          NSNumber *indexNumber = uidToIndex[uid];
+          if (indexNumber) {
+              NSUInteger idx = indexNumber.unsignedIntegerValue;
+              NCMessageModel *oldModel = repository[idx];
+              if ([self edit_isNewMessageModel:newModel olderThanCurrentModel:oldModel]) {
+                  return;
+              }
+
+              if ([oldModel edit_hasReferenceMessage] && [newModel edit_hasReferenceMessage]) {
+                  NCReferenceMessageStatus oldStatus = [oldModel edit_referenceMessageStatus];
+                  NCReferenceMessageStatus newStatus = [newModel edit_referenceMessageStatus];
+                  if (oldStatus > newStatus) {
+                      [newModel edit_setReferenceMessageStatus:oldStatus];
+                  }
+              }
+
+              oldModel.content = newModel.content;
+              oldModel.updateInfo = newModel.updateInfo;
+              oldModel.hasChanged = newModel.hasChanged;
+              oldModel.cellSize = CGSizeZero;
+              [needUpdateIndexes addIndex:idx];
+          }
+
+          NSMutableIndexSet *refIndexes = referUidToIndexes[uid];
+          if (refIndexes.count > 0) {
+              [refIndexes enumerateIndexesUsingBlock:^(NSUInteger refIdx, BOOL *stopRef) {
                 NCMessageModel *refModel = repository[refIdx];
                 if (![refModel edit_hasReferenceMessage]) {
                     return;
                 }
-                
+
                 if (newModel.hasChanged) {
                     [refModel edit_setReferenceMessageStatus:NCReferenceMessageStatusUpdated];
                 }
                 [refModel edit_updateReferencedMessagePreviewContentFromModel:newModel];
-                
+
                 refModel.cellSize = CGSizeZero;
                 [needUpdateIndexes addIndex:refIdx];
-            }];
-        }
-    }];
-    
+              }];
+          }
+        }];
+
     return needUpdateIndexes.copy;
 }
 
@@ -278,13 +294,14 @@
 
 /// Reloads affected items and preserves the bottom position when already pinned there.
 - (void)reloadCollectionViewAtIndexes:(NSIndexSet *)indexes keepBottomIfNeeded:(BOOL)keepBottom {
-    if (indexes.count == 0) return;
-    
+    if (indexes.count == 0)
+        return;
+
     NSMutableArray<NSIndexPath *> *indexPaths = [NSMutableArray arrayWithCapacity:indexes.count];
     [indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-        [indexPaths addObject:[NSIndexPath indexPathForItem:idx inSection:0]];
+      [indexPaths addObject:[NSIndexPath indexPathForItem:idx inSection:0]];
     }];
-    
+
     @try {
         [self.chatVC.messageCollectionView reloadItemsAtIndexPaths:indexPaths];
     } @catch (NSException *exception) {
@@ -302,20 +319,21 @@
 
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
-        }
-        [strongSelf.chatVC.messageCollectionView setNeedsLayout];
-        [strongSelf.chatVC.messageCollectionView layoutIfNeeded];
-        [strongSelf.chatVC scrollToBottomAnimated:NO];
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+          return;
+      }
+      [strongSelf.chatVC.messageCollectionView setNeedsLayout];
+      [strongSelf.chatVC.messageCollectionView layoutIfNeeded];
+      [strongSelf.chatVC scrollToBottomAnimated:NO];
     });
 }
 
 #pragma mark - Local and Remote Result Merging
 
-- (NCReferenceRefreshContext *)edit_createReferenceRefreshContextWithMessages:(NSArray<NCMessage *> *)messages
-                                                                       complete:(void (^)(NSArray<NCMessage *> *))complete {
+- (NCReferenceRefreshContext *)
+    edit_createReferenceRefreshContextWithMessages:(NSArray<NCMessage *> *)messages
+                                          complete:(void (^)(NSArray<NCMessage *> *))complete {
     NCReferenceRefreshContext *context = [NCReferenceRefreshContext new];
     context.localMessages = messages;
     context.completeBlock = complete;
@@ -323,28 +341,31 @@
 
     __weak typeof(self) weakSelf = self;
     __weak NCReferenceRefreshContext *weakContext = context;
-    context.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
-    dispatch_source_set_timer(context.timer, dispatch_time(DISPATCH_TIME_NOW, 1000 * NSEC_PER_MSEC), DISPATCH_TIME_FOREVER, 0);
+    context.timer =
+        dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    dispatch_source_set_timer(context.timer, dispatch_time(DISPATCH_TIME_NOW, 1000 * NSEC_PER_MSEC),
+                              DISPATCH_TIME_FOREVER, 0);
     dispatch_source_set_event_handler(context.timer, ^{
-        [weakSelf edit_handleCombineTimeoutForContext:weakContext];
+      [weakSelf edit_handleCombineTimeoutForContext:weakContext];
     });
     dispatch_resume(context.timer);
     return context;
 }
 
 - (void)edit_handleLocalResults:(NSArray<NCMessageResult *> *)results
-                         context:(NCReferenceRefreshContext *)context {
+                        context:(NCReferenceRefreshContext *)context {
     if (!context.isWaitingForRemoteResults) {
         return;
     }
 
     if (results.count > 0) {
-        context.localMessages = [self edit_replaceMessages:context.localMessages withResults:results];
+        context.localMessages = [self edit_replaceMessages:context.localMessages
+                                               withResults:results];
     }
 }
 
 - (void)edit_handleRemoteResults:(NSArray<NCMessageResult *> *)results
-                          context:(NCReferenceRefreshContext *)context {
+                         context:(NCReferenceRefreshContext *)context {
     if (!context.isWaitingForRemoteResults) {
         [self edit_handleRemoteReferenceMessageResults:results];
         return;
@@ -395,20 +416,20 @@
 }
 
 - (void)edit_addReferenceRefreshContext:(NCReferenceRefreshContext *)context {
-    @synchronized (self) {
+    @synchronized(self) {
         [self.referenceRefreshContexts addObject:context];
     }
 }
 
 - (void)edit_removeReferenceRefreshContext:(NCReferenceRefreshContext *)context {
-    @synchronized (self) {
+    @synchronized(self) {
         [self.referenceRefreshContexts removeObject:context];
     }
 }
 
 - (void)edit_cleanupAllReferenceRefreshContexts {
     NSArray<NCReferenceRefreshContext *> *contexts;
-    @synchronized (self) {
+    @synchronized(self) {
         contexts = self.referenceRefreshContexts.allObjects;
         [self.referenceRefreshContexts removeAllObjects];
     }
@@ -442,7 +463,8 @@
         return messages;
     }
     // Build a message ID lookup to avoid an O(n*m) nested scan.
-    NSMutableDictionary<NSString *, NCMessage *> *uidToMessage = [NSMutableDictionary dictionaryWithCapacity:results.count];
+    NSMutableDictionary<NSString *, NCMessage *> *uidToMessage =
+        [NSMutableDictionary dictionaryWithCapacity:results.count];
     for (NCMessageResult *result in results) {
         NCMessage *message = result.message;
         if (result.messageId.length > 0 && message) {

@@ -7,16 +7,16 @@
 //
 
 #import "NCUserSearchViewModel.h"
-#import "NCSearchUserProfileViewModel.h"
-#import "NCUserProfileViewModel.h"
-#import "NCProfileViewController.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIErrorCode.h"
+#import "NCProfileViewController.h"
+#import "NCSearchUserProfileViewModel.h"
+#import "NCUserProfileViewModel.h"
 
-@interface NCUserSearchViewModel()<NCSearchUserProfileViewModelDelegate>
+@interface NCUserSearchViewModel () <NCSearchUserProfileViewModelDelegate>
 @property (nonatomic, strong) NCSearchUserProfileViewModel *searchBarVM;
 @property (nonatomic, strong) NCNavigationItemsViewModel *naviItemsVM;
-@property (nonatomic, weak) UIViewController <NCListViewModelResponder> *responder;
+@property (nonatomic, weak) UIViewController<NCListViewModelResponder> *responder;
 
 @end
 
@@ -26,10 +26,13 @@
 #pragma mark - Public
 
 - (UISearchBar *)configureSearchBarForViewController:(UIViewController *)viewController {
-    if ([self.delegate respondsToSelector:@selector(willConfigureSearchBarViewModelForUserSearchViewModel:)]) {
-        self.searchBarVM = [self.delegate willConfigureSearchBarViewModelForUserSearchViewModel:self];
-    } else if(!self.searchBarVM) {
-        NCSearchUserProfileViewModel *vm = [[NCSearchUserProfileViewModel alloc] initWithPlaceholder:NCUILocalizedString(@"user_search_application_number")];
+    if ([self.delegate
+            respondsToSelector:@selector(willConfigureSearchBarViewModelForUserSearchViewModel:)]) {
+        self.searchBarVM =
+            [self.delegate willConfigureSearchBarViewModelForUserSearchViewModel:self];
+    } else if (!self.searchBarVM) {
+        NCSearchUserProfileViewModel *vm = [[NCSearchUserProfileViewModel alloc]
+            initWithPlaceholder:NCUILocalizedString(@"user_search_application_number")];
         vm.delegate = self;
         self.searchBarVM = vm;
     }
@@ -37,10 +40,14 @@
 }
 
 - (NSArray *)configureRightNaviItemsForViewController:(UIViewController *)viewController {
-    if ([self.delegate respondsToSelector:@selector(willConfigureRightNavigationItemsForUserSearchViewModel:)]) {
-        self.naviItemsVM = [self.delegate willConfigureRightNavigationItemsForUserSearchViewModel:self];
-    } else if(!self.naviItemsVM) {
-        NCNavigationItemsViewModel *vm = [[NCNavigationItemsViewModel alloc] initWithResponder:viewController];
+    if ([self.delegate
+            respondsToSelector:@selector(
+                                   willConfigureRightNavigationItemsForUserSearchViewModel:)]) {
+        self.naviItemsVM =
+            [self.delegate willConfigureRightNavigationItemsForUserSearchViewModel:self];
+    } else if (!self.naviItemsVM) {
+        NCNavigationItemsViewModel *vm =
+            [[NCNavigationItemsViewModel alloc] initWithResponder:viewController];
         self.naviItemsVM = vm;
     }
     return [self.naviItemsVM rightNavigationBarItems];
@@ -50,10 +57,9 @@
     [self.searchBarVM endEditingState];
 }
 
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder {
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder {
     self.responder = responder;
 }
-
 
 #pragma mark - NCSearchUserProfileViewModelDelegate
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
@@ -61,40 +67,42 @@
 }
 
 - (void)searchUserProfileWithText:(NSString *)text {
-    if ([self.delegate respondsToSelector:@selector(userSearchViewModel:searchUserProfileWithText:)]) {
-        BOOL ret = [self.delegate userSearchViewModel:self
-                            searchUserProfileWithText:text];
+    if ([self.delegate
+            respondsToSelector:@selector(userSearchViewModel:searchUserProfileWithText:)]) {
+        BOOL ret = [self.delegate userSearchViewModel:self searchUserProfileWithText:text];
         if (ret) {
             return;
         }
     }
     [self startLoading];
-    [[NCEngine userModule] getUserProfilesWithUserIds:@[text ?: @""]
-                                           completion:^(NSArray<NCUserProfile *> * _Nullable userProfiles, NCError * _Nullable error) {
-        if (error) {
-            [self showTipsWithCode:error.code];
-            if (error.code == NCChatUIErrorCodeUserProfileUserNotExist) {
-                [self reloadData:YES];
-            }
-            [self endLoading];
-            return;
-        }
-        NCUserProfile *userProfile = userProfiles.firstObject;
-        [self reloadData:userProfile == nil];
-        if (userProfile) {
-            [self showUserProfile:userProfile];
-        }
-        if (userProfiles.count == 0) {
-            [self reloadData:YES];
-        }
-        [self endLoading];
-    }];
+    [[NCEngine userModule]
+        getUserProfilesWithUserIds:@[ text ?: @"" ]
+                        completion:^(NSArray<NCUserProfile *> *_Nullable userProfiles,
+                                     NCError *_Nullable error) {
+                          if (error) {
+                              [self showTipsWithCode:error.code];
+                              if (error.code == NCChatUIErrorCodeUserProfileUserNotExist) {
+                                  [self reloadData:YES];
+                              }
+                              [self endLoading];
+                              return;
+                          }
+                          NCUserProfile *userProfile = userProfiles.firstObject;
+                          [self reloadData:userProfile == nil];
+                          if (userProfile) {
+                              [self showUserProfile:userProfile];
+                          }
+                          if (userProfiles.count == 0) {
+                              [self reloadData:YES];
+                          }
+                          [self endLoading];
+                        }];
 }
-#pragma mark -- Private
+#pragma mark-- Private
 - (void)startLoading {
     if ([self.responder respondsToSelector:@selector(startLoading)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder startLoading];
+          [self.responder startLoading];
         });
     }
 }
@@ -102,30 +110,28 @@
 - (void)endLoading {
     if ([self.responder respondsToSelector:@selector(endLoading)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder endLoading];
+          [self.responder endLoading];
         });
     }
 }
 
 - (void)showUserProfile:(NCUserProfile *)profile {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if ([self.delegate respondsToSelector:@selector(userSearchViewModel:showUserProfile:)]) {
-            BOOL ret = [self.delegate userSearchViewModel:self
-                                          showUserProfile:profile];
-            if (ret) {
-                return;
-            }
-        }
-        NCProfileViewModel *viewModel = [NCUserProfileViewModel viewModelWithUserId:profile.userId];
-        NCProfileViewController *vc = [[NCProfileViewController alloc] initWithViewModel:viewModel];
-        [self.responder.navigationController pushViewController:vc
-                                                       animated:YES];
+      if ([self.delegate respondsToSelector:@selector(userSearchViewModel:showUserProfile:)]) {
+          BOOL ret = [self.delegate userSearchViewModel:self showUserProfile:profile];
+          if (ret) {
+              return;
+          }
+      }
+      NCProfileViewModel *viewModel = [NCUserProfileViewModel viewModelWithUserId:profile.userId];
+      NCProfileViewController *vc = [[NCProfileViewController alloc] initWithViewModel:viewModel];
+      [self.responder.navigationController pushViewController:vc animated:YES];
     });
 }
 - (void)showTipsWithCode:(NCChatUIErrorCode)errorCode {
     if ([self.responder respondsToSelector:@selector(showTips:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder showTips:NCUILocalizedString(@"user_search_failed")];
+          [self.responder showTips:NCUILocalizedString(@"user_search_failed")];
         });
     }
 }
@@ -133,7 +139,7 @@
 - (void)reloadData:(BOOL)ret {
     if ([self.responder respondsToSelector:@selector(reloadData:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder reloadData:ret];
+          [self.responder reloadData:ret];
         });
     }
 }

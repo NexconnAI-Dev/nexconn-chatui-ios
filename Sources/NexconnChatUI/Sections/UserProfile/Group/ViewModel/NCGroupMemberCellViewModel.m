@@ -7,8 +7,8 @@
 //
 
 #import "NCGroupMemberCellViewModel.h"
-#import "NCGroupMemberCell.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupMemberCell.h"
 
 @interface NCGroupMemberCellViewModel ()
 
@@ -19,7 +19,8 @@
 @implementation NCGroupMemberCellViewModel
 
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:NCGroupMemberCell.class forCellReuseIdentifier:NCGroupMemberCellIdentifier];
+    [tableView registerClass:NCGroupMemberCell.class
+        forCellReuseIdentifier:NCGroupMemberCellIdentifier];
 }
 
 - (instancetype)initWithMember:(NCGroupMemberInfo *)memberInfo {
@@ -30,8 +31,10 @@
     return self;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCGroupMemberCell *cell = [tableView dequeueReusableCellWithIdentifier:NCGroupMemberCellIdentifier];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCGroupMemberCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCGroupMemberCellIdentifier];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     if (self.cellPortraitImage) {
         cell.portraitImageView.image = self.cellPortraitImage;
@@ -56,19 +59,19 @@
     return NCUserManagementCellHeight;
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (NSString *)getRoleString:(NCGroupMemberRole)role {
     NSString *string;
     switch (role) {
-        case NCGroupMemberRoleOwner:
-            string = NCUILocalizedString(@"group_owner");
-            break;
-        case NCGroupMemberRoleAdmin:
-            string = NCUILocalizedString(@"group_manager");
-            break;
-        default:
-            break;
+    case NCGroupMemberRoleOwner:
+        string = NCUILocalizedString(@"group_owner");
+        break;
+    case NCGroupMemberRoleAdmin:
+        string = NCUILocalizedString(@"group_manager");
+        break;
+    default:
+        break;
     }
     return string;
 }

@@ -8,8 +8,8 @@
 
 #import "NCBaseViewModel.h"
 #import "NCGroupMemberCellViewModel.h"
-#import "NCSearchBarViewModel.h"
 #import "NCListViewModelProtocol.h"
+#import "NCSearchBarViewModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 @class NCGroupMemberListViewModel;
@@ -30,8 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param dataSource The current data source
 /// @return The data source processed by the app, or `nil` to use the default
 ///
-- (NSArray <NCGroupMemberCellViewModel *> * )groupMemberList:(NCGroupMemberListViewModel *)viewModel
-                                   willLoadItemsInDataSource:(NSArray <NCGroupMemberCellViewModel *> * )dataSource;
+- (NSArray<NCGroupMemberCellViewModel *> *)groupMemberList:(NCGroupMemberListViewModel *)viewModel
+                                 willLoadItemsInDataSource:
+                                     (NSArray<NCGroupMemberCellViewModel *> *)dataSource;
 
 /// Called when the user taps a cell
 /// @param viewModel viewModel
@@ -42,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupMemberList:(NCGroupMemberListViewModel *)viewModel
-         viewController:(UIViewController*)viewController
+         viewController:(UIViewController *)viewController
               tableView:(UITableView *)tableView
            didSelectRow:(NSIndexPath *)indexPath
           cellViewModel:(NCGroupMemberCellViewModel *)cellViewModel;
@@ -50,13 +51,13 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /// Group member list view model
-@interface NCGroupMemberListViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCGroupMemberListViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Delegate
 @property (nonatomic, weak) id<NCGroupMemberListViewModelDelegate> delegate;
 
 /// Data source
-@property (nonatomic, strong, readonly) NSArray <NCGroupMemberCellViewModel *>*memberList;
+@property (nonatomic, strong, readonly) NSArray<NCGroupMemberCellViewModel *> *memberList;
 
 /// Number of members loaded per page. Defaults to 50, range: (0, 100].
 @property (nonatomic, assign, setter=setPageCount:) NSInteger pageCount;

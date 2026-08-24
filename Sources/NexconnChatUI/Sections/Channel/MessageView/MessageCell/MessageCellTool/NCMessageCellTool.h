@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCMessageModel.h"
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "NCMessageModel.h"
 
 @interface NCMessageCellTool : NSObject
 + (UIImage *)getDefaultMessageCellBackgroundImage:(NCMessageModel *)model;

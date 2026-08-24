@@ -6,15 +6,14 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCMessageModel.h"
 #import "NCStreamContentViewModel.h"
+#import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol NCStreamContentViewDelegate <NSObject>
 
 - (void)streamContentViewDidLongPress;
-
 
 - (void)streamContentViewDidClickUrl:(NSString *)urlString;
 

@@ -57,8 +57,9 @@
 
     // Observe label text changes.
     self.stateLabel.userInteractionEnabled = YES;
-    [self.stateLabel
-        addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(stateLabelClick)]];
+    [self.stateLabel addGestureRecognizer:[[UITapGestureRecognizer alloc]
+                                              initWithTarget:self
+                                                      action:@selector(stateLabelClick)]];
 }
 
 - (void)placeSubviews {

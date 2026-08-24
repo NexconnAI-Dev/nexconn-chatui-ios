@@ -68,7 +68,7 @@
 @property (nonatomic, assign, readonly) CGSize contentViewSize;
 
 // Disable system emojis
-@property (nonatomic, assign, readonly, getter = isSystemEmojiDisable) BOOL disableDefaultEmoji;
+@property (nonatomic, assign, readonly, getter=isSystemEmojiDisable) BOOL disableDefaultEmoji;
 /**
  *  init
  *
@@ -88,19 +88,21 @@ Whether the send button is enabled
 /**
  *  Add a sticker pack (for standard developer use)
  *
- *  @param viewDataSource Data source delegate for each emoji page; called when swiping requires loading an emoji page — return the page view
+ *  @param viewDataSource Data source delegate for each emoji page; called when swiping requires
+ * loading an emoji page — return the page view
  */
 - (void)addEmojiTab:(id<NCEmoticonTabSource>)viewDataSource;
 /**
  *  Add an extension sticker pack (for third-party sticker vendors)
  *
- *  @param viewDataSource Data source delegate for each emoji page; called when swiping requires loading an emoji page — return the page view
+ *  @param viewDataSource Data source delegate for each emoji page; called when swiping requires
+ * loading an emoji page — return the page view
  */
 - (void)addExtensionEmojiTab:(id<NCEmoticonTabSource>)viewDataSource;
 
 /**
- *  Reload sticker packs loaded via extensions (this triggers the NCChatUIExtensionModule protocol callback for addEmojiTab;
- * packs added this way will not be reloaded)
+ *  Reload sticker packs loaded via extensions (this triggers the NCChatUIExtensionModule protocol
+ * callback for addEmojiTab; packs added this way will not be reloaded)
  */
 - (void)reloadExtensionEmoticonTabSource;
 

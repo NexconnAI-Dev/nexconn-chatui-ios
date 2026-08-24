@@ -7,17 +7,17 @@
 //
 
 #import "NCSightFileBrowserViewController.h"
-#import "NCMessageModel.h"
-#import "NCChatUIUtility.h"
-#import "NCSightSlideViewController.h"
-#import "NCChatUICommonDefine.h"
-#import "NCSemanticContext.h"
-#import "NCBaseTableViewCell.h"
 #import "NCBaseNavigationController.h"
-#import "NCUserInfoCacheManager.h"
-#import "NCSightFileBrowserCell.h"
+#import "NCBaseTableViewCell.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIThemeManager.h"
 #import "NCChatUIUserInfo.h"
+#import "NCChatUIUtility.h"
+#import "NCMessageModel.h"
+#import "NCSemanticContext.h"
+#import "NCSightFileBrowserCell.h"
+#import "NCSightSlideViewController.h"
+#import "NCUserInfoCacheManager.h"
 
 @interface NCSightFileBrowserViewController ()
 
@@ -51,15 +51,19 @@
     [self loadSightMessagesAroundSelectedMessageModel:self.selectedMessageModel];
     self.refreshControl = [[UIRefreshControl alloc] init];
     self.refreshControl.tintColor = NCDynamicColor(@"disabled_color");
-    [self.refreshControl addTarget:self action:@selector(refreshAction:) forControlEvents:UIControlEventValueChanged];
+    [self.refreshControl addTarget:self
+                            action:@selector(refreshAction:)
+                  forControlEvents:UIControlEventValueChanged];
     self.tableView.tableFooterView = [UIView new];
-    [self.tableView registerClass:[NCSightFileBrowserCell class] forCellReuseIdentifier:NCSightFileBrowserCellIdentifier];
+    [self.tableView registerClass:[NCSightFileBrowserCell class]
+           forCellReuseIdentifier:NCSightFileBrowserCellIdentifier];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.title = NCUILocalizedString(@"chat_files");
-    [self.navigationController.navigationBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setBackgroundImage:nil
+                                                  forBarMetrics:UIBarMetricsDefault];
     self.navigationController.navigationBar.shadowImage = nil;
 }
 
@@ -69,7 +73,8 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage new]
+                                                  forBarMetrics:UIBarMetricsDefault];
     self.navigationController.navigationBar.shadowImage = [UIImage new];
 }
 
@@ -91,15 +96,18 @@
     return self.sightMessageModels.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.themesType == NCChatUIBuiltInThemeTypeLively) {
-        NCSightFileBrowserCell *cell = [tableView dequeueReusableCellWithIdentifier:NCSightFileBrowserCellIdentifier];
+        NCSightFileBrowserCell *cell =
+            [tableView dequeueReusableCellWithIdentifier:NCSightFileBrowserCellIdentifier];
         return cell;
     } else {
         NSString *const identifier = @"NCSightFileCell";
         NCBaseTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
         if (!cell) {
-            cell = [[NCBaseTableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier];
+            cell = [[NCBaseTableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
+                                              reuseIdentifier:identifier];
         }
         cell.textLabel.textColor = NCDynamicColor(@"text_primary_color");
         cell.detailTextLabel.textColor = NCDynamicColor(@"text_secondary_color");
@@ -115,43 +123,47 @@
 }
 
 - (void)tableView:(UITableView *)tableView
-  willDisplayCell:(UITableViewCell *)cell
-forRowAtIndexPath:(NSIndexPath *)indexPath {
+      willDisplayCell:(UITableViewCell *)cell
+    forRowAtIndexPath:(NSIndexPath *)indexPath {
     NCMessageModel *messageModel = self.sightMessageModels[indexPath.row];
     NCShortVideoMessage *sightMessage = (NCShortVideoMessage *)messageModel.content;
     UIImage *image = NCDynamicImage(@"video_files_list_icon_img");
 
     long long timeSecond = messageModel.sentTime / 1000;
     NSString *timeString = [NCChatUIUtility convertMessageTime:timeSecond];
-    NSString *sizeString = sightMessage.size > 1000000
-                               ? [NSString stringWithFormat:@"%0.1fM", sightMessage.size / 1024.0f / 1024.0f]
-                               : [NSString stringWithFormat:@"%0.1fKB", sightMessage.size / 1024.0f];
+    NSString *sizeString =
+        sightMessage.size > 1000000
+            ? [NSString stringWithFormat:@"%0.1fM", sightMessage.size / 1024.0f / 1024.0f]
+            : [NSString stringWithFormat:@"%0.1fKB", sightMessage.size / 1024.0f];
     NCChatUIUserInfo *userInfo = [self managedUserInfoForMessageModel:messageModel];
     NSString *displayName = [NCChatUIUtility getDisplayName:userInfo];
-    NSString *userName = displayName.length > 20
-                             ? [NSString stringWithFormat:@"%@...", [displayName substringToIndex:20]]
-                             : displayName;
+    NSString *userName =
+        displayName.length > 20
+            ? [NSString stringWithFormat:@"%@...", [displayName substringToIndex:20]]
+            : displayName;
     if (self.themesType == NCChatUIBuiltInThemeTypeLively) {
         if ([cell isKindOfClass:[NCSightFileBrowserCell class]]) {
             NCSightFileBrowserCell *browserCell = (NCSightFileBrowserCell *)cell;
             browserCell.imageIcon.image = image;
             browserCell.labelTitle.text = sightMessage.name;
             browserCell.labelTime.text = timeString;
-            browserCell.labelSubtitle.text = [NSString stringWithFormat:@"%@  %@", sizeString, userName];
+            browserCell.labelSubtitle.text =
+                [NSString stringWithFormat:@"%@  %@", sizeString, userName];
         }
     } else {
         cell.imageView.image = image;
         cell.textLabel.text = sightMessage.name;
-        cell.detailTextLabel.text = [NSString stringWithFormat:@"%@ %@ %@", userName, timeString, sizeString];
+        cell.detailTextLabel.text =
+            [NSString stringWithFormat:@"%@ %@ %@", userName, timeString, sizeString];
     }
-
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     NCSightSlideViewController *ssv = [[NCSightSlideViewController alloc] init];
     ssv.messageModel = self.sightMessageModels[indexPath.row];
     ssv.topRightBtnHidden = YES;
-    NCBaseNavigationController *navc = [[NCBaseNavigationController alloc] initWithRootViewController:ssv];
+    NCBaseNavigationController *navc =
+        [[NCBaseNavigationController alloc] initWithRootViewController:ssv];
     navc.modalPresentationStyle = UIModalPresentationFullScreen;
     [self presentViewController:navc animated:YES completion:nil];
 }
@@ -159,31 +171,42 @@ forRowAtIndexPath:(NSIndexPath *)indexPath {
 #pragma mark - UIScrollViewDelegate
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     CGFloat totalHeight = scrollView.contentOffset.y + scrollView.frame.size.height;
-    if (totalHeight - scrollView.contentSize.height <= 0 || self.isLoadingOlder || self.sightMessageModels.count == 0) {
+    if (totalHeight - scrollView.contentSize.height <= 0 || self.isLoadingOlder ||
+        self.sightMessageModels.count == 0) {
         return;
     }
     self.isLoadingOlder = YES;
     __weak typeof(self) weakSelf = self;
-    [self getOlderSightMessageModelsThanModel:self.sightMessageModels.lastObject count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf) {
-                return;
-            }
-            strongSelf.isLoadingOlder = NO;
-            NSArray<NCMessageModel *> *uniqueModels = [strongSelf uniqueMessageModelsFromModels:models];
-            if (uniqueModels.count == 0) {
-                return;
-            }
-            NSMutableArray<NSIndexPath *> *indexPaths = [[NSMutableArray alloc] init];
-            NSUInteger baseIndex = strongSelf.sightMessageModels.count;
-            for (NSUInteger i = 0; i < uniqueModels.count; i++) {
-                [indexPaths addObject:[NSIndexPath indexPathForRow:baseIndex + i inSection:0]];
-            }
-            [strongSelf.sightMessageModels addObjectsFromArray:uniqueModels];
-            [strongSelf.tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationMiddle];
-        });
-    }];
+    [self getOlderSightMessageModelsThanModel:self.sightMessageModels.lastObject
+                                        count:5
+                                        times:0
+                                   completion:^(NSArray<NCMessageModel *> *models) {
+                                     dispatch_async(dispatch_get_main_queue(), ^{
+                                       __strong typeof(weakSelf) strongSelf = weakSelf;
+                                       if (!strongSelf) {
+                                           return;
+                                       }
+                                       strongSelf.isLoadingOlder = NO;
+                                       NSArray<NCMessageModel *> *uniqueModels =
+                                           [strongSelf uniqueMessageModelsFromModels:models];
+                                       if (uniqueModels.count == 0) {
+                                           return;
+                                       }
+                                       NSMutableArray<NSIndexPath *> *indexPaths =
+                                           [[NSMutableArray alloc] init];
+                                       NSUInteger baseIndex = strongSelf.sightMessageModels.count;
+                                       for (NSUInteger i = 0; i < uniqueModels.count; i++) {
+                                           [indexPaths
+                                               addObject:[NSIndexPath indexPathForRow:baseIndex + i
+                                                                            inSection:0]];
+                                       }
+                                       [strongSelf.sightMessageModels
+                                           addObjectsFromArray:uniqueModels];
+                                       [strongSelf.tableView
+                                           insertRowsAtIndexPaths:indexPaths
+                                                 withRowAnimation:UITableViewRowAnimationMiddle];
+                                     });
+                                   }];
 }
 
 #pragma mark - Target action
@@ -195,50 +218,62 @@ forRowAtIndexPath:(NSIndexPath *)indexPath {
     }
     self.isLoadingLater = YES;
     __weak typeof(self) weakSelf = self;
-    [self getLaterSightMessageModelsThanModel:self.sightMessageModels.firstObject count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf) {
-                return;
-            }
-            strongSelf.isLoadingLater = NO;
-            NSArray<NCMessageModel *> *uniqueModels = [strongSelf uniqueMessageModelsFromModels:models];
-            if (uniqueModels.count == 0) {
-                return;
-            }
-            NSMutableArray<NSIndexPath *> *indexPaths = [[NSMutableArray alloc] init];
-            for (NSUInteger i = 0; i < uniqueModels.count; i++) {
-                [indexPaths addObject:[NSIndexPath indexPathForRow:i inSection:0]];
-            }
-            NSIndexSet *indexSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, uniqueModels.count)];
-            [strongSelf.sightMessageModels insertObjects:uniqueModels atIndexes:indexSet];
-            [strongSelf.tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationMiddle];
-        });
-    }];
+    [self getLaterSightMessageModelsThanModel:self.sightMessageModels.firstObject
+                                        count:5
+                                        times:0
+                                   completion:^(NSArray<NCMessageModel *> *models) {
+                                     dispatch_async(dispatch_get_main_queue(), ^{
+                                       __strong typeof(weakSelf) strongSelf = weakSelf;
+                                       if (!strongSelf) {
+                                           return;
+                                       }
+                                       strongSelf.isLoadingLater = NO;
+                                       NSArray<NCMessageModel *> *uniqueModels =
+                                           [strongSelf uniqueMessageModelsFromModels:models];
+                                       if (uniqueModels.count == 0) {
+                                           return;
+                                       }
+                                       NSMutableArray<NSIndexPath *> *indexPaths =
+                                           [[NSMutableArray alloc] init];
+                                       for (NSUInteger i = 0; i < uniqueModels.count; i++) {
+                                           [indexPaths addObject:[NSIndexPath indexPathForRow:i
+                                                                                    inSection:0]];
+                                       }
+                                       NSIndexSet *indexSet = [NSIndexSet
+                                           indexSetWithIndexesInRange:NSMakeRange(
+                                                                          0, uniqueModels.count)];
+                                       [strongSelf.sightMessageModels insertObjects:uniqueModels
+                                                                          atIndexes:indexSet];
+                                       [strongSelf.tableView
+                                           insertRowsAtIndexPaths:indexPaths
+                                                 withRowAnimation:UITableViewRowAnimationMiddle];
+                                     });
+                                   }];
 }
 
 #pragma mark - Private Methods
 
-static NCChannelIdentifier *NCSightFileChannelIdentifierFromMessageModel(NCMessageModel *messageModel) {
+static NCChannelIdentifier *
+NCSightFileChannelIdentifierFromMessageModel(NCMessageModel *messageModel) {
     NSString *channelId = messageModel.channelId ?: @"";
     switch ((NCChannelType)messageModel.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
-                                                          channelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
-                                                          channelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
-                                                          channelId:channelId];
-        case NCChannelTypeOpen:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeOpen
-                                                          channelId:channelId];
-        case NCChannelTypeCommunity:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeCommunity
-                                                          channelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
+                                                      channelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
+                                                      channelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
+                                                      channelId:channelId];
+    case NCChannelTypeOpen:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeOpen
+                                                      channelId:channelId];
+    case NCChannelTypeCommunity:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeCommunity
+                                                      channelId:channelId];
+    default:
+        return nil;
     }
 }
 
@@ -294,8 +329,10 @@ static NCChannelIdentifier *NCSightFileChannelIdentifierFromMessageModel(NCMessa
 - (void)querySightMessageModelsWithAnchorModel:(NCMessageModel *)anchorModel
                                          count:(NSInteger)count
                                    isAscending:(BOOL)isAscending
-                                    completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    NCChannelIdentifier *channelIdentifier = self.previewChannelIdentifier ?: NCSightFileChannelIdentifierFromMessageModel(anchorModel);
+                                    completion:
+                                        (void (^)(NSArray<NCMessageModel *> *models))completion {
+    NCChannelIdentifier *channelIdentifier =
+        self.previewChannelIdentifier ?: NCSightFileChannelIdentifierFromMessageModel(anchorModel);
     if (!channelIdentifier || channelIdentifier.channelId.length == 0) {
         if (completion) {
             completion(@[]);
@@ -308,53 +345,78 @@ static NCChannelIdentifier *NCSightFileChannelIdentifierFromMessageModel(NCMessa
     params.sentTime = anchorModel.sentTime;
     params.isAscending = isAscending;
     params.messageTypes = @[ NCMessageType.shortVideo ];
-    NCLocalMessagesByTimeQuery *query = [NCBaseChannel createLocalMessagesByTimeQueryWithParams:params];
-    @synchronized (self) {
+    NCLocalMessagesByTimeQuery *query =
+        [NCBaseChannel createLocalMessagesByTimeQueryWithParams:params];
+    @synchronized(self) {
         [self.activeSightQueries addObject:query];
     }
     __weak typeof(self) weakSelf = self;
-    [query loadNextPageWithCompletion:^(NSArray<NCMessage *> * _Nullable messages, NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf) {
-            @synchronized (strongSelf) {
-                [strongSelf.activeSightQueries removeObject:query];
-            }
-        }
-        if (completion) {
-            completion((error || !strongSelf) ? @[] : [strongSelf messageModelsWithMessages:(messages ?: @[])]);
-        }
+    [query loadNextPageWithCompletion:^(NSArray<NCMessage *> *_Nullable messages,
+                                        NCError *_Nullable error) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (strongSelf) {
+          @synchronized(strongSelf) {
+              [strongSelf.activeSightQueries removeObject:query];
+          }
+      }
+      if (completion) {
+          completion((error || !strongSelf)
+                         ? @[]
+                         : [strongSelf messageModelsWithMessages:(messages ?: @[])]);
+      }
     }];
 }
 
 - (void)getLaterSightMessageModelsThanModel:(NCMessageModel *)model
                                       count:(NSInteger)count
                                       times:(int)times
-                                 completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    [self querySightMessageModelsWithAnchorModel:model count:count isAscending:YES completion:^(NSArray<NCMessageModel *> *models) {
-        NSArray<NCMessageModel *> *orderedModels = models.reverseObjectEnumerator.allObjects;
-        if (times < 2 && orderedModels.count == 0 && models.count == count && models.lastObject) {
-            [self getLaterSightMessageModelsThanModel:models.lastObject count:count times:times + 1 completion:completion];
-            return;
-        }
-        if (completion) {
-            completion(orderedModels ?: @[]);
-        }
-    }];
+                                 completion:
+                                     (void (^)(NSArray<NCMessageModel *> *models))completion {
+    [self
+        querySightMessageModelsWithAnchorModel:model
+                                         count:count
+                                   isAscending:YES
+                                    completion:^(NSArray<NCMessageModel *> *models) {
+                                      NSArray<NCMessageModel *> *orderedModels =
+                                          models.reverseObjectEnumerator.allObjects;
+                                      if (times < 2 && orderedModels.count == 0 &&
+                                          models.count == count && models.lastObject) {
+                                          [self
+                                              getLaterSightMessageModelsThanModel:models.lastObject
+                                                                            count:count
+                                                                            times:times + 1
+                                                                       completion:completion];
+                                          return;
+                                      }
+                                      if (completion) {
+                                          completion(orderedModels ?: @[]);
+                                      }
+                                    }];
 }
 
 - (void)getOlderSightMessageModelsThanModel:(NCMessageModel *)model
                                       count:(NSInteger)count
                                       times:(int)times
-                                 completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
-    [self querySightMessageModelsWithAnchorModel:model count:count isAscending:NO completion:^(NSArray<NCMessageModel *> *models) {
-        if (times < 2 && models.count == 0 && models.count == count && models.lastObject) {
-            [self getOlderSightMessageModelsThanModel:models.lastObject count:count times:times + 1 completion:completion];
-            return;
-        }
-        if (completion) {
-            completion(models ?: @[]);
-        }
-    }];
+                                 completion:
+                                     (void (^)(NSArray<NCMessageModel *> *models))completion {
+    [self
+        querySightMessageModelsWithAnchorModel:model
+                                         count:count
+                                   isAscending:NO
+                                    completion:^(NSArray<NCMessageModel *> *models) {
+                                      if (times < 2 && models.count == 0 && models.count == count &&
+                                          models.lastObject) {
+                                          [self
+                                              getOlderSightMessageModelsThanModel:models.lastObject
+                                                                            count:count
+                                                                            times:times + 1
+                                                                       completion:completion];
+                                          return;
+                                      }
+                                      if (completion) {
+                                          completion(models ?: @[]);
+                                      }
+                                    }];
 }
 
 - (void)loadSightMessagesAroundSelectedMessageModel:(NCMessageModel *)selectedMessageModel {
@@ -366,23 +428,49 @@ static NCChannelIdentifier *NCSightFileChannelIdentifierFromMessageModel(NCMessa
     [self.tableView reloadData];
 
     __weak typeof(self) weakSelf = self;
-    self.previewChannelIdentifier = NCSightFileChannelIdentifierFromMessageModel(selectedMessageModel);
-    [self getLaterSightMessageModelsThanModel:selectedMessageModel count:10 times:0 completion:^(NSArray<NCMessageModel *> *laterModels) {
-        [weakSelf getOlderSightMessageModelsThanModel:selectedMessageModel count:10 times:0 completion:^(NSArray<NCMessageModel *> *olderModels) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (!strongSelf) {
-                    return;
-                }
-                NSMutableArray<NCMessageModel *> *sightMessageModels = [[NSMutableArray alloc] init];
-                [sightMessageModels addObjectsFromArray:laterModels];
-                [sightMessageModels addObject:selectedMessageModel];
-                [sightMessageModels addObjectsFromArray:olderModels];
-                strongSelf.sightMessageModels = sightMessageModels;
-                [strongSelf.tableView reloadData];
-            });
-        }];
-    }];
+    self.previewChannelIdentifier =
+        NCSightFileChannelIdentifierFromMessageModel(selectedMessageModel);
+    [self
+        getLaterSightMessageModelsThanModel:selectedMessageModel
+                                      count:10
+                                      times:0
+                                 completion:^(NSArray<NCMessageModel *> *laterModels) {
+                                   [weakSelf
+                                       getOlderSightMessageModelsThanModel:selectedMessageModel
+                                                                     count:10
+                                                                     times:0
+                                                                completion:^(
+                                                                    NSArray<NCMessageModel *>
+                                                                        *olderModels) {
+                                                                  dispatch_async(
+                                                                      dispatch_get_main_queue(), ^{
+                                                                        __strong typeof(weakSelf)
+                                                                            strongSelf = weakSelf;
+                                                                        if (!strongSelf) {
+                                                                            return;
+                                                                        }
+                                                                        NSMutableArray<
+                                                                            NCMessageModel *>
+                                                                            *sightMessageModels =
+                                                                                [[NSMutableArray
+                                                                                    alloc] init];
+                                                                        [sightMessageModels
+                                                                            addObjectsFromArray:
+                                                                                laterModels];
+                                                                        [sightMessageModels
+                                                                            addObject:
+                                                                                selectedMessageModel];
+                                                                        [sightMessageModels
+                                                                            addObjectsFromArray:
+                                                                                olderModels];
+                                                                        strongSelf
+                                                                            .sightMessageModels =
+                                                                            sightMessageModels;
+                                                                        [strongSelf.tableView
+                                                                                reloadData];
+                                                                      });
+                                                                }];
+                                 }];
 }
 
 - (NSMutableArray<NCMessageModel *> *)sightMessageModels {

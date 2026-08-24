@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseViewController.h"
+#import <UIKit/UIKit.h>
 
 @class NCMessageModel;
 
@@ -21,7 +21,9 @@
 @property (nonatomic, assign) BOOL topRightBtnHidden;
 
 /*!
- Whether to preview only the current video message. The default is NO, which supports swipe preview for video messages in the current channel. If set to YES, only the current video message is previewed.
+ Whether to preview only the current video message. The default is NO, which supports swipe preview
+ for video messages in the current channel. If set to YES, only the current video message is
+ previewed.
 */
 @property (nonatomic, assign) BOOL onlyPreviewCurrentMessage;
 

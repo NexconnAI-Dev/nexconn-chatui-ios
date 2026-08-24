@@ -13,7 +13,8 @@
 @implementation NCSightManager
 
 + (id)createSightViewControllerWithCaptureMode:(NSUInteger)mode {
-    NCSightViewController *sightViewController = [[NCSightViewController alloc] initWithCaptureMode:mode];
+    NCSightViewController *sightViewController =
+        [[NCSightViewController alloc] initWithCaptureMode:mode];
     return sightViewController;
 }
 

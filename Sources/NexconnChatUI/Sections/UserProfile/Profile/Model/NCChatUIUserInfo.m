@@ -5,7 +5,9 @@ static NSString *NCChatUIJSONStringFromDictionary(NSDictionary *dictionary) {
         return nil;
     }
     NSError *error = nil;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary options:NSJSONWritingPrettyPrinted error:&error];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:&error];
     if (!jsonData) {
         return nil;
     }

@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NexconnChatUI.h"
 #import "NCAttributedLabel.h"
 #import "NCReferencedContentView.h"
+#import "NexconnChatUI.h"
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NCReferenceMessageCell : NCMessageCell

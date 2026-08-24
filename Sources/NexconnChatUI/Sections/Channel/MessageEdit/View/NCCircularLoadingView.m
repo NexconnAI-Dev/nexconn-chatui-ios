@@ -8,7 +8,7 @@
 
 #import "NCCircularLoadingView.h"
 #import "NCChatUICommonDefine.h"
-static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimation";
+static NSString *const kRotationAnimationKey = @"circularLoadingRotationAnimation";
 
 @interface NCCircularLoadingView ()
 
@@ -65,8 +65,8 @@ static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimati
     }
     _strokeColor = color; // Match the blue used in the UI specification.
     _animationDuration = 1.0;
-    _startAngle = 0;                    // Start at 3 o'clock (0 degrees).
-    _endAngle = -M_PI_2;                // End at 12 o'clock (-90 degrees).
+    _startAngle = 0;     // Start at 3 o'clock (0 degrees).
+    _endAngle = -M_PI_2; // End at 12 o'clock (-90 degrees).
     _animating = NO;
 }
 
@@ -80,9 +80,9 @@ static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimati
     self.circleLayer.lineWidth = self.lineWidth;
     self.circleLayer.lineCap = kCALineCapRound;
     self.circleLayer.lineJoin = kCALineJoinRound;
-    
+
     [self.layer addSublayer:self.circleLayer];
-    
+
     // Build the initial arc path.
     [self updateCirclePath];
 }
@@ -94,18 +94,18 @@ static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimati
     CGRect bounds = self.bounds;
     CGPoint center = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     CGFloat radius = MIN(bounds.size.width, bounds.size.height) / 2 - self.lineWidth / 2;
-    
+
     // Keep the path radius positive for very small bounds.
     if (radius <= 0) {
         radius = 1;
     }
-    
+
     UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:center
                                                         radius:radius
                                                     startAngle:self.startAngle
                                                       endAngle:self.endAngle
                                                      clockwise:YES];
-    
+
     self.circleLayer.path = path.CGPath;
     self.circleLayer.frame = bounds;
 }
@@ -116,19 +116,21 @@ static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimati
     if (self.animating) {
         return;
     }
-    
+
     self.animating = YES;
     self.hidden = NO;
-    
+
     // Rotate the arc continuously.
-    CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    CABasicAnimation *rotationAnimation =
+        [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
     rotationAnimation.fromValue = @(0);
     rotationAnimation.toValue = @(M_PI * 2);
     rotationAnimation.duration = self.animationDuration;
     rotationAnimation.repeatCount = HUGE_VALF;
     rotationAnimation.removedOnCompletion = NO;
-    rotationAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
-    
+    rotationAnimation.timingFunction =
+        [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+
     [self.circleLayer addAnimation:rotationAnimation forKey:kRotationAnimationKey];
 }
 
@@ -136,7 +138,7 @@ static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimati
     if (!self.animating) {
         return;
     }
-    
+
     self.animating = NO;
     [self.circleLayer removeAnimationForKey:kRotationAnimationKey];
 }
@@ -174,4 +176,4 @@ static NSString * const kRotationAnimationKey = @"circularLoadingRotationAnimati
     [self stopAnimating];
 }
 
-@end 
+@end

@@ -8,11 +8,11 @@
 
 #import "NCSystemSoundPlayer.h"
 #import "NCChatUICommonDefine.h"
-#import "NCVoicePlayer.h"
-#import "NCExtensionKit.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import <AVFoundation/AVFoundation.h>
 #import "NCChatUIConfig.h"
+#import "NCExtensionKit.h"
+#import "NCVoicePlayer.h"
+#import <AVFoundation/AVFoundation.h>
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 #define kPlayDuration 0.9
 
@@ -68,8 +68,10 @@ static void playSoundEnd(SystemSoundID mySSID, void *myself) {
     _soundFilePath = path;
 }
 
-- (void)playSoundByMessage:(NCMessage *)message completeBlock:(NCSystemSoundPlayerCompletion)completion {
-    if (message.channelIdentifier.channelType == self.channelType && [message.channelIdentifier.channelId isEqualToString:self.channelId]) {
+- (void)playSoundByMessage:(NCMessage *)message
+             completeBlock:(NCSystemSoundPlayerCompletion)completion {
+    if (message.channelIdentifier.channelType == self.channelType &&
+        [message.channelIdentifier.channelId isEqualToString:self.channelId]) {
         completion(NO);
     } else {
         self.completion = completion;
@@ -82,19 +84,20 @@ static void playSoundEnd(SystemSoundID mySSID, void *myself) {
         return;
     }
     // Suppress incoming-message sounds during voice playback or recording.
-    if ([NCVoicePlayer defaultPlayer].isPlaying || [NCVoiceRecorder defaultVoiceRecorder].isRecording ||
+    if ([NCVoicePlayer defaultPlayer].isPlaying ||
+        [NCVoiceRecorder defaultVoiceRecorder].isRecording ||
         [NCVoiceRecorder hqVoiceRecorder].isRecording) {
         self.completion(NO);
         return;
     }
 
-    // Suppress incoming-message sounds while short-video playback or capture owns camera or audio resources.
+    // Suppress incoming-message sounds while short-video playback or capture owns camera or audio
+    // resources.
     if ([NCChatUIUtility isCameraHolding] || [NCChatUIUtility isAudioHolding]) {
         self.completion(NO);
         return;
     }
-    
-    
+
     if (self.isPlaying) {
         self.completion(NO);
         return;
@@ -107,7 +110,8 @@ static void playSoundEnd(SystemSoundID mySSID, void *myself) {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_7_0
     // Route playback to the speaker.
     UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;
-    AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(audioRouteOverride), &audioRouteOverride);
+    AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(audioRouteOverride),
+                            &audioRouteOverride);
 #else
     [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
 #endif
@@ -115,7 +119,6 @@ static void playSoundEnd(SystemSoundID mySSID, void *myself) {
     [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
 
     [audioSession setActive:YES error:&err];
-    
 
     if (nil != err) {
         NCLogD(@"[NexconnChatUI]: Exception is thrown when setting audio session");
@@ -130,9 +133,10 @@ static void playSoundEnd(SystemSoundID mySSID, void *myself) {
     }
 
     if (nil != _soundFilePath) {
-        OSStatus error =
-            AudioServicesCreateSystemSoundID((__bridge CFURLRef)[NSURL fileURLWithPath:_soundFilePath], &_soundId);
-        if (error != kAudioServicesNoError) { // The sound file could not be registered as a system sound.
+        OSStatus error = AudioServicesCreateSystemSoundID(
+            (__bridge CFURLRef)[NSURL fileURLWithPath:_soundFilePath], &_soundId);
+        if (error !=
+            kAudioServicesNoError) { // The sound file could not be registered as a system sound.
             NCLogD(@"[NexconnChatUI]: Exception is thrown when creating system sound ID");
             self.completion(NO);
             return;
@@ -141,9 +145,9 @@ static void playSoundEnd(SystemSoundID mySSID, void *myself) {
         self.isPlaying = YES;
         if (NC_IOS_SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"9.0")) {
             AudioServicesPlaySystemSoundWithCompletion(_soundId, ^{
-                self.isPlaying = NO;
-                self.completion(YES);
-                return;
+              self.isPlaying = NO;
+              self.completion(YES);
+              return;
             });
         } else {
             AudioServicesPlaySystemSound(_soundId);

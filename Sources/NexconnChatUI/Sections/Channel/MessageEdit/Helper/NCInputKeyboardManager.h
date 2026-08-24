@@ -24,10 +24,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameter frame The keyboard frame.
 /// - Parameter duration The animation duration.
 /// - Parameter curve The animation curve.
-- (void)keyboardManager:(NCInputKeyboardManager *)manager 
-     willShowWithHeight:(CGFloat)height 
+- (void)keyboardManager:(NCInputKeyboardManager *)manager
+     willShowWithHeight:(CGFloat)height
                   frame:(CGRect)frame
-      animationDuration:(NSTimeInterval)duration 
+      animationDuration:(NSTimeInterval)duration
          animationCurve:(UIViewAnimationCurve)curve;
 
 /// Called before the keyboard is hidden.
@@ -94,4 +94,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-NS_ASSUME_NONNULL_END 
+NS_ASSUME_NONNULL_END

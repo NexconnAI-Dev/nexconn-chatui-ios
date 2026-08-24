@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseViewController.h"
 #import "NCChatUIUserInfo.h"
 #import <UIKit/UIKit.h>
-#import "NCBaseViewController.h"
 
 @protocol NCSelectingUserDataSource;
 

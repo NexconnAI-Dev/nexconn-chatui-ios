@@ -56,7 +56,8 @@
         [self.contentView addSubview:self.playerController.view];
         [self strechToSuperview:self.playerController.view];
         self.longPressGestureRecognizer =
-            [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressed:)];
+            [[UILongPressGestureRecognizer alloc] initWithTarget:self
+                                                          action:@selector(longPressed:)];
         [self.playerController.view addGestureRecognizer:self.longPressGestureRecognizer];
     }
     self.label.text = [NSString stringWithFormat:@"%ld", model.messageModel.clientId];
@@ -79,32 +80,34 @@
     view.translatesAutoresizingMaskIntoConstraints = NO;
     NSArray *formats = @[ @"H:|[view]|", @"V:|[view]|" ];
     for (NSString *each in formats) {
-        NSArray *constraints =
-            [NSLayoutConstraint constraintsWithVisualFormat:each options:0 metrics:nil views:@{
-                @"view" : view
-            }];
+        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
+                                                                       options:0
+                                                                       metrics:nil
+                                                                         views:@{@"view" : view}];
         [view.superview addConstraints:constraints];
     }
 }
 
 - (void)constraintCenterInSuperview:(UIView *)view {
     view.translatesAutoresizingMaskIntoConstraints = NO;
-    NSLayoutConstraint *constraintY = [NSLayoutConstraint constraintWithItem:view
-                                                                   attribute:NSLayoutAttributeCenterY
-                                                                   relatedBy:NSLayoutRelationEqual
-                                                                      toItem:view.superview
-                                                                   attribute:NSLayoutAttributeCenterY
-                                                                  multiplier:1.0f
-                                                                    constant:0];
+    NSLayoutConstraint *constraintY =
+        [NSLayoutConstraint constraintWithItem:view
+                                     attribute:NSLayoutAttributeCenterY
+                                     relatedBy:NSLayoutRelationEqual
+                                        toItem:view.superview
+                                     attribute:NSLayoutAttributeCenterY
+                                    multiplier:1.0f
+                                      constant:0];
     [view.superview addConstraint:constraintY];
 
-    NSLayoutConstraint *constraintX = [NSLayoutConstraint constraintWithItem:view
-                                                                   attribute:NSLayoutAttributeCenterX
-                                                                   relatedBy:NSLayoutRelationEqual
-                                                                      toItem:view.superview
-                                                                   attribute:NSLayoutAttributeCenterX
-                                                                  multiplier:1.0f
-                                                                    constant:0];
+    NSLayoutConstraint *constraintX =
+        [NSLayoutConstraint constraintWithItem:view
+                                     attribute:NSLayoutAttributeCenterX
+                                     relatedBy:NSLayoutRelationEqual
+                                        toItem:view.superview
+                                     attribute:NSLayoutAttributeCenterX
+                                    multiplier:1.0f
+                                      constant:0];
 
     [view.superview addConstraint:constraintX];
 }
@@ -115,15 +118,11 @@
     NSArray *formats = @[ @"H:[view(==width)]", @"V:[view(==height)]" ];
 
     for (NSString *each in formats) {
-        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
-                                                                       options:0
-                                                                       metrics:@{
-                                                                           @"width" : @(size.width),
-                                                                           @"height" : @(size.height)
-                                                                       }
-                                                                         views:@{
-                                                                             @"view" : view
-                                                                         }];
+        NSArray *constraints = [NSLayoutConstraint
+            constraintsWithVisualFormat:each
+                                options:0
+                                metrics:@{@"width" : @(size.width), @"height" : @(size.height)}
+                                  views:@{@"view" : view}];
         [view addConstraints:constraints];
     }
 }
@@ -155,12 +154,15 @@
 }
 
 - (void)longPressed:(id)sender {
-    NCShortVideoMessage *sightMessage = (NCShortVideoMessage *)self.messageModel.messageModel.content;
+    NCShortVideoMessage *sightMessage =
+        (NCShortVideoMessage *)self.messageModel.messageModel.content;
     NSString *localPath = nil;
-    if (sightMessage.localPath && [[NSFileManager defaultManager] fileExistsAtPath:sightMessage.localPath]) {
+    if (sightMessage.localPath &&
+        [[NSFileManager defaultManager] fileExistsAtPath:sightMessage.localPath]) {
         localPath = sightMessage.localPath;
     } else if (self.playerController.sightURL.isFileURL &&
-               [[NSFileManager defaultManager] fileExistsAtPath:self.playerController.sightURL.path]) {
+               [[NSFileManager defaultManager]
+                   fileExistsAtPath:self.playerController.sightURL.path]) {
         localPath = self.playerController.sightURL.path;
     } else {
         NCLogD(@"LocalPath and sightUrl are nil");

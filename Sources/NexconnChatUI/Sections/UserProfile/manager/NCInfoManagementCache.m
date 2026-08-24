@@ -7,12 +7,12 @@
 //
 
 #import "NCInfoManagementCache.h"
-#import "NCThreadSafeMutableDictionary.h"
-#import "NSMutableDictionary+NCOperation.h"
-#import "NSMutableArray+NCOperation.h"
-#import "NCReadWriteLock.h"
-#import "NCChatUIUserInfo.h"
 #import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
+#import "NCReadWriteLock.h"
+#import "NCThreadSafeMutableDictionary.h"
+#import "NSMutableArray+NCOperation.h"
+#import "NSMutableDictionary+NCOperation.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
 #define NCInfoManagementCacheMaxSize 1000
@@ -41,7 +41,7 @@
 
 @implementation NCInfoManagementCache
 
-#pragma mark -- user
+#pragma mark-- user
 
 - (NCChatUIUserInfo *)getUserCache:(NSString *)userId {
     NCChatUIUserInfo *info = [self.userCache objectForKey:userId];
@@ -58,33 +58,33 @@
     }
     [self.userCache nc_setObject:copyInfo forKey:copyInfo.userId];
     [self.userThreadLock performWriteLockBlock:^{
-        if ([self.cacheUserIds containsObject:copyInfo.userId]) {
-            return;
-        }
-        [self.cacheUserIds nc_addObject:copyInfo.userId];
-        if (self.cacheUserIds.count > NCInfoManagementCacheMaxSize) {
-            NSString *userId = self.cacheUserIds.firstObject;
-            [self.cacheUserIds removeObject:userId];
-            [self.userCache nc_removeObjectForKey:userId];
-        }
+      if ([self.cacheUserIds containsObject:copyInfo.userId]) {
+          return;
+      }
+      [self.cacheUserIds nc_addObject:copyInfo.userId];
+      if (self.cacheUserIds.count > NCInfoManagementCacheMaxSize) {
+          NSString *userId = self.cacheUserIds.firstObject;
+          [self.cacheUserIds removeObject:userId];
+          [self.userCache nc_removeObjectForKey:userId];
+      }
     }];
 }
 
 - (void)removeUserCache:(NSString *)userId {
     [self.userCache nc_removeObjectForKey:userId];
     [self.userThreadLock performWriteLockBlock:^{
-        [self.cacheUserIds removeObject:userId];
+      [self.cacheUserIds removeObject:userId];
     }];
 }
 
 - (void)removeAllUserCache {
     [self.userCache removeAllObjects];
     [self.userThreadLock performWriteLockBlock:^{
-        [self.cacheUserIds removeAllObjects];
+      [self.cacheUserIds removeAllObjects];
     }];
 }
 
-#pragma mark -- group
+#pragma mark-- group
 
 - (NCChatUIGroup *)getGroupCache:(NSString *)groupId {
     NCChatUIGroup *info = [self.groupCache objectForKey:groupId];
@@ -101,29 +101,29 @@
     }
     [self.groupCache nc_setObject:copyInfo forKey:copyInfo.groupId];
     [self.groupThreadLock performWriteLockBlock:^{
-        if ([self.cacheGroupIds containsObject:copyInfo.groupId]) {
-            return;
-        }
-        [self.cacheGroupIds nc_addObject:copyInfo.groupId];
-        if (self.cacheGroupIds.count > NCInfoManagementCacheMaxSize) {
-            NSString *groupId = self.cacheGroupIds.firstObject;
-            [self.cacheGroupIds removeObject:groupId];
-            [self.groupCache nc_removeObjectForKey:groupId];
-        }
+      if ([self.cacheGroupIds containsObject:copyInfo.groupId]) {
+          return;
+      }
+      [self.cacheGroupIds nc_addObject:copyInfo.groupId];
+      if (self.cacheGroupIds.count > NCInfoManagementCacheMaxSize) {
+          NSString *groupId = self.cacheGroupIds.firstObject;
+          [self.cacheGroupIds removeObject:groupId];
+          [self.groupCache nc_removeObjectForKey:groupId];
+      }
     }];
 }
 
 - (void)removeGroupCache:(NSString *)groupId {
     [self.groupCache nc_removeObjectForKey:groupId];
     [self.groupThreadLock performWriteLockBlock:^{
-        [self.cacheGroupIds removeObject:groupId];
+      [self.cacheGroupIds removeObject:groupId];
     }];
 }
 
 - (void)removeAllGroupCache {
     [self.groupCache removeAllObjects];
     [self.groupThreadLock performWriteLockBlock:^{
-        [self.cacheGroupIds removeAllObjects];
+      [self.cacheGroupIds removeAllObjects];
     }];
 }
 
@@ -147,15 +147,15 @@
     }
     [self.memberCache nc_setObject:copyInfo forKey:key];
     [self.memberThreadLock performWriteLockBlock:^{
-        if ([self.cacheMemberIds containsObject:key]) {
-            return;
-        }
-        [self.cacheMemberIds nc_addObject:key];
-        if (self.cacheMemberIds.count > NCInfoManagementCacheMaxSize) {
-            NSString *value = self.cacheMemberIds.firstObject;
-            [self.cacheMemberIds removeObject:value];
-            [self.memberCache nc_removeObjectForKey:value];
-        }
+      if ([self.cacheMemberIds containsObject:key]) {
+          return;
+      }
+      [self.cacheMemberIds nc_addObject:key];
+      if (self.cacheMemberIds.count > NCInfoManagementCacheMaxSize) {
+          NSString *value = self.cacheMemberIds.firstObject;
+          [self.cacheMemberIds removeObject:value];
+          [self.memberCache nc_removeObjectForKey:value];
+      }
     }];
 }
 
@@ -166,7 +166,7 @@
     }
     [self.memberCache nc_removeObjectForKey:key];
     [self.memberThreadLock performWriteLockBlock:^{
-        [self.cacheMemberIds removeObject:key];
+      [self.cacheMemberIds removeObject:key];
     }];
 }
 
@@ -176,27 +176,27 @@
     }
     NSString *prefix = [NSString stringWithFormat:@"%@_", groupId];
     [self.memberThreadLock performWriteLockBlock:^{
-        NSMutableArray<NSString *> *keysToRemove = [NSMutableArray array];
-        for (NSString *key in self.cacheMemberIds) {
-            if ([key hasPrefix:prefix]) {
-                [keysToRemove nc_addObject:key];
-            }
-        }
-        for (NSString *key in keysToRemove) {
-            [self.memberCache nc_removeObjectForKey:key];
-        }
-        [self.cacheMemberIds removeObjectsInArray:keysToRemove];
+      NSMutableArray<NSString *> *keysToRemove = [NSMutableArray array];
+      for (NSString *key in self.cacheMemberIds) {
+          if ([key hasPrefix:prefix]) {
+              [keysToRemove nc_addObject:key];
+          }
+      }
+      for (NSString *key in keysToRemove) {
+          [self.memberCache nc_removeObjectForKey:key];
+      }
+      [self.cacheMemberIds removeObjectsInArray:keysToRemove];
     }];
 }
 
 - (void)removeAllGroupMemberCache {
     [self.memberCache removeAllObjects];
     [self.memberThreadLock performWriteLockBlock:^{
-        [self.cacheMemberIds removeAllObjects];
+      [self.cacheMemberIds removeAllObjects];
     }];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (NCUserProfile *)copyProfile:(NCUserProfile *)profile {
     if (!profile) {
@@ -228,7 +228,9 @@
     copyFriendInfo.name = friendInfo.name;
     copyFriendInfo.avatarUrl = friendInfo.avatarUrl;
     copyFriendInfo.remark = friendInfo.remark;
-    copyFriendInfo.extProfile = friendInfo.extProfile.count > 0 ? [NSDictionary dictionaryWithDictionary:friendInfo.extProfile] : @{};
+    copyFriendInfo.extProfile = friendInfo.extProfile.count > 0
+                                    ? [NSDictionary dictionaryWithDictionary:friendInfo.extProfile]
+                                    : @{};
     return copyFriendInfo;
 }
 
@@ -254,7 +256,9 @@
     }
     NCGroupInfo *copyGroupInfo = [NCGroupInfo new];
     copyGroupInfo.groupId = groupInfo.groupId;
-    copyGroupInfo.extProfile = groupInfo.extProfile.count > 0 ? [NSDictionary dictionaryWithDictionary:groupInfo.extProfile] : @{};
+    copyGroupInfo.extProfile = groupInfo.extProfile.count > 0
+                                   ? [NSDictionary dictionaryWithDictionary:groupInfo.extProfile]
+                                   : @{};
     copyGroupInfo.creatorId = groupInfo.creatorId;
     copyGroupInfo.ownerId = groupInfo.ownerId;
     copyGroupInfo.createTime = groupInfo.createTime;
@@ -316,24 +320,27 @@
     return [NSString stringWithFormat:@"%@_%@", groupId, userId];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 - (NCThreadSafeMutableDictionary *)userCache {
     if (!_userCache) {
-        _userCache = [[NCThreadSafeMutableDictionary alloc] initWithCapacity:NCInfoManagementCacheMaxSize];
+        _userCache =
+            [[NCThreadSafeMutableDictionary alloc] initWithCapacity:NCInfoManagementCacheMaxSize];
     }
     return _userCache;
 }
 
 - (NCThreadSafeMutableDictionary *)groupCache {
     if (!_groupCache) {
-        _groupCache = [[NCThreadSafeMutableDictionary alloc] initWithCapacity:NCInfoManagementCacheMaxSize];
+        _groupCache =
+            [[NCThreadSafeMutableDictionary alloc] initWithCapacity:NCInfoManagementCacheMaxSize];
     }
     return _groupCache;
 }
 
 - (NCThreadSafeMutableDictionary *)memberCache {
     if (!_memberCache) {
-        _memberCache = [[NCThreadSafeMutableDictionary alloc] initWithCapacity:NCInfoManagementCacheMaxSize];
+        _memberCache =
+            [[NCThreadSafeMutableDictionary alloc] initWithCapacity:NCInfoManagementCacheMaxSize];
     }
     return _memberCache;
 }
@@ -354,7 +361,8 @@
 
 - (NSMutableArray *)cacheMemberIds {
     if (!_cacheMemberIds) {
-        _cacheMemberIds = [NSMutableArray new];;
+        _cacheMemberIds = [NSMutableArray new];
+        ;
     }
     return _cacheMemberIds;
 }

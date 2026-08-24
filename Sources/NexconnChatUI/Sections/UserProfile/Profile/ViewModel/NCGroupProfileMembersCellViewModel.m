@@ -27,24 +27,30 @@
     return self;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCGroupProfileMembersCell *cell = [tableView dequeueReusableCellWithIdentifier:NCGroupProfileMembersCellIdentifier forIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCGroupProfileMembersCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCGroupProfileMembersCellIdentifier
+                                        forIndexPath:indexPath];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     [cell.membersView configViewModel:self.collectionViewModel];
     return cell;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    CGFloat result = (CGFloat)self.showItemCount / NCGroupMembersCollectionViewModelPortraitLineCount;
+    CGFloat result =
+        (CGFloat)self.showItemCount / NCGroupMembersCollectionViewModelPortraitLineCount;
     NSInteger line = ceil(result);
-    return NCGroupProfileMembersCellTextTopSpace + NCGroupProfileMembersCellTextBottomSpace + NCGroupMembersCollectionViewModelItemHeight * line + NCGroupMembersCollectionViewModelLineSpace * (line - 1);
+    return NCGroupProfileMembersCellTextTopSpace + NCGroupProfileMembersCellTextBottomSpace +
+           NCGroupMembersCollectionViewModelItemHeight * line +
+           NCGroupMembersCollectionViewModelLineSpace * (line - 1);
 }
 
 - (void)configViewModel:(NCGroupMembersCollectionViewModel *)viewModel {
     self.collectionViewModel = viewModel;
 }
 
-#pragma mark -- getter & setter
+#pragma mark-- getter & setter
 
 - (void)setDelegate:(id<NCGroupMembersCollectionViewModelDelegate>)delegate {
     self.collectionViewModel.delegate = delegate;

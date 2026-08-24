@@ -11,7 +11,7 @@
 #import "NCChatUIConfig.h"
 #import "NCSemanticContext.h"
 
-NSString  * const NCGroupMemberCellIdentifier = @"NCGroupMemberCellIdentifier";
+NSString *const NCGroupMemberCellIdentifier = @"NCGroupMemberCellIdentifier";
 
 #define NCGroupMemberCellPortraitSize 40
 #define NCGroupMemberCellNameFont 17
@@ -19,8 +19,7 @@ NSString  * const NCGroupMemberCellIdentifier = @"NCGroupMemberCellIdentifier";
 #define NCGroupMemberCellArrowWidth 8
 #define NCGroupMemberCellArrowHeight 14
 
-
-@interface NCGroupMemberCell()
+@interface NCGroupMemberCell ()
 @end
 
 @implementation NCGroupMemberCell
@@ -34,17 +33,17 @@ NSString  * const NCGroupMemberCellIdentifier = @"NCGroupMemberCellIdentifier";
     [self.contentStackView addArrangedSubview:self.arrowView];
 }
 
-
 - (void)setupConstraints {
     [super setupConstraints];
-    [self updateLineViewConstraints:60
-                           trailing:-10];
-    
+    [self updateLineViewConstraints:60 trailing:-10];
+
     [NSLayoutConstraint activateConstraints:@[
         [self.arrowView.widthAnchor constraintEqualToConstant:NCGroupMemberCellArrowWidth],
         [self.arrowView.heightAnchor constraintEqualToConstant:NCGroupMemberCellArrowHeight],
-        [self.portraitImageView.widthAnchor constraintEqualToConstant:NCGroupMemberCellPortraitSize],
-        [self.portraitImageView.heightAnchor constraintEqualToConstant:NCGroupMemberCellPortraitSize]
+        [self.portraitImageView.widthAnchor
+            constraintEqualToConstant:NCGroupMemberCellPortraitSize],
+        [self.portraitImageView.heightAnchor
+            constraintEqualToConstant:NCGroupMemberCellPortraitSize]
     ]];
 }
 
@@ -59,13 +58,14 @@ NSString  * const NCGroupMemberCellIdentifier = @"NCGroupMemberCellIdentifier";
         _portraitImageView = [[NCImageView alloc] init];
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-            _portraitImageView.layer.cornerRadius = NCGroupMemberCellPortraitSize/2;
-        }else{
+            _portraitImageView.layer.cornerRadius = NCGroupMemberCellPortraitSize / 2;
+        } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
         _portraitImageView.layer.masksToBounds = YES;
         _portraitImageView.translatesAutoresizingMaskIntoConstraints = NO;
-        [_portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+        [_portraitImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
     }
     return _portraitImageView;
 }
@@ -89,18 +89,20 @@ NSString  * const NCGroupMemberCellIdentifier = @"NCGroupMemberCellIdentifier";
         _roleLabel.font = [UIFont systemFontOfSize:NCGroupMemberCellNameFont];
         _roleLabel.textAlignment = NSTextAlignmentRight;
         _roleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        [_roleLabel setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [_roleLabel setContentHuggingPriority:UILayoutPriorityRequired
+                                      forAxis:UILayoutConstraintAxisHorizontal];
     }
     return _roleLabel;
 }
 
 - (NCBaseImageView *)arrowView {
-   if (!_arrowView) {
-       UIImage *image = NCDynamicImage(@"cell_right_arrow_img");
-       _arrowView = [[NCBaseImageView alloc] initWithImage: [NCSemanticContext imageflippedForRTL:image]];
-       _arrowView.translatesAutoresizingMaskIntoConstraints = NO;
-   }
-   return _arrowView;
+    if (!_arrowView) {
+        UIImage *image = NCDynamicImage(@"cell_right_arrow_img");
+        _arrowView =
+            [[NCBaseImageView alloc] initWithImage:[NCSemanticContext imageflippedForRTL:image]];
+        _arrowView.translatesAutoresizingMaskIntoConstraints = NO;
+    }
+    return _arrowView;
 }
 
 @end

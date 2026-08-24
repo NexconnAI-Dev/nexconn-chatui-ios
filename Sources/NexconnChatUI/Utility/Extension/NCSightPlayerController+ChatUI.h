@@ -13,7 +13,7 @@
 #else
 @interface NCSightPlayerController : NCBaseViewController
 @property (nonatomic, weak, nullable) id delegate;
-@property (strong, nonatomic) NSURL * _Nullable sightURL;
+@property (strong, nonatomic) NSURL *_Nullable sightURL;
 @property (strong, nonatomic, nullable) UIImage *firstFrameImage;
 @property (nonatomic, assign, getter=isAutoPlay) BOOL autoPlay;
 - (void)setFirstFrameThumbnail:(nullable UIImage *)image;

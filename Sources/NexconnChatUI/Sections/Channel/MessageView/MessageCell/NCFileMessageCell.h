@@ -7,8 +7,8 @@
 //
 
 #import "NCMessageCell.h"
-#import <UIKit/UIKit.h>
 #import "NCProgressView.h"
+#import <UIKit/UIKit.h>
 /// File message cell
 @interface NCFileMessageCell : NCMessageCell
 

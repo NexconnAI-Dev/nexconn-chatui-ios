@@ -7,16 +7,15 @@
 //
 
 #import "NCNavigationItemsViewModel.h"
-#import "NCUserSearchViewController.h"
 #import "NCChatUICommonDefine.h"
+#import "NCUserSearchViewController.h"
 
-@interface NCNavigationItemsViewModel()
+@interface NCNavigationItemsViewModel ()
 @end
 
 @implementation NCNavigationItemsViewModel
 
-- (instancetype)initWithResponder:(UIViewController *)responder
-{
+- (instancetype)initWithResponder:(UIViewController *)responder {
     self = [super init];
     if (self) {
         self.responder = responder;
@@ -27,12 +26,12 @@
 - (NSArray *)rightNavigationBarItems {
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
     [btn addTarget:self
-            action:@selector(rightBarItemClicked:)
-  forControlEvents:UIControlEventTouchUpInside];
+                  action:@selector(rightBarItemClicked:)
+        forControlEvents:UIControlEventTouchUpInside];
     UIImage *image = NCDynamicImage(@"friend_list_add_new_img");
     [btn setImage:image forState:UIControlStateNormal];
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithCustomView:btn];
-    return @[item];
+    return @[ item ];
 }
 
 - (void)rightBarItemClicked:(id)sender {

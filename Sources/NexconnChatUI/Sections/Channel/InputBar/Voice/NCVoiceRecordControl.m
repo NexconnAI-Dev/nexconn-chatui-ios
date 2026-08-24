@@ -8,14 +8,14 @@
 
 #import "NCVoiceRecordControl.h"
 
-#import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreTelephony/CTCallCenter.h>
+#import <UIKit/UIKit.h>
 
-#import "NCVoiceCaptureControl.h"
 #import "NCAlertView.h"
-#import "NCVoicePlayer.h"
 #import "NCChatUICommonDefine.h"
+#import "NCVoiceCaptureControl.h"
+#import "NCVoicePlayer.h"
 
 @interface NCVoiceRecordControl () <NCVoiceCaptureControlDelegate>
 @property (nonatomic, assign) NCChannelType channelType;
@@ -45,7 +45,7 @@
     if (self.voiceCaptureControl) {
         return;
     }
-    
+
     if ([self.delegate respondsToSelector:@selector(recordWillBegin)]) {
         if (![self.delegate recordWillBegin]) {
             return;
@@ -59,18 +59,18 @@
     }
 
     [self checkRecordPermission:^{
-        self.voiceCaptureControl =
-            [[NCVoiceCaptureControl alloc] initWithFrame:CGRectMake(0, 20, [UIScreen mainScreen].bounds.size.width,
-                                                                    [UIScreen mainScreen].bounds.size.height)
-                                        channelType:self.channelType];
-        self.voiceCaptureControl.delegate = self;
-        if ([NCVoicePlayer defaultPlayer].isPlaying) {
-            [[NCVoicePlayer defaultPlayer] resetPlayer];
-        }
-        [self.voiceCaptureControl startRecord];
-        if ([self.delegate respondsToSelector:@selector(voiceRecordControlDidBegin:)]) {
-            [self.delegate voiceRecordControlDidBegin:self];
-        }
+      self.voiceCaptureControl = [[NCVoiceCaptureControl alloc]
+          initWithFrame:CGRectMake(0, 20, [UIScreen mainScreen].bounds.size.width,
+                                   [UIScreen mainScreen].bounds.size.height)
+            channelType:self.channelType];
+      self.voiceCaptureControl.delegate = self;
+      if ([NCVoicePlayer defaultPlayer].isPlaying) {
+          [[NCVoicePlayer defaultPlayer] resetPlayer];
+      }
+      [self.voiceCaptureControl startRecord];
+      if ([self.delegate respondsToSelector:@selector(voiceRecordControlDidBegin:)]) {
+          [self.delegate voiceRecordControlDidBegin:self];
+      }
     }];
 }
 
@@ -90,9 +90,10 @@
         }
         return;
     }
-    
+
     if (self.voiceCaptureControl.duration > 1.0f) {
-        if ([self.delegate respondsToSelector:@selector(voiceRecordControl:didEnd:duration:error:)]) {
+        if ([self.delegate
+                respondsToSelector:@selector(voiceRecordControl:didEnd:duration:error:)]) {
             [self.delegate voiceRecordControl:self
                                        didEnd:recordData
                                      duration:self.voiceCaptureControl.duration
@@ -103,8 +104,11 @@
         // message too short
         if (!self.isAudioRecoderTimeOut) {
             self.isAudioRecoderTimeOut = NO;
-            [self.voiceCaptureControl showViewWithErrorMsg:NCUILocalizedString(@"message_too_short")];
-            [self performSelector:@selector(destroyVoiceCaptureControl) withObject:nil afterDelay:1.0f];
+            [self.voiceCaptureControl
+                showViewWithErrorMsg:NCUILocalizedString(@"message_too_short")];
+            [self performSelector:@selector(destroyVoiceCaptureControl)
+                       withObject:nil
+                       afterDelay:1.0f];
             if ([self.delegate respondsToSelector:@selector(voiceRecordControlDidCancel:)]) {
                 [self.delegate voiceRecordControlDidCancel:self];
             }
@@ -141,16 +145,17 @@
 }
 
 #pragma mark - Notification
-- (void)registerNotification{
+- (void)registerNotification {
     [[NSNotificationCenter defaultCenter] addObserver:self
-    selector:@selector(audioSessionInterrupted:)
-        name:AVAudioSessionInterruptionNotification
-      object:nil];
+                                             selector:@selector(audioSessionInterrupted:)
+                                                 name:AVAudioSessionInterruptionNotification
+                                               object:nil];
 }
 
 - (void)audioSessionInterrupted:(NSNotification *)notification {
     NSDictionary *info = notification.userInfo;
-    AVAudioSessionInterruptionType interruptionType = [info[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+    AVAudioSessionInterruptionType interruptionType =
+        [info[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
     switch (interruptionType) {
     case AVAudioSessionInterruptionTypeBegan: {
         [self onEndRecordEvent];
@@ -160,7 +165,7 @@
     }
 }
 
-- (void)dealloc{
+- (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -175,20 +180,23 @@
 - (void)checkRecordPermission:(void (^)(void))successBlock {
     if ([[AVAudioSession sharedInstance] respondsToSelector:@selector(requestRecordPermission:)]) {
         if ([[AVAudioSession sharedInstance] respondsToSelector:@selector(recordPermission)]) {
-            if ([AVAudioSession sharedInstance].recordPermission == AVAudioSessionRecordPermissionGranted) {
+            if ([AVAudioSession sharedInstance].recordPermission ==
+                AVAudioSessionRecordPermissionGranted) {
                 successBlock();
-            } else if ([AVAudioSession sharedInstance].recordPermission == AVAudioSessionRecordPermissionDenied) {
+            } else if ([AVAudioSession sharedInstance].recordPermission ==
+                       AVAudioSessionRecordPermissionDenied) {
                 [self alertRecordPermissionDenied];
-            } else if ([AVAudioSession sharedInstance].recordPermission == AVAudioSessionRecordPermissionUndetermined) {
+            } else if ([AVAudioSession sharedInstance].recordPermission ==
+                       AVAudioSessionRecordPermissionUndetermined) {
                 // Bug 7071637281 修复：首次请求权限时，只请求权限不自动开始录制
                 // 用户需要在授权后重新点击录音按钮
                 [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if (!granted) {
-                            [self alertRecordPermissionDenied];
-                        }
-                        // 注意：不调用 successBlock，用户需要重新点击按钮
-                    });
+                  dispatch_async(dispatch_get_main_queue(), ^{
+                    if (!granted) {
+                        [self alertRecordPermissionDenied];
+                    }
+                    // 注意：不调用 successBlock，用户需要重新点击按钮
+                  });
                 }];
             }
         }

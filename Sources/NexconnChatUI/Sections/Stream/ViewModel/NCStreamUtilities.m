@@ -9,7 +9,7 @@
 #import "NCStreamUtilities.h"
 #import "NSDictionary+NCAccessor.h"
 
-static NSString * const kStreamMessageExpansionSummeryKey = @"RC_Ext_StreamMsgSummary";
+static NSString *const kStreamMessageExpansionSummeryKey = @"RC_Ext_StreamMsgSummary";
 @implementation NCStreamSummaryModel
 
 @end
@@ -19,7 +19,8 @@ static NSString * const kStreamMessageExpansionSummeryKey = @"RC_Ext_StreamMsgSu
     if (![model.content isKindOfClass:NCStreamMessage.class]) {
         return nil;
     }
-    NSString *summaryConfig = [model.expansionDic nc_stringForKey:kStreamMessageExpansionSummeryKey];
+    NSString *summaryConfig =
+        [model.expansionDic nc_stringForKey:kStreamMessageExpansionSummeryKey];
     NSData *data = [summaryConfig dataUsingEncoding:NSUTF8StringEncoding];
     if (!data) {
         return nil;

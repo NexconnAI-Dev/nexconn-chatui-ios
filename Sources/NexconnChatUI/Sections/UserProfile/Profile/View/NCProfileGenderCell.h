@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCStackTableViewCell.h"
 #import "NCBaseImageView.h"
+#import "NCStackTableViewCell.h"
 
-UIKIT_EXTERN NSString  * _Nonnull const NCProfileGenderCellIdentifier;
+UIKIT_EXTERN NSString *_Nonnull const NCProfileGenderCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

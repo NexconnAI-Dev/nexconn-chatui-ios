@@ -14,11 +14,11 @@ NSString *const NCChatUIThemeNameLight = @"light";
 NSString *const NCChatUIThemeNameDark = @"dark";
 
 // Lively theme resource bundle name.
-static NSString * const kLivelyThemeBundleName = @"NCChatUILively";
+static NSString *const kLivelyThemeBundleName = @"NCChatUILively";
 
 #pragma mark - NCChatUIBuiltInThemes
 
-@interface NCChatUIBuiltInThemes()
+@interface NCChatUIBuiltInThemes ()
 @end
 
 @implementation NCChatUIBuiltInThemes
@@ -47,7 +47,7 @@ static NSString * const kLivelyThemeBundleName = @"NCChatUILively";
 
 #pragma mark - NCChatUILivelyThemes
 
-@interface NCChatUILivelyThemes()
+@interface NCChatUILivelyThemes ()
 
 /// Light theme resources.
 @property (nonatomic, strong) NCChatUITheme *lightTheme;
@@ -67,17 +67,18 @@ static NSString * const kLivelyThemeBundleName = @"NCChatUILively";
 /// - Returns: A trait-aware color.
 - (UIColor *)dynamicColor:(NSString *)colorKey {
     if (@available(iOS 13.0, *)) {
-        return [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull traitCollection) {
-            UIColor *lightColor = [self.lightTheme dynamicColor:colorKey defaultColor:nil];
-            switch (traitCollection.userInterfaceStyle) {
-                case UIUserInterfaceStyleDark:
-                    return [self.darkTheme dynamicColor:colorKey defaultColor:nil] ?: lightColor ?: [UIColor clearColor];
+        return [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(
+                            UITraitCollection *_Nonnull traitCollection) {
+          UIColor *lightColor = [self.lightTheme dynamicColor:colorKey defaultColor:nil];
+          switch (traitCollection.userInterfaceStyle) {
+          case UIUserInterfaceStyleDark:
+              return [self.darkTheme dynamicColor:colorKey defaultColor:nil] ?: lightColor ?: [UIColor clearColor];
 
-                case UIUserInterfaceStyleLight:
-                case UIUserInterfaceStyleUnspecified:
-                default:
-                    return lightColor ?: [UIColor clearColor];
-            }
+          case UIUserInterfaceStyleLight:
+          case UIUserInterfaceStyleUnspecified:
+          default:
+              return lightColor ?: [UIColor clearColor];
+          }
         }];
     } else {
         // Earlier systems use the light color because they do not support dark mode.
@@ -93,7 +94,8 @@ static NSString * const kLivelyThemeBundleName = @"NCChatUILively";
 }
 
 /// Returns a trait-aware Lively theme image when both variants are available.
-/// On iOS 13 and later, a missing variant falls back to the available image; earlier systems use the light image.
+/// On iOS 13 and later, a missing variant falls back to the available image; earlier systems use
+/// the light image.
 /// - Parameter imageKey: Lively theme image key.
 /// - Returns: The resolved image, or nil when no usable variant exists.
 - (UIImage *)dynamicImage:(NSString *)imageKey {
@@ -115,9 +117,9 @@ static NSString * const kLivelyThemeBundleName = @"NCChatUILively";
 /// - Parameters:
 ///   - lightImage: Light-mode image.
 ///   - darkImage: Dark-mode image.
-/// - Returns: A trait-aware image, the only available variant, or the light image on earlier systems.
-- (UIImage *)combinedImageWithLight:(UIImage *)lightImage
-                               dark:(UIImage *)darkImage {
+/// - Returns: A trait-aware image, the only available variant, or the light image on earlier
+/// systems.
+- (UIImage *)combinedImageWithLight:(UIImage *)lightImage dark:(UIImage *)darkImage {
     if (@available(iOS 13.0, *)) {
         if (!lightImage) {
             return darkImage;
@@ -128,23 +130,34 @@ static NSString * const kLivelyThemeBundleName = @"NCChatUILively";
 
         // Preserve the current screen scale in the dark trait registration.
         CGFloat scale = [UIScreen mainScreen].scale;
-        UITraitCollection *scaleTraitCollection = [UITraitCollection traitCollectionWithDisplayScale:scale];
+        UITraitCollection *scaleTraitCollection =
+            [UITraitCollection traitCollectionWithDisplayScale:scale];
 
         // Create the light-mode trait collection.
-        UITraitCollection *lightTraitCollection = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleLight];
+        UITraitCollection *lightTraitCollection =
+            [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleLight];
 
         // Create a dark-mode trait collection that includes the display scale.
-        UITraitCollection *darkUnscaledTraitCollection = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
-        UITraitCollection *darkScaledTraitCollection = [UITraitCollection traitCollectionWithTraitsFromCollections:@[scaleTraitCollection, darkUnscaledTraitCollection]];
+        UITraitCollection *darkUnscaledTraitCollection =
+            [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
+        UITraitCollection *darkScaledTraitCollection =
+            [UITraitCollection traitCollectionWithTraitsFromCollections:@[
+                scaleTraitCollection, darkUnscaledTraitCollection
+            ]];
 
         // Configure the light image for light mode.
-        UIImage *configuredLightImage = [lightImage imageWithConfiguration:[lightImage.configuration configurationWithTraitCollection:lightTraitCollection]];
+        UIImage *configuredLightImage = [lightImage
+            imageWithConfiguration:[lightImage.configuration
+                                       configurationWithTraitCollection:lightTraitCollection]];
 
         // Configure the dark image for dark mode and the current scale.
-        UIImage *configuredDarkImage = [darkImage imageWithConfiguration:[darkImage.configuration configurationWithTraitCollection:darkScaledTraitCollection]];
+        UIImage *configuredDarkImage = [darkImage
+            imageWithConfiguration:[darkImage.configuration
+                                       configurationWithTraitCollection:darkScaledTraitCollection]];
 
         // Register the dark variant in the light image's asset.
-        [configuredLightImage.imageAsset registerImage:configuredDarkImage withTraitCollection:darkScaledTraitCollection];
+        [configuredLightImage.imageAsset registerImage:configuredDarkImage
+                                   withTraitCollection:darkScaledTraitCollection];
 
         return configuredLightImage;
     } else {

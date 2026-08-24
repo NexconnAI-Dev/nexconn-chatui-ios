@@ -7,24 +7,23 @@
 //
 
 #import "NCApplyFriendCellViewModel.h"
-#import "NCApplyFriendOperationCell.h"
-#import "NCChatUIUtility.h"
-#import "NCChatUICommonDefine.h"
-#import "NCApplyFriendAlertView.h"
 #import "NCAlertView.h"
+#import "NCApplyFriendAlertView.h"
+#import "NCApplyFriendOperationCell.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 
 NSInteger const NCFriendApplyCellHeight = 78;
-@interface NCApplyFriendCellViewModel()
+@interface NCApplyFriendCellViewModel ()
 @property (nonatomic, weak) UITableView *tableView;
-@property (nonatomic, strong)  NSIndexPath *indexPath;
+@property (nonatomic, strong) NSIndexPath *indexPath;
 @property (nonatomic, assign) CGFloat cellHeightOfExpand;
-@property (nonatomic, weak) UIViewController <NCListViewModelResponder> *responder;
+@property (nonatomic, weak) UIViewController<NCListViewModelResponder> *responder;
 @end
 
 @implementation NCApplyFriendCellViewModel
 
-- (instancetype)initWithApplicationInfo:(NCFriendApplicationInfo *)application
-{
+- (instancetype)initWithApplicationInfo:(NCFriendApplicationInfo *)application {
     self = [super init];
     if (self) {
         self.application = application;
@@ -39,7 +38,7 @@ NSInteger const NCFriendApplyCellHeight = 78;
     if (self.style == NCFriendApplyCellStyleNone) {
         if (natureSize.height > size.height) {
             self.style = NCFriendApplyCellStyleFolder;
-            self.cellHeightOfExpand = NCFriendApplyCellHeight-size.height+natureSize.height;
+            self.cellHeightOfExpand = NCFriendApplyCellHeight - size.height + natureSize.height;
             return NO;
         } else {
             self.style = NCFriendApplyCellStyleNormal;
@@ -49,22 +48,26 @@ NSInteger const NCFriendApplyCellHeight = 78;
 }
 
 #pragma mark - NCCellViewModelProtocol
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     self.tableView = tableView;
     self.indexPath = indexPath;
     NCApplyFriendCell *cell = nil;
     if (self.application.applicationStatus == NCFriendApplicationStatusUnHandled &&
-        self.application.applicationType == NCFriendApplicationTypeReceived ) {
+        self.application.applicationType == NCFriendApplicationTypeReceived) {
         cell = [tableView dequeueReusableCellWithIdentifier:NCFriendApplyOperationCellIdentifier
-                                                                           forIndexPath:indexPath];
+                                               forIndexPath:indexPath];
         if (!cell) {
-            cell = [[NCApplyFriendOperationCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:NCFriendApplyOperationCellIdentifier];
+            cell = [[NCApplyFriendOperationCell alloc]
+                  initWithStyle:UITableViewCellStyleDefault
+                reuseIdentifier:NCFriendApplyOperationCellIdentifier];
         }
     } else {
         cell = [tableView dequeueReusableCellWithIdentifier:NCFriendApplyCellIdentifier
-                                                                  forIndexPath:indexPath];
+                                               forIndexPath:indexPath];
         if (!cell) {
-            cell = [[NCApplyFriendCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:NCFriendApplyCellIdentifier];
+            cell = [[NCApplyFriendCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                            reuseIdentifier:NCFriendApplyCellIdentifier];
         }
     }
     cell.hideSeparatorLine = self.hideSeparatorLine;
@@ -73,39 +76,42 @@ NSInteger const NCFriendApplyCellHeight = 78;
 }
 
 - (void)itemDidSelectedByViewController:(UIViewController *)vc {
-    
 }
 #pragma mark - Function
 - (NSArray<UITableViewRowAction *> *)tableView:(UITableView *)tableView
                   editActionsForRowAtIndexPath:(NSIndexPath *)indexPath
-                                    completion:(void(^)(NSInteger errorCode))completion {
+                                    completion:(void (^)(NSInteger errorCode))completion {
     /* Temporarily disabled for the initial release.
-    UITableViewRowAction *actionDelete = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:NCUILocalizedString(@"delete") handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
-        [self deleteApplication:completion];
+    UITableViewRowAction *actionDelete = [UITableViewRowAction
+    rowActionWithStyle:UITableViewRowActionStyleDefault title:NCUILocalizedString(@"delete")
+    handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) { [self
+    deleteApplication:completion];
     }];
- 
+
     return @[actionDelete];
      */
     return nil;
 }
 
-
 - (void)approveApplication {
-    [[NCEngine userModule] acceptFriendApplicationWithUserId:self.application.userId
-                                                  completion:^(NCError * _Nullable error) {
-        if (error) {
-            [self showTips:NCUILocalizedString(@"friend_application_accept_failed")];
-            return;
-        }
-        self.application.applicationStatus = NCFriendApplicationStatusAccepted;
-        [self reloadCell];
-        }];
+    [[NCEngine userModule]
+        acceptFriendApplicationWithUserId:self.application.userId
+                               completion:^(NCError *_Nullable error) {
+                                 if (error) {
+                                     [self showTips:NCUILocalizedString(
+                                                        @"friend_application_accept_failed")];
+                                     return;
+                                 }
+                                 self.application.applicationStatus =
+                                     NCFriendApplicationStatusAccepted;
+                                 [self reloadCell];
+                               }];
 }
 
 - (void)showTips:(NSString *)tips {
     if ([self.responder respondsToSelector:@selector(showTips:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder showTips:tips];
+          [self.responder showTips:tips];
         });
     }
 }
@@ -116,28 +122,42 @@ NSInteger const NCFriendApplyCellHeight = 78;
 
 - (void)commitRefuse:(NSString *)reason {
     (void)reason;
-    [[NCEngine userModule] refuseFriendApplicationWithUserId:self.application.userId completion:^(NCError * _Nullable error) {
-        if (error) {
-            [self showTips:NCUILocalizedString(@"friend_application_refuse_failed")];
-            return;
-        }
-        self.application.applicationStatus = NCFriendApplicationStatusRefused;
-        [self reloadCell];
-    }];
+    [[NCEngine userModule]
+        refuseFriendApplicationWithUserId:self.application.userId
+                               completion:^(NCError *_Nullable error) {
+                                 if (error) {
+                                     [self showTips:NCUILocalizedString(
+                                                        @"friend_application_refuse_failed")];
+                                     return;
+                                 }
+                                 self.application.applicationStatus =
+                                     NCFriendApplicationStatusRefused;
+                                 [self reloadCell];
+                               }];
 }
 
 - (void)showRefuseAlertView {
-    [NCAlertView showAlertController:nil message:[NSString stringWithFormat:@"%@?", NCUILocalizedString(@"friend_apply_refuse_title")] actionTitles:nil cancelTitle:NCUILocalizedString(@"cancel") confirmTitle:NCUILocalizedString(@"confirm") preferredStyle:UIAlertControllerStyleAlert actionsBlock:nil cancelBlock:^{
-    } confirmBlock:^{
-        [self commitRefuse:@""];  
-    } inViewController:self.responder];
-    
-//    [NCApplyFriendAlertView showAlert:NCUILocalizedString(@"friend_apply_refuse_title")
-//                          placeholder:NCUILocalizedString(@"friend_apply_refuse_placeholder")
-//                          lengthLimit:64
-//                           completion:^(NSString * text) {
-//        [self commitRefuse:text];
-//    }];
+    [NCAlertView showAlertController:nil
+        message:[NSString
+                    stringWithFormat:@"%@?", NCUILocalizedString(@"friend_apply_refuse_title")]
+        actionTitles:nil
+        cancelTitle:NCUILocalizedString(@"cancel")
+        confirmTitle:NCUILocalizedString(@"confirm")
+        preferredStyle:UIAlertControllerStyleAlert
+        actionsBlock:nil
+        cancelBlock:^{
+        }
+        confirmBlock:^{
+          [self commitRefuse:@""];
+        }
+        inViewController:self.responder];
+
+    //    [NCApplyFriendAlertView showAlert:NCUILocalizedString(@"friend_apply_refuse_title")
+    //                          placeholder:NCUILocalizedString(@"friend_apply_refuse_placeholder")
+    //                          lengthLimit:64
+    //                           completion:^(NSString * text) {
+    //        [self commitRefuse:text];
+    //    }];
 }
 
 - (void)expandRemark {
@@ -147,9 +167,9 @@ NSInteger const NCFriendApplyCellHeight = 78;
 
 + (void)registerCellForTableView:(UITableView *)tableView {
     [tableView registerClass:[NCApplyFriendCell class]
-      forCellReuseIdentifier:NCFriendApplyCellIdentifier];
+        forCellReuseIdentifier:NCFriendApplyCellIdentifier];
     [tableView registerClass:[NCApplyFriendOperationCell class]
-      forCellReuseIdentifier:NCFriendApplyOperationCellIdentifier];
+        forCellReuseIdentifier:NCFriendApplyOperationCellIdentifier];
 }
 
 - (CGFloat)cellHeight {
@@ -160,7 +180,7 @@ NSInteger const NCFriendApplyCellHeight = 78;
     }
 }
 
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder {
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder {
     self.responder = responder;
 }
 #pragma mark - Private
@@ -175,7 +195,8 @@ NSInteger const NCFriendApplyCellHeight = 78;
 - (void)reloadCell {
     if (self.indexPath) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.tableView reloadRowsAtIndexPaths:@[self.indexPath] withRowAnimation:UITableViewRowAnimationFade];
+          [self.tableView reloadRowsAtIndexPaths:@[ self.indexPath ]
+                                withRowAnimation:UITableViewRowAnimationFade];
         });
     }
 }

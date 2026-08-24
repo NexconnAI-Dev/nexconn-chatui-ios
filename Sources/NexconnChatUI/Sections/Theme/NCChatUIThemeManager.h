@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCChatUITheme.h"
+#import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, NCChatUIBuiltInThemeType) {
@@ -19,8 +19,7 @@ typedef NS_ENUM(NSInteger, NCChatUIBuiltInThemeType) {
 /// Called when the theme changes.
 /// @param customTheme The new custom theme (nil if no custom theme is set).
 /// @param type The new built-in theme type.
-- (void) themeDidChanged:(NCChatUITheme *)customTheme
-        baseOnTheme:(NCChatUIBuiltInThemeType)type;
+- (void)themeDidChanged:(NCChatUITheme *)customTheme baseOnTheme:(NCChatUIBuiltInThemeType)type;
 
 @end
 

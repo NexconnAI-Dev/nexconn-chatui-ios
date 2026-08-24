@@ -23,26 +23,28 @@
 /// @param channelId          Channel ID.
 /// @return A list of cell info objects.
 ///
-/// When entering the channel page, the SDK needs the extension module's MessageCell class and messageType.
+/// When entering the channel page, the SDK needs the extension module's MessageCell class and
+/// messageType.
 - (NSArray<NCChatUIExtensionMessageCellInfo *> *)getMessageCellInfoList:(NCChannelType)channelType
-                                                         channelId:(NSString *)channelId;
+                                                              channelId:(NSString *)channelId;
 
 /// Called when a MessageCell is tapped.
 ///
 /// @param messageModel   The data model of the tapped MessageCell.
 - (void)didTapMessageCell:(NCMessageModel *)messageModel;
 
-/// Called when the channel page triggers viewWillAppear. You can modify the extensionView frame and content.
+/// Called when the channel page triggers viewWillAppear. You can modify the extensionView frame and
+/// content.
 ///
 /// @param channelType Channel type.
 /// @param channelId         Channel ID.
 /// @param extensionView    The extension view.
 - (void)extensionViewWillAppear:(NCChannelType)channelType
-                       channelId:(NSString *)channelId
+                      channelId:(NSString *)channelId
                   extensionView:(UIView *)extensionView;
 
-/// Called when the channel page triggers viewWillDisappear. If your extension module modifies the channel page's
-/// extensionView, stop modifications after receiving this callback.
+/// Called when the channel page triggers viewWillDisappear. If your extension module modifies the
+/// channel page's extensionView, stop modifications after receiving this callback.
 ///
 /// @param channelType Channel type.
 /// @param channelId         Channel ID.

@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCMessageModel.h"
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "NCMessageModel.h"
 
 typedef enum : NSUInteger {
     NCMessageMultiSelectStatusSelected = 0,
@@ -26,7 +26,8 @@ Callback before the message cell selection count changes.
 - Parameter status: The message cell selection status.
 - Parameter model: The message cell data model.
 */
-- (BOOL)onMessagesMultiSelectedCountWillChanged:(NCMessageMultiSelectStatus)status model:(NCMessageModel *)model;
+- (BOOL)onMessagesMultiSelectedCountWillChanged:(NCMessageMultiSelectStatus)status
+                                          model:(NCMessageModel *)model;
 
 /*!
 Callback after the message cell selection count changes.
@@ -34,7 +35,8 @@ Callback after the message cell selection count changes.
 - Parameter status: The message cell selection status.
 - Parameter model: The message cell data model.
 */
-- (void)onMessagesMultiSelectedCountDidChanged:(NCMessageMultiSelectStatus)status model:(NCMessageModel *)model;
+- (void)onMessagesMultiSelectedCountDidChanged:(NCMessageMultiSelectStatus)status
+                                         model:(NCMessageModel *)model;
 
 @end
 

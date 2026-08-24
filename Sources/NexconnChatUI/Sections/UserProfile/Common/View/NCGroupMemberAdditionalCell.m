@@ -10,7 +10,8 @@
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 
-NSString * _Nullable const NCGroupMemberAdditionalCellIdentifier = @"NCGroupMemberAdditionalCellIdentifier";
+NSString *_Nullable const NCGroupMemberAdditionalCellIdentifier =
+    @"NCGroupMemberAdditionalCellIdentifier";
 
 @implementation NCGroupMemberAdditionalCell
 - (void)setupView {
@@ -26,7 +27,7 @@ NSString * _Nullable const NCGroupMemberAdditionalCellIdentifier = @"NCGroupMemb
     [self updateLineViewConstraints:NCUserManagementImageCellLineLeading
                            trailing:-NCUserManagementImageCellLineTrailing];
     CGFloat portraitWidth = 32;
-    
+
     [NSLayoutConstraint activateConstraints:@[
         // portraitImageView constraints.
         [self.portraitImageView.widthAnchor constraintEqualToConstant:portraitWidth],
@@ -34,10 +35,8 @@ NSString * _Nullable const NCGroupMemberAdditionalCellIdentifier = @"NCGroupMemb
     ]];
 }
 
-
 - (void)showPortraitByImage:(UIImage *)image {
 }
-
 
 - (UIImageView *)portraitImageView {
     if (!_portraitImageView) {
@@ -53,7 +52,6 @@ NSString * _Nullable const NCGroupMemberAdditionalCellIdentifier = @"NCGroupMemb
     }
     return _portraitImageView;
 }
-
 
 - (UILabel *)labName {
     if (!_labName) {

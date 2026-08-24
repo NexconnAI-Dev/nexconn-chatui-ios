@@ -7,10 +7,10 @@
 //
 
 #import "NCInputStateManager.h"
-#import "NCMentionedStringRangeInfo.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCGroupMentionViewModel.h"
+#import "NCMentionedStringRangeInfo.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
 @interface NCInputStateManager ()
@@ -45,36 +45,38 @@
     if (!self.isMentionedEnabled || !self.textView) {
         return YES;
     }
-    
+
     BOOL shouldUseDefaultChangeText = YES;
-    
+
     // Track the edited range.
     NSInteger changedLocation = 0;
     NSInteger changedLength = 0;
-    
+
     // A zero replacement length indicates deletion.
     if (text.length == 0) {
         for (NCMentionedStringRangeInfo *mentionedInfo in [self.mentionedRangeInfoList copy]) {
             NSRange mentionedRange = mentionedInfo.range;
-            
+
             // Deleting at the end of a mention removes the entire mention token.
-            if (range.length == 1 && (mentionedRange.location + mentionedRange.length == range.location + 1)) {
+            if (range.length == 1 &&
+                (mentionedRange.location + mentionedRange.length == range.location + 1)) {
                 // Remove the full mention only when its range is valid.
-                if ([self isSafeToDeleteRange:mentionedRange fromTextStorage:self.textView.textStorage]) {
+                if ([self isSafeToDeleteRange:mentionedRange
+                              fromTextStorage:self.textView.textStorage]) {
                     shouldUseDefaultChangeText = NO;
-                    
+
                     [self.textView.textStorage deleteCharactersInRange:mentionedRange];
-                    
+
                     // Mutating textStorage does not trigger textViewDidChange:, so notify manually.
                     [self notifyTextViewDidChange];
-                    
+
                     range.location = range.location - mentionedRange.length + 1;
                     range.length = 0;
                     self.textView.selectedRange = NSMakeRange(mentionedRange.location, 0);
-                    
+
                     changedLocation = mentionedInfo.range.location;
                     changedLength = -(NSInteger)mentionedInfo.range.length;
-                    
+
                     [self.mentionedRangeInfoList removeObject:mentionedInfo];
                     break;
                 }
@@ -84,7 +86,7 @@
                 // Continue because one deletion can overlap multiple mention ranges.
             }
         }
-        
+
         if (changedLength == 0) {
             // Track ordinary deletions that do not intersect a mention.
             changedLocation = range.location + 1;
@@ -96,18 +98,20 @@
                 __weak typeof(self) weakSelf = self;
                 [self.delegate inputStateManager:self
                                 showUserSelector:^(NCChatUIUserInfo *selectedUser) {
-                                    [weakSelf insertMentionedUser:selectedUser symbolRequest:NO];
+                                  [weakSelf insertMentionedUser:selectedUser symbolRequest:NO];
                                 }
                                           cancel:^{
                                               // Ignore selection-only changes.
                                           }];
             }
         }
-        
-        // Remove a mention when editing starts inside it; otherwise shift its range to match the edit.
+
+        // Remove a mention when editing starts inside it; otherwise shift its range to match the
+        // edit.
         for (NCMentionedStringRangeInfo *mentionedInfo in [self.mentionedRangeInfoList copy]) {
             NSRange strRange = mentionedInfo.range;
-            if ((range.location > strRange.location) && (range.location < (strRange.location + strRange.length))) {
+            if ((range.location > strRange.location) &&
+                (range.location < (strRange.location + strRange.length))) {
                 [self.mentionedRangeInfoList removeObject:mentionedInfo];
                 break;
             }
@@ -115,10 +119,10 @@
         changedLocation = range.location;
         changedLength = text.length - range.length;
     }
-    
+
     [self updateAllMentionedRangeInfo:changedLocation length:changedLength];
     [self notifyMentionsDidUpdate];
-    
+
     return shouldUseDefaultChangeText;
 }
 
@@ -141,72 +145,74 @@
     if (!self.isMentionedEnabled || !userInfo.userId || !self.textView) {
         return;
     }
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        // Read the current insertion point.
-        NSUInteger cursorPosition = self.textView.selectedRange.location;
-        if (cursorPosition > self.textView.textStorage.length) {
-            cursorPosition = self.textView.textStorage.length;
-        }
-        
-        // Build the mention token at the insertion point.
-        NSUInteger mentionedPosition;
-        NSString *insertContent = nil;
-        NSInteger changeRangeLength;
-        
-        if (symbolRequest) {
-            // Insert both the @ symbol and user name.
-            if (userInfo.name.length > 0) {
-                insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.name];
-            } else {
-                insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.userId];
-            }
-            mentionedPosition = cursorPosition;
-            changeRangeLength = [insertContent length];
-        } else {
-            // The @ symbol already exists, so insert only the user name.
-            if (userInfo.name.length > 0) {
-                insertContent = [NSString stringWithFormat:@"%@ ", userInfo.name];
-            } else {
-                insertContent = [NSString stringWithFormat:@"%@ ", userInfo.userId];
-            }
-            mentionedPosition = (cursorPosition >= 1) ? (cursorPosition - 1) : 0;
-            changeRangeLength = [insertContent length] + 1; // Include the existing @ symbol.
-        }
-        
-        // Create the attributed mention token.
-        NSMutableAttributedString *attStr = [[NSMutableAttributedString alloc] initWithString:insertContent];
-        [attStr addAttribute:NSFontAttributeName
-                       value:self.textView.font
-                       range:NSMakeRange(0, insertContent.length)];
-        UIColor *foreColor = NCDynamicColor(@"text_primary_color");
-        if (foreColor) {
-            [attStr addAttribute:NSForegroundColorAttributeName
-                           value:foreColor
-                           range:NSMakeRange(0, insertContent.length)];
-        }
 
-        // Insert the mention into the text storage.
-        [self.textView.textStorage insertAttributedString:attStr atIndex:cursorPosition];
-        
-        // Mutating textStorage does not trigger textViewDidChange:, so notify manually.
-        [self notifyTextViewDidChange];
-        
-        self.textView.selectedRange = NSMakeRange(cursorPosition + insertContent.length, 0);
-        [self updateAllMentionedRangeInfo:cursorPosition length:insertContent.length];
-        
-        // Store the mention range metadata.
-        NCMentionedStringRangeInfo *mentionedStrInfo = [[NCMentionedStringRangeInfo alloc] init];
-        if (symbolRequest) {
-            mentionedStrInfo.content = insertContent; // insertContent already includes the @ symbol.
-        } else {
-            mentionedStrInfo.content = [@"@" stringByAppendingString:insertContent]; // Prefix the user name with @.
-        }
-        mentionedStrInfo.userId = userInfo.userId;
-        mentionedStrInfo.range = NSMakeRange(mentionedPosition, changeRangeLength);
-        [self.mentionedRangeInfoList addObject:mentionedStrInfo];
-        
-        [self notifyMentionsDidUpdate];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      // Read the current insertion point.
+      NSUInteger cursorPosition = self.textView.selectedRange.location;
+      if (cursorPosition > self.textView.textStorage.length) {
+          cursorPosition = self.textView.textStorage.length;
+      }
+
+      // Build the mention token at the insertion point.
+      NSUInteger mentionedPosition;
+      NSString *insertContent = nil;
+      NSInteger changeRangeLength;
+
+      if (symbolRequest) {
+          // Insert both the @ symbol and user name.
+          if (userInfo.name.length > 0) {
+              insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.name];
+          } else {
+              insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.userId];
+          }
+          mentionedPosition = cursorPosition;
+          changeRangeLength = [insertContent length];
+      } else {
+          // The @ symbol already exists, so insert only the user name.
+          if (userInfo.name.length > 0) {
+              insertContent = [NSString stringWithFormat:@"%@ ", userInfo.name];
+          } else {
+              insertContent = [NSString stringWithFormat:@"%@ ", userInfo.userId];
+          }
+          mentionedPosition = (cursorPosition >= 1) ? (cursorPosition - 1) : 0;
+          changeRangeLength = [insertContent length] + 1; // Include the existing @ symbol.
+      }
+
+      // Create the attributed mention token.
+      NSMutableAttributedString *attStr =
+          [[NSMutableAttributedString alloc] initWithString:insertContent];
+      [attStr addAttribute:NSFontAttributeName
+                     value:self.textView.font
+                     range:NSMakeRange(0, insertContent.length)];
+      UIColor *foreColor = NCDynamicColor(@"text_primary_color");
+      if (foreColor) {
+          [attStr addAttribute:NSForegroundColorAttributeName
+                         value:foreColor
+                         range:NSMakeRange(0, insertContent.length)];
+      }
+
+      // Insert the mention into the text storage.
+      [self.textView.textStorage insertAttributedString:attStr atIndex:cursorPosition];
+
+      // Mutating textStorage does not trigger textViewDidChange:, so notify manually.
+      [self notifyTextViewDidChange];
+
+      self.textView.selectedRange = NSMakeRange(cursorPosition + insertContent.length, 0);
+      [self updateAllMentionedRangeInfo:cursorPosition length:insertContent.length];
+
+      // Store the mention range metadata.
+      NCMentionedStringRangeInfo *mentionedStrInfo = [[NCMentionedStringRangeInfo alloc] init];
+      if (symbolRequest) {
+          mentionedStrInfo.content = insertContent; // insertContent already includes the @ symbol.
+      } else {
+          mentionedStrInfo.content =
+              [@"@" stringByAppendingString:insertContent]; // Prefix the user name with @.
+      }
+      mentionedStrInfo.userId = userInfo.userId;
+      mentionedStrInfo.range = NSMakeRange(mentionedPosition, changeRangeLength);
+      [self.mentionedRangeInfoList addObject:mentionedStrInfo];
+
+      [self notifyMentionsDidUpdate];
     });
 }
 
@@ -235,7 +241,7 @@
 - (void)setupMentionedRangeInfo:(NSArray<NCMentionedStringRangeInfo *> *)mentionedRangeInfo {
     [self.mentionedRangeInfoList removeAllObjects];
     [self.mentionedRangeInfoList addObjectsFromArray:mentionedRangeInfo];
-    
+
     // Resolve the latest display information for mentioned users.
     [self updateMentionedInfoWithLatestUserInfo];
     [self notifyMentionsDidUpdate];
@@ -250,14 +256,16 @@
 // Replace mentioned user names in the input with their latest display names.
 - (void)updateMentionedInfoWithLatestUserInfo {
     // 从后往前处理，避免前面替换影响后续 range
-    NSArray<NCMentionedStringRangeInfo *> *sortedList = [self.mentionedRangeInfoList sortedArrayUsingComparator:^NSComparisonResult(NCMentionedStringRangeInfo *obj1, NCMentionedStringRangeInfo *obj2) {
-        if (obj1.range.location > obj2.range.location) {
-            return NSOrderedAscending; // 降序，从后往前
-        } else if (obj1.range.location < obj2.range.location) {
-            return NSOrderedDescending;
-        }
-        return NSOrderedSame;
-    }];
+    NSArray<NCMentionedStringRangeInfo *> *sortedList = [self.mentionedRangeInfoList
+        sortedArrayUsingComparator:^NSComparisonResult(NCMentionedStringRangeInfo *obj1,
+                                                       NCMentionedStringRangeInfo *obj2) {
+          if (obj1.range.location > obj2.range.location) {
+              return NSOrderedAscending; // 降序，从后往前
+          } else if (obj1.range.location < obj2.range.location) {
+              return NSOrderedDescending;
+          }
+          return NSOrderedSame;
+        }];
 
     NSMutableString *currentText = [self.textView.text mutableCopy];
 
@@ -282,9 +290,11 @@
             latestMentionedContent = [NSString stringWithFormat:@"@%@ ", userInfo.name];
         }
 
-        if (latestMentionedContent && ![latestMentionedContent isEqualToString:mentionedInfo.content]) {
+        if (latestMentionedContent &&
+            ![latestMentionedContent isEqualToString:mentionedInfo.content]) {
             // 按 range 精准替换当前位置内容
-            [currentText replaceCharactersInRange:mentionedInfo.range withString:latestMentionedContent];
+            [currentText replaceCharactersInRange:mentionedInfo.range
+                                       withString:latestMentionedContent];
 
             // 计算长度差，重算前面所有 @ range（因为从后往前，已处理的在当前位置之后，不受影响）
             NSInteger lengthDiff = latestMentionedContent.length - mentionedInfo.range.length;
@@ -294,10 +304,12 @@
                         // 当前位置之前的不受影响
                     } else if (info.range.location > mentionedInfo.range.location) {
                         // 当前位置之后的需要偏移
-                        info.range = NSMakeRange(info.range.location + lengthDiff, info.range.length);
+                        info.range =
+                            NSMakeRange(info.range.location + lengthDiff, info.range.length);
                     } else if (info == mentionedInfo) {
                         // 当前项更新 range
-                        info.range = NSMakeRange(info.range.location, latestMentionedContent.length);
+                        info.range =
+                            NSMakeRange(info.range.location, latestMentionedContent.length);
                     }
                 }
             }
@@ -313,7 +325,7 @@
 - (void)clearAllStates {
     // Clear the input text.
     self.textView.text = @"";
-    
+
     // Clear mention metadata.
     [self clearAllMentions];
 }
@@ -346,23 +358,23 @@
     if (!textStorage) {
         return NO;
     }
-    
+
     // Reject missing and empty ranges.
     if (range.location == NSNotFound || range.length == 0) {
         return NO;
     }
-    
+
     // The start must be inside the text storage.
     if (range.location >= textStorage.length) {
         return NO;
     }
-    
+
     // The end must not exceed the text storage length.
     NSUInteger endLocation = range.location + range.length;
     if (endLocation > textStorage.length) {
         return NO;
     }
-    
+
     return YES;
 }
 
@@ -375,12 +387,12 @@
     if (!text || !prefix || index < 0 || index >= text.length) {
         return NO;
     }
-    
+
     NSInteger remainingLength = text.length - index;
     if (remainingLength < prefix.length) {
         return NO; // The remaining text is shorter than the prefix.
     }
-    
+
     NSRange checkRange = NSMakeRange(index, prefix.length);
     NSString *substring = [text substringWithRange:checkRange];
     return [substring isEqualToString:prefix];
@@ -416,14 +428,17 @@
             }
         }
         if (containsMentionAll) {
-            return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeAll userIdList:nil mentionedContent:nil];
+            return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeAll
+                                              userIdList:nil
+                                        mentionedContent:nil];
         }
         if (mentionedUserIdList.count == 0) {
             return nil;
         }
-        NCMentionedInfo *mentionedInfo = [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
-                                                                    userIdList:[mentionedUserIdList allObjects]
-                                                              mentionedContent:nil];
+        NCMentionedInfo *mentionedInfo =
+            [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
+                                       userIdList:[mentionedUserIdList allObjects]
+                                 mentionedContent:nil];
         return mentionedInfo;
     }
     return nil;
@@ -437,4 +452,4 @@
     return [self.mentionedRangeInfoList copy];
 }
 
-@end 
+@end

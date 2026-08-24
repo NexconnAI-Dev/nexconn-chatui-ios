@@ -7,13 +7,13 @@
 //
 
 #import "NCActionSheetView.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCChatUIConfig.h"
 #import "NCBaseTableView.h"
 #import "NCBaseTableViewCell.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 #define Space_Line 6
-@interface NCActionSheetView()
+@interface NCActionSheetView ()
 @property (nonatomic, strong) UIView *maskCoverView; // Background mask.
 
 @property (nonatomic, strong) NCBaseTableView *tableView; // Options table.
@@ -38,22 +38,27 @@
                   cellArray:(NSArray *)cellArray
                 cancelTitle:(NSString *)cancelTitle
               selectedBlock:(void (^)(NSInteger index))selectedBlock
-                cancelBlock:(void (^)(void))cancelBlock{
+                cancelBlock:(void (^)(void))cancelBlock {
     UIWindow *keyWindow = [NCChatUIUtility getKeyWindow];
     if (!keyWindow) {
         return;
     }
     [keyWindow endEditing:YES];
-    NCActionSheetView *actionSheet = [[NCActionSheetView alloc] initWithTitle:title CellArray:cellArray viewSize:keyWindow.bounds.size cancelTitle:cancelTitle selectedBlock:selectedBlock cancelBlock:cancelBlock];
+    NCActionSheetView *actionSheet = [[NCActionSheetView alloc] initWithTitle:title
+                                                                    CellArray:cellArray
+                                                                     viewSize:keyWindow.bounds.size
+                                                                  cancelTitle:cancelTitle
+                                                                selectedBlock:selectedBlock
+                                                                  cancelBlock:cancelBlock];
     [keyWindow addSubview:actionSheet];
 }
 
 - (instancetype)initWithTitle:(NSString *)title
                     CellArray:(NSArray *)cellArray
-                   viewSize:(CGSize)viewSize
+                     viewSize:(CGSize)viewSize
                   cancelTitle:(NSString *)cancelTitle
                 selectedBlock:(void (^)(NSInteger index))selectedBlock
-                  cancelBlock:(void (^)(void))cancelBlock{
+                  cancelBlock:(void (^)(void))cancelBlock {
     self = [super init];
     if (self) {
         _viewSize = viewSize;
@@ -71,30 +76,40 @@
     return self;
 }
 
-- (void)dealloc{
+- (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark - Notification
 - (void)registerNotificationCenter {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(deviceOrientationDidChange:)
-                                                 name:UIApplicationDidChangeStatusBarFrameNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(deviceOrientationDidChange:)
+               name:UIApplicationDidChangeStatusBarFrameNotification
+             object:nil];
 }
 
 - (void)deviceOrientationDidChange:(NSNotification *)notification {
     UIDeviceOrientation interfaceOrientation = [UIDevice currentDevice].orientation;
-    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft || interfaceOrientation == UIDeviceOrientationLandscapeRight || interfaceOrientation == UIDeviceOrientationPortrait){
+    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft ||
+        interfaceOrientation == UIDeviceOrientationLandscapeRight ||
+        interfaceOrientation == UIDeviceOrientationPortrait) {
         [self removeFromSuperview];
     }
 }
 
 #pragma mark - Create UI
-- (void)addTitleView{
-    CGFloat height = [NCChatUIUtility getTextDrawingSize:self.title font:[UIFont systemFontOfSize:15] constrainedSize:CGSizeMake(self.viewSize.width-20, MAXFLOAT)].height;
-    self.headView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.viewSize.width, height + 30)];
-    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, self.headView.frame.size.width - 20, self.headView.frame.size.height)];
+- (void)addTitleView {
+    CGFloat height =
+        [NCChatUIUtility getTextDrawingSize:self.title
+                                       font:[UIFont systemFontOfSize:15]
+                            constrainedSize:CGSizeMake(self.viewSize.width - 20, MAXFLOAT)]
+            .height;
+    self.headView =
+        [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.viewSize.width, height + 30)];
+    UILabel *titleLabel =
+        [[UILabel alloc] initWithFrame:CGRectMake(10, 0, self.headView.frame.size.width - 20,
+                                                  self.headView.frame.size.height)];
     titleLabel.textAlignment = NSTextAlignmentCenter;
     titleLabel.font = [UIFont systemFontOfSize:14];
     titleLabel.numberOfLines = 0;
@@ -122,7 +137,8 @@
 
 - (NCBaseTableView *)tableView {
     if (!_tableView) {
-        _tableView = [[NCBaseTableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
+        _tableView = [[NCBaseTableView alloc] initWithFrame:CGRectZero
+                                                      style:UITableViewStyleGrouped];
         _tableView.estimatedRowHeight = 0;
         _tableView.estimatedSectionHeaderHeight = 0;
         _tableView.estimatedSectionFooterHeight = 0;
@@ -148,7 +164,8 @@
     return (section == 0) ? _cellArray.count : 1;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NCBaseTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"OneCell"];
     if (indexPath.section == 0) {
         cell.textLabel.text = _cellArray[indexPath.row];
@@ -177,7 +194,7 @@
     [self dismiss];
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return CGFLOAT_MIN;
 }
 
@@ -187,7 +204,8 @@
 
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
     if (section == 0) {
-        UIView *footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, Space_Line)];
+        UIView *footerView = [[UIView alloc]
+            initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, Space_Line)];
         footerView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
         return footerView;
     } else {
@@ -211,14 +229,15 @@
 
 // Slide the sheet in.
 - (void)show {
-    _tableView.frame =
-        CGRectMake(0, self.viewSize.height, self.viewSize.width,
-                   _tableView.rowHeight * (_cellArray.count + 1) + _headView.bounds.size.height + (Space_Line * 2) + [NCChatUIUtility getWindowSafeAreaInsetsForView:self].bottom);
+    _tableView.frame = CGRectMake(0, self.viewSize.height, self.viewSize.width,
+                                  _tableView.rowHeight * (_cellArray.count + 1) +
+                                      _headView.bounds.size.height + (Space_Line * 2) +
+                                      [NCChatUIUtility getWindowSafeAreaInsetsForView:self].bottom);
     [UIView animateWithDuration:.2
                      animations:^{
-                         CGRect rect = _tableView.frame;
-                         rect.origin.y -= _tableView.bounds.size.height;
-                         _tableView.frame = rect;
+                       CGRect rect = _tableView.frame;
+                       rect.origin.y -= _tableView.bounds.size.height;
+                       _tableView.frame = rect;
                      }];
 }
 
@@ -226,12 +245,12 @@
 - (void)dismiss {
     [UIView animateWithDuration:.2
         animations:^{
-            CGRect rect = _tableView.frame;
-            rect.origin.y += _tableView.bounds.size.height;
-            _tableView.frame = rect;
+          CGRect rect = _tableView.frame;
+          rect.origin.y += _tableView.bounds.size.height;
+          _tableView.frame = rect;
         }
         completion:^(BOOL finished) {
-            [self removeFromSuperview];
+          [self removeFromSuperview];
         }];
 }
 

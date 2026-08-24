@@ -7,8 +7,8 @@
 //
 
 #import "NCMessageReadDetailCellViewModel.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUIUserInfo.h"
+#import "NCChatUIUtility.h"
 
 @interface NCMessageReadDetailCellViewModel ()
 
@@ -19,13 +19,13 @@
 
 @implementation NCMessageReadDetailCellViewModel
 
-- (instancetype)initWithUserInfo:(NCChatUIUserInfo *)userInfo
-                        readTime:(long long)readTime {
+- (instancetype)initWithUserInfo:(NCChatUIUserInfo *)userInfo readTime:(long long)readTime {
     self = [super init];
     if (self) {
         _userInfo = userInfo;
         _readTime = readTime;
-        _displayReadTime = readTime > 0 ? [NCChatUIUtility convertMessageTime:self.readTime/1000] : @"";
+        _displayReadTime =
+            readTime > 0 ? [NCChatUIUtility convertMessageTime:self.readTime / 1000] : @"";
         _cellHeight = 54;
     }
     return self;

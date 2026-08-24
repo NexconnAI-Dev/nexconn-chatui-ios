@@ -6,12 +6,13 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import "NCMessageCellNotificationModel.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCChatUIErrorCode.h"
+#import "NCMessageCellNotificationModel.h"
+#import <Foundation/Foundation.h>
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
-@class NCChannelViewController,NCMessageModel,NCEditInputBarConfig,NCInformationNotificationMessage;
+@class NCChannelViewController, NCMessageModel, NCEditInputBarConfig,
+    NCInformationNotificationMessage;
 
 @interface NCChannelVCUtil : NSObject
 - (instancetype)init:(NCChannelViewController *)chatVC;
@@ -30,12 +31,15 @@
 // Stops playing the voice message if needed.
 - (void)stopVoiceMessageIfNeed:(NCMessageModel *)model;
 // Notifies the message cell status.
-- (void)sendMessageStatusNotification:(NSString *)actionNametatus clientId:(long)clientId progress:(NSInteger)progress;
+- (void)sendMessageStatusNotification:(NSString *)actionNametatus
+                             clientId:(long)clientId
+                             progress:(NSInteger)progress;
 
 - (void)sendMessageReadReceiptNotification:(NCMessageModel *)model;
 
 #pragma mark - UI
-// Calculates the extra message height. Default is 14; add 44 when showing time and 16 when showing the name.
+// Calculates the extra message height. Default is 14; add 44 when showing time and 16 when showing
+// the name.
 - (CGFloat)referenceExtraHeight:(Class)cellClass messageModel:(NCMessageModel *)model;
 // Finds the data-source position of the message.
 - (NSIndexPath *)findDataIndexFromMessageList:(NCMessageModel *)model;
@@ -57,7 +61,6 @@
 // Whether the message can be referenced.
 - (BOOL)canReferenceMessage:(NCMessageModel *)message;
 
-
 /// Gets a model by message ID.
 /// - Parameter messageID
 - (NCMessageModel *)modelByMessageID:(NSInteger)messageID;
@@ -71,7 +74,8 @@
 // Gets the HQ voice message cache path.
 - (NSString *)getHQVoiceMessageCachePath;
 
-- (NCInformationNotificationMessage *)getInfoNotificationMessageByErrorCode:(NCChatUIErrorCode)errorCode;
+- (NCInformationNotificationMessage *)getInfoNotificationMessageByErrorCode:
+    (NCChatUIErrorCode)errorCode;
 
 + (CGFloat)incrementOfTimeLabelBy:(NCMessageModel *)model;
 

@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import <NexconnChatSDK/NexconnChatSDK.h>
 #import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
 @protocol NCVoiceCaptureControlDelegate <NSObject>
 - (void)NCVoiceCaptureControlTimeout:(double)duration;
 
@@ -24,7 +24,8 @@
 
 @property (nonatomic, readonly, assign) double duration;
 
-//Customer service channels do not recognize high-quality voice messages, so NCChannelType is needed for the check.
+// Customer service channels do not recognize high-quality voice messages, so NCChannelType is
+// needed for the check.
 - (instancetype)initWithFrame:(CGRect)frame channelType:(NCChannelType)type;
 
 - (void)startRecord;

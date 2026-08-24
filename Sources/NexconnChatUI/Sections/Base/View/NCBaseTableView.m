@@ -10,12 +10,12 @@
 #import "NCSemanticContext.h"
 
 @implementation NCBaseTableView
-- (instancetype)initWithFrame:(CGRect)frame style:(UITableViewStyle)style{
+- (instancetype)initWithFrame:(CGRect)frame style:(UITableViewStyle)style {
     self = [super initWithFrame:frame style:style];
-    if(self){
+    if (self) {
         if ([NCSemanticContext isRTL]) {
             self.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-        }else{
+        } else {
             self.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
         }
     }

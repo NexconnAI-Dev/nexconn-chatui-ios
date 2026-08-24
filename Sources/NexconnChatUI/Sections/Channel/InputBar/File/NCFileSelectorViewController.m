@@ -7,11 +7,11 @@
 //
 
 #import "NCFileSelectorViewController.h"
+#import "NCAlertView.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCSelectDirectoryTableViewCell.h"
 #import "NCSelectFilesTableViewCell.h"
-#import "NCChatUIConfig.h"
-#import "NCAlertView.h"
 #import "NCSemanticContext.h"
 @interface NCFileSelectorViewController ()
 
@@ -38,8 +38,8 @@ static NSString *const NCListValue = @"List";
     if (self) {
         self.rootPath = rootPath;
         self.maxSelectedNumber = 20;
-        self.directoryScanQueue =
-            dispatch_queue_create("ai.nexconn.chatui.file-selector.directory-scan", DISPATCH_QUEUE_SERIAL);
+        self.directoryScanQueue = dispatch_queue_create(
+            "ai.nexconn.chatui.file-selector.directory-scan", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -55,7 +55,6 @@ static NSString *const NCListValue = @"List";
     self.tableView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
     self.tableView.separatorColor = NCDynamicColor(@"line_background_color");
 
-
     if ([self.tableView respondsToSelector:@selector(setSeparatorInset:)]) {
         [self.tableView setSeparatorInset:UIEdgeInsetsMake(0, 45, 0, 0)];
     }
@@ -67,13 +66,17 @@ static NSString *const NCListValue = @"List";
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
     imgMirror = [NCSemanticContext imageflippedForRTL:imgMirror];
     if (self.isSubDirectory) {
-        self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:NCUILocalizedString(@"back") target:self action:@selector(clickBackBtn:)];
+        self.navigationItem.leftBarButtonItems =
+            [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                              title:NCUILocalizedString(@"back")
+                                             target:self
+                                             action:@selector(clickBackBtn:)];
     } else {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
         [btn addTarget:self
-                action:@selector(clickCancelBtn:)
-      forControlEvents:UIControlEventTouchUpInside];
-        UIColor *color =  NCChatUIConfigCenter.ui.globalNavigationBarTintColor;
+                      action:@selector(clickCancelBtn:)
+            forControlEvents:UIControlEventTouchUpInside];
+        UIColor *color = NCChatUIConfigCenter.ui.globalNavigationBarTintColor;
         btn.tintColor = color;
         [btn setTitleColor:color forState:UIControlStateNormal];
         [btn setTitle:NCUILocalizedString(@"cancel") forState:UIControlStateNormal];
@@ -84,7 +87,7 @@ static NSString *const NCListValue = @"List";
     }
     [self getDataSourceList];
 }
- 
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self.tableView reloadData];
@@ -93,8 +96,8 @@ static NSString *const NCListValue = @"List";
 
     [btn setTitleColor:color forState:UIControlStateNormal];
     [btn addTarget:self
-            action:@selector(clickDoneBtn:)
-  forControlEvents:UIControlEventTouchUpInside];
+                  action:@selector(clickDoneBtn:)
+        forControlEvents:UIControlEventTouchUpInside];
     [btn setTitle:NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
     [btn sizeToFit];
     self.buttonDone = btn;
@@ -114,7 +117,8 @@ static NSString *const NCListValue = @"List";
     return list.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *directoryCellReuseIdentifier = @"NCFileSelectorViewControllerDirectoryCellReuseId";
     NSString *cellReuseIdentifier = @"NCFileSelectorViewControllerCellReuseId";
 
@@ -124,13 +128,15 @@ static NSString *const NCListValue = @"List";
 
     UITableViewCell *retCell = nil;
     if ([type isEqualToString:NCFileValue]) {
-        NCSelectFilesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellReuseIdentifier];
+        NCSelectFilesTableViewCell *cell =
+            [tableView dequeueReusableCellWithIdentifier:cellReuseIdentifier];
         if (cell == nil) {
             cell = [[NCSelectFilesTableViewCell alloc] init];
         }
         NSString *fileName = list[indexPath.row];
         cell.fileNameLabel.text = fileName;
-        cell.fileIconImageView.image = [NCChatUIUtility imageWithFileSuffix:[fileName pathExtension]];
+        cell.fileIconImageView.image =
+            [NCChatUIUtility imageWithFileSuffix:[fileName pathExtension]];
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         retCell = cell;
     } else {
@@ -151,7 +157,8 @@ static NSString *const NCListValue = @"List";
     return 51.5f;
 }
 
-- (nullable NSIndexPath *)tableView:(UITableView *)tableView willSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+- (nullable NSIndexPath *)tableView:(UITableView *)tableView
+           willSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     NSArray *indexPaths = [self.tableView indexPathsForSelectedRows];
     if (indexPaths.count >= self.maxSelectedNumber) {
         return nil;
@@ -161,14 +168,17 @@ static NSString *const NCListValue = @"List";
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if ([[tableView cellForRowAtIndexPath:indexPath] isKindOfClass:[NCSelectDirectoryTableViewCell class]]) {
+    if ([[tableView cellForRowAtIndexPath:indexPath]
+            isKindOfClass:[NCSelectDirectoryTableViewCell class]]) {
         [tableView deselectRowAtIndexPath:indexPath animated:NO];
         NSString *dir = self.dataSource[indexPath.section][NCListValue][indexPath.row];
         [self selecteDirectory:dir];
-    } else if ([[tableView cellForRowAtIndexPath:indexPath] isKindOfClass:[NCSelectFilesTableViewCell class]]) {
+    } else if ([[tableView cellForRowAtIndexPath:indexPath]
+                   isKindOfClass:[NCSelectFilesTableViewCell class]]) {
         NSDictionary *dict = self.dataSource[indexPath.section];
         NSArray *list = dict[NCListValue];
-        NSString *filePath = [NSString stringWithFormat:@"%@/%@", self.rootPath, list[indexPath.row]];
+        NSString *filePath =
+            [NSString stringWithFormat:@"%@/%@", self.rootPath, list[indexPath.row]];
         if ([self.delegate respondsToSelector:@selector(canBeSelectedAtPath:)]) {
             if (![self.delegate canBeSelectedAtPath:filePath]) {
                 [tableView deselectRowAtIndexPath:indexPath animated:NO];
@@ -179,7 +189,8 @@ static NSString *const NCListValue = @"List";
                 [tableView deselectRowAtIndexPath:indexPath animated:NO];
                 [self presentOverMaximumAlert];
             } else {
-                [self selecteFile:(NCSelectFilesTableViewCell *)[tableView cellForRowAtIndexPath:indexPath]];
+                [self selecteFile:(NCSelectFilesTableViewCell *)[tableView
+                                      cellForRowAtIndexPath:indexPath]];
             }
         }
     }
@@ -201,7 +212,8 @@ static NSString *const NCListValue = @"List";
     return cell;
 }
 
-- (NCSelectDirectoryTableViewCell *)getSelectDirectoryTableViewCell:(NCSelectDirectoryTableViewCell *)cell
+- (NCSelectDirectoryTableViewCell *)getSelectDirectoryTableViewCell:
+                                        (NCSelectDirectoryTableViewCell *)cell
                                                              source:(NSArray *)source
                                                                 row:(NSInteger)row {
     cell.directoryNameLabel.text = source[row];
@@ -245,7 +257,8 @@ static NSString *const NCListValue = @"List";
             continue;
         }
         [selectedFileList
-            addObject:[NSString stringWithFormat:@"%@/%@", self.rootPath, [fileList objectAtIndex:indexPath.row]]];
+            addObject:[NSString stringWithFormat:@"%@/%@", self.rootPath,
+                                                 [fileList objectAtIndex:indexPath.row]]];
     }
 
     if ([self.delegate respondsToSelector:@selector(fileDidSelect:)]) {
@@ -266,16 +279,17 @@ static NSString *const NCListValue = @"List";
 
     __weak typeof(self) weakSelf = self;
     dispatch_async(self.directoryScanQueue, ^{
-        NSArray *dataSource = [NCFileSelectorViewController p_dataSourceListForDirectoryPath:filePath];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf || strongSelf.dataSourceLoadRequestId != requestId) {
-                return;
-            }
-            [strongSelf p_setDirectoryLoading:NO];
-            strongSelf.dataSource = [dataSource mutableCopy];
-            [strongSelf.tableView reloadData];
-        });
+      NSArray *dataSource =
+          [NCFileSelectorViewController p_dataSourceListForDirectoryPath:filePath];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf || strongSelf.dataSourceLoadRequestId != requestId) {
+            return;
+        }
+        [strongSelf p_setDirectoryLoading:NO];
+        strongSelf.dataSource = [dataSource mutableCopy];
+        [strongSelf.tableView reloadData];
+      });
     });
 }
 
@@ -340,19 +354,23 @@ static NSString *const NCListValue = @"List";
 
         UIActivityIndicatorView *indicatorView = nil;
         if (@available(iOS 13.0, *)) {
-            indicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+            indicatorView = [[UIActivityIndicatorView alloc]
+                initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
         } else {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            indicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+            indicatorView = [[UIActivityIndicatorView alloc]
+                initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
 #pragma clang diagnostic pop
         }
         indicatorView.hidesWhenStopped = YES;
         indicatorView.translatesAutoresizingMaskIntoConstraints = NO;
         [_directoryLoadingView addSubview:indicatorView];
         [NSLayoutConstraint activateConstraints:@[
-            [indicatorView.centerXAnchor constraintEqualToAnchor:_directoryLoadingView.centerXAnchor],
-            [indicatorView.centerYAnchor constraintEqualToAnchor:_directoryLoadingView.centerYAnchor]
+            [indicatorView.centerXAnchor
+                constraintEqualToAnchor:_directoryLoadingView.centerXAnchor],
+            [indicatorView.centerYAnchor
+                constraintEqualToAnchor:_directoryLoadingView.centerYAnchor]
         ]];
         self.directoryLoadingIndicatorView = indicatorView;
     }
@@ -365,23 +383,26 @@ static NSString *const NCListValue = @"List";
     if (indexPaths.count > 0) {
         self.navigationItem.rightBarButtonItem.enabled = YES;
         NSString *title = [NCUILocalizedString(@"confirm")
-            stringByAppendingString:[NSString stringWithFormat:@"(%ld/20)", (long)indexPaths.count]];
-        UIColor *color = NCDynamicResourceColor(@"primary_color", @"confirm_text_enable", @"0x0099ff");
+            stringByAppendingString:[NSString
+                                        stringWithFormat:@"(%ld/20)", (long)indexPaths.count]];
+        UIColor *color =
+            NCDynamicResourceColor(@"primary_color", @"confirm_text_enable", @"0x0099ff");
         [self.buttonDone setTitleColor:color forState:UIControlStateNormal];
-        [self.buttonDone setTitle: title forState:UIControlStateNormal];
-        
+        [self.buttonDone setTitle:title forState:UIControlStateNormal];
+
     } else {
         UIColor *color = NCDynamicColor(@"primary_color");
         self.navigationItem.rightBarButtonItem.enabled = NO;
         [self.buttonDone setTitleColor:color forState:UIControlStateNormal];
-        [self.buttonDone setTitle: NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
+        [self.buttonDone setTitle:NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
     }
     [self.buttonDone sizeToFit];
 }
 
 - (BOOL)isOverMaximum:(NSString *)filePath {
     BOOL isOverMaximum = NO;
-    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath
+                                                                                    error:nil];
     unsigned long long length = [fileAttributes fileSize];
     float ff = length / 1024.0 / 1024.0;
     if (ff > 100) {
@@ -391,7 +412,10 @@ static NSString *const NCListValue = @"List";
 }
 
 - (void)presentOverMaximumAlert {
-    [NCAlertView showAlertController:nil message:NCUILocalizedString(@"over_maximum") cancelTitle:NCUILocalizedString(@"ok") inViewController:self];
+    [NCAlertView showAlertController:nil
+                             message:NCUILocalizedString(@"over_maximum")
+                         cancelTitle:NCUILocalizedString(@"ok")
+                    inViewController:self];
 }
 
 @end

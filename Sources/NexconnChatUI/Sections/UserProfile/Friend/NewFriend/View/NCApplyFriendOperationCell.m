@@ -10,7 +10,7 @@
 #import "NCChatUICommonDefine.h"
 #import "NCImageView.h"
 
-NSString  * const NCFriendApplyOperationCellIdentifier = @"NCFriendApplyOperationCellIdentifier";
+NSString *const NCFriendApplyOperationCellIdentifier = @"NCFriendApplyOperationCellIdentifier";
 NSInteger const NCApplyFriendOperationCellBtnMinWidth = 45;
 NSInteger const NCApplyFriendOperationCellBtnSpace = 10;
 @implementation NCApplyFriendOperationCell
@@ -27,21 +27,21 @@ NSInteger const NCApplyFriendOperationCellBtnSpace = 10;
     [self updateCGColorUI];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)updateCGColorUI {
     UIColor *borderColor = NCDynamicColor(@"line_background_color");
     self.btnReject.layer.borderColor = borderColor.CGColor;
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (UIButton *)btnReject {
     if (!_btnReject) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [btn setTitle:NCUILocalizedString(@"friend_application_refuse") forState:UIControlStateNormal];
-        btn.backgroundColor =
-        NCDynamicColor(@"common_background_color");
+        [btn setTitle:NCUILocalizedString(@"friend_application_refuse")
+             forState:UIControlStateNormal];
+        btn.backgroundColor = NCDynamicColor(@"common_background_color");
         [btn setTitleColor:NCDynamicColor(@"hint_color") forState:UIControlStateNormal];
         UIColor *borderColor = NCDynamicColor(@"line_background_color");
         btn.layer.borderColor = borderColor.CGColor;
@@ -52,10 +52,11 @@ NSInteger const NCApplyFriendOperationCellBtnSpace = 10;
         [btn sizeToFit];
 
         [btn addTarget:self
-                action:@selector(rejectApplication)
-      forControlEvents:UIControlEventTouchUpInside];
+                      action:@selector(rejectApplication)
+            forControlEvents:UIControlEventTouchUpInside];
         btn.translatesAutoresizingMaskIntoConstraints = NO;
-        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [btn setContentHuggingPriority:UILayoutPriorityRequired
                                forAxis:UILayoutConstraintAxisHorizontal];
         _btnReject = btn;
@@ -66,16 +67,18 @@ NSInteger const NCApplyFriendOperationCellBtnSpace = 10;
 - (UIButton *)btnApprove {
     if (!_btnApprove) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [btn setTitle:NCUILocalizedString(@"friend_application_accept") forState:UIControlStateNormal];
+        [btn setTitle:NCUILocalizedString(@"friend_application_accept")
+             forState:UIControlStateNormal];
         [btn setBackgroundColor:NCDynamicColor(@"primary_color")];
-        [btn setTitleColor:NCDynamicColor(@"control_title_white_color") forState:UIControlStateNormal];
+        [btn setTitleColor:NCDynamicColor(@"control_title_white_color")
+                  forState:UIControlStateNormal];
         btn.layer.cornerRadius = 4;
         btn.contentEdgeInsets = UIEdgeInsetsMake(5, 17, 5, 17);
         btn.titleLabel.font = [UIFont systemFontOfSize:14];
         [btn sizeToFit];
         [btn addTarget:self
-                action:@selector(approveApplication)
-      forControlEvents:UIControlEventTouchUpInside];
+                      action:@selector(approveApplication)
+            forControlEvents:UIControlEventTouchUpInside];
         btn.translatesAutoresizingMaskIntoConstraints = NO;
         [btn setContentCompressionResistancePriority:UILayoutPriorityRequired
                                              forAxis:UILayoutConstraintAxisHorizontal];

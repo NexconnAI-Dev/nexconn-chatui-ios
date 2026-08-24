@@ -14,7 +14,7 @@
     static NCSightActivityState *state = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        state = [[NCSightActivityState alloc] init];
+      state = [[NCSightActivityState alloc] init];
     });
     return state;
 }

@@ -14,7 +14,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- YYSentinel is a thread safe incrementing counter. 
+ YYSentinel is a thread safe incrementing counter.
  It may be used in some multi-threaded situation.
  */
 @interface NCYYSentinel : NSObject

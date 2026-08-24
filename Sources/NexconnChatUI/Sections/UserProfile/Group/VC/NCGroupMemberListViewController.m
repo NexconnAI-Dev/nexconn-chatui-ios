@@ -7,14 +7,11 @@
 //
 
 #import "NCGroupMemberListViewController.h"
-#import "NCGroupMemberListViewModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupMemberListViewModel.h"
 #import "NCSelectUserView.h"
-@interface NCGroupMemberListViewController ()<
-UITableViewDelegate,
-UITableViewDataSource,
-NCListViewModelResponder
->
+@interface NCGroupMemberListViewController () <UITableViewDelegate, UITableViewDataSource,
+                                               NCListViewModelResponder>
 
 @property (nonatomic, strong) NCSelectUserView *membersView;
 
@@ -55,24 +52,28 @@ NCListViewModelResponder
     [self.viewModel endEditingState];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)setupView {
     [self.membersView configureSearchBar:[self.viewModel configureSearchBar]];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-#pragma mark -- NCListViewModelResponder
+#pragma mark-- NCListViewModelResponder
 
 - (void)reloadData:(BOOL)isEmpty {
     [self.membersView.tableView reloadData];
@@ -83,27 +84,32 @@ NCListViewModelResponder
     return self;
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.viewModel.memberList.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [self.viewModel.memberList[indexPath.row] tableView:tableView cellForRowAtIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [self.viewModel.memberList[indexPath.row] tableView:tableView
+                                         cellForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- UITableViewDelegate
+#pragma mark-- UITableViewDelegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [self.viewModel.memberList[indexPath.row] tableView:tableView heightForRowAtIndexPath:indexPath];
+    return [self.viewModel.memberList[indexPath.row] tableView:tableView
+                                       heightForRowAtIndexPath:indexPath];
 }
 
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)tableView
+      willDisplayCell:(UITableViewCell *)cell
+    forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row > self.viewModel.memberList.count - 10) {
         [self.viewModel fetchGroupMembersByPage];
     }
@@ -113,7 +119,7 @@ NCListViewModelResponder
     [self.view endEditing:YES];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCSelectUserView *)membersView {
     if (!_membersView) {
@@ -124,6 +130,5 @@ NCListViewModelResponder
     }
     return _membersView;
 }
-
 
 @end

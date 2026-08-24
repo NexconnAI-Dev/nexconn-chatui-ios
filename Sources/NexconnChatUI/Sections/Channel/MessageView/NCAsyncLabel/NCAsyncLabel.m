@@ -9,20 +9,17 @@
 #import "NCAsyncLabel.h"
 #import "NCChatUILog.h"
 #import "NCYYAsyncLayer.h"
-#import <CoreText/CoreText.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <CoreText/CoreText.h>
 
-
-@interface NCAsyncLabel() {
+@interface NCAsyncLabel () {
     CTFrameRef _currentFrame;
 }
 @property (nonatomic, strong) NSDataDetector *dataDetector;
 @property (nonatomic, strong) NSArray *checkingResults;
 @end
 
-
 @implementation NCAsyncLabel
-
 
 - (void)setText:(NSString *)text {
     _text = text.copy;
@@ -44,15 +41,15 @@
     [self.layer setNeedsDisplay];
 }
 
-
 - (void)clean {
-  _text = @"";
-  self.layer.contents = nil;
+    _text = @"";
+    self.layer.contents = nil;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:CGRectZero];
-    if (!self) return nil;
+    if (!self)
+        return nil;
     self.backgroundColor = [UIColor clearColor];
     self.opaque = NO;
     self.layer.contentsScale = [UIScreen mainScreen].scale;
@@ -63,7 +60,8 @@
 }
 
 - (void)addTapGestureRecognizer {
-    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    UITapGestureRecognizer *tapGestureRecognizer =
+        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
     [self addGestureRecognizer:tapGestureRecognizer];
 }
 
@@ -75,80 +73,79 @@
     if (!results.count) { // Skip hit testing when there are no detected URLs or phone numbers.
         return;
     }
-    
-//    NSTextCheckingResult *result = [self linkAtPoint:[gestureRecognizer locationInView:self]];
-    CGPoint location =[gestureRecognizer locationInView:self];
+
+    //    NSTextCheckingResult *result = [self linkAtPoint:[gestureRecognizer locationInView:self]];
+    CGPoint location = [gestureRecognizer locationInView:self];
 
     // Resolve the tap in the Core Text coordinate system.
     [self userDidClickAt:location];
 }
 
-
 + (Class)layerClass {
     return NCYYAsyncLayer.class;
 }
-
 
 - (void)dealloc {
     [self resetCurrentFrameWith:NULL];
 }
 #pragma mark - Private
 
-
 /// Returns whether the text should be detected by the data detector.
 - (BOOL)shouldDetectText {
-    if([self.delegate respondsToSelector:@selector(shouldDetectText)]) {
-        return [self.delegate shouldDetectText];;
+    if ([self.delegate respondsToSelector:@selector(shouldDetectText)]) {
+        return [self.delegate shouldDetectText];
+        ;
     }
     return NO;
 }
 
 /// Detect the data in text and add highlight to the data range.
 /// @return Whether detected.
-- (BOOL)detectText:(NSMutableAttributedString *)text withAttributes:(NSDictionary *)textAttributes{
+- (BOOL)detectText:(NSMutableAttributedString *)text withAttributes:(NSDictionary *)textAttributes {
     // Clear results from the previous text.
     self.checkingResults = @[];
-    if (![self shouldDetectText]) return NO;
-    if (text.length == 0) return NO;
+    if (![self shouldDetectText])
+        return NO;
+    if (text.length == 0)
+        return NO;
     if (![textAttributes isKindOfClass:[NSDictionary class]]) {
         return NO;
     }
     __block BOOL detected = NO;
     NSMutableArray *array = [NSMutableArray array];
-    [self.dataDetector enumerateMatchesInString:text.string
-                                        options:kNilOptions
-                                          range:NSMakeRange(0, text.length)
-                                     usingBlock: ^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
-        
-        switch (result.resultType) {
-            case NSTextCheckingTypeLink:
-            case NSTextCheckingTypePhoneNumber: {
-                detected = YES;
-                NSDictionary *dic = textAttributes[@(result.resultType)];
-                if (![dic isKindOfClass:[NSDictionary class]]) {
-                    break;
-                }
-                if (dic.count) {
-                    [dic enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-                        [self setAttributeOf:text name:key value:obj range:result.range];
-                    }];
-                }
-                if (result) {
-                    [array addObject:result];
-                }
-            }
-                break;
-            default:
-                break;
-        }
-    }];
+    [self.dataDetector
+        enumerateMatchesInString:text.string
+                         options:kNilOptions
+                           range:NSMakeRange(0, text.length)
+                      usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags,
+                                   BOOL *stop) {
+                        switch (result.resultType) {
+                        case NSTextCheckingTypeLink:
+                        case NSTextCheckingTypePhoneNumber: {
+                            detected = YES;
+                            NSDictionary *dic = textAttributes[@(result.resultType)];
+                            if (![dic isKindOfClass:[NSDictionary class]]) {
+                                break;
+                            }
+                            if (dic.count) {
+                                [dic enumerateKeysAndObjectsUsingBlock:^(id key, id obj,
+                                                                         BOOL *stop) {
+                                  [self setAttributeOf:text name:key value:obj range:result.range];
+                                }];
+                            }
+                            if (result) {
+                                [array addObject:result];
+                            }
+                        } break;
+                        default:
+                            break;
+                        }
+                      }];
     self.checkingResults = array;
     return detected;
 }
 
-- (void)setAttributeOf:(NSMutableAttributedString *)text
-                  name:(NSString *)name
-                 value:(id)value {
+- (void)setAttributeOf:(NSMutableAttributedString *)text name:(NSString *)name value:(id)value {
     [self setAttributeOf:text name:name value:value range:NSMakeRange(0, text.length)];
 }
 
@@ -159,11 +156,11 @@
     if (!text) {
         return;
     }
-    if (!name || [NSNull isEqual:name]) return;
+    if (!name || [NSNull isEqual:name])
+        return;
     if (value && ![NSNull isEqual:value]) {
         [text addAttribute:name value:value range:range];
-    }
-    else {
+    } else {
         [text setAttributes:nil range:range];
     }
 }
@@ -172,7 +169,8 @@
 /// @param text The source text.
 /// @param font The drawing font.
 - (NSMutableAttributedString *)attibuteStringWith:(NSString *)text font:(UIFont *)font {
-    NSMutableAttributedString *attibuteStr = [[NSMutableAttributedString alloc] initWithString:text];
+    NSMutableAttributedString *attibuteStr =
+        [[NSMutableAttributedString alloc] initWithString:text];
     [attibuteStr addAttribute:NSFontAttributeName value:font range:NSMakeRange(0, text.length)];
     NSDictionary *textAttributes = nil;
     if ([self.delegate respondsToSelector:@selector(textAttributesInfo)]) {
@@ -180,10 +178,12 @@
     }
     UIColor *textColor = textAttributes[NSForegroundColorAttributeName];
     if (textColor) {
-        [attibuteStr addAttribute:NSForegroundColorAttributeName value:textColor range:NSMakeRange(0, text.length)];
+        [attibuteStr addAttribute:NSForegroundColorAttributeName
+                            value:textColor
+                            range:NSMakeRange(0, text.length)];
     }
     [self detectText:attibuteStr withAttributes:textAttributes];
-    
+
     return attibuteStr;
 }
 
@@ -192,10 +192,12 @@
     CGMutablePathRef path = CGPathCreateMutable();
     CGRect bounds = CGRectMake(0, 0, size.width, size.height);
     CGPathAddRect(path, NULL, bounds);
-    
+
     // Create a framesetter and frame from the attributed string.
-    CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString((CFAttributedStringRef)attrString);
-    CTFrameRef frame = CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, [attrString length]), path, NULL);
+    CTFramesetterRef frameSetter =
+        CTFramesetterCreateWithAttributedString((CFAttributedStringRef)attrString);
+    CTFrameRef frame =
+        CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, [attrString length]), path, NULL);
     CFRelease(frameSetter);
     CFRelease(path);
     return frame;
@@ -208,12 +210,12 @@
     return Lines;
 }
 
-- (void)translateCTM:(CGContextRef)context size:(CGSize)size{
-//    [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-        CGContextSetTextMatrix(context, CGAffineTransformIdentity);
-        CGContextTranslateCTM(context, 0, size.height);
-        CGContextScaleCTM(context, 1.0, -1.0);
-//    }];
+- (void)translateCTM:(CGContextRef)context size:(CGSize)size {
+    //    [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+    CGContextSetTextMatrix(context, CGAffineTransformIdentity);
+    CGContextTranslateCTM(context, 0, size.height);
+    CGContextScaleCTM(context, 1.0, -1.0);
+    //    }];
 }
 
 #pragma mark - Touch
@@ -237,24 +239,22 @@
 
 - (void)reportWith:(NSTextCheckingResult *)result {
     switch (result.resultType) {
-        case NSTextCheckingTypeLink: {
-            if ([self.delegate respondsToSelector:@selector(asyncLabel:didSelectLinkWithURL:)]) {
-                [self.delegate asyncLabel:self didSelectLinkWithURL:[result URL]];
-            }
+    case NSTextCheckingTypeLink: {
+        if ([self.delegate respondsToSelector:@selector(asyncLabel:didSelectLinkWithURL:)]) {
+            [self.delegate asyncLabel:self didSelectLinkWithURL:[result URL]];
         }
-            break;
-        case NSTextCheckingTypePhoneNumber: {
-            if ([self.delegate respondsToSelector:@selector(asyncLabel:didSelectLinkWithPhoneNumber:)]) {
-                [self.delegate asyncLabel:self didSelectLinkWithPhoneNumber:[result phoneNumber]];
-            }
+    } break;
+    case NSTextCheckingTypePhoneNumber: {
+        if ([self.delegate
+                respondsToSelector:@selector(asyncLabel:didSelectLinkWithPhoneNumber:)]) {
+            [self.delegate asyncLabel:self didSelectLinkWithPhoneNumber:[result phoneNumber]];
         }
-            break;
-        default: {
-            if ([self.delegate respondsToSelector:@selector(didTapAsyncLabel:)]) {
-                [self.delegate didTapAsyncLabel:self];
-            }
+    } break;
+    default: {
+        if ([self.delegate respondsToSelector:@selector(didTapAsyncLabel:)]) {
+            [self.delegate didTapAsyncLabel:self];
         }
-            break;
+    } break;
     }
 }
 
@@ -263,16 +263,16 @@
 - (CFIndex)characterIndexBy:(CGPoint)location {
     // Flip the UIKit point into Core Text coordinates.
     CGPoint point = CGPointMake(location.x, self.bounds.size.height - location.y);
-    
+
     CFIndex index = kCFNotFound;
     CFArrayRef lines = [self createLinesFromFrame:_currentFrame];
     CFIndex lineCount = CFArrayGetCount(lines);
-    
+
     CGPoint origins[lineCount];
     CTFrameGetLineOrigins(_currentFrame, CFRangeMake(0, 0), origins);
-    
-    for (CFIndex i = 0; i < lineCount; i ++) {
-        
+
+    for (CFIndex i = 0; i < lineCount; i++) {
+
         CTLineRef line = CFArrayGetValueAtIndex(lines, i);
         CGPoint lineOrigin = origins[i];
         // Hit-testing approach based on TTTAttributedLabel.
@@ -281,7 +281,7 @@
         CGFloat width = (CGFloat)CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
         CGFloat yMin = (CGFloat)floor(lineOrigin.y - descent);
         CGFloat yMax = (CGFloat)ceil(lineOrigin.y + ascent);
-        
+
         CGPoint relativePoint = CGPointMake(point.x - lineOrigin.x, point.y - lineOrigin.y);
         // Check if we've already passed the line
         if (point.y > yMax) {
@@ -291,7 +291,7 @@
         if (point.y >= yMin) {
             // Check if the point is within this line horizontally
             if (point.x >= lineOrigin.x && point.x <= lineOrigin.x + width) {
-                index = CTLineGetStringIndexForPosition(line,relativePoint);
+                index = CTLineGetStringIndexForPosition(line, relativePoint);
                 NCLogD(@"%ld", (long)index);
                 break;
             }
@@ -309,45 +309,44 @@
     if (frame != NULL) {
         _currentFrame = CFRetain(frame);
     }
-    
 }
 #pragma mark - YYAsyncLayer
 
 - (NCYYAsyncLayerDisplayTask *)newAsyncDisplayTask {
     // capture current state to display task
-    NSString *text = self.text ?:@"";
+    NSString *text = self.text ?: @"";
     UIFont *font = self.font;
     NCYYAsyncLayerDisplayTask *task = [NCYYAsyncLayerDisplayTask new];
-    
-    
-    task.display = ^(CGContextRef context, CGSize size, BOOL(^isCancelled)(void)) {
-        [self translateCTM:context size:size];
-        if (isCancelled && isCancelled()) return;
-        NSMutableAttributedString *string = [self attibuteStringWith:text font:font];
-        CTFrameRef frame = [self createFrameWith:string size:size];
-        [self resetCurrentFrameWith:frame];
-        CFArrayRef lines = [self createLinesFromFrame:frame];
-        CFIndex lineCount = CFArrayGetCount(lines);
-        CGPoint origins[lineCount];
-        CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins);
-        for (CFIndex i = 0; i < lineCount; i ++) {
-            CTLineRef line = CFArrayGetValueAtIndex(lines, i);
-            CGPoint point = origins[i];
-            CGContextSetTextPosition(context, point.x, point.y);
-            CTLineDraw(line, context);
-        }
-        CFRelease(lines);
-        CFRelease(frame);
+
+    task.display = ^(CGContextRef context, CGSize size, BOOL (^isCancelled)(void)) {
+      [self translateCTM:context size:size];
+      if (isCancelled && isCancelled())
+          return;
+      NSMutableAttributedString *string = [self attibuteStringWith:text font:font];
+      CTFrameRef frame = [self createFrameWith:string size:size];
+      [self resetCurrentFrameWith:frame];
+      CFArrayRef lines = [self createLinesFromFrame:frame];
+      CFIndex lineCount = CFArrayGetCount(lines);
+      CGPoint origins[lineCount];
+      CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins);
+      for (CFIndex i = 0; i < lineCount; i++) {
+          CTLineRef line = CFArrayGetValueAtIndex(lines, i);
+          CGPoint point = origins[i];
+          CGContextSetTextPosition(context, point.x, point.y);
+          CTLineDraw(line, context);
+      }
+      CFRelease(lines);
+      CFRelease(frame);
     };
-    
+
     task.didDisplay = ^(CALayer *layer, BOOL finished) {
-        if (finished) {
-            // finished
-        } else {
-            // cancelled
-        }
+      if (finished) {
+          // finished
+      } else {
+          // cancelled
+      }
     };
-    
+
     return task;
 }
 
@@ -356,8 +355,7 @@
 - (NSDataDetector *)dataDetector {
     if (!_dataDetector) {
         NSTextCheckingType checkingType = NSTextCheckingTypePhoneNumber | NSTextCheckingTypeLink;
-        _dataDetector = [NSDataDetector dataDetectorWithTypes:checkingType
-                                                        error:NULL];
+        _dataDetector = [NSDataDetector dataDetectorWithTypes:checkingType error:NULL];
     }
     return _dataDetector;
 }

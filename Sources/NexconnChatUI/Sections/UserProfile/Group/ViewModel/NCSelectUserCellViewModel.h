@@ -7,12 +7,12 @@
 //
 
 #import "NCBaseCellViewModel.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCUserProfileDefine.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 /// Select user cell view model
-@interface NCSelectUserCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCSelectUserCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 
 /// Friend info
 @property (nonatomic, strong, readonly) NCFriendInfo *friendInfo;

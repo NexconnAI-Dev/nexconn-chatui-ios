@@ -12,7 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NCChannelViewController (RRS)
 - (void)rrs_observeReadReceipt;
-- (void)rrs_didReceiveMessageReadReceiptResponses:(NSArray<NCMessageReadReceiptResponse *> *)responses;
+- (void)rrs_didReceiveMessageReadReceiptResponses:
+    (NSArray<NCMessageReadReceiptResponse *> *)responses;
 @end
 
 NS_ASSUME_NONNULL_END

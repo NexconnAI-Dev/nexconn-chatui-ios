@@ -7,12 +7,12 @@
 //
 
 #import "NCTipMessageCell.h"
-#import "NCChatUIUtility.h"
-#import "NCUserInfoCacheManager.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 #import "NCInfoUpdateCenter.h"
 #import "NCMessageCellTool.h"
+#import "NCUserInfoCacheManager.h"
 
 @interface NCMessageModel (NCTipMessageCell)
 
@@ -54,12 +54,14 @@
     [super setDataModel:model];
 
     self.relatedUserIdList = [model tipMessageRelatedUserIdList];
-    
+
     self.tipMessageLabel.text = [model formattedTipMessageText];
     CGSize labelSize = [NCTipMessageCell getTipLabelSize:model];
-    
+
     self.tipMessageLabel.textAlignment = NSTextAlignmentCenter;
-    self.tipMessageLabel.frame = CGRectMake((self.baseContentView.bounds.size.width - labelSize.width) / 2.0f - 5, 0, labelSize.width + 10, labelSize.height);
+    self.tipMessageLabel.frame =
+        CGRectMake((self.baseContentView.bounds.size.width - labelSize.width) / 2.0f - 5, 0,
+                   labelSize.width + 10, labelSize.height);
 }
 
 #pragma mark - NCAttributedLabelDelegate
@@ -73,10 +75,12 @@
     }
 }
 
-- (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithAddress:(NSDictionary *)addressComponents {
+- (void)attributedLabel:(NCAttributedLabel *)label
+    didSelectLinkWithAddress:(NSDictionary *)addressComponents {
 }
 
-- (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
+- (void)attributedLabel:(NCAttributedLabel *)label
+    didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
     NSString *number = [NCMessageCellTool phoneURLStringWithPhoneNumber:phoneNumber];
     if (!number) {
         return;
@@ -94,17 +98,18 @@
 }
 
 #pragma mark - Private Methods
-+ (CGSize)getTipLabelSize:(NCMessageModel *)model{
++ (CGSize)getTipLabelSize:(NCMessageModel *)model {
     NSString *localizedMessage = [model formattedTipMessageText];
-    CGSize textSize = [NCChatUIUtility getTextDrawingSize:localizedMessage
-                                                    font:[[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
-                                         constrainedSize:CGSizeMake([self getMaxLabelWidth], MAXFLOAT)];
+    CGSize textSize =
+        [NCChatUIUtility getTextDrawingSize:localizedMessage
+                                       font:[[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
+                            constrainedSize:CGSizeMake([self getMaxLabelWidth], MAXFLOAT)];
     textSize = CGSizeMake(ceilf(textSize.width), ceilf(textSize.height));
     CGSize labelSize = CGSizeMake(textSize.width + 10, textSize.height + 6);
     return labelSize;
 }
 
-+ (CGFloat)getMaxLabelWidth{
++ (CGFloat)getMaxLabelWidth {
     return SCREEN_WIDTH - 30 * 2;
 }
 
@@ -112,7 +117,7 @@
 }
 
 #pragma mark - Getter
-- (NCTipLabel *)tipMessageLabel{
+- (NCTipLabel *)tipMessageLabel {
     if (!_tipMessageLabel) {
         _tipMessageLabel = [NCTipLabel greyTipLabel];
         _tipMessageLabel.textColor = NCDynamicColor(@"control_title_white_color");

@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 /// Group favorites view model
-@interface NCGroupFollowsViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCGroupFollowsViewModel : NCBaseViewModel <NCListViewModelProtocol>
 /// Creates an `NCGroupFollowsViewModel` instance
 ///
 /// @param groupId The group owner identifier

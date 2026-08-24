@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCProfileCommonCell.h"
 #import "NCImageView.h"
-UIKIT_EXTERN NSString * _Nullable const NCProfileImageCellIdentifier;
+#import "NCProfileCommonCell.h"
+UIKIT_EXTERN NSString *_Nullable const NCProfileImageCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -8,7 +8,7 @@
 
 #import "NCNavigationItemsViewModel.h"
 
-typedef NS_ENUM(NSInteger ,NCApplicationCategory) {
+typedef NS_ENUM(NSInteger, NCApplicationCategory) {
     NCApplicationCategoryBoth,
     NCApplicationCategoryReceived,
     NCApplicationCategorySent

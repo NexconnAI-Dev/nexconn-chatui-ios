@@ -26,7 +26,8 @@
         NSString *singlePinyinLetter = nil;
         if ([self isChinese:[hanZi substringWithRange:NSMakeRange(j, 1)]]) {
             singlePinyinLetter =
-                [[NSString stringWithFormat:@"%c", pinyinFirstLetter([hanZi characterAtIndex:j])] uppercaseString];
+                [[NSString stringWithFormat:@"%c", pinyinFirstLetter([hanZi characterAtIndex:j])]
+                    uppercaseString];
         } else {
             singlePinyinLetter = [hanZi substringWithRange:NSMakeRange(j, 1)];
         }
@@ -56,13 +57,13 @@
 
 + (NSMutableDictionary *)sortedWithPinYinArray:(NSArray *)array
                                     usingBlock:(NSString * (^)(id obj, NSUInteger idx))block {
-    
+
     if (!array || array.count == 0)
         return nil;
 
     NSMutableDictionary *infoDic = [NSMutableDictionary new];
     NSMutableArray *allkeyArr = [NSMutableArray new];
-    for (int i = 0; i<array.count; i++) {
+    for (int i = 0; i < array.count; i++) {
         NSString *firstLetter = @"#";
         id obj = array[i];
         NSString *key = block(obj, i);
@@ -70,7 +71,7 @@
         if (![allkeyArr containsObject:firstLetter]) {
             [allkeyArr addObject:firstLetter];
         }
-        
+
         NSMutableArray *result = [infoDic valueForKey:firstLetter];
         if (!result) {
             result = [NSMutableArray new];
@@ -85,7 +86,8 @@
     if (firstString.length == 0 || secondString.length == 0) {
         return NO;
     }
-    NSString *twoStr = [[secondString stringByReplacingOccurrencesOfString:@" " withString:@""] lowercaseString];
+    NSString *twoStr = [[secondString stringByReplacingOccurrencesOfString:@" "
+                                                                withString:@""] lowercaseString];
     if ([[firstString lowercaseString] containsString:[secondString lowercaseString]] ||
         [[firstString lowercaseString] containsString:twoStr] ||
         [[[self hanZiToPinYinWithString:firstString] lowercaseString] containsString:twoStr]) {

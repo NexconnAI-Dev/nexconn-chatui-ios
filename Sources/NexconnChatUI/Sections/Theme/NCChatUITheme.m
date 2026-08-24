@@ -7,26 +7,27 @@
 //
 
 #import "NCChatUITheme.h"
-#import <NexconnChatUI/NCChatUILog.h>
 #import "UIColor+NCIMHexColor.h"
+#import <NexconnChatUI/NCChatUILog.h>
 
 // Theme file constants.
-static NSString * const kThemePlistFileName = @"theme.plist";
-static NSString * const kThemeResourcesDirectoryName = @"resources";
+static NSString *const kThemePlistFileName = @"theme.plist";
+static NSString *const kThemeResourcesDirectoryName = @"resources";
 
 // Theme configuration keys.
-static NSString * const kThemeNameKey = @"name";
-static NSString * const kThemeColorsKey = @"colors";
-static NSString * const kThemeImagesKey = @"images";
+static NSString *const kThemeNameKey = @"name";
+static NSString *const kThemeColorsKey = @"colors";
+static NSString *const kThemeImagesKey = @"images";
 
-@interface NCChatUITheme()
+@interface NCChatUITheme ()
 
 @property (nonatomic, copy, readwrite) NSDictionary<NSString *, NSString *> *colors;
 @property (nonatomic, copy, readwrite) NSDictionary<NSString *, NSString *> *images;
 @property (nonatomic, copy, readwrite) NSString *resourcePath;
 @property (nonatomic, copy, readwrite) NSString *plistPath;
 
-/// Resolves an existing image path by preferred screen scale, then falls back across @2x, @3x, and unscaled files.
+/// Resolves an existing image path by preferred screen scale, then falls back across @2x, @3x, and
+/// unscaled files.
 - (nullable NSString *)resolvedImagePathForImageName:(NSString *)imageName;
 
 @end
@@ -117,8 +118,7 @@ static NSString * const kThemeImagesKey = @"images";
 ///   - colorKey: Theme color key.
 ///   - hex: Fallback hex color.
 /// - Returns: The configured color, the hex fallback, or nil when neither can be resolved.
-- (UIColor *)dynamicColor:(NSString *)colorKey
-             defaultColor:(NSString *)hex {
+- (UIColor *)dynamicColor:(NSString *)colorKey defaultColor:(NSString *)hex {
     // Validate the key.
     if (![self isValidStringKey:colorKey]) {
         return nil;
@@ -140,8 +140,7 @@ static NSString * const kThemeImagesKey = @"images";
 ///   - imageKey: Theme image key.
 ///   - defaultImage: Fallback image.
 /// - Returns: The configured image, or defaultImage when the key or file cannot be resolved.
-- (UIImage *)dynamicImage:(NSString *)imageKey
-             defaultImage:(UIImage *)defaultImage {
+- (UIImage *)dynamicImage:(NSString *)imageKey defaultImage:(UIImage *)defaultImage {
     // Validate the key.
     if (![self isValidStringKey:imageKey]) {
         return defaultImage;
@@ -188,9 +187,7 @@ static NSString * const kThemeImagesKey = @"images";
 
     if (!image) {
         NCLogW(@"[NCChatUITheme] Failed to load image for key:%@, name:%@, resourcePath:%@",
-               imageKey,
-               imageName,
-               self.resourcePath);
+               imageKey, imageName, self.resourcePath);
     }
 
     return image;
@@ -202,25 +199,25 @@ static NSString * const kThemeImagesKey = @"images";
     }
 
     NSString *extension = [imageName pathExtension];
-    NSString *baseName = extension.length > 0 ? [imageName stringByDeletingPathExtension] : imageName;
-    NSString *normalizedExtension = extension.length > 0 ? [@"." stringByAppendingString:extension] : @".png";
+    NSString *baseName =
+        extension.length > 0 ? [imageName stringByDeletingPathExtension] : imageName;
+    NSString *normalizedExtension =
+        extension.length > 0 ? [@"." stringByAppendingString:extension] : @".png";
     CGFloat screenScale = [UIScreen mainScreen].scale;
 
     NSArray<NSString *> *scaleSuffixes = nil;
     if (screenScale >= 3.0) {
-        scaleSuffixes = @[@"@3x", @"@2x", @""];
+        scaleSuffixes = @[ @"@3x", @"@2x", @"" ];
     } else if (screenScale >= 2.0) {
-        scaleSuffixes = @[@"@2x", @"@3x", @""];
+        scaleSuffixes = @[ @"@2x", @"@3x", @"" ];
     } else {
-        scaleSuffixes = @[@"", @"@2x", @"@3x"];
+        scaleSuffixes = @[ @"", @"@2x", @"@3x" ];
     }
 
     NSFileManager *fileManager = [NSFileManager defaultManager];
     for (NSString *suffix in scaleSuffixes) {
-        NSString *fileName = [NSString stringWithFormat:@"%@%@%@",
-                              baseName,
-                              suffix,
-                              normalizedExtension];
+        NSString *fileName =
+            [NSString stringWithFormat:@"%@%@%@", baseName, suffix, normalizedExtension];
         NSString *candidatePath = [self.resourcePath stringByAppendingPathComponent:fileName];
         if ([fileManager fileExistsAtPath:candidatePath]) {
             return candidatePath;

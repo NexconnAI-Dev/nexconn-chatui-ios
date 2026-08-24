@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCChatUIUserInfo.h"
+#import "NCEditInputBarConfig.h"
 #import "NCEditInputContainerView.h"
 #import "NCEmojiBoardView.h"
-#import "NCEditInputBarConfig.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -23,7 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Edit confirmed
 /// @param editInputBarControl The edit input bar control
 /// @param text The edited text
-- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl didConfirmWithText:(NSString *)text;
+- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+         didConfirmWithText:(NSString *)text;
 
 /// Edit cancelled
 /// @param editInputBarControl The edit input bar control
@@ -48,7 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Edit control height changed
 /// @param editInputBarControl The edit input bar control
 /// @param frame The new frame
-- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl shouldChangeFrame:(CGRect)frame;
+- (void)editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+          shouldChangeFrame:(CGRect)frame;
 
 @end
 
@@ -61,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param userId The user ID
 /// @return The user info
 - (nullable NCChatUIUserInfo *)editInputBarControl:(NCEditInputBarControl *)editInputBarControl
-                                 getUserInfo:(NSString *)userId;
+                                       getUserInfo:(NSString *)userId;
 
 @end
 
@@ -79,8 +81,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Target ID
 @property (nonatomic, copy) NSString *channelId;
 
-/// Parent view for the bottom panels. If provided, the bottom panel's origin.x and origin.y are both 0.
-/// If not set, the bottom panel is displayed on the parent view of NCEditInputBarControl, laid out at the bottom of the screen.
+/// Parent view for the bottom panels. If provided, the bottom panel's origin.x and origin.y are
+/// both 0. If not set, the bottom panel is displayed on the parent view of NCEditInputBarControl,
+/// laid out at the bottom of the screen.
 @property (nonatomic, strong) UIView *bottomPanelsContainerView;
 
 /// Whether the control is visible
@@ -110,7 +113,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Add a mentioned user
 /// @param userInfo The user info
-/// @param symbolRequest Whether to insert the @ symbol (YES = insert @ symbol + username, NO = insert username only, assuming @ symbol already exists)
+/// @param symbolRequest Whether to insert the @ symbol (YES = insert @ symbol + username, NO =
+/// insert username only, assuming @ symbol already exists)
 - (void)addMentionedUser:(NCChatUIUserInfo *)userInfo symbolRequest:(BOOL)symbolRequest;
 
 /// Set reference message info, typically used to update the referenced message content display
@@ -140,7 +144,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showWithConfig:(NCEditInputBarConfig *)config;
 
 /// Exit the edit input bar
-- (void)exitWithAnimation:(BOOL)animated completion:(void (^ _Nullable)(void))completion;
+- (void)exitWithAnimation:(BOOL)animated completion:(void (^_Nullable)(void))completion;
 
 /// Get the current edit text
 - (NSString *)currentEditText;
@@ -153,7 +157,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)restoreFocus;
 
 /// Hide bottom panels, including the emoji board or keyboard
-- (void)hideBottomPanelsWithAnimation:(BOOL)animated completion:(void (^ _Nullable)(void))completion;
+- (void)hideBottomPanelsWithAnimation:(BOOL)animated completion:(void (^_Nullable)(void))completion;
 
 /// Set the visibility of the edit input bar (without exiting edit mode)
 /// @param hidden Whether to hide

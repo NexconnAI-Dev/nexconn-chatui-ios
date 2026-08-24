@@ -7,10 +7,10 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCListViewModelProtocol.h"
-#import "NCNavigationItemsViewModel.h"
 #import "NCCellViewModelProtocol.h"
 #import "NCGroupInfoCellViewModel.h"
+#import "NCListViewModelProtocol.h"
+#import "NCNavigationItemsViewModel.h"
 #import "NCSearchBarViewModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -31,14 +31,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param viewModel viewModel
 /// @return Custom navigation items view model, or `nil` to use the default
 ///
-- (NCNavigationItemsViewModel *_Nullable)willConfigureRightNavigationItemsForMyGroupsViewModel:(NCMyGroupsViewModel *)viewModel;
-
+- (NCNavigationItemsViewModel *_Nullable)willConfigureRightNavigationItemsForMyGroupsViewModel:
+    (NCMyGroupsViewModel *)viewModel;
 
 /// Configures custom search functionality
 /// @param viewModel viewModel
 /// @return Custom search view model, or `nil` to use the default
 ///
-- (NCSearchBarViewModel *_Nullable)willConfigureSearchBarViewModelForMyGroupsViewModel:(NCMyGroupsViewModel *)viewModel;
+- (NCSearchBarViewModel *_Nullable)willConfigureSearchBarViewModelForMyGroupsViewModel:
+    (NCMyGroupsViewModel *)viewModel;
 
 /// Called when the user taps a cell
 ///   - viewModel: viewModel
@@ -49,14 +50,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)myGroupsViewModel:(NCMyGroupsViewModel *)viewModel
-           viewController:(UIViewController*)viewController
+           viewController:(UIViewController *)viewController
                 tableView:(UITableView *)tableView
              didSelectRow:(NSIndexPath *)indexPath
             cellViewModel:(NCBaseCellViewModel *)cellViewModel;
 @end
 
 /// Group list view model
-@interface NCMyGroupsViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCMyGroupsViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Delegate
 @property (nonatomic, weak) id<NCMyGroupsViewModelDelegate> delegate;
@@ -75,7 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)fetchData;
 
 /// Binds the responder
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder;
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder;
 
 /// Loads more data
 - (void)loadMoreData;

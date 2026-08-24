@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCStackTableViewCell.h"
 #import "NCOnlineStatusView.h"
-UIKIT_EXTERN NSString * _Nullable const NCFriendListPermanentCellIdentifier;
+#import "NCStackTableViewCell.h"
+UIKIT_EXTERN NSString *_Nullable const NCFriendListPermanentCellIdentifier;
 @class NCImageView;
 
 NS_ASSUME_NONNULL_BEGIN

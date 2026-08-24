@@ -22,4 +22,3 @@
     return [[self alloc] initWithTitle:item.title image:nil action:item.action];
 }
 @end
-

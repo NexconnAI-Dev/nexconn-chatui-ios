@@ -7,17 +7,17 @@
 //
 
 #import "NCGIFPreviewViewController.h"
-#import "NCGIFImage.h"
-#import "NCChatUIUtility.h"
-#import "NCChatUICommonDefine.h"
+#import "NCActionSheetView.h"
+#import "NCAlertView.h"
 #import "NCAssetHelper.h"
 #import "NCChatUI.h"
-#import "NCAlertView.h"
-#import "NCActionSheetView.h"
-#import "NCSemanticContext.h"
-#import "NCMBProgressHUD.h"
-#import "NCGIFUtility.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 #import "NCFileUtility.h"
+#import "NCGIFImage.h"
+#import "NCGIFUtility.h"
+#import "NCMBProgressHUD.h"
+#import "NCSemanticContext.h"
 
 @interface NCGIFPreviewViewController () <NCChatUIMessageEventObserver>
 
@@ -53,66 +53,67 @@
     NCGIFMessage *gifMessage = (NCGIFMessage *)self.messageModel.content;
     if (gifMessage.localPath.length > 0 && [NCFileUtility isFileExist:gifMessage.localPath]) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            self.gifData = [NSData dataWithContentsOfFile:gifMessage.localPath];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.gifData) {
-                    self.gifView.animatedImage = [NCGIFImage animatedImageWithGIFData:self.gifData];
-                }
-            });
+          self.gifData = [NSData dataWithContentsOfFile:gifMessage.localPath];
+          dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.gifData) {
+                self.gifView.animatedImage = [NCGIFImage animatedImageWithGIFData:self.gifData];
+            }
+          });
         });
     } else if (gifMessage.remoteUrl.length > 0) {
-        self.progressHUD =
-            [NCMBProgressHUD showHUDAddedTo:self.view animated:YES];
+        self.progressHUD = [NCMBProgressHUD showHUDAddedTo:self.view animated:YES];
         self.progressHUD.label.text = NCUILocalizedString(@"file_is_downloading");
         self.progressHUD.bezelView.style = NCMBProgressHUDBackgroundStyleSolidColor;
         self.progressHUD.bezelView.color = [UIColor clearColor];
-        
+
         __weak typeof(self) weakSelf = self;
-        [NCBaseChannel downloadMediaUrl:gifMessage.remoteUrl
-                               fileName:[NCGIFUtility downloadFileNameForMessageName:gifMessage.name
-                                                                     mediaURLString:gifMessage.remoteUrl]
-                        progressHandler:nil
-                      completionHandler:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (error || mediaPath.length == 0) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    strongSelf.progressHUD.label.text = NCUILocalizedString(@"file_download_failed");
+        [NCBaseChannel
+             downloadMediaUrl:gifMessage.remoteUrl
+                     fileName:[NCGIFUtility downloadFileNameForMessageName:gifMessage.name
+                                                            mediaURLString:gifMessage.remoteUrl]
+              progressHandler:nil
+            completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              if (error || mediaPath.length == 0) {
+                  dispatch_async(dispatch_get_main_queue(), ^{
+                    strongSelf.progressHUD.label.text =
+                        NCUILocalizedString(@"file_download_failed");
                     [strongSelf.progressHUD hideAnimated:YES afterDelay:1];
                     strongSelf.progressHUD = nil;
-                });
-                return;
-            }
-            // Save the downloaded file path.
-            gifMessage.localPath = mediaPath;
-            [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:gifMessage.remoteUrl];
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                  });
+                  return;
+              }
+              // Save the downloaded file path.
+              gifMessage.localPath = mediaPath;
+              [NCFileUtility setFileLocalPath:mediaPath forRemoteURL:gifMessage.remoteUrl];
+              dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 strongSelf.gifData = [NSData dataWithContentsOfFile:mediaPath];
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [strongSelf.progressHUD hideAnimated:YES];
-                    strongSelf.progressHUD = nil;
-                    if (strongSelf.gifData) {
-                        strongSelf.gifView.animatedImage = [NCGIFImage animatedImageWithGIFData:strongSelf.gifData];
-                    }
+                  [strongSelf.progressHUD hideAnimated:YES];
+                  strongSelf.progressHUD = nil;
+                  if (strongSelf.gifData) {
+                      strongSelf.gifView.animatedImage =
+                          [NCGIFImage animatedImageWithGIFData:strongSelf.gifData];
+                  }
                 });
-            });
-        }
-                          cancelHandler:nil];
+              });
+            }
+                cancelHandler:nil];
     }
 }
 
-
 - (void)saveGIF {
-    NCGIFMessage *gifMessage =
-        (NCGIFMessage *)self.messageModel.content;
+    NCGIFMessage *gifMessage = (NCGIFMessage *)self.messageModel.content;
     if (gifMessage.localPath.length > 0) {
-        [NCAssetHelper savePhotosAlbumWithPath:gifMessage.localPath authorizationStatusBlock:^{
-            [self showAlertController:NCUILocalizedString(@"access_right_title")
-                              message:NCUILocalizedString(@"photo_access_right")
-                          cancelTitle:NCUILocalizedString(@"ok")];
-        } resultBlock:^(BOOL success) {
-            [self showAlertWithSuccess:success];
-        }];
-
+        [NCAssetHelper savePhotosAlbumWithPath:gifMessage.localPath
+            authorizationStatusBlock:^{
+              [self showAlertController:NCUILocalizedString(@"access_right_title")
+                                message:NCUILocalizedString(@"photo_access_right")
+                            cancelTitle:NCUILocalizedString(@"ok")];
+            }
+            resultBlock:^(BOOL success) {
+              [self showAlertWithSuccess:success];
+            }];
     }
 }
 
@@ -140,27 +141,30 @@
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-        BOOL isCurrentMessageDeletedForAll = NO;
-        for (NCMessage *message in messages) {
-            if (message.clientId == self.messageModel.clientId) {
-                isCurrentMessageDeletedForAll = YES;
-                break;
-            }
-        }
-        // Dismiss the preview only when the GIF being viewed is deleted for everyone.
-        if (isCurrentMessageDeletedForAll) {
-            UIAlertController *alertController = [UIAlertController
-                alertControllerWithTitle:nil
-                                 message:NCUILocalizedString(@"message_delete_for_all_alert")
-                          preferredStyle:UIAlertControllerStyleAlert];
-            [alertController
-                addAction:[UIAlertAction actionWithTitle:NCUILocalizedString(@"confirm")
-                                                   style:UIAlertActionStyleDefault
-                                                 handler:^(UIAlertAction *_Nonnull action) {
-                                                     [self.navigationController popViewControllerAnimated:YES];
-                                                 }]];
-            [self.navigationController presentViewController:alertController animated:YES completion:nil];
-        }
+      BOOL isCurrentMessageDeletedForAll = NO;
+      for (NCMessage *message in messages) {
+          if (message.clientId == self.messageModel.clientId) {
+              isCurrentMessageDeletedForAll = YES;
+              break;
+          }
+      }
+      // Dismiss the preview only when the GIF being viewed is deleted for everyone.
+      if (isCurrentMessageDeletedForAll) {
+          UIAlertController *alertController = [UIAlertController
+              alertControllerWithTitle:nil
+                               message:NCUILocalizedString(@"message_delete_for_all_alert")
+                        preferredStyle:UIAlertControllerStyleAlert];
+          [alertController
+              addAction:[UIAlertAction actionWithTitle:NCUILocalizedString(@"confirm")
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *_Nonnull action) {
+                                                 [self.navigationController
+                                                     popViewControllerAnimated:YES];
+                                               }]];
+          [self.navigationController presentViewController:alertController
+                                                  animated:YES
+                                                completion:nil];
+      }
     });
 }
 
@@ -170,7 +174,11 @@
     // Configure the left navigation item.
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
     imgMirror = [NCSemanticContext imageflippedForRTL:imgMirror];
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:NCUILocalizedString(@"back") target:self action:@selector(clickBackBtn:)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:NCUILocalizedString(@"back")
+                                         target:self
+                                         action:@selector(clickBackBtn:)];
 }
 
 - (void)addSubViews {
@@ -181,7 +189,6 @@
     [self.view addGestureRecognizer:longPress];
 }
 
-
 - (void)clickBackBtn:(id)sender {
     [self.navigationController popViewControllerAnimated:YES];
 }
@@ -191,16 +198,25 @@
     if (press.state == UIGestureRecognizerStateEnded) {
         return;
     } else if (press.state == UIGestureRecognizerStateBegan) {
-        [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"save")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
-            [self saveGIF];
-        } cancelBlock:^{
-                
-        }];
+        [NCActionSheetView showActionSheetView:nil
+                                     cellArray:@[ NCUILocalizedString(@"save") ]
+                                   cancelTitle:NCUILocalizedString(@"cancel")
+                                 selectedBlock:^(NSInteger index) {
+                                   [self saveGIF];
+                                 }
+                                   cancelBlock:^{
+
+                                   }];
     }
 }
 
-- (void)showAlertController:(NSString *)title message:(NSString *)message cancelTitle:(NSString *)cancelTitle {
-    [NCAlertView showAlertController:title message:message cancelTitle:cancelTitle inViewController:self];
+- (void)showAlertController:(NSString *)title
+                    message:(NSString *)message
+                cancelTitle:(NSString *)cancelTitle {
+    [NCAlertView showAlertController:title
+                             message:message
+                         cancelTitle:cancelTitle
+                    inViewController:self];
 }
 
 - (CGFloat)getSafeAreaExtraBottomHeight {
@@ -218,7 +234,8 @@
         CGFloat homeBarHeight = [self getSafeAreaExtraBottomHeight];
         CGFloat NavBarHeight = [self getDeviceNavBarHeight];
         _gifView = [[NCGIFImageView alloc]
-            initWithFrame:CGRectMake(0, 0, viewFrame.size.width, viewFrame.size.height - NavBarHeight - homeBarHeight)];
+            initWithFrame:CGRectMake(0, 0, viewFrame.size.width,
+                                     viewFrame.size.height - NavBarHeight - homeBarHeight)];
         _gifView.userInteractionEnabled = YES;
         _gifView.contentMode = UIViewContentModeScaleAspectFit;
     }

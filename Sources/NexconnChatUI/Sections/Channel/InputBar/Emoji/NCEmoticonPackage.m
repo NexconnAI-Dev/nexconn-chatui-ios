@@ -42,8 +42,9 @@
             currentView.tag = viewTag;
             viewTag++;
             [_loadedEmoticonPage setObject:currentView forKey:pageKey];
-            [currentView setFrame:CGRectMake(self.emojBoardView.frame.size.width * (currentIndex + 1), 0,
-                                             self.emojBoardView.frame.size.width, 186)];
+            [currentView
+                setFrame:CGRectMake(self.emojBoardView.frame.size.width * (currentIndex + 1), 0,
+                                    self.emojBoardView.frame.size.width, 186)];
             [self.emotionContainerView addSubview:currentView];
         }
         if (currentIndex >= 0) {
@@ -57,8 +58,9 @@
                 currentView.tag = viewTag;
                 viewTag++;
                 [_loadedEmoticonPage setObject:currentView forKey:pageKey];
-                [currentView setFrame:CGRectMake(self.emojBoardView.frame.size.width * (currentIndex), 0,
-                                                 self.emojBoardView.frame.size.width, 186)];
+                [currentView
+                    setFrame:CGRectMake(self.emojBoardView.frame.size.width * (currentIndex), 0,
+                                        self.emojBoardView.frame.size.width, 186)];
                 [self.emotionContainerView addSubview:currentView];
             }
         }
@@ -100,7 +102,8 @@
 }
 
 - (void)setNeedLayout {
-    self.emotionContainerView.contentSize = CGSizeMake(self.emojBoardView.frame.size.width * self.totalPage, 186);
+    self.emotionContainerView.contentSize =
+        CGSizeMake(self.emojBoardView.frame.size.width * self.totalPage, 186);
     // Update child frames after the package position changes.
     for (UIView *aView in self.emotionContainerView.subviews) {
         if (aView.tag >= 8800) {
@@ -113,14 +116,15 @@
 #pragma mark - Getters and Setters
 - (NCBaseScrollView *)emotionContainerView {
     if (!_emotionContainerView) {
-        _emotionContainerView =
-            [[NCBaseScrollView alloc] initWithFrame:CGRectMake(0, 0, self.emojBoardView.frame.size.width, 186)];
+        _emotionContainerView = [[NCBaseScrollView alloc]
+            initWithFrame:CGRectMake(0, 0, self.emojBoardView.frame.size.width, 186)];
         _loadedEmoticonPage = [NSMutableDictionary new];
         _emotionContainerView.pagingEnabled = YES;
         _emotionContainerView.showsHorizontalScrollIndicator = NO;
         _emotionContainerView.showsVerticalScrollIndicator = NO;
         _emotionContainerView.delegate = self;
-        _emotionContainerView.contentSize = CGSizeMake(self.emojBoardView.frame.size.width * self.totalPage, 186);
+        _emotionContainerView.contentSize =
+            CGSizeMake(self.emojBoardView.frame.size.width * self.totalPage, 186);
     }
     return _emotionContainerView;
 }

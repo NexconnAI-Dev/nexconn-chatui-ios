@@ -7,15 +7,15 @@
 //
 
 #import "NCMyProfileViewModel.h"
+#import "NCChatUICommonDefine.h"
+#import "NCGenderSelectViewController.h"
+#import "NCNameEditViewController.h"
 #import "NCProfileCommonCellViewModel.h"
-#import "NCProfileCommonTextCell.h"
 #import "NCProfileCommonImageCell.h"
+#import "NCProfileCommonTextCell.h"
+#import "NCProfileViewModel+private.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 #import <NexconnChatUI/NCChatUILog.h>
-#import "NCChatUICommonDefine.h"
-#import "NCNameEditViewController.h"
-#import "NCGenderSelectViewController.h"
-#import "NCProfileViewModel+private.h"
 @interface NCMyProfileViewModel ()
 
 @property (nonatomic, strong) NCUserProfile *userProfile;
@@ -33,81 +33,105 @@
 
 - (void)registerCellForTableView:(UITableView *)tableView {
     [tableView registerClass:[NCProfileCommonTextCell class]
-      forCellReuseIdentifier:NCProfileTextCellIdentifier];
+        forCellReuseIdentifier:NCProfileTextCellIdentifier];
     [tableView registerClass:[NCProfileCommonImageCell class]
-      forCellReuseIdentifier:NCProfileImageCellIdentifier];
+        forCellReuseIdentifier:NCProfileImageCellIdentifier];
 }
 
 - (void)updateProfile {
-    [[NCEngine userModule] getMyUserProfileWithCompletion:^(NCUserProfile * _Nullable userProfile, NCError * _Nullable error) {
-        if (error) {
-            NCLogE(@"get my User Profiles error");
-            return;
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.profileList = [self reloadDataSource:userProfile];
-            [self.responder reloadData:NO];
-        });
+    [[NCEngine userModule] getMyUserProfileWithCompletion:^(NCUserProfile *_Nullable userProfile,
+                                                            NCError *_Nullable error) {
+      if (error) {
+          NCLogE(@"get my User Profiles error");
+          return;
+      }
+      dispatch_async(dispatch_get_main_queue(), ^{
+        self.profileList = [self reloadDataSource:userProfile];
+        [self.responder reloadData:NO];
+      });
     }];
 }
 
-#pragma mark -- NCListViewModelProtocol
+#pragma mark-- NCListViewModelProtocol
 
-- (void)viewController:(UIViewController *)viewController tableView:(UITableView *)tableView didSelectRow:(NSIndexPath *)indexPath {
+- (void)viewController:(UIViewController *)viewController
+             tableView:(UITableView *)tableView
+          didSelectRow:(NSIndexPath *)indexPath {
     NCProfileCellViewModel *cellViewModel = self.profileList[indexPath.section][indexPath.row];
-    
-    if ([self.delegate respondsToSelector:@selector(profileViewModel:viewController:tableView:didSelectRow:cellViewModel:)]) {
-        BOOL intercept = [self.delegate profileViewModel:self viewController:viewController tableView:tableView didSelectRow:indexPath cellViewModel:cellViewModel];
+
+    if ([self.delegate respondsToSelector:@selector(profileViewModel:viewController:tableView:
+                                                    didSelectRow:cellViewModel:)]) {
+        BOOL intercept = [self.delegate profileViewModel:self
+                                          viewController:viewController
+                                               tableView:tableView
+                                            didSelectRow:indexPath
+                                           cellViewModel:cellViewModel];
         if (intercept) {
             return;
         }
     }
-    
+
     if (![cellViewModel isKindOfClass:NCProfileCommonCellViewModel.class]) {
         return;
     }
-    
-    NCProfileCommonCellViewModel *commonCellViewModel = (NCProfileCommonCellViewModel *)cellViewModel;
+
+    NCProfileCommonCellViewModel *commonCellViewModel =
+        (NCProfileCommonCellViewModel *)cellViewModel;
     if ([commonCellViewModel.title isEqualToString:NCUILocalizedString(@"name")]) {
-        NCNameEditViewModel *viewModel = [NCNameEditViewModel viewModelWithUserId:[NCEngine getCurrentUserId] ?: @"" groupId:nil type:NCNameEditTypeName];
-        NCNameEditViewController *nameEditVC = [[NCNameEditViewController alloc] initWithViewModel:viewModel];
+        NCNameEditViewModel *viewModel =
+            [NCNameEditViewModel viewModelWithUserId:[NCEngine getCurrentUserId] ?: @""
+                                             groupId:nil
+                                                type:NCNameEditTypeName];
+        NCNameEditViewController *nameEditVC =
+            [[NCNameEditViewController alloc] initWithViewModel:viewModel];
         [viewController.navigationController pushViewController:nameEditVC animated:YES];
-    } else if([commonCellViewModel.title isEqualToString:NCUILocalizedString(@"gender")]) {
+    } else if ([commonCellViewModel.title isEqualToString:NCUILocalizedString(@"gender")]) {
         NCProfileGenderViewModel *viewModel = [[NCProfileGenderViewModel alloc] init];
         viewModel.profle = self.userProfile;
-        NCGenderSelectViewController *genderVC = [[NCGenderSelectViewController alloc] initWithViewModel:viewModel];
+        NCGenderSelectViewController *genderVC =
+            [[NCGenderSelectViewController alloc] initWithViewModel:viewModel];
         [viewController.navigationController pushViewController:genderVC animated:YES];
     }
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (NSArray<NSArray<NCProfileCellViewModel *> *> *)reloadDataSource:(NCUserProfile *)userProfile {
     self.userProfile = userProfile;
-    NCProfileCommonCellViewModel *portraitViewModel = [[NCProfileCommonCellViewModel alloc] initWithCellType:NCUProfileCellTypeImage title:NCUILocalizedString(@"portrait") detail:self.userProfile.avatarUrl];
+    NCProfileCommonCellViewModel *portraitViewModel =
+        [[NCProfileCommonCellViewModel alloc] initWithCellType:NCUProfileCellTypeImage
+                                                         title:NCUILocalizedString(@"portrait")
+                                                        detail:self.userProfile.avatarUrl];
     portraitViewModel.hiddenArrow = YES;
-    
-    NCProfileCommonCellViewModel *nameViewModel = [[NCProfileCommonCellViewModel alloc] initWithCellType:NCUProfileCellTypeText title:NCUILocalizedString(@"name") detail:self.userProfile.name];
-    
-    NCProfileCommonCellViewModel *uniqueIdViewModel = [[NCProfileCommonCellViewModel alloc] initWithCellType:NCUProfileCellTypeText title:NCUILocalizedString(@"application_number") detail:self.userProfile.uniqueId];
+
+    NCProfileCommonCellViewModel *nameViewModel =
+        [[NCProfileCommonCellViewModel alloc] initWithCellType:NCUProfileCellTypeText
+                                                         title:NCUILocalizedString(@"name")
+                                                        detail:self.userProfile.name];
+
+    NCProfileCommonCellViewModel *uniqueIdViewModel = [[NCProfileCommonCellViewModel alloc]
+        initWithCellType:NCUProfileCellTypeText
+                   title:NCUILocalizedString(@"application_number")
+                  detail:self.userProfile.uniqueId];
     uniqueIdViewModel.hiddenArrow = YES;
-    
-    NCProfileCommonCellViewModel *genderViewModel = [[NCProfileCommonCellViewModel alloc] initWithCellType:NCUProfileCellTypeText title:NCUILocalizedString(@"gender") detail:[self getGenderString:self.userProfile.gender]];
+
+    NCProfileCommonCellViewModel *genderViewModel = [[NCProfileCommonCellViewModel alloc]
+        initWithCellType:NCUProfileCellTypeText
+                   title:NCUILocalizedString(@"gender")
+                  detail:[self getGenderString:self.userProfile.gender]];
     genderViewModel.hideSeparatorLine = YES;
-    NSArray *array = @[
-        @[portraitViewModel, nameViewModel, uniqueIdViewModel, genderViewModel]
-    ];
+    NSArray *array = @[ @[ portraitViewModel, nameViewModel, uniqueIdViewModel, genderViewModel ] ];
     return array;
 }
 
 - (NSString *)getGenderString:(NSInteger)gender {
     switch (gender) {
-        case 1:
-            return NCUILocalizedString(@"male");
-        case 2:
-            return NCUILocalizedString(@"female");
-        default:
-            break;
+    case 1:
+        return NCUILocalizedString(@"male");
+    case 2:
+        return NCUILocalizedString(@"female");
+    default:
+        break;
     }
     return NCUILocalizedString(@"unknown");
 }

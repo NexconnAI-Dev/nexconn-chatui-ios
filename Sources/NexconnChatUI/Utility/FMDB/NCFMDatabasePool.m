@@ -42,7 +42,8 @@
 
     if (self != nil) {
         _path = [aPath copy];
-        _lockQueue = dispatch_queue_create([[NSString stringWithFormat:@"fmdb.%@", self] UTF8String], NULL);
+        _lockQueue =
+            dispatch_queue_create([[NSString stringWithFormat:@"fmdb.%@", self] UTF8String], NULL);
         _databaseInPool = NCFMDBReturnRetained([NSMutableArray array]);
         _databaseOutPool = NCFMDBReturnRetained([NSMutableArray array]);
         _openFlags = openFlags;
@@ -53,7 +54,8 @@
 
 - (instancetype)initWithPath:(NSString *)aPath {
     // default flags for sqlite3_open
-    return [self initWithPath:aPath flags:SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE];
+    return [self initWithPath:aPath
+                        flags:SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE];
 }
 
 - (instancetype)init {
@@ -87,17 +89,15 @@
     }
 
     [self executeLocked:^() {
+      if ([self->_databaseInPool containsObject:db]) {
+          [[NSException exceptionWithName:@"Database already in pool"
+                                   reason:@"The NCFMDatabase being put back into the pool is "
+                                          @"already present in the pool"
+                                 userInfo:nil] raise];
+      }
 
-        if ([self->_databaseInPool containsObject:db]) {
-            [[NSException
-                exceptionWithName:@"Database already in pool"
-                           reason:@"The NCFMDatabase being put back into the pool is already present in the pool"
-                         userInfo:nil] raise];
-        }
-
-        [self->_databaseInPool addObject:db];
-        [self->_databaseOutPool removeObject:db];
-
+      [self->_databaseInPool addObject:db];
+      [self->_databaseOutPool removeObject:db];
     }];
 }
 
@@ -106,54 +106,58 @@
     __block NCFMDatabase *db;
 
     [self executeLocked:^() {
-        db = [self->_databaseInPool lastObject];
+      db = [self->_databaseInPool lastObject];
 
-        BOOL shouldNotifyDelegate = NO;
+      BOOL shouldNotifyDelegate = NO;
 
-        if (db) {
-            [self->_databaseOutPool addObject:db];
-            [self->_databaseInPool removeLastObject];
-        } else {
+      if (db) {
+          [self->_databaseOutPool addObject:db];
+          [self->_databaseInPool removeLastObject];
+      } else {
 
-            if (self->_maximumNumberOfDatabasesToCreate) {
-                NSUInteger currentCount = [self->_databaseOutPool count] + [self->_databaseInPool count];
+          if (self->_maximumNumberOfDatabasesToCreate) {
+              NSUInteger currentCount =
+                  [self->_databaseOutPool count] + [self->_databaseInPool count];
 
-                if (currentCount >= self->_maximumNumberOfDatabasesToCreate) {
-                    NCLogD(@"Maximum number of databases (%ld) has already been reached!", (long)currentCount);
-                    return;
-                }
-            }
+              if (currentCount >= self->_maximumNumberOfDatabasesToCreate) {
+                  NCLogD(@"Maximum number of databases (%ld) has already been reached!",
+                         (long)currentCount);
+                  return;
+              }
+          }
 
-            db = [NCFMDatabase databaseWithPath:self->_path];
-            shouldNotifyDelegate = YES;
-        }
+          db = [NCFMDatabase databaseWithPath:self->_path];
+          shouldNotifyDelegate = YES;
+      }
 
 // This ensures that the db is opened before returning
 #if SQLITE_VERSION_NUMBER >= 3005000
-        BOOL success = [db openWithFlags:self->_openFlags];
+      BOOL success = [db openWithFlags:self->_openFlags];
 #else
         BOOL success = [db open];
 #endif
-        if (success) {
-            if ([self->_delegate respondsToSelector:@selector(databasePool:shouldAddDatabaseToPool:)] &&
-                ![self->_delegate databasePool:self shouldAddDatabaseToPool:db]) {
-                [db close];
-                db = 0x00;
-            } else {
-                // It should not get added in the pool twice if lastObject was found
-                if (![self->_databaseOutPool containsObject:db]) {
-                    [self->_databaseOutPool addObject:db];
+      if (success) {
+          if ([self->_delegate
+                  respondsToSelector:@selector(databasePool:shouldAddDatabaseToPool:)] &&
+              ![self->_delegate databasePool:self shouldAddDatabaseToPool:db]) {
+              [db close];
+              db = 0x00;
+          } else {
+              // It should not get added in the pool twice if lastObject was found
+              if (![self->_databaseOutPool containsObject:db]) {
+                  [self->_databaseOutPool addObject:db];
 
-                    if (shouldNotifyDelegate &&
-                        [self->_delegate respondsToSelector:@selector(databasePool:didAddDatabase:)]) {
-                        [self->_delegate databasePool:self didAddDatabase:db];
-                    }
-                }
-            }
-        } else {
-            NCLogD(@"Could not open up the database at path %@", self->_path);
-            db = 0x00;
-        }
+                  if (shouldNotifyDelegate &&
+                      [self->_delegate
+                          respondsToSelector:@selector(databasePool:didAddDatabase:)]) {
+                      [self->_delegate databasePool:self didAddDatabase:db];
+                  }
+              }
+          }
+      } else {
+          NCLogD(@"Could not open up the database at path %@", self->_path);
+          db = 0x00;
+      }
     }];
 
     return db;
@@ -164,7 +168,7 @@
     __block NSUInteger count;
 
     [self executeLocked:^() {
-        count = [self->_databaseInPool count];
+      count = [self->_databaseInPool count];
     }];
 
     return count;
@@ -175,7 +179,7 @@
     __block NSUInteger count;
 
     [self executeLocked:^() {
-        count = [self->_databaseOutPool count];
+      count = [self->_databaseOutPool count];
     }];
 
     return count;
@@ -185,7 +189,7 @@
     __block NSUInteger count;
 
     [self executeLocked:^() {
-        count = [self->_databaseOutPool count] + [self->_databaseInPool count];
+      count = [self->_databaseOutPool count] + [self->_databaseInPool count];
     }];
 
     return count;
@@ -193,8 +197,8 @@
 
 - (void)releaseAllDatabases {
     [self executeLocked:^() {
-        [self->_databaseOutPool removeAllObjects];
-        [self->_databaseInPool removeAllObjects];
+      [self->_databaseOutPool removeAllObjects];
+      [self->_databaseInPool removeAllObjects];
     }];
 }
 
@@ -207,7 +211,8 @@
     [self pushDatabaseBackInPool:db];
 }
 
-- (void)beginTransaction:(BOOL)useDeferred withBlock:(void (^)(NCFMDatabase *db, BOOL *rollback))block {
+- (void)beginTransaction:(BOOL)useDeferred
+               withBlock:(void (^)(NCFMDatabase *db, BOOL *rollback))block {
 
     BOOL shouldRollback = NO;
 
@@ -270,7 +275,9 @@
     NSString *errorMessage = NSLocalizedString(@"Save point functions require SQLite 3.7", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
-    return [NSError errorWithDomain:@"NCFMDatabase" code:0 userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+    return [NSError errorWithDomain:@"NCFMDatabase"
+                               code:0
+                           userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
 #endif
 }
 

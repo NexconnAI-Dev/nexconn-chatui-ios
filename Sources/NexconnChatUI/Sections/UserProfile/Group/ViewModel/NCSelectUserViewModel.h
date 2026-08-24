@@ -7,8 +7,8 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCSearchBarViewModel.h"
 #import "NCListViewModelProtocol.h"
+#import "NCSearchBarViewModel.h"
 #import "NCSelectUserCellViewModel.h"
 
 @class NCSelectUserViewModel;
@@ -37,8 +37,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param dataSource The current data source
 /// @return The data source processed by the app, or `nil` to use the default
 ///
-- (NSArray <NCSelectUserCellViewModel *>* _Nullable)selectUserViewModel:(NCSelectUserViewModel *)viewModel
-                                     willLoadItemsInDataSource:(NSArray <NCSelectUserCellViewModel *>*)dataSource;
+- (NSArray<NCSelectUserCellViewModel *> *_Nullable)
+          selectUserViewModel:(NCSelectUserViewModel *)viewModel
+    willLoadItemsInDataSource:(NSArray<NCSelectUserCellViewModel *> *)dataSource;
 
 /// Called when the user taps a cell
 ///
@@ -50,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)selectUserViewModel:(NCSelectUserViewModel *)viewModel
-             viewController:(UIViewController*)viewController
+             viewController:(UIViewController *)viewController
                   tableView:(UITableView *)tableView
                didSelectRow:(NSIndexPath *)indexPath
               cellViewModel:(NCSelectUserCellViewModel *)cellViewModel;
@@ -63,14 +64,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)selectUserDidSelectComplete:(NCSelectUserViewModel *)viewModel
-                      selectUserIds:(NSMutableArray <NSString *>*)selectUserIds
-                     viewController:(UIViewController*)viewController;
-
+                      selectUserIds:(NSMutableArray<NSString *> *)selectUserIds
+                     viewController:(UIViewController *)viewController;
 
 @end
 
 /// Select user view model
-@interface NCSelectUserViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCSelectUserViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Creates an `NCSelectUserViewModel` instance
 ///
@@ -79,19 +79,19 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @return The instance
 ///
-+ (instancetype)viewModelWithType:(NCSelectUserType)type
-                          groupId:(NSString *_Nullable)groupId;
++ (instancetype)viewModelWithType:(NCSelectUserType)type groupId:(NSString *_Nullable)groupId;
 
 /// Delegate
 @property (nonatomic, weak) id<NCSelectUserViewModelDelegate> delegate;
 
 /// List of selected users
-@property (nonatomic, strong, readonly) NSMutableArray <NSString *>*selectUserIds;
+@property (nonatomic, strong, readonly) NSMutableArray<NSString *> *selectUserIds;
 
 /// Maximum number of selections per operation. Defaults to 30, range: (0, 100].
 @property (nonatomic, assign, setter=setMaxSelectCount:) NSInteger maxSelectCount;
 
-@property (nonatomic, copy) void (^selectionDidCompelteBlock)(NSArray <NSString *>*selectUserIds, UIViewController *selectVC);
+@property (nonatomic, copy) void (^selectionDidCompelteBlock)
+    (NSArray<NSString *> *selectUserIds, UIViewController *selectVC);
 
 /// Configures the search bar
 - (UISearchBar *)configureSearchBarForViewController:(UIViewController *)viewController;

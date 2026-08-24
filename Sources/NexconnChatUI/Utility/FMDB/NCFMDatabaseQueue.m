@@ -80,7 +80,8 @@ static const void *const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
 
         _path = NCFMDBReturnRetained(aPath);
 
-        _queue = dispatch_queue_create([[NSString stringWithFormat:@"fmdb.%@", self] UTF8String], NULL);
+        _queue =
+            dispatch_queue_create([[NSString stringWithFormat:@"fmdb.%@", self] UTF8String], NULL);
         dispatch_queue_set_specific(_queue, kDispatchQueueSpecificKey, (__bridge void *)self, NULL);
         _openFlags = openFlags;
     }
@@ -95,7 +96,9 @@ static const void *const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
 - (instancetype)initWithPath:(NSString *)aPath {
 
     // default flags for sqlite3_open
-    return [self initWithPath:aPath flags:SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE vfs:nil];
+    return [self initWithPath:aPath
+                        flags:SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+                          vfs:nil];
 }
 
 - (instancetype)init {
@@ -119,9 +122,9 @@ static const void *const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
 - (void)close {
     NCFMDBRetain(self);
     dispatch_sync(_queue, ^() {
-        [self->_db close];
-        NCFMDBRelease(_db);
-        self->_db = 0x00;
+      [self->_db close];
+      NCFMDBRelease(_db);
+      self->_db = 0x00;
     });
     NCFMDBRelease(self);
 }
@@ -147,55 +150,56 @@ static const void *const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
 }
 
 - (void)inDatabase:(void (^)(NCFMDatabase *db))block {
-    /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue
-     * and then check it against self to make sure we're not about to deadlock. */
-    NCFMDatabaseQueue *currentSyncQueue = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
+    /* Get the currently executing queue (which should probably be nil, but in theory could be
+     * another DB queue and then check it against self to make sure we're not about to deadlock. */
+    NCFMDatabaseQueue *currentSyncQueue =
+        (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
     assert(currentSyncQueue != self &&
            "inDatabase: was called reentrantly on the same queue, which would lead to a deadlock");
 
     NCFMDBRetain(self);
 
     dispatch_sync(_queue, ^() {
+      NCFMDatabase *db = [self database];
+      block(db);
 
-        NCFMDatabase *db = [self database];
-        block(db);
-
-        if ([db hasOpenResultSets]) {
-            NCLogD(@"Warning: there is at least one open result set around after performing [NCFMDatabaseQueue "
-                  @"inDatabase:]");
+      if ([db hasOpenResultSets]) {
+          NCLogD(@"Warning: there is at least one open result set around after performing "
+                 @"[NCFMDatabaseQueue "
+                 @"inDatabase:]");
 
 #if defined(DEBUG) && DEBUG
-            NSSet *openSetCopy = NCFMDBReturnAutoreleased([[db valueForKey:@"_openResultSets"] copy]);
-            for (NSValue *rsInWrappedInATastyValueMeal in openSetCopy) {
-                NCFMResultSet *rs = (NCFMResultSet *)[rsInWrappedInATastyValueMeal pointerValue];
-                NCLogD(@"query: '%@'", [rs query]);
-            }
+          NSSet *openSetCopy = NCFMDBReturnAutoreleased([[db valueForKey:@"_openResultSets"] copy]);
+          for (NSValue *rsInWrappedInATastyValueMeal in openSetCopy) {
+              NCFMResultSet *rs = (NCFMResultSet *)[rsInWrappedInATastyValueMeal pointerValue];
+              NCLogD(@"query: '%@'", [rs query]);
+          }
 #endif
-        }
+      }
     });
 
     NCFMDBRelease(self);
 }
 
-- (void)beginTransaction:(BOOL)useDeferred withBlock:(void (^)(NCFMDatabase *db, BOOL *rollback))block {
+- (void)beginTransaction:(BOOL)useDeferred
+               withBlock:(void (^)(NCFMDatabase *db, BOOL *rollback))block {
     NCFMDBRetain(self);
     dispatch_sync(_queue, ^() {
+      BOOL shouldRollback = NO;
 
-        BOOL shouldRollback = NO;
+      if (useDeferred) {
+          [[self database] beginDeferredTransaction];
+      } else {
+          [[self database] beginTransaction];
+      }
 
-        if (useDeferred) {
-            [[self database] beginDeferredTransaction];
-        } else {
-            [[self database] beginTransaction];
-        }
+      block([self database], &shouldRollback);
 
-        block([self database], &shouldRollback);
-
-        if (shouldRollback) {
-            [[self database] rollback];
-        } else {
-            [[self database] commit];
-        }
+      if (shouldRollback) {
+          [[self database] rollback];
+      } else {
+          [[self database] commit];
+      }
     });
 
     NCFMDBRelease(self);
@@ -215,21 +219,20 @@ static const void *const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
     __block NSError *err = 0x00;
     NCFMDBRetain(self);
     dispatch_sync(_queue, ^() {
+      NSString *name = [NSString stringWithFormat:@"savePoint%ld", savePointIdx++];
 
-        NSString *name = [NSString stringWithFormat:@"savePoint%ld", savePointIdx++];
+      BOOL shouldRollback = NO;
 
-        BOOL shouldRollback = NO;
+      if ([[self database] startSavePointWithName:name error:&err]) {
 
-        if ([[self database] startSavePointWithName:name error:&err]) {
+          block([self database], &shouldRollback);
 
-            block([self database], &shouldRollback);
-
-            if (shouldRollback) {
-                // We need to rollback and release this savepoint to remove it
-                [[self database] rollbackToSavePointWithName:name error:&err];
-            }
-            [[self database] releaseSavePointWithName:name error:&err];
-        }
+          if (shouldRollback) {
+              // We need to rollback and release this savepoint to remove it
+              [[self database] rollbackToSavePointWithName:name error:&err];
+          }
+          [[self database] releaseSavePointWithName:name error:&err];
+      }
     });
     NCFMDBRelease(self);
     return err;
@@ -237,7 +240,9 @@ static const void *const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
     NSString *errorMessage = NSLocalizedString(@"Save point functions require SQLite 3.7", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
-    return [NSError errorWithDomain:@"NCFMDatabase" code:0 userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+    return [NSError errorWithDomain:@"NCFMDatabase"
+                               code:0
+                           userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
 #endif
 }
 

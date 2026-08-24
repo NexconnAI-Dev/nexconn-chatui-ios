@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Channel navigation bar title view.
- * 
+ *
  * @discussion
  *   - Supports displaying an online status indicator.
  *   - Supports displaying title text.
@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Sets the title text.
- * 
+ *
  * @param title Title text.
  */
 - (void)setTitle:(NSString *)title;
@@ -45,4 +45,3 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
-

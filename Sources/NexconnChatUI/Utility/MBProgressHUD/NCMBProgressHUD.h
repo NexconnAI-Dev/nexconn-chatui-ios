@@ -75,26 +75,31 @@ typedef void (^NCMBProgressHUDCompletionBlock)(void);
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Displays a simple HUD window containing a progress indicator and two optional labels for short messages.
+ * Displays a simple HUD window containing a progress indicator and two optional labels for short
+ * messages.
  *
- * This is a simple drop-in class for displaying a progress HUD view similar to Apple's private UIProgressHUD class.
- * The NCMBProgressHUD window spans over the entire space given to it by the initWithFrame: constructor and catches all
- * user input on this region, thereby preventing the user operations on components below the view.
+ * This is a simple drop-in class for displaying a progress HUD view similar to Apple's private
+ * UIProgressHUD class. The NCMBProgressHUD window spans over the entire space given to it by the
+ * initWithFrame: constructor and catches all user input on this region, thereby preventing the user
+ * operations on components below the view.
  *
- * @note To still allow touches to pass through the HUD, you can set hud.userInteractionEnabled = NO.
- * @attention NCMBProgressHUD is a UI class and should therefore only be accessed on the main thread.
+ * @note To still allow touches to pass through the HUD, you can set hud.userInteractionEnabled =
+ * NO.
+ * @attention NCMBProgressHUD is a UI class and should therefore only be accessed on the main
+ * thread.
  */
 @interface NCMBProgressHUD : UIView
 
 /**
- * Creates a new HUD, adds it to provided view and shows it. The counterpart to this method is hideHUDForView:animated:.
+ * Creates a new HUD, adds it to provided view and shows it. The counterpart to this method is
+ * hideHUDForView:animated:.
  *
- * @note This method sets removeFromSuperViewOnHide. The HUD will automatically be removed from the view hierarchy when
- * hidden.
+ * @note This method sets removeFromSuperViewOnHide. The HUD will automatically be removed from the
+ * view hierarchy when hidden.
  *
  * @param view The view that the HUD will be added to
- * @param animated If set to YES the HUD will appear using the current animationType. If set to NO the HUD will not use
- * animations while appearing.
+ * @param animated If set to YES the HUD will appear using the current animationType. If set to NO
+ * the HUD will not use animations while appearing.
  * - Returns: A reference to the created HUD.
  *
  * @see hideHUDForView:animated:
@@ -105,14 +110,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// @name Showing and hiding
 
 /**
- * Finds the top-most HUD subview and hides it. The counterpart to this method is showHUDAddedTo:animated:.
+ * Finds the top-most HUD subview and hides it. The counterpart to this method is
+ * showHUDAddedTo:animated:.
  *
- * @note This method sets removeFromSuperViewOnHide. The HUD will automatically be removed from the view hierarchy when
- * hidden.
+ * @note This method sets removeFromSuperViewOnHide. The HUD will automatically be removed from the
+ * view hierarchy when hidden.
  *
  * @param view The view that is going to be searched for a HUD subview.
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not
- * use animations while disappearing.
+ * @param animated If set to YES the HUD will disappear using the current animationType. If set to
+ * NO the HUD will not use animations while disappearing.
  * - Returns: YES if a HUD was found and removed, NO otherwise.
  *
  * @see showHUDAddedTo:animated:
@@ -129,45 +135,46 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NCMBProgressHUD *)HUDForView:(UIView *)view;
 
 /**
- * A convenience constructor that initializes the HUD with the view's bounds. Calls the designated constructor with
- * view.bounds as the parameter.
+ * A convenience constructor that initializes the HUD with the view's bounds. Calls the designated
+ * constructor with view.bounds as the parameter.
  *
- * @param view The view instance that will provide the bounds for the HUD. Should be the same instance as
- * the HUD's superview (i.e., the view that the HUD will be added to).
+ * @param view The view instance that will provide the bounds for the HUD. Should be the same
+ * instance as the HUD's superview (i.e., the view that the HUD will be added to).
  */
 - (instancetype)initWithView:(UIView *)view;
 
 /**
  * Displays the HUD.
  *
- * @note You need to make sure that the main thread completes its run loop soon after this method call so that
- * the user interface can be updated. Call this method when your task is already set up to be executed in a new thread
- * (e.g., when using something like NSOperation or making an asynchronous call like NSURLRequest).
+ * @note You need to make sure that the main thread completes its run loop soon after this method
+ * call so that the user interface can be updated. Call this method when your task is already set up
+ * to be executed in a new thread (e.g., when using something like NSOperation or making an
+ * asynchronous call like NSURLRequest).
  *
- * @param animated If set to YES the HUD will appear using the current animationType. If set to NO the HUD will not use
- * animations while appearing.
+ * @param animated If set to YES the HUD will appear using the current animationType. If set to NO
+ * the HUD will not use animations while appearing.
  *
  * @see animationType
  */
 - (void)showAnimated:(BOOL)animated;
 
 /**
- * Hides the HUD. This still calls the hudWasHidden: delegate. This is the counterpart of the show: method. Use it to
- * hide the HUD when your task completes.
+ * Hides the HUD. This still calls the hudWasHidden: delegate. This is the counterpart of the show:
+ * method. Use it to hide the HUD when your task completes.
  *
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not
- * use animations while disappearing.
+ * @param animated If set to YES the HUD will disappear using the current animationType. If set to
+ * NO the HUD will not use animations while disappearing.
  *
  * @see animationType
  */
 - (void)hideAnimated:(BOOL)animated;
 
 /**
- * Hides the HUD after a delay. This still calls the hudWasHidden: delegate. This is the counterpart of the show:
- * method. Use it to hide the HUD when your task completes.
+ * Hides the HUD after a delay. This still calls the hudWasHidden: delegate. This is the counterpart
+ * of the show: method. Use it to hide the HUD when your task completes.
  *
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not
- * use animations while disappearing.
+ * @param animated If set to YES the HUD will disappear using the current animationType. If set to
+ * NO the HUD will not use animations while disappearing.
  * @param delay Delay in seconds until the HUD is hidden.
  *
  * @see animationType
@@ -233,9 +240,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign, nonatomic) CGPoint offset UI_APPEARANCE_SELECTOR;
 
 /**
- * The amount of space between the HUD edge and the HUD elements (labels, indicators or custom views).
- * This also represents the minimum bezel distance to the edge of the HUD view.
- * Defaults to 20.f
+ * The amount of space between the HUD edge and the HUD elements (labels, indicators or custom
+ * views). This also represents the minimum bezel distance to the edge of the HUD view. Defaults
+ * to 20.f
  */
 @property (assign, nonatomic) CGFloat margin UI_APPEARANCE_SELECTOR;
 
@@ -284,19 +291,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * The UIView (e.g., a UIImageView) to be shown when the HUD is in NCMBProgressHUDModeCustomView.
- * The view should implement intrinsicContentSize for proper sizing. For best results use approximately 37 by 37 pixels.
+ * The view should implement intrinsicContentSize for proper sizing. For best results use
+ * approximately 37 by 37 pixels.
  */
 @property (strong, nonatomic, nullable) UIView *customView;
 
 /**
- * A label that holds an optional short message to be displayed below the activity indicator. The HUD is automatically
- * resized to fit the entire text.
+ * A label that holds an optional short message to be displayed below the activity indicator. The
+ * HUD is automatically resized to fit the entire text.
  */
 @property (strong, nonatomic, readonly) UILabel *label;
 
 /**
- * A label that holds an optional details message displayed below the labelText message. The details text can span
- * multiple lines.
+ * A label that holds an optional details message displayed below the labelText message. The details
+ * text can span multiple lines.
  */
 @property (strong, nonatomic, readonly) UILabel *detailsLabel;
 
@@ -382,17 +390,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * The background style.
- * Defaults to NCMBProgressHUDBackgroundStyleBlur on iOS 7 or later and NCMBProgressHUDBackgroundStyleSolidColor
- * otherwise.
- * @note Due to iOS 7 not supporting UIVisualEffectView, the blur effect differs slightly between iOS 7 and later
- * versions.
+ * Defaults to NCMBProgressHUDBackgroundStyleBlur on iOS 7 or later and
+ * NCMBProgressHUDBackgroundStyleSolidColor otherwise.
+ * @note Due to iOS 7 not supporting UIVisualEffectView, the blur effect differs slightly between
+ * iOS 7 and later versions.
  */
 @property (nonatomic) NCMBProgressHUDBackgroundStyle style;
 
 /**
  * The background color or the blur tint color.
- * @note Due to iOS 7 not supporting UIVisualEffectView, the blur effect differs slightly between iOS 7 and later
- * versions.
+ * @note Due to iOS 7 not supporting UIVisualEffectView, the blur effect differs slightly between
+ * iOS 7 and later versions.
  */
 @property (nonatomic, strong) UIColor *color;
 
@@ -411,47 +419,56 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)show:(BOOL)animated __attribute__((deprecated("Use showAnimated: instead.")));
 - (void)hide:(BOOL)animated __attribute__((deprecated("Use hideAnimated: instead.")));
 - (void)hide:(BOOL)animated
-  afterDelay:(NSTimeInterval)delay __attribute__((deprecated("Use hideAnimated:afterDelay: instead.")));
+    afterDelay:(NSTimeInterval)delay
+    __attribute__((deprecated("Use hideAnimated:afterDelay: instead.")));
 
 - (void)showWhileExecuting:(SEL)method
                   onTarget:(id)target
                 withObject:(id)object
                   animated:(BOOL)animated __attribute__((deprecated("Use GCD directly.")));
 - (void)showAnimated:(BOOL)animated
- whileExecutingBlock:(dispatch_block_t)block __attribute__((deprecated("Use GCD directly.")));
+    whileExecutingBlock:(dispatch_block_t)block __attribute__((deprecated("Use GCD directly.")));
 - (void)showAnimated:(BOOL)animated
- whileExecutingBlock:(dispatch_block_t)block
-     completionBlock:(nullable NCMBProgressHUDCompletionBlock)completion
+    whileExecutingBlock:(dispatch_block_t)block
+        completionBlock:(nullable NCMBProgressHUDCompletionBlock)completion
     __attribute__((deprecated("Use GCD directly.")));
 - (void)showAnimated:(BOOL)animated
- whileExecutingBlock:(dispatch_block_t)block
-             onQueue:(dispatch_queue_t)queue __attribute__((deprecated("Use GCD directly.")));
+    whileExecutingBlock:(dispatch_block_t)block
+                onQueue:(dispatch_queue_t)queue __attribute__((deprecated("Use GCD directly.")));
 - (void)showAnimated:(BOOL)animated
- whileExecutingBlock:(dispatch_block_t)block
-             onQueue:(dispatch_queue_t)queue
-     completionBlock:(nullable NCMBProgressHUDCompletionBlock)completion
+    whileExecutingBlock:(dispatch_block_t)block
+                onQueue:(dispatch_queue_t)queue
+        completionBlock:(nullable NCMBProgressHUDCompletionBlock)completion
     __attribute__((deprecated("Use GCD directly.")));
 @property (assign) BOOL taskInProgress __attribute__((deprecated("No longer needed.")));
 
-@property (nonatomic, copy) NSString *labelText __attribute__((deprecated("Use label.text instead.")));
-@property (nonatomic, strong) UIFont *labelFont __attribute__((deprecated("Use label.font instead.")));
-@property (nonatomic, strong) UIColor *labelColor __attribute__((deprecated("Use label.textColor instead.")));
-@property (nonatomic, copy) NSString *detailsLabelText __attribute__((deprecated("Use detailsLabel.text instead.")));
-@property (nonatomic, strong) UIFont *detailsLabelFont __attribute__((deprecated("Use detailsLabel.font instead.")));
+@property (nonatomic, copy) NSString *labelText
+    __attribute__((deprecated("Use label.text instead.")));
+@property (nonatomic, strong) UIFont *labelFont
+    __attribute__((deprecated("Use label.font instead.")));
+@property (nonatomic, strong) UIColor *labelColor
+    __attribute__((deprecated("Use label.textColor instead.")));
+@property (nonatomic, copy) NSString *detailsLabelText
+    __attribute__((deprecated("Use detailsLabel.text instead.")));
+@property (nonatomic, strong) UIFont *detailsLabelFont
+    __attribute__((deprecated("Use detailsLabel.font instead.")));
 @property (nonatomic, strong) UIColor *detailsLabelColor
     __attribute__((deprecated("Use detailsLabel.textColor instead.")));
-@property (assign, nonatomic) CGFloat opacity __attribute__((deprecated("Customize bezelView properties instead.")));
-@property (strong, nonatomic) UIColor *color __attribute__((deprecated("Customize the bezelView color instead.")));
+@property (assign, nonatomic) CGFloat opacity
+    __attribute__((deprecated("Customize bezelView properties instead.")));
+@property (strong, nonatomic) UIColor *color
+    __attribute__((deprecated("Customize the bezelView color instead.")));
 @property (assign, nonatomic) CGFloat xOffset __attribute__((deprecated("Set offset.x instead.")));
 @property (assign, nonatomic) CGFloat yOffset __attribute__((deprecated("Set offset.y instead.")));
 @property (assign, nonatomic) CGFloat cornerRadius
     __attribute__((deprecated("Set bezelView.layer.cornerRadius instead.")));
 @property (assign, nonatomic) BOOL dimBackground
     __attribute__((deprecated("Customize HUD background properties instead.")));
-@property (strong, nonatomic) UIColor *activityIndicatorColor
-    __attribute__((deprecated("Use UIAppearance to customize UIActivityIndicatorView. E.g.: [UIActivityIndicatorView "
-                              "appearanceWhenContainedIn:[NCMBProgressHUD class], nil].color = [UIColor redColor];")));
-@property (atomic, assign, readonly) CGSize size __attribute__((deprecated("Get the bezelView.frame.size instead.")));
+@property (strong, nonatomic) UIColor *activityIndicatorColor __attribute__((deprecated(
+    "Use UIAppearance to customize UIActivityIndicatorView. E.g.: [UIActivityIndicatorView "
+    "appearanceWhenContainedIn:[NCMBProgressHUD class], nil].color = [UIColor redColor];")));
+@property (atomic, assign, readonly) CGSize size
+    __attribute__((deprecated("Get the bezelView.frame.size instead.")));
 
 @end
 

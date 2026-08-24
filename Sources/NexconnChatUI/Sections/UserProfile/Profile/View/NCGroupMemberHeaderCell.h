@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-UIKIT_EXTERN NSString  * _Nonnull const NCGroupMemberHeaderCellIdentifier;
+UIKIT_EXTERN NSString *_Nonnull const NCGroupMemberHeaderCellIdentifier;
 
 @interface NCGroupMemberHeaderCell : NCBaseCollectionViewCell
 

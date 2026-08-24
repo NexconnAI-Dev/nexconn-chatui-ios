@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCChatUIConfig.h"
-#import "NCChatUICommonDefine.h"
 #import "NCGroupMemberHeaderCell.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 
-NSString  * const NCGroupMemberHeaderCellIdentifier = @"NCGroupMemberHeaderCellIdentifier";
+NSString *const NCGroupMemberHeaderCellIdentifier = @"NCGroupMemberHeaderCellIdentifier";
 
 #define NCGroupMemberHeaderCellPortraitSize 48
 #define NCGroupMemberHeaderCellNameHeight 15
@@ -28,15 +28,18 @@ NSString  * const NCGroupMemberHeaderCellIdentifier = @"NCGroupMemberHeaderCellI
 
 - (void)setupViewConstraints {
     [NSLayoutConstraint activateConstraints:@[
-           [self.portraitImageView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor],
-           [self.portraitImageView.centerXAnchor constraintEqualToAnchor:self.contentView.centerXAnchor],
-           [self.portraitImageView.heightAnchor constraintEqualToConstant:NCGroupMemberHeaderCellPortraitSize],
-           [self.portraitImageView.widthAnchor constraintEqualToConstant:NCGroupMemberHeaderCellPortraitSize],
-           
-           [self.nameLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor],
-           [self.nameLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor],
-           [self.nameLabel.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor]
-       ]];
+        [self.portraitImageView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor],
+        [self.portraitImageView.centerXAnchor
+            constraintEqualToAnchor:self.contentView.centerXAnchor],
+        [self.portraitImageView.heightAnchor
+            constraintEqualToConstant:NCGroupMemberHeaderCellPortraitSize],
+        [self.portraitImageView.widthAnchor
+            constraintEqualToConstant:NCGroupMemberHeaderCellPortraitSize],
+
+        [self.nameLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor],
+        [self.nameLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor],
+        [self.nameLabel.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor]
+    ]];
 }
 
 - (void)setupView {
@@ -53,7 +56,7 @@ NSString  * const NCGroupMemberHeaderCellIdentifier = @"NCGroupMemberHeaderCellI
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
             _portraitImageView.layer.cornerRadius = NCGroupMemberHeaderCellPortraitSize / 2;
-        }else{
+        } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
     }

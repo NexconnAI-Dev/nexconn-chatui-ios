@@ -6,16 +6,16 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseButton.h"
+#import "NCBaseImageView.h"
+#import "NCButton.h"
+#import "NCChatUIThemeDefine.h"
 #import "NCContentView.h"
 #import "NCMessageBaseCell.h"
 #import "NCMessageCellDelegate.h"
-#import "NCChatUIThemeDefine.h"
-#import "NCButton.h"
-#import "NCBaseButton.h"
-#import "NCBaseImageView.h"
 #import "NCReadReceiptProgressView.h"
 #define HeadAndContentSpacing 8
-#define PortraitViewEdgeSpace 12//Distance between avatar and screen edge
+#define PortraitViewEdgeSpace 12 // Distance between avatar and screen edge
 #define NameAndContentSpace 2
 #define NameHeight 14
 @class NCImageView;
@@ -70,7 +70,6 @@ Avatar of the message sender
 
 /// Button displayed when message edit fails
 @property (nonatomic, strong) UIButton *editRetryButton;
-
 
 @property (nonatomic, strong) NCCircularLoadingView *editCircularLoadingView;
 
@@ -127,7 +126,7 @@ Avatar of the message sender
 
 /*!
  Get the default message bubble background image
- 
+
  @return Message bubble background image
  */
 - (UIImage *)getDefaultMessageCellBackgroundImage;

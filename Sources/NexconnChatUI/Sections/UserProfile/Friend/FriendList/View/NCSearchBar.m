@@ -7,10 +7,10 @@
 //
 
 #import "NCSearchBar.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 
-@interface NCSearchBar ()<UITextFieldDelegate>
+@interface NCSearchBar () <UITextFieldDelegate>
 @property (nonatomic, strong) UITextField *textField;
 @end
 
@@ -21,18 +21,18 @@
     if (self) {
         // Support right-to-left layout.
         [self updateRTLUI];
-        
+
         // Access the search text field.
         if (@available(iOS 13.0, *)) {
             self.textField = self.searchTextField;
         } else {
             self.textField = [self valueForKey:@"searchField"];
         }
-        
+
         // Set a text-field background color that supports Dark Mode.
         self.textField.backgroundColor = [UIColor clearColor];
         self.showsCancelButton = NO;
-        
+
         // Set the search icon color.
         if (@available(iOS 13.0, *)) {
             UIImageView *iconView = (UIImageView *)self.searchTextField.leftView;
@@ -40,28 +40,29 @@
                 iconView.tintColor = NCDynamicColor(@"primary_color");
             }
         }
-        UIColor *color = NCDynamicColor(@"text_secondary_color");;
+        UIColor *color = NCDynamicColor(@"text_secondary_color");
+        ;
         if (!color) {
             color = [UIColor lightGrayColor];
         }
-        NSString *placeholderText =  NCUILocalizedString(@"to_search");
+        NSString *placeholderText = NCUILocalizedString(@"to_search");
         NSDictionary *attributes = @{
-            NSFontAttributeName: [UIFont systemFontOfSize:17],
-            NSForegroundColorAttributeName:color  // Set the placeholder color.
+            NSFontAttributeName : [UIFont systemFontOfSize:17],
+            NSForegroundColorAttributeName : color // Set the placeholder color.
         };
         // Apply the attributed placeholder.
-        self.textField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholderText attributes:attributes];
-           
+        self.textField.attributedPlaceholder =
+            [[NSAttributedString alloc] initWithString:placeholderText attributes:attributes];
+
         self.textField.delegate = self;
-        
+
         // Make all backgrounds transparent.
         self.backgroundColor = [UIColor clearColor];
         self.barTintColor = [UIColor clearColor];
         self.backgroundImage = [UIImage new];
-        
+
         // Remove the border.
         self.layer.borderWidth = 0;
-        
     }
     return self;
 }
@@ -91,6 +92,5 @@
     }
     return retValue;
 }
-
 
 @end

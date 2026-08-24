@@ -7,8 +7,8 @@
 //
 
 #import "NCAttributedLabel+Edit.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 
 @interface NCAttributedLabel ()
 
@@ -26,11 +26,11 @@
         [self setText:@"" dataDetectorEnabled:YES];
         return;
     }
-    
+
     if (isEdited) {
         // Append the localized edited marker to the display text.
         NSString *displayText = [NCMessageEditUtil displayTextForOriginalText:text isEdited:YES];
-        
+
         NSRange suffixRange = NSMakeRange(text.length, [NCMessageEditUtil editedSuffix].length);
         if (NSMaxRange(suffixRange) <= displayText.length) {
             self.nc_editedSuffixRange = suffixRange;

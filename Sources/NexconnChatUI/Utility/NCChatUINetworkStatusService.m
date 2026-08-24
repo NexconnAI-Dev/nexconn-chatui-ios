@@ -1,7 +1,7 @@
 #import "NCChatUINetworkStatusService.h"
 #import <SystemConfiguration/SystemConfiguration.h>
-#import <netinet/in.h>
 #import <TargetConditionals.h>
+#import <netinet/in.h>
 
 @interface NCChatUINetworkStatusService ()
 
@@ -14,15 +14,15 @@
 
 @end
 
-static NCChatUINetworkStatus NCChatUINetworkStatusFromReachabilityFlags(SCNetworkReachabilityFlags flags) {
+static NCChatUINetworkStatus
+NCChatUINetworkStatusFromReachabilityFlags(SCNetworkReachabilityFlags flags) {
     BOOL isReachable = (flags & kSCNetworkReachabilityFlagsReachable) != 0;
     BOOL needsConnection = (flags & kSCNetworkReachabilityFlagsConnectionRequired) != 0;
     BOOL canConnectWithoutUserInteraction =
         ((flags & kSCNetworkReachabilityFlagsConnectionOnDemand) != 0 ||
          (flags & kSCNetworkReachabilityFlagsConnectionOnTraffic) != 0);
-    BOOL canConnectAutomatically =
-        canConnectWithoutUserInteraction &&
-        ((flags & kSCNetworkReachabilityFlagsInterventionRequired) == 0);
+    BOOL canConnectAutomatically = canConnectWithoutUserInteraction &&
+                                   ((flags & kSCNetworkReachabilityFlagsInterventionRequired) == 0);
     if (!isReachable || (needsConnection && !canConnectAutomatically)) {
         return NCChatUINetworkStatusNotReachable;
     }
@@ -35,8 +35,7 @@ static NCChatUINetworkStatus NCChatUINetworkStatusFromReachabilityFlags(SCNetwor
 }
 
 static void NCChatUIReachabilityCallback(SCNetworkReachabilityRef target,
-                                         SCNetworkReachabilityFlags flags,
-                                         void *info) {
+                                         SCNetworkReachabilityFlags flags, void *info) {
     (void)target;
     NCChatUINetworkStatusService *service = (__bridge NCChatUINetworkStatusService *)info;
     if (!service) {
@@ -47,7 +46,8 @@ static void NCChatUIReachabilityCallback(SCNetworkReachabilityRef target,
 
 @implementation NCChatUINetworkStatusService
 
-- (instancetype)initWithStatusChangedHandler:(NCChatUINetworkStatusChangedHandler)statusChangedHandler {
+- (instancetype)initWithStatusChangedHandler:
+    (NCChatUINetworkStatusChangedHandler)statusChangedHandler {
     self = [super init];
     if (self) {
         _statusChangedHandler = [statusChangedHandler copy];
@@ -69,21 +69,20 @@ static void NCChatUIReachabilityCallback(SCNetworkReachabilityRef target,
     address.sin_len = sizeof(address);
     address.sin_family = AF_INET;
 
-    SCNetworkReachabilityRef reachability =
-        SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (const struct sockaddr *)&address);
+    SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithAddress(
+        kCFAllocatorDefault, (const struct sockaddr *)&address);
     if (!reachability) {
         self.currentNetworkStatus = NCChatUINetworkStatusNotReachable;
         return;
     }
     SCNetworkReachabilityContext context = {0, (__bridge void *)self, NULL, NULL, NULL};
-    BOOL setCallback = SCNetworkReachabilitySetCallback(reachability, NCChatUIReachabilityCallback, &context);
-    BOOL scheduled = SCNetworkReachabilityScheduleWithRunLoop(reachability,
-                                                              CFRunLoopGetMain(),
+    BOOL setCallback =
+        SCNetworkReachabilitySetCallback(reachability, NCChatUIReachabilityCallback, &context);
+    BOOL scheduled = SCNetworkReachabilityScheduleWithRunLoop(reachability, CFRunLoopGetMain(),
                                                               kCFRunLoopCommonModes);
     if (!setCallback || !scheduled) {
         if (scheduled) {
-            SCNetworkReachabilityUnscheduleFromRunLoop(reachability,
-                                                       CFRunLoopGetMain(),
+            SCNetworkReachabilityUnscheduleFromRunLoop(reachability, CFRunLoopGetMain(),
                                                        kCFRunLoopCommonModes);
         }
         CFRelease(reachability);
@@ -98,8 +97,7 @@ static void NCChatUIReachabilityCallback(SCNetworkReachabilityRef target,
     if (!self.networkReachability) {
         return;
     }
-    SCNetworkReachabilityUnscheduleFromRunLoop(self.networkReachability,
-                                               CFRunLoopGetMain(),
+    SCNetworkReachabilityUnscheduleFromRunLoop(self.networkReachability, CFRunLoopGetMain(),
                                                kCFRunLoopCommonModes);
     CFRelease(self.networkReachability);
     self.networkReachability = NULL;

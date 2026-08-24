@@ -57,7 +57,8 @@
         if (self.state == NCMJRefreshStateIdle && currentOffsetY > normal2pullingOffsetY) {
             // Enter the ready-to-refresh state.
             self.state = NCMJRefreshStatePulling;
-        } else if (self.state == NCMJRefreshStatePulling && currentOffsetY <= normal2pullingOffsetY) {
+        } else if (self.state == NCMJRefreshStatePulling &&
+                   currentOffsetY <= normal2pullingOffsetY) {
             // Return to the idle state.
             self.state = NCMJRefreshStateIdle;
         }
@@ -73,10 +74,12 @@
     [super scrollViewContentSizeDidChange:change];
 
     // Effective content height.
-    CGFloat contentHeight = self.scrollView.ncmj_contentH + self.ignoredScrollViewContentInsetBottom;
+    CGFloat contentHeight =
+        self.scrollView.ncmj_contentH + self.ignoredScrollViewContentInsetBottom;
     // Visible scroll view height.
     CGFloat scrollHeight = self.scrollView.ncmj_h - self.scrollViewOriginalInset.top -
-                           self.scrollViewOriginalInset.bottom + self.ignoredScrollViewContentInsetBottom;
+                           self.scrollViewOriginalInset.bottom +
+                           self.ignoredScrollViewContentInsetBottom;
     // Position the footer after the larger of the content and visible area.
     self.ncmj_y = MAX(contentHeight, scrollHeight);
 }
@@ -90,21 +93,21 @@
         if (NCMJRefreshStateRefreshing == oldState) {
             [UIView animateWithDuration:NCMJRefreshSlowAnimationDuration
                 animations:^{
-                    self.scrollView.ncmj_insetB -= self.lastBottomDelta;
+                  self.scrollView.ncmj_insetB -= self.lastBottomDelta;
 
-                    if (self.endRefreshingAnimateCompletionBlock) {
-                        self.endRefreshingAnimateCompletionBlock();
-                    }
-                    // Apply automatic alpha behavior.
-                    if (self.isAutomaticallyChangeAlpha)
-                        self.alpha = 0.0;
+                  if (self.endRefreshingAnimateCompletionBlock) {
+                      self.endRefreshingAnimateCompletionBlock();
+                  }
+                  // Apply automatic alpha behavior.
+                  if (self.isAutomaticallyChangeAlpha)
+                      self.alpha = 0.0;
                 }
                 completion:^(BOOL finished) {
-                    self.pullingPercent = 0.0;
+                  self.pullingPercent = 0.0;
 
-                    if (self.endRefreshingCompletionBlock) {
-                        self.endRefreshingCompletionBlock();
-                    }
+                  if (self.endRefreshingCompletionBlock) {
+                      self.endRefreshingCompletionBlock();
+                  }
                 }];
         }
 
@@ -121,25 +124,25 @@
 
         [UIView animateWithDuration:NCMJRefreshFastAnimationDuration
             animations:^{
-                CGFloat bottom = self.ncmj_h + self.scrollViewOriginalInset.bottom;
-                CGFloat deltaH = [self heightForContentBreakView];
-                if (deltaH < 0) { // Content is shorter than the visible area.
-                    bottom -= deltaH;
-                }
-                self.lastBottomDelta = bottom - self.scrollView.ncmj_insetB;
-                self.scrollView.ncmj_insetB = bottom;
-                self.scrollView.ncmj_offsetY = [self happenOffsetY] + self.ncmj_h;
+              CGFloat bottom = self.ncmj_h + self.scrollViewOriginalInset.bottom;
+              CGFloat deltaH = [self heightForContentBreakView];
+              if (deltaH < 0) { // Content is shorter than the visible area.
+                  bottom -= deltaH;
+              }
+              self.lastBottomDelta = bottom - self.scrollView.ncmj_insetB;
+              self.scrollView.ncmj_insetB = bottom;
+              self.scrollView.ncmj_offsetY = [self happenOffsetY] + self.ncmj_h;
             }
             completion:^(BOOL finished) {
-                [self executeRefreshingCallback];
+              [self executeRefreshingCallback];
             }];
     }
 }
 #pragma mark - Private Methods
 #pragma mark Content Height Beyond the Visible Area
 - (CGFloat)heightForContentBreakView {
-    CGFloat h =
-        self.scrollView.frame.size.height - self.scrollViewOriginalInset.bottom - self.scrollViewOriginalInset.top;
+    CGFloat h = self.scrollView.frame.size.height - self.scrollViewOriginalInset.bottom -
+                self.scrollViewOriginalInset.top;
     return self.scrollView.contentSize.height - h;
 }
 

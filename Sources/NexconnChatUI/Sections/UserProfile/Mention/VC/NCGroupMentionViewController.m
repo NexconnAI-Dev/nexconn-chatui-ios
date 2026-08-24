@@ -7,14 +7,11 @@
 //
 
 #import "NCGroupMentionViewController.h"
-#import "NCGroupMemberListViewModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupMemberListViewModel.h"
 #import "NCSearchBarListView.h"
-@interface NCGroupMentionViewController ()<
-UITableViewDelegate,
-UITableViewDataSource,
-NCListViewModelResponder
->
+@interface NCGroupMentionViewController () <UITableViewDelegate, UITableViewDataSource,
+                                            NCListViewModelResponder>
 
 @property (nonatomic, strong) NCSearchBarListView *membersView;
 
@@ -55,25 +52,29 @@ NCListViewModelResponder
     [self.viewModel endEditingState];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)setupView {
     [self.membersView configureSearchBar:[self.viewModel configureSearchBar]];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
     [self.viewModel selectionCanceled];
 }
 
-#pragma mark -- NCListViewModelResponder
+#pragma mark-- NCListViewModelResponder
 
 - (void)reloadData:(BOOL)isEmpty {
     [self.membersView.tableView reloadData];
@@ -84,17 +85,18 @@ NCListViewModelResponder
     return self;
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- UITableViewDelegate
+#pragma mark-- UITableViewDelegate
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return [self.viewModel numberOfSections];
@@ -109,7 +111,9 @@ NCListViewModelResponder
     return [self.viewModel tableView:tableView heightForRowAtIndexPath:indexPath];
 }
 
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)tableView
+      willDisplayCell:(UITableViewCell *)cell
+    forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row > self.viewModel.memberList.count - 10) {
         [self.viewModel fetchGroupMembersByPage];
     }
@@ -127,7 +131,7 @@ NCListViewModelResponder
     [self.view endEditing:YES];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCSearchBarListView *)membersView {
     if (!_membersView) {
@@ -138,6 +142,5 @@ NCListViewModelResponder
     }
     return _membersView;
 }
-
 
 @end

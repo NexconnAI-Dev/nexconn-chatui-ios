@@ -38,7 +38,8 @@ CGAffineTransform transformBaseOnCaptureOrientation(AVCaptureVideoOrientation or
 @property (strong, nonatomic) AVAssetWriter *assetWriter;
 @property (strong, nonatomic) AVAssetWriterInput *assetWriterVideoInput;
 @property (strong, nonatomic) AVAssetWriterInput *assetWriterAudioInput;
-@property (strong, nonatomic) AVAssetWriterInputPixelBufferAdaptor *assetWriterInputPixelBufferAdaptor;
+@property (strong, nonatomic)
+    AVAssetWriterInputPixelBufferAdaptor *assetWriterInputPixelBufferAdaptor;
 @property (strong, nonatomic) dispatch_queue_t dispatchQueue;
 @property (strong, nonatomic) NSDictionary *videoSettings;
 @property (strong, nonatomic) NSDictionary *audioSettings;
@@ -75,52 +76,55 @@ CGAffineTransform transformBaseOnCaptureOrientation(AVCaptureVideoOrientation or
 - (void)prepareToRecord:(AVCaptureVideoOrientation)orientation {
     __weak typeof(self) weakSelf = self;
     dispatch_async(self.dispatchQueue, ^{
+      NSError *error = nil;
 
-        NSError *error = nil;
+      NSString *fileType = AVFileTypeMPEG4;
+      weakSelf.assetWriter = [AVAssetWriter assetWriterWithURL:[weakSelf outputURL]
+                                                      fileType:fileType
+                                                         error:&error];
+      if (!weakSelf.assetWriter || error) {
+          NSString *formatString = @"Could not create AVAssetWriter: %@";
+          NCLogE(@"%@", [NSString stringWithFormat:formatString, error]);
+          return;
+      }
 
-        NSString *fileType = AVFileTypeMPEG4;
-        weakSelf.assetWriter = [AVAssetWriter assetWriterWithURL:[weakSelf outputURL] fileType:fileType error:&error];
-        if (!weakSelf.assetWriter || error) {
-            NSString *formatString = @"Could not create AVAssetWriter: %@";
-            NCLogE(@"%@", [NSString stringWithFormat:formatString, error]);
-            return;
-        }
+      weakSelf.assetWriterVideoInput =
+          [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo
+                                         outputSettings:weakSelf.videoSettings];
+      weakSelf.assetWriterVideoInput.expectsMediaDataInRealTime = YES;
+      weakSelf.assetWriterVideoInput.transform = transformBaseOnCaptureOrientation(orientation);
 
-        weakSelf.assetWriterVideoInput =
-            [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo outputSettings:weakSelf.videoSettings];
-        weakSelf.assetWriterVideoInput.expectsMediaDataInRealTime = YES;
-        weakSelf.assetWriterVideoInput.transform = transformBaseOnCaptureOrientation(orientation);
+      NSDictionary *attributes = @{
+          (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
+          (id)kCVPixelBufferWidthKey : weakSelf.videoSettings[AVVideoWidthKey],
+          (id)kCVPixelBufferHeightKey : weakSelf.videoSettings[AVVideoHeightKey],
+          (id)kCVPixelFormatOpenGLESCompatibility : (id)kCFBooleanTrue
+      };
 
-        NSDictionary *attributes = @{
-            (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
-            (id)kCVPixelBufferWidthKey : weakSelf.videoSettings[AVVideoWidthKey],
-            (id)kCVPixelBufferHeightKey : weakSelf.videoSettings[AVVideoHeightKey],
-            (id)kCVPixelFormatOpenGLESCompatibility : (id)kCFBooleanTrue
-        };
+      weakSelf.assetWriterInputPixelBufferAdaptor = [[AVAssetWriterInputPixelBufferAdaptor alloc]
+             initWithAssetWriterInput:weakSelf.assetWriterVideoInput
+          sourcePixelBufferAttributes:attributes];
 
-        weakSelf.assetWriterInputPixelBufferAdaptor =
-            [[AVAssetWriterInputPixelBufferAdaptor alloc] initWithAssetWriterInput:weakSelf.assetWriterVideoInput
-                                                       sourcePixelBufferAttributes:attributes];
+      if ([weakSelf.assetWriter canAddInput:weakSelf.assetWriterVideoInput]) {
+          [weakSelf.assetWriter addInput:weakSelf.assetWriterVideoInput];
+      } else {
+          NCLogE(@"Unable to add video input.");
+          return;
+      }
+      if (weakSelf.audioSettings) {
+          weakSelf.assetWriterAudioInput =
+              [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeAudio
+                                             outputSettings:weakSelf.audioSettings];
+          weakSelf.assetWriterAudioInput.expectsMediaDataInRealTime = YES;
+          if ([weakSelf.assetWriter canAddInput:weakSelf.assetWriterAudioInput]) {
+              [weakSelf.assetWriter addInput:weakSelf.assetWriterAudioInput];
+          } else {
+              NCLogE(@"Unable to add audio input.");
+          }
+      }
 
-        if ([weakSelf.assetWriter canAddInput:weakSelf.assetWriterVideoInput]) {
-            [weakSelf.assetWriter addInput:weakSelf.assetWriterVideoInput];
-        } else {
-            NCLogE(@"Unable to add video input.");
-            return;
-        }
-        if (weakSelf.audioSettings) {
-            weakSelf.assetWriterAudioInput =
-                [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeAudio outputSettings:weakSelf.audioSettings];
-            weakSelf.assetWriterAudioInput.expectsMediaDataInRealTime = YES;
-            if ([weakSelf.assetWriter canAddInput:weakSelf.assetWriterAudioInput]) {
-                [weakSelf.assetWriter addInput:weakSelf.assetWriterAudioInput];
-            } else {
-                NCLogE(@"Unable to add audio input.");
-            }
-        }
-
-        weakSelf.firstSample = YES;
-        weakSelf.isWriting = YES;
+      weakSelf.firstSample = YES;
+      weakSelf.isWriting = YES;
     });
 }
 
@@ -166,29 +170,29 @@ CGAffineTransform transformBaseOnCaptureOrientation(AVCaptureVideoOrientation or
 
 - (void)finishRecording {
     dispatch_async(self.dispatchQueue, ^{
-        self.isWriting = NO;
-        if (self.assetWriter.status == AVAssetWriterStatusWriting) {
-            [self.assetWriter finishWritingWithCompletionHandler:^{
-                if (self.assetWriter.status == AVAssetWriterStatusCompleted) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        NSURL *fileURL = [self.assetWriter outputURL];
-                        [self.delegate sightRecorder:self didWriteMovieAtURL:fileURL];
-                    });
-                } else {
-                    [self reportFailedWith:self.assetWriter.error status:self.assetWriter.status];
-                }
-            }];
-        } else {
-            [self reportFailedWith:self.assetWriter.error status:self.assetWriter.status];
-        }
+      self.isWriting = NO;
+      if (self.assetWriter.status == AVAssetWriterStatusWriting) {
+          [self.assetWriter finishWritingWithCompletionHandler:^{
+            if (self.assetWriter.status == AVAssetWriterStatusCompleted) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                  NSURL *fileURL = [self.assetWriter outputURL];
+                  [self.delegate sightRecorder:self didWriteMovieAtURL:fileURL];
+                });
+            } else {
+                [self reportFailedWith:self.assetWriter.error status:self.assetWriter.status];
+            }
+          }];
+      } else {
+          [self reportFailedWith:self.assetWriter.error status:self.assetWriter.status];
+      }
     });
 }
 
 - (void)reportFailedWith:(NSError *)error status:(NSInteger)status {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if ([self.delegate respondsToSelector:@selector(sightRecorder:didFailWithError:status:)]) {
-            [self.delegate sightRecorder:self didFailWithError:error status:status];
-        }
+      if ([self.delegate respondsToSelector:@selector(sightRecorder:didFailWithError:status:)]) {
+          [self.delegate sightRecorder:self didFailWithError:error status:status];
+      }
     });
 }
 #pragma mark - helpers

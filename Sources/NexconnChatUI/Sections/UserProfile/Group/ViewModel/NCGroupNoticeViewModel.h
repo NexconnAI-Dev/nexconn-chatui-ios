@@ -35,8 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupNoticeDidUpdate:(NCGroupInfo *)updatedGroup
-                 viewModel:(NCGroupNoticeViewModel *)viewModel
-          inViewController:(UIViewController *)inViewController;
+                   viewModel:(NCGroupNoticeViewModel *)viewModel
+            inViewController:(UIViewController *)inViewController;
 
 @end
 

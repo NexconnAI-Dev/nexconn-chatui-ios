@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCMessageReadDetailTabView.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -22,14 +22,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// Called when the user switches a tab
 /// @param view The current view
 /// @param tabType The tab type to switch to
-- (void)readReceiptUserListView:(NCMessageReadDetailView *)view 
+- (void)readReceiptUserListView:(NCMessageReadDetailView *)view
                  didSwitchToTab:(NCMessageReadDetailTabType)tabType;
 
 /// Loads more data when needed
 /// @param view The current view
 /// @param tabType The current tab type
-- (void)readReceiptUserListView:(NCMessageReadDetailView *)view 
-          needLoadMoreForTabType:(NCMessageReadDetailTabType)tabType;
+- (void)readReceiptUserListView:(NCMessageReadDetailView *)view
+         needLoadMoreForTabType:(NCMessageReadDetailTabType)tabType;
 
 @end
 
@@ -80,4 +80,3 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
-

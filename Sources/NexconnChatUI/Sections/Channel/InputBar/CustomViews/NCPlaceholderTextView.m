@@ -25,7 +25,10 @@
     self = [super init];
     if (self) {
         [self addSubview:self.placeholderLabel];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updatePlaceholder) name:UITextViewTextDidChangeNotification object:self];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(updatePlaceholder)
+                                                     name:UITextViewTextDidChangeNotification
+                                                   object:self];
     }
     return self;
 }
@@ -92,6 +95,5 @@
         [self layoutIfNeeded];
     }
 }
-
 
 @end

@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseViewModel.h"
 #import "NCButtonItem.h"
+#import <UIKit/UIKit.h>
 @class NCProfileFooterViewModel;
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,8 +29,8 @@ typedef NS_ENUM(NSUInteger, NCProfileFooterViewType) {
 /// @param models The current data source
 /// @return The data source processed by the app, or `nil` to use the default
 ///
-- (nullable NSArray <NCButtonItem *> *)profileFooterViewModel:(NCProfileFooterViewModel *)viewModel
-                                     willLoadButtonItemsViewModels:(NSArray <NCButtonItem *> *)models;
+- (nullable NSArray<NCButtonItem *> *)profileFooterViewModel:(NCProfileFooterViewModel *)viewModel
+                               willLoadButtonItemsViewModels:(NSArray<NCButtonItem *> *)models;
 
 @end
 
@@ -58,7 +58,7 @@ typedef NS_ENUM(NSUInteger, NCProfileFooterViewType) {
 /// @param channelId The target identifier
 - (instancetype)initWithResponder:(UIViewController *)responder
                              type:(NCProfileFooterViewType)type
-                         channelId:(NSString *)channelId;
+                        channelId:(NSString *)channelId;
 
 /// Loads the view
 ///

@@ -7,18 +7,18 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCProfileGenderCellViewModel.h"
 #import "NCListViewModelProtocol.h"
+#import "NCProfileGenderCellViewModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class NCUserProfile;
 
-@interface NCProfileGenderViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCProfileGenderViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 @property (nonatomic, strong) NCUserProfile *profle;
 
-@property (nonatomic, strong) NSArray <NCProfileGenderCellViewModel *> *dataSource;
+@property (nonatomic, strong) NSArray<NCProfileGenderCellViewModel *> *dataSource;
 
 - (void)updateUserProfileGender:(UIViewController *)viewController;
 

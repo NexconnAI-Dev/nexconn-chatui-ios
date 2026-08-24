@@ -9,15 +9,15 @@
 #import "NCChannelListCell.h"
 #import "NCChannelListCellUpdateInfo.h"
 #import "NCChannelListHeaderView.h"
+#import "NCChannelModel+Display.h"
 #import "NCChatUI.h"
 #import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUIConfig.h"
-#import "NCSemanticContext.h"
-#import "NCOnlineStatusView.h"
-#import "NCUserOnlineStatusUtil.h"
-#import "NCChannelModel+Display.h"
+#import "NCChatUIUtility.h"
 #import "NCInfoUpdateCenter.h"
+#import "NCOnlineStatusView.h"
+#import "NCSemanticContext.h"
+#import "NCUserOnlineStatusUtil.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
 @interface NCChannelListCell () <NCInfoUpdateDelegate>
@@ -26,7 +26,8 @@
 // Throttle repeated updates for the same user.
 @property (nonatomic, copy) NSString *displayedUserIdentityKey;
 
-// Stack view containing the presence indicator and title so hidden-state layout updates automatically.
+// Stack view containing the presence indicator and title so hidden-state layout updates
+// automatically.
 @property (nonatomic, strong) UIStackView *titleStackView;
 
 @end
@@ -34,7 +35,8 @@
 @implementation NCChannelListCell
 
 #pragma mark - Initialization
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         [self initCellLayout];
@@ -46,11 +48,11 @@
 - (void)initCellLayout {
     self.selectionStyle = UITableViewCellSelectionStyleNone;
     self.selectedBackgroundView = [[UIView alloc] initWithFrame:self.frame];
-    self.selectedBackgroundView.backgroundColor =
-    NCDynamicColor(@"highlight_color");
+    self.selectedBackgroundView.backgroundColor = NCDynamicColor(@"highlight_color");
 
     [self.contentView addSubview:self.headerView];
-    [self.contentView addSubview:self.titleStackView]; // Group the presence indicator and title in a stack view.
+    [self.contentView
+        addSubview:self.titleStackView]; // Group the presence indicator and title in a stack view.
     [self.contentView addSubview:self.conversationTagView];
     [self.contentView addSubview:self.messageCreatedTimeLabel];
     [self.contentView addSubview:self.detailContentView];
@@ -65,10 +67,11 @@
                                              selector:@selector(updateCellIfNeed:)
                                                  name:NCChatUIChannelListCellUpdateNotification
                                                object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(onUserOnlineStatusChanged:)
-                                                 name:NCChatUIConversationCellOnlineStatusUpdateNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(onUserOnlineStatusChanged:)
+               name:NCChatUIConversationCellOnlineStatusUpdateNotification
+             object:nil];
 }
 
 - (void)dealloc {
@@ -78,67 +81,80 @@
 
 - (void)addSubViewConstraints {
     [self.titleStackView setContentCompressionResistancePriority:UILayoutPriorityRequired
-                                                            forAxis:UILayoutConstraintAxisHorizontal];
-    [self.titleStackView setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-    
-    [self.conversationTitle setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
-                                                            forAxis:UILayoutConstraintAxisHorizontal];
-    [self.conversationTitle setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-    
-    [self.messageCreatedTimeLabel setContentCompressionResistancePriority:UILayoutPriorityRequired
-                                                                  forAxis:UILayoutConstraintAxisHorizontal];
-    
-    
+                                                         forAxis:UILayoutConstraintAxisHorizontal];
+    [self.titleStackView setContentHuggingPriority:UILayoutPriorityRequired
+                                           forAxis:UILayoutConstraintAxisHorizontal];
+
+    [self.conversationTitle
+        setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
+                                        forAxis:UILayoutConstraintAxisHorizontal];
+    [self.conversationTitle setContentHuggingPriority:UILayoutPriorityRequired
+                                              forAxis:UILayoutConstraintAxisHorizontal];
+
+    [self.messageCreatedTimeLabel
+        setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                        forAxis:UILayoutConstraintAxisHorizontal];
+
     // Fix the department label overlapping the timestamp.
     NSDictionary *cellSubViews =
-        NSDictionaryOfVariableBindings(_headerView, _titleStackView, _messageCreatedTimeLabel, _detailContentView,
-                                       _statusView, _conversationTagView);
-    
+        NSDictionaryOfVariableBindings(_headerView, _titleStackView, _messageCreatedTimeLabel,
+                                       _detailContentView, _statusView, _conversationTagView);
+
     // Horizontal layout: avatar - stack view (presence + title) - tag - time.
     // The stack view removes the hidden presence indicator from layout.
     [self.contentView
-        addConstraints:[NSLayoutConstraint
-                           constraintsWithVisualFormat:@"H:|-12-[_headerView(width)]-12-"
-                                                       @"[_titleStackView]-5-[_conversationTagView(50)]-5-"
-                                                       @"[_messageCreatedTimeLabel]-12-|"
-                                               options:0
-                                               metrics:@{
-                                                   @"width" : @(NCChatUIConfigCenter.ui.globalConversationPortraitSize.width)
-                                               }
-                                                 views:cellSubViews]];
-    
+        addConstraints:
+            [NSLayoutConstraint
+                constraintsWithVisualFormat:@"H:|-12-[_headerView(width)]-12-"
+                                            @"[_titleStackView]-5-[_conversationTagView(50)]-5-"
+                                            @"[_messageCreatedTimeLabel]-12-|"
+                                    options:0
+                                    metrics:@{
+                                        @"width" : @(NCChatUIConfigCenter.ui
+                                                         .globalConversationPortraitSize.width)
+                                    }
+                                      views:cellSubViews]];
+
     [NSLayoutConstraint activateConstraints:@[
         // Avatar height.
-        [self.headerView.heightAnchor constraintEqualToConstant:NCChatUIConfigCenter.ui.globalConversationPortraitSize.height],
-        
+        [self.headerView.heightAnchor
+            constraintEqualToConstant:NCChatUIConfigCenter.ui.globalConversationPortraitSize
+                                          .height],
+
         // Stack view height, matching the title height.
         [self.titleStackView.heightAnchor constraintEqualToConstant:21],
-        
+
         // Tag height.
         [self.conversationTagView.heightAnchor constraintEqualToConstant:21],
-        
+
         // Time label position.
-        [self.messageCreatedTimeLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:16],
-        
-        [self.detailContentView.leadingAnchor constraintEqualToAnchor:self.headerView.trailingAnchor constant:12],
+        [self.messageCreatedTimeLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
+                                                               constant:16],
+
+        [self.detailContentView.leadingAnchor constraintEqualToAnchor:self.headerView.trailingAnchor
+                                                             constant:12],
         [self.detailContentView.trailingAnchor constraintEqualToAnchor:self.statusView.leadingAnchor
                                                               constant:-8],
         // Keep detailContentView at height 16 to match its messageContentLabel.
         [self.detailContentView.heightAnchor constraintEqualToConstant:16],
-        
-        [self.statusView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-5],
+
+        [self.statusView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
+                                                       constant:-5],
         [self.statusView.widthAnchor constraintEqualToConstant:55],
-        [self.statusView.centerYAnchor constraintEqualToAnchor:self.detailContentView.centerYAnchor],
-        
+        [self.statusView.centerYAnchor
+            constraintEqualToAnchor:self.detailContentView.centerYAnchor],
+
         // Center the tag vertically in the stack view.
-        [self.conversationTagView.centerYAnchor constraintEqualToAnchor:self.titleStackView.centerYAnchor],
-        
+        [self.conversationTagView.centerYAnchor
+            constraintEqualToAnchor:self.titleStackView.centerYAnchor],
+
         // Align the avatar bottom with the detail content.
         [self.detailContentView.bottomAnchor constraintEqualToAnchor:self.headerView.bottomAnchor],
-        
+
         // Align the stack view top with the time label.
-        [self.titleStackView.topAnchor constraintEqualToAnchor:self.messageCreatedTimeLabel.topAnchor],
-        
+        [self.titleStackView.topAnchor
+            constraintEqualToAnchor:self.messageCreatedTimeLabel.topAnchor],
+
         // Center the avatar vertically.
         [self.headerView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
     ]];
@@ -150,7 +166,8 @@
 - (void)setDataModel:(NCChannelModel *)model {
     [self resetDefaultLayout:model];
     [super setDataModel:model];
-    self.backgroundColor = self.model.isTop ? self.topCellBackgroundColor : self.cellBackgroundColor;
+    self.backgroundColor =
+        self.model.isTop ? self.topCellBackgroundColor : self.cellBackgroundColor;
 
     if (model.conversationModelType == NC_CONVERSATION_MODEL_TYPE_NORMAL) {
         [self p_displayNormal:model];
@@ -158,13 +175,15 @@
 
     [self.headerView updateBubbleUnreadNumber:(int)model.unreadMessageCount];
     if (model.sentTime > 0) {
-        self.messageCreatedTimeLabel.text = [NCChatUIUtility convertConversationTime:model.sentTime / 1000];
+        self.messageCreatedTimeLabel.text =
+            [NCChatUIUtility convertConversationTime:model.sentTime / 1000];
     } else if (model.operationTime > 0) {
-        self.messageCreatedTimeLabel.text = [NCChatUIUtility convertConversationTime:model.operationTime / 1000];
+        self.messageCreatedTimeLabel.text =
+            [NCChatUIUtility convertConversationTime:model.operationTime / 1000];
     }
     [self.statusView updateReadStatus:model];
     [self.statusView updateNotificationStatus:model];
-    
+
     // Update the presence indicator.
     [self updateOnlineStatusDisplay];
 }
@@ -198,8 +217,8 @@
 }
 
 - (void)p_displayNormal:(NCChannelModel *)model {
-    BOOL isSimpleConversation = [model isChannelType:NCChannelTypeDirect] ||
-    [model isChannelType:NCChannelTypeSystem];
+    BOOL isSimpleConversation =
+        [model isChannelType:NCChannelTypeDirect] || [model isChannelType:NCChannelTypeSystem];
     if (isSimpleConversation) {
         [self p_displaySimaple:model];
         return;
@@ -210,7 +229,6 @@
     [self.detailContentView updateContent:model prefixName:nil];
     [self updateConversationTitle:model.channelId];
 }
-
 
 - (void)resetDefaultLayout:(NCChannelModel *)reuseModel {
     _hideSenderName = [self hideSenderNameForDefault:reuseModel];
@@ -225,7 +243,7 @@
     for (UIView *view in [self.conversationTagView subviews]) {
         [view removeFromSuperview];
     }
-    
+
     // Reset the presence dot. It is hidden by default and occupies no stack-view space.
     self.onlineStatusView.hidden = YES;
     self.onlineStatusView.backgroundColor = nil;
@@ -271,7 +289,8 @@
         if ([self updateMessagePrefixNameWithSenderUser]) {
             return;
         }
-        [self.detailContentView updateContent:self.model prefixName:[self.model senderDisplayNameInGroup]];
+        [self.detailContentView updateContent:self.model
+                                   prefixName:[self.model senderDisplayNameInGroup]];
     }
 }
 
@@ -298,7 +317,7 @@
                     return;
                 }
                 [self.detailContentView updateContent:self.model
-                                          prefixName:[self.model senderDisplayNameInGroup]];
+                                           prefixName:[self.model senderDisplayNameInGroup]];
             }
         }
     }
@@ -308,7 +327,8 @@
     NSString *userId = userInfo.userId;
 
     if (self.model.conversationModelType == NC_CONVERSATION_MODEL_TYPE_NORMAL &&
-        [self.model isChannelType:NCChannelTypeGroup] && [self.model.channelId isEqualToString:groupId] &&
+        [self.model isChannelType:NCChannelTypeGroup] &&
+        [self.model.channelId isEqualToString:groupId] &&
         [self.model.senderUserId isEqualToString:userId]) {
         if (self.hideSenderName) {
             return;
@@ -316,7 +336,8 @@
         if ([self updateMessagePrefixNameWithSenderUser]) {
             return;
         }
-        [self.detailContentView updateContent:self.model prefixName:[self.model senderDisplayNameInGroup]];
+        [self.detailContentView updateContent:self.model
+                                   prefixName:[self.model senderDisplayNameInGroup]];
     }
 }
 
@@ -343,16 +364,16 @@
 
     if ([updateInfo.model isEqual:self.model]) {
         dispatch_main_async_safe(^{
-            if (updateInfo.updateType == NCChannelListCellMessageContentUpdate) {
-                [self.detailContentView updateContent:self.model];
-                [self.statusView updateReadStatus:self.model];
-            } else if (updateInfo.updateType == NCChannelListCellSentStatusUpdate) {
-                [self.statusView updateReadStatus:self.model];
-                [self.detailContentView updateContent:self.model];
-            } else if (updateInfo.updateType == NCChannelListCellUnreadCountUpdate) {
-                [self.headerView updateBubbleUnreadNumber:(int)self.model.unreadMessageCount];
-            }
-            [self didUpdateCell];
+          if (updateInfo.updateType == NCChannelListCellMessageContentUpdate) {
+              [self.detailContentView updateContent:self.model];
+              [self.statusView updateReadStatus:self.model];
+          } else if (updateInfo.updateType == NCChannelListCellSentStatusUpdate) {
+              [self.statusView updateReadStatus:self.model];
+              [self.detailContentView updateContent:self.model];
+          } else if (updateInfo.updateType == NCChannelListCellUnreadCountUpdate) {
+              [self.headerView updateBubbleUnreadNumber:(int)self.model.unreadMessageCount];
+          }
+          [self didUpdateCell];
         });
     }
 }
@@ -362,14 +383,15 @@
     if (![self.model isChannelType:NCChannelTypeDirect]) {
         return;
     }
-    
+
     // Get the user IDs whose presence changed.
-    NSArray<NSString *> *changedUserIds = notification.userInfo[NCChatUIUserOnlineStatusChangedUserIdsKey];
-    
+    NSArray<NSString *> *changedUserIds =
+        notification.userInfo[NCChatUIUserOnlineStatusChangedUserIdsKey];
+
     // Check whether the current channel user is in the changed list.
     if ([changedUserIds containsObject:self.model.channelId]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self updateOnlineStatusDisplay];
+          [self updateOnlineStatusDisplay];
         });
     }
 }
@@ -389,15 +411,17 @@
 
 #pragma mark - Getter & Setter
 - (NCChannelListHeaderView *)headerView {
-    if(!_headerView) {
+    if (!_headerView) {
         _headerView = [[NCChannelListHeaderView alloc]
-            initWithFrame:CGRectMake(0, 0, NCChatUIConfigCenter.ui.globalConversationPortraitSize.width,
-                                     NCChatUIConfigCenter.ui.globalConversationPortraitSize.height)];
-        [_headerView
-            addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self
-                                                                               action:@selector(headerImageDidLongPress)]];
-        [_headerView
-            addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(headerImageDidTap)]];
+            initWithFrame:CGRectMake(
+                              0, 0, NCChatUIConfigCenter.ui.globalConversationPortraitSize.width,
+                              NCChatUIConfigCenter.ui.globalConversationPortraitSize.height)];
+        [_headerView addGestureRecognizer:[[UILongPressGestureRecognizer alloc]
+                                              initWithTarget:self
+                                                      action:@selector(headerImageDidLongPress)]];
+        [_headerView addGestureRecognizer:[[UITapGestureRecognizer alloc]
+                                              initWithTarget:self
+                                                      action:@selector(headerImageDidTap)]];
     }
     return _headerView;
 }
@@ -409,10 +433,13 @@
         _titleStackView.axis = UILayoutConstraintAxisHorizontal;
         _titleStackView.alignment = UIStackViewAlignmentCenter;
         _titleStackView.spacing = 4; // Space between the presence dot and title.
-        
-        [self.onlineStatusView setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-        [self.onlineStatusView setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-        
+
+        [self.onlineStatusView
+            setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                            forAxis:UILayoutConstraintAxisHorizontal];
+        [self.onlineStatusView setContentHuggingPriority:UILayoutPriorityRequired
+                                                 forAxis:UILayoutConstraintAxisHorizontal];
+
         // Add the presence dot and title to the stack view.
         [_titleStackView addArrangedSubview:self.onlineStatusView];
         [_titleStackView addArrangedSubview:self.conversationTitle];
@@ -428,7 +455,7 @@
 }
 
 - (UILabel *)conversationTitle {
-    if(!_conversationTitle) {
+    if (!_conversationTitle) {
         _conversationTitle = [[UILabel alloc] init];
         _conversationTitle.translatesAutoresizingMaskIntoConstraints = NO;
         _conversationTitle.backgroundColor = [UIColor clearColor];
@@ -439,7 +466,7 @@
 }
 
 - (UIView *)conversationTagView {
-    if(!_conversationTagView) {
+    if (!_conversationTagView) {
         _conversationTagView = [[UIView alloc] init];
         _conversationTagView.translatesAutoresizingMaskIntoConstraints = NO;
         _conversationTagView.clipsToBounds = YES;
@@ -448,7 +475,7 @@
 }
 
 - (UILabel *)messageCreatedTimeLabel {
-    if(!_messageCreatedTimeLabel) {
+    if (!_messageCreatedTimeLabel) {
         _messageCreatedTimeLabel = [[UILabel alloc] init];
         _messageCreatedTimeLabel.translatesAutoresizingMaskIntoConstraints = NO;
         _messageCreatedTimeLabel.backgroundColor = [UIColor clearColor];
@@ -462,14 +489,14 @@
 }
 
 - (NCChannelListDetailContentView *)detailContentView {
-    if(!_detailContentView) {
+    if (!_detailContentView) {
         _detailContentView = [[NCChannelListDetailContentView alloc] init];
     }
     return _detailContentView;
 }
 
 - (NCChannelListStatusView *)statusView {
-    if(!_statusView) {
+    if (!_statusView) {
         _statusView = [[NCChannelListStatusView alloc] init];
     }
     return _statusView;
@@ -489,20 +516,19 @@
         [NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement &&
         senderUserInfo.userId.length > 0 &&
         [senderUserInfo.userId isEqualToString:self.model.senderUserId]) {
-        NSString *displayName = senderUserInfo.name.length > 0 ? senderUserInfo.name : senderUserInfo.userId;
+        NSString *displayName =
+            senderUserInfo.name.length > 0 ? senderUserInfo.name : senderUserInfo.userId;
         [self.detailContentView updateContent:self.model prefixName:displayName];
         return YES;
     }
     return NO;
 }
 
-    
 - (void)didUpdateCell {
     if ([self.delegate respondsToSelector:@selector(didUpdateCell:model:)]) {
         [self.delegate didUpdateCell:self model:self.model];
     }
 }
-       
 
 #pragma mark - Backward Compatibility
 - (void)setHeaderImageViewBackgroundView:(UIView *)headerImageViewBackgroundView {
@@ -537,11 +563,11 @@
     return self.detailContentView.messageContentLabel;
 }
 - (void)setEnableNotification:(BOOL)enableNotification {
-    if([[NSThread currentThread] isMainThread]) {
+    if ([[NSThread currentThread] isMainThread]) {
         self.statusView.conversationNotificationStatusView.hidden = enableNotification;
-    }else {
+    } else {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.statusView.conversationNotificationStatusView.hidden = enableNotification;
+          self.statusView.conversationNotificationStatusView.hidden = enableNotification;
         });
     }
 }

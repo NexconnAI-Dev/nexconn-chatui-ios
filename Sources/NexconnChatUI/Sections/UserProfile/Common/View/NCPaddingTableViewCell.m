@@ -13,7 +13,7 @@ NSInteger const NCUserManagementPadding = 16;
 NSInteger const NCUserManagementImageCellLineLeading = 60;
 NSInteger const NCUserManagementImageCellLineTrailing = 10;
 
-@interface NCPaddingTableViewCell()
+@interface NCPaddingTableViewCell ()
 @property (nonatomic, strong) NSLayoutConstraint *paddingLeadingConstraint;
 @property (nonatomic, strong) NSLayoutConstraint *paddingTrailingConstraint;
 @property (nonatomic, strong) NSLayoutConstraint *lineLeadingConstraint;
@@ -25,27 +25,30 @@ NSInteger const NCUserManagementImageCellLineTrailing = 10;
     [super setupView];
     // Keep the cell transparent so the table view background remains visible.
     self.backgroundColor = [UIColor clearColor];
-    self.contentView.backgroundColor =  [UIColor clearColor];
+    self.contentView.backgroundColor = [UIColor clearColor];
     [self.contentView addSubview:self.paddingContainerView];
     [self.paddingContainerView addSubview:self.lineView];
 }
 
 - (void)setupConstraints {
     [super setupConstraints];
-    
-   self.paddingLeadingConstraint = [self.paddingContainerView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:NCUserManagementPadding];
-   self.paddingTrailingConstraint = [self.paddingContainerView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-NCUserManagementPadding];
+
+    self.paddingLeadingConstraint = [self.paddingContainerView.leadingAnchor
+        constraintEqualToAnchor:self.contentView.leadingAnchor
+                       constant:NCUserManagementPadding];
+    self.paddingTrailingConstraint = [self.paddingContainerView.trailingAnchor
+        constraintEqualToAnchor:self.contentView.trailingAnchor
+                       constant:-NCUserManagementPadding];
     // Inset contentView by 16 points on each side.
     [NSLayoutConstraint activateConstraints:@[
-        self.paddingLeadingConstraint,
-        self.paddingTrailingConstraint,
+        self.paddingLeadingConstraint, self.paddingTrailingConstraint,
         [self.paddingContainerView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor],
-        [self.paddingContainerView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor]
+        [self.paddingContainerView.bottomAnchor
+            constraintEqualToAnchor:self.contentView.bottomAnchor]
     ]];
 }
 
-- (void)updatePaddingContainer:(NSInteger)leading
-                      trailing:(NSInteger)trailing {
+- (void)updatePaddingContainer:(NSInteger)leading trailing:(NSInteger)trailing {
     NSInteger leadingConstant = self.paddingLeadingConstraint.constant;
     NSInteger trailingConstant = self.paddingTrailingConstraint.constant;
     if (leadingConstant == leading && trailingConstant == trailing) {
@@ -57,13 +60,12 @@ NSInteger const NCUserManagementImageCellLineTrailing = 10;
     self.paddingLeadingConstraint.constant = leading;
     self.paddingTrailingConstraint.constant = trailing;
     if (self.lineLeadingConstraint) {
-        self.lineLeadingConstraint.constant = self.lineLeadingConstraint.constant+leadingDiff;
+        self.lineLeadingConstraint.constant = self.lineLeadingConstraint.constant + leadingDiff;
     }
     if (self.lineTrailingConstraint) {
-        self.lineTrailingConstraint.constant = self.lineTrailingConstraint.constant+trailingDiff;
+        self.lineTrailingConstraint.constant = self.lineTrailingConstraint.constant + trailingDiff;
     }
 }
-
 
 - (void)updateLineViewConstraints:(NSInteger)leading trailing:(NSInteger)trailing {
     if (self.lineLeadingConstraint && self.lineTrailingConstraint) {
@@ -74,13 +76,16 @@ NSInteger const NCUserManagementImageCellLineTrailing = 10;
         self.lineLeadingConstraint.active = NO;
         self.lineTrailingConstraint.active = NO;
     }
-    self.lineLeadingConstraint = [self.lineView.leadingAnchor constraintEqualToAnchor:self.paddingContainerView.leadingAnchor constant:leading];
-    
-    self.lineTrailingConstraint = [self.lineView.trailingAnchor constraintEqualToAnchor:self.paddingContainerView.trailingAnchor constant:trailing];
-    
+    self.lineLeadingConstraint =
+        [self.lineView.leadingAnchor constraintEqualToAnchor:self.paddingContainerView.leadingAnchor
+                                                    constant:leading];
+
+    self.lineTrailingConstraint = [self.lineView.trailingAnchor
+        constraintEqualToAnchor:self.paddingContainerView.trailingAnchor
+                       constant:trailing];
+
     [NSLayoutConstraint activateConstraints:@[
-        self.lineLeadingConstraint,
-        self.lineTrailingConstraint,
+        self.lineLeadingConstraint, self.lineTrailingConstraint,
         [self.lineView.heightAnchor constraintEqualToConstant:1],
         [self.lineView.bottomAnchor constraintEqualToAnchor:self.paddingContainerView.bottomAnchor]
     ]];

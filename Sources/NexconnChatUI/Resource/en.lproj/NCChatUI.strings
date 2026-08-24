@@ -343,6 +343,7 @@
 "message_edit_not_exist"="Message no longer exists. Can't edit.";
 "message_edit_content_sensitive"="Unable to update. Content contains sensitive information.";
 "message_edit_expired_toast"="Edit expired";
+"message_edit_text_length_exceeded"="Edited content can't exceed 5000 characters.";
 
 "message_read_status"="Read status";
 "message_read_status_none_read"="0 read";

@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <CoreMedia/CoreMedia.h>
 #import <AVFoundation/AVFoundation.h>
+#import <CoreMedia/CoreMedia.h>
 
 @protocol NCSightRecorderDelegate;
 
@@ -50,7 +50,8 @@
 /**
  Finishes recording.
 
- @discussion Called asynchronously. sightRecorderDidFinishRecording is called on completion, and sightRecorder:didFailWithError: is called on failure.
+ @discussion Called asynchronously. sightRecorderDidFinishRecording is called on completion, and
+ sightRecorder:didFailWithError: is called on failure.
  */
 - (void)finishRecording;
 

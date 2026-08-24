@@ -7,10 +7,10 @@
 //
 
 #import "NCUserOnlineStatusManager.h"
-#import <NexconnChatUI/NCChatUIErrorCode.h>
-#import <NexconnChatUI/NCChatUILog.h>
 #import "NCChatUI.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
+#import <NexconnChatUI/NCChatUIErrorCode.h>
+#import <NexconnChatUI/NCChatUILog.h>
 
 #pragma mark - Internal Types
 
@@ -60,11 +60,11 @@ static const NSInteger kNCOnlineStatusSubscribeStatusMaxRetryCount = 3;
 /// cacheQueue 特定 key，用于检测当前是否在队列内执行，避免递归死锁
 static const void *kNCOnlineStatusCacheQueueKey = &kNCOnlineStatusCacheQueueKey;
 /// NCEngine handler identifier.
-static NSString * const kNCOnlineStatusUserHandlerIdentifier = @"NCUserOnlineStatusManager";
+static NSString *const kNCOnlineStatusUserHandlerIdentifier = @"NCUserOnlineStatusManager";
 
-typedef void (^NCBatchRetryBlock)(NSArray * _Nullable retryItems);
+typedef void (^NCBatchRetryBlock)(NSArray *_Nullable retryItems);
 typedef void (^NCBatchFailBlock)(NCChatUIErrorCode status);
-typedef NSArray * _Nonnull (^NCBatchPendingSnapshotBlock)(void);
+typedef NSArray *_Nonnull (^NCBatchPendingSnapshotBlock)(void);
 
 /// Signals completion of the current batch.
 typedef void (^NCBatchCompletion)(void);
@@ -76,14 +76,12 @@ typedef void (^NCBatchCompletion)(void);
 ///   - batchCompletion: Advances to the next batch after the current batch finishes.
 ///   - retry: Retries the current batch when retryItems is nil, or retries only the supplied items.
 ///   - fail: Terminates processing with an error status.
-typedef void (^NCBatchExecutorBlock)(NSArray *batch,
-                                     id context,
+typedef void (^NCBatchExecutorBlock)(NSArray *batch, id context,
                                      NCBatchPendingSnapshotBlock pendingSnapshot,
-                                     NCBatchCompletion batchCompletion,
-                                     NCBatchRetryBlock retry,
+                                     NCBatchCompletion batchCompletion, NCBatchRetryBlock retry,
                                      NCBatchFailBlock fail);
 
-@interface NCUserOnlineStatusManager ()<NCUserHandler, NCConnectionStatusHandler>
+@interface NCUserOnlineStatusManager () <NCUserHandler, NCConnectionStatusHandler>
 
 /// Serial queue protecting manager state.
 @property (nonatomic, strong) dispatch_queue_t cacheQueue;
@@ -96,7 +94,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 @property (nonatomic, strong) NSMutableSet<NSString *> *fetchingUserIds;
 
 /// 订阅在线状态查询按批次记录的限频重试次数
-@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *subscribeOnlineStatusRetryCounts;
+@property (nonatomic, strong)
+    NSMutableDictionary<NSString *, NSNumber *> *subscribeOnlineStatusRetryCounts;
 
 /// 已调度延迟重试的订阅在线状态查询批次，避免重复 dispatch_after
 @property (nonatomic, strong) NSMutableSet<NSString *> *scheduledSubscribeOnlineStatusRetryKeys;
@@ -124,7 +123,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     static NCUserOnlineStatusManager *instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        instance = [[NCUserOnlineStatusManager alloc] init];
+      instance = [[NCUserOnlineStatusManager alloc] init];
     });
     return instance;
 }
@@ -136,35 +135,37 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         _statusCache = [[NSCache alloc] init];
         _statusCache.countLimit = 5000; // Cache at most 5,000 user statuses.
         _statusCache.name = @"nexconn.chat.onlinestatus.cache";
-        
+
         // Initialize the in-flight request set.
         _fetchingUserIds = [NSMutableSet set];
         _subscribeOnlineStatusRetryCounts = [NSMutableDictionary dictionary];
         _scheduledSubscribeOnlineStatusRetryKeys = [NSMutableSet set];
-        
+
         // Initialize the unordered subscribed-user set.
         _subscribedUserIds = [NSMutableSet set];
-        
+
         // Initialize the confirmed-friend cache.
         _friendUserIds = [NSMutableSet set];
-        
+
         // Initialize ordered pending-user collections.
         _pendingFriendProfileUserIds = [NSMutableOrderedSet orderedSet];
         _pendingFriendOnlineStatusUserIds = [NSMutableOrderedSet orderedSet];
-        
+
         // Create the serial state queue.
-        _cacheQueue = dispatch_queue_create("nexconn.chat.onlinestatus.cache", DISPATCH_QUEUE_SERIAL);
+        _cacheQueue =
+            dispatch_queue_create("nexconn.chat.onlinestatus.cache", DISPATCH_QUEUE_SERIAL);
         // Mark the queue so nested calls can detect their execution context.
-        dispatch_queue_set_specific(_cacheQueue, kNCOnlineStatusCacheQueueKey, (void *)kNCOnlineStatusCacheQueueKey, NULL);
-        
+        dispatch_queue_set_specific(_cacheQueue, kNCOnlineStatusCacheQueueKey,
+                                    (void *)kNCOnlineStatusCacheQueueKey, NULL);
+
         // Register for NC user events.
         [NCEngine addUserHandlerWithIdentifier:kNCOnlineStatusUserHandlerIdentifier handler:self];
-        
-        // Register for connection status events.
-        [NCEngine addConnectionStatusHandlerWithIdentifier:kNCOnlineStatusUserHandlerIdentifier handler:self];
-        
-        // Friend relationship events arrive through the user handler.
 
+        // Register for connection status events.
+        [NCEngine addConnectionStatusHandlerWithIdentifier:kNCOnlineStatusUserHandlerIdentifier
+                                                   handler:self];
+
+        // Friend relationship events arrive through the user handler.
     }
     return self;
 }
@@ -186,7 +187,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         NCLogD(@"Fetch online status, user id is invalid");
         return;
     }
-    [self fetchOnlineStatusForUsers:@[userId] processSubscribeLimit:processSubscribeLimit];
+    [self fetchOnlineStatusForUsers:@[ userId ] processSubscribeLimit:processSubscribeLimit];
 }
 
 - (void)fetchFriendOnlineStatus:(NSArray<NSString *> *)userIds {
@@ -203,18 +204,18 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     __block NSUInteger addedCount = 0;
 
     [self performOnCacheQueueSyncSafe:^{
-        syncCompleted = self.friendOnlineStatusSyncCompleted;
-        if (!syncCompleted) {
-            NSUInteger beforeCount = self.pendingFriendOnlineStatusUserIds.count;
-            [self.pendingFriendOnlineStatusUserIds addObjectsFromArray:userIds];
-            addedCount = self.pendingFriendOnlineStatusUserIds.count - beforeCount;
-        }
+      syncCompleted = self.friendOnlineStatusSyncCompleted;
+      if (!syncCompleted) {
+          NSUInteger beforeCount = self.pendingFriendOnlineStatusUserIds.count;
+          [self.pendingFriendOnlineStatusUserIds addObjectsFromArray:userIds];
+          addedCount = self.pendingFriendOnlineStatusUserIds.count - beforeCount;
+      }
     }];
 
     if (!syncCompleted) {
-        NCLogD(@"Friend online status sync not completed, queuing %lu users (%lu new, %lu duplicates, total pending: %lu)",
-               (unsigned long)userIds.count,
-               (unsigned long)addedCount,
+        NCLogD(@"Friend online status sync not completed, queuing %lu users (%lu new, %lu "
+               @"duplicates, total pending: %lu)",
+               (unsigned long)userIds.count, (unsigned long)addedCount,
                (unsigned long)(userIds.count - addedCount),
                (unsigned long)self.pendingFriendOnlineStatusUserIds.count);
         return;
@@ -229,23 +230,24 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     }
     __block NCSubscribeUserOnlineStatus *status = nil;
     [self performOnCacheQueueSyncSafe:^{
-        status = [self.statusCache objectForKey:userId];
+      status = [self.statusCache objectForKey:userId];
     }];
     if (status) {
-        NCLogD(@"Get cached online status, user:%@, isOnline:%@", userId, status.isOnline ? @"YES" : @"NO");
+        NCLogD(@"Get cached online status, user:%@, isOnline:%@", userId,
+               status.isOnline ? @"YES" : @"NO");
     }
     return status;
 }
 
 - (void)clearCache {
     dispatch_async(self.cacheQueue, ^{
-        [self.statusCache removeAllObjects];
-        [self.fetchingUserIds removeAllObjects];
-        [self.subscribedUserIds removeAllObjects];
-        [self.friendUserIds removeAllObjects];
-        [self.pendingFriendProfileUserIds removeAllObjects];
-        [self.pendingFriendOnlineStatusUserIds removeAllObjects];
-        self.friendOnlineStatusSyncCompleted = NO;
+      [self.statusCache removeAllObjects];
+      [self.fetchingUserIds removeAllObjects];
+      [self.subscribedUserIds removeAllObjects];
+      [self.friendUserIds removeAllObjects];
+      [self.pendingFriendProfileUserIds removeAllObjects];
+      [self.pendingFriendOnlineStatusUserIds removeAllObjects];
+      self.friendOnlineStatusSyncCompleted = NO;
     });
 }
 
@@ -263,11 +265,14 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
                event.status == NCConnectionStatusDisconnException) {
         // 终态断连：用户切换、互踢、Token失效、账号废弃、异常断开，清空所有缓存和订阅记录
         NSString *currentUserId = [NCEngine getCurrentUserId];
-        NCLogD(@"Terminal disconnect (status=%ld) for user %@, clearing all cache and subscriptions", (long)event.status, currentUserId);
+        NCLogD(
+            @"Terminal disconnect (status=%ld) for user %@, clearing all cache and subscriptions",
+            (long)event.status, currentUserId);
         [self clearCache];
 
         // 通知UI清理展示
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"NCUserOnlineStatusCacheCleared" object:nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"NCUserOnlineStatusCacheCleared"
+                                                            object:nil];
     }
 }
 
@@ -276,10 +281,10 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 - (void)onSubscriptionSyncCompleted:(NCSubscriptionSyncCompletedEvent *)event {
     if (event.type == NCSubscribeTypeFriendOnlineStatus) {
         NCLogD(@"Friend online status sync completed");
-        
+
         dispatch_async(self.cacheQueue, ^{
-            // Record receipt of the subscription sync callback.
-            self.friendOnlineStatusSyncCompleted = YES;
+          // Record receipt of the subscription sync callback.
+          self.friendOnlineStatusSyncCompleted = YES;
         });
         [self handlePendingFetchOnlineStatus];
     }
@@ -288,9 +293,10 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 - (void)onSubscriptionChangedOnOtherDevices:(NCSubscriptionChangedOnOtherDevicesEvent *)event {
     NSMutableArray<NSString *> *subscribedUsers = [NSMutableArray array];
     NSMutableArray<NSString *> *unsubscribedUsers = [NSMutableArray array];
-    
+
     for (NCSubscribeChangeEvent *changeEvent in event.events) {
-        if ([self isOnlineStatusSubscribeType:changeEvent.subscribeType] && changeEvent.userId.length > 0) {
+        if ([self isOnlineStatusSubscribeType:changeEvent.subscribeType] &&
+            changeEvent.userId.length > 0) {
             if (changeEvent.operationType == NCSubscribeOperationTypeSubscribe) {
                 [subscribedUsers addObject:changeEvent.userId];
             } else {
@@ -298,19 +304,20 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
             }
         }
     }
-    if (subscribedUsers.count == 0 && unsubscribedUsers.count == 0) return;
-    
+    if (subscribedUsers.count == 0 && unsubscribedUsers.count == 0)
+        return;
+
     NSArray<NSString *> *addSnapshot = [subscribedUsers copy];
     NSArray<NSString *> *removeSnapshot = [unsubscribedUsers copy];
 
     dispatch_async(self.cacheQueue, ^{
-        // Mutate subscription tracking only on cacheQueue.
-        if (addSnapshot.count > 0) {
-            [self.subscribedUserIds addObjectsFromArray:addSnapshot];
-        }
-        if (removeSnapshot.count > 0) {
-            [self.subscribedUserIds minusSet:[NSSet setWithArray:removeSnapshot]];
-        }
+      // Mutate subscription tracking only on cacheQueue.
+      if (addSnapshot.count > 0) {
+          [self.subscribedUserIds addObjectsFromArray:addSnapshot];
+      }
+      if (removeSnapshot.count > 0) {
+          [self.subscribedUserIds minusSet:[NSSet setWithArray:removeSnapshot]];
+      }
     });
 
     // Perform fetch and notification work outside cacheQueue to avoid reentry.
@@ -332,11 +339,13 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         return;
     }
     NSMutableArray<NCSubscribeUserOnlineStatus *> *changedStatuses = [NSMutableArray array];
-    
+
     for (NCSubscriptionStatusInfo *statusInfo in event.events) {
         // 只处理在线状态事件
-        if ([self isOnlineStatusSubscribeType:statusInfo.subscribeType] && statusInfo.userId.length > 0) {
-            NCSubscribeUserOnlineStatus *status = [self onlineStatusFromSubscriptionStatusInfo:statusInfo];
+        if ([self isOnlineStatusSubscribeType:statusInfo.subscribeType] &&
+            statusInfo.userId.length > 0) {
+            NCSubscribeUserOnlineStatus *status =
+                [self onlineStatusFromSubscriptionStatusInfo:statusInfo];
             [changedStatuses addObject:status];
         }
     }
@@ -349,7 +358,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
            subscribeType == NCSubscribeTypeFriendOnlineStatus;
 }
 
-- (NCSubscribeUserOnlineStatus *)onlineStatusFromSubscriptionStatusInfo:(NCSubscriptionStatusInfo *)statusInfo {
+- (NCSubscribeUserOnlineStatus *)onlineStatusFromSubscriptionStatusInfo:
+    (NCSubscriptionStatusInfo *)statusInfo {
     NCSubscribeUserOnlineStatus *status = [NCSubscribeUserOnlineStatus new];
     status.userId = statusInfo.userId;
 
@@ -374,7 +384,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 
 #pragma mark - NCUserHandler (Friend Relationship Events)
 
-/// Records the user as a friend, removes any regular subscription, and fetches friend status when enabled.
+/// Records the user as a friend, removes any regular subscription, and fetches friend status when
+/// enabled.
 - (void)onFriendAdd:(NCFriendAddEvent *)event {
     NSString *userId = event.userId;
     if (!userId || userId.length == 0) {
@@ -383,15 +394,15 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     NCLogD(@"onFriendAdd, userId:%@", userId);
     // Record the confirmed friend ID.
     dispatch_async(self.cacheQueue, ^{
-        [self.friendUserIds addObject:userId];
+      [self.friendUserIds addObject:userId];
     });
 
     // Remove the regular online-status subscription.
-    [self unsubscribeUsers:@[userId] completion:nil];
+    [self unsubscribeUsers:@[ userId ] completion:nil];
 
     if ([self isFriendOnlineStatusSubscribeEnable]) {
         // Friend status is available only when the app setting is enabled.
-        [self fetchFriendOnlineStatus:@[userId]];
+        [self fetchFriendOnlineStatus:@[ userId ]];
     } else {
         NCLogD(@"onFriendAdd, friend online status subscribe is not enabled");
     }
@@ -405,11 +416,11 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     }
     // Remove the IDs from the confirmed-friend cache.
     dispatch_async(self.cacheQueue, ^{
-        for (NSString *userId in userIds) {
-            if (userId && userId.length > 0) {
-                [self.friendUserIds removeObject:userId];
-            }
-        }
+      for (NSString *userId in userIds) {
+          if (userId && userId.length > 0) {
+              [self.friendUserIds removeObject:userId];
+          }
+      }
     });
     // Subscribe to the removed friend IDs as non-friends.
     [self subscribeUsers:userIds pageSize:0 processSubscribeLimit:YES];
@@ -419,8 +430,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 - (void)onFriendCleared:(NCFriendClearedEvent *)event {
     __block NSArray *subscribeUserIds = nil;
     [self performOnCacheQueueSyncSafe:^{
-        subscribeUserIds = [self.friendUserIds copy];
-        [self.friendUserIds removeAllObjects];
+      subscribeUserIds = [self.friendUserIds copy];
+      [self.friendUserIds removeAllObjects];
     }];
 
     if (subscribeUserIds.count > 0) {
@@ -443,19 +454,19 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 
     // Atomically snapshot and clear pending IDs on cacheQueue.
     [self performOnCacheQueueSyncSafe:^{
-        if (self.pendingFriendProfileUserIds.count > 0) {
-            NCLogD(@"Processing %lu pending users after friend profile sync completed",
-                   (unsigned long)self.pendingFriendProfileUserIds.count);
-            profileSnapshot = [self.pendingFriendProfileUserIds.array copy];
-            [self.pendingFriendProfileUserIds removeAllObjects];
-        }
+      if (self.pendingFriendProfileUserIds.count > 0) {
+          NCLogD(@"Processing %lu pending users after friend profile sync completed",
+                 (unsigned long)self.pendingFriendProfileUserIds.count);
+          profileSnapshot = [self.pendingFriendProfileUserIds.array copy];
+          [self.pendingFriendProfileUserIds removeAllObjects];
+      }
 
-        if (self.pendingFriendOnlineStatusUserIds.count > 0) {
-            NCLogD(@"Processing %lu pending friend online status users after sync completed",
-                   (unsigned long)self.pendingFriendOnlineStatusUserIds.count);
-            friendStatusSnapshot = [self.pendingFriendOnlineStatusUserIds.array copy];
-            [self.pendingFriendOnlineStatusUserIds removeAllObjects];
-        }
+      if (self.pendingFriendOnlineStatusUserIds.count > 0) {
+          NCLogD(@"Processing %lu pending friend online status users after sync completed",
+                 (unsigned long)self.pendingFriendOnlineStatusUserIds.count);
+          friendStatusSnapshot = [self.pendingFriendOnlineStatusUserIds.array copy];
+          [self.pendingFriendOnlineStatusUserIds removeAllObjects];
+      }
     }];
 
     if (profileSnapshot.count > 0) {
@@ -497,21 +508,20 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     __block NSUInteger pendingCount = 0;
 
     [self performOnCacheQueueSyncSafe:^{
-        syncCompleted = self.friendOnlineStatusSyncCompleted;
-        if (!syncCompleted) {
-            NSUInteger beforeCount = self.pendingFriendProfileUserIds.count;
-            [self.pendingFriendProfileUserIds addObjectsFromArray:userIds];
-            addedCount = self.pendingFriendProfileUserIds.count - beforeCount;
-            pendingCount = self.pendingFriendProfileUserIds.count;
-        }
+      syncCompleted = self.friendOnlineStatusSyncCompleted;
+      if (!syncCompleted) {
+          NSUInteger beforeCount = self.pendingFriendProfileUserIds.count;
+          [self.pendingFriendProfileUserIds addObjectsFromArray:userIds];
+          addedCount = self.pendingFriendProfileUserIds.count - beforeCount;
+          pendingCount = self.pendingFriendProfileUserIds.count;
+      }
     }];
 
     if (!syncCompleted) {
-        NCLogD(@"Friend sync not completed, queuing %lu users (%lu new, %lu duplicates, total pending: %lu)",
-               (unsigned long)userIds.count,
-               (unsigned long)addedCount,
-               (unsigned long)(userIds.count - addedCount),
-               (unsigned long)pendingCount);
+        NCLogD(@"Friend sync not completed, queuing %lu users (%lu new, %lu duplicates, total "
+               @"pending: %lu)",
+               (unsigned long)userIds.count, (unsigned long)addedCount,
+               (unsigned long)(userIds.count - addedCount), (unsigned long)pendingCount);
         return;
     }
 
@@ -525,49 +535,54 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         return;
     }
     [self filterFriendAndNonFriendUserIds:userIds
-                           perBatchResult:^(NSArray<NSString *> * _Nullable friendUserIds,
-                                             NSArray<NSString *> * _Nullable nonFriendUserIds) {
-        if (nonFriendUserIds.count > 0) {
-            [self subscribeUsers:nonFriendUserIds pageSize:0 processSubscribeLimit:processSubscribeLimit];
+        perBatchResult:^(NSArray<NSString *> *_Nullable friendUserIds,
+                         NSArray<NSString *> *_Nullable nonFriendUserIds) {
+          if (nonFriendUserIds.count > 0) {
+              [self subscribeUsers:nonFriendUserIds
+                               pageSize:0
+                  processSubscribeLimit:processSubscribeLimit];
+          }
+          // Fetch friend status only when the app setting is enabled.
+          if (friendUserIds.count > 0 && [self isFriendOnlineStatusSubscribeEnable]) {
+              [self getSubscribeUsersOnlineStatus:friendUserIds];
+          } else {
+              NCLogD(@"filterAndFetchOnlineStatus, friend online status subscribe is %@",
+                     [self isFriendOnlineStatusSubscribeEnable] ? @"enabled" : @"disabled");
+          }
         }
-        // Fetch friend status only when the app setting is enabled.
-        if (friendUserIds.count > 0 && [self isFriendOnlineStatusSubscribeEnable]) {
-            [self getSubscribeUsersOnlineStatus:friendUserIds];
-        } else {
-            NCLogD(@"filterAndFetchOnlineStatus, friend online status subscribe is %@", [self isFriendOnlineStatusSubscribeEnable] ? @"enabled" : @"disabled");
-        }
-    } completion:^(BOOL success) {
-        if (!success) {
-            NCLogD(@"Filter friend/non-friend failed, skip fetching online status");
-        }
-    }];
+        completion:^(BOOL success) {
+          if (!success) {
+              NCLogD(@"Filter friend/non-friend failed, skip fetching online status");
+          }
+        }];
 }
 
 /// Classifies user IDs as friends or non-friends in batches.
 - (void)filterFriendAndNonFriendUserIds:(NSArray<NSString *> *)userIds
-                         perBatchResult:(void (^)(NSArray<NSString *> * _Nullable friendUserIds,
-                                                  NSArray<NSString *> * _Nullable nonFriendUserIds))perBatchResult
+                         perBatchResult:(void (^)(NSArray<NSString *> *_Nullable friendUserIds,
+                                                  NSArray<NSString *> *_Nullable nonFriendUserIds))
+                                            perBatchResult
                              completion:(void (^)(BOOL success))completion {
     __block BOOL completionCalled = NO;
     // Finish the classification once.
     void (^finish)(BOOL) = ^(BOOL success) {
-        if (completionCalled) {
-            return;
-        }
-        completionCalled = YES;
-        if (completion) {
-            completion(success);
-        }
+      if (completionCalled) {
+          return;
+      }
+      completionCalled = YES;
+      if (completion) {
+          completion(success);
+      }
     };
     if (userIds.count == 0) {
         finish(YES);
         return;
     }
-    
+
     // Resolve IDs already present in the confirmed-friend cache first.
     __block NSSet *friendCacheSnapshot = nil;
     [self performOnCacheQueueSyncSafe:^{
-        friendCacheSnapshot = [self.friendUserIds copy];
+      friendCacheSnapshot = [self.friendUserIds copy];
     }];
     NSMutableOrderedSet<NSString *> *knownFriendIds = [NSMutableOrderedSet orderedSet];
     NSMutableOrderedSet<NSString *> *unknownUserIds = [NSMutableOrderedSet orderedSet];
@@ -581,7 +596,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
             [unknownUserIds addObject:userId];
         }
     }
-    
+
     // Report known friends before querying the remaining IDs.
     if (knownFriendIds.count > 0 && perBatchResult) {
         NCLogD(@"Known friend ids:%@", knownFriendIds.array);
@@ -599,47 +614,51 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 
     // Query the remaining IDs in batches.
     [self batchQueryFriendsInfo:unknownUserIds.array
-                perBatchResult:^(NSArray<NSString *> * _Nullable batchFriendUserIds,
-                                  NSArray<NSString *> * _Nullable batchNonFriendUserIds) {
-        NCLogD(@"perBatchResult, friendUserIds:%@, nonFriendUserIds:%@", batchFriendUserIds, batchNonFriendUserIds);
-        if (batchFriendUserIds.count > 0) {
-            NSSet *friendSet = [NSSet setWithArray:batchFriendUserIds];
-            dispatch_async(self.cacheQueue, ^{
+        perBatchResult:^(NSArray<NSString *> *_Nullable batchFriendUserIds,
+                         NSArray<NSString *> *_Nullable batchNonFriendUserIds) {
+          NCLogD(@"perBatchResult, friendUserIds:%@, nonFriendUserIds:%@", batchFriendUserIds,
+                 batchNonFriendUserIds);
+          if (batchFriendUserIds.count > 0) {
+              NSSet *friendSet = [NSSet setWithArray:batchFriendUserIds];
+              dispatch_async(self.cacheQueue, ^{
                 // Cache only IDs confirmed as friends.
                 [self.friendUserIds unionSet:friendSet];
-            });
+              });
+          }
+          if (perBatchResult) {
+              perBatchResult(batchFriendUserIds, batchNonFriendUserIds);
+          }
+
+          // Remove classified IDs from the pending set.
+          for (NSString *userId in batchFriendUserIds) {
+              [pendingUnknownUserIds removeObject:userId];
+          }
+          for (NSString *userId in batchNonFriendUserIds) {
+              [pendingUnknownUserIds removeObject:userId];
+          }
         }
-        if (perBatchResult) {
-            perBatchResult(batchFriendUserIds, batchNonFriendUserIds);
-        }
-        
-        // Remove classified IDs from the pending set.
-        for (NSString *userId in batchFriendUserIds) {
-            [pendingUnknownUserIds removeObject:userId];
-        }
-        for (NSString *userId in batchNonFriendUserIds) {
-            [pendingUnknownUserIds removeObject:userId];
-        }
-    } completion:^(NCChatUIErrorCode status) {
-        BOOL treatAsSuccess = (status == NCChatUIErrorCodeSuccess || status == NCChatUIErrorCodeUserProfileServiceUnavailable);
-        if (status == NCChatUIErrorCodeUserProfileServiceUnavailable &&
-            perBatchResult &&
-            pendingUnknownUserIds.count > 0) {
-            // The current fallback treats every unresolved ID as a non-friend when the profile service is unavailable.
-            perBatchResult(@[], [pendingUnknownUserIds.array copy]);
-        }
-        if (!treatAsSuccess) {
-            NCLogD(@"Filter failed with status:%ld", (long)status);
-        }
-        finish(treatAsSuccess);
-    }];
+        completion:^(NCChatUIErrorCode status) {
+          BOOL treatAsSuccess = (status == NCChatUIErrorCodeSuccess ||
+                                 status == NCChatUIErrorCodeUserProfileServiceUnavailable);
+          if (status == NCChatUIErrorCodeUserProfileServiceUnavailable && perBatchResult &&
+              pendingUnknownUserIds.count > 0) {
+              // The current fallback treats every unresolved ID as a non-friend when the profile
+              // service is unavailable.
+              perBatchResult(@[], [pendingUnknownUserIds.array copy]);
+          }
+          if (!treatAsSuccess) {
+              NCLogD(@"Filter failed with status:%ld", (long)status);
+          }
+          finish(treatAsSuccess);
+        }];
 }
 
 - (void)batchQueryFriendsInfo:(NSArray<NSString *> *)userIds
-              perBatchResult:(void (^)(NSArray<NSString *> * _Nullable friendUserIds,
-                                       NSArray<NSString *> * _Nullable nonFriendUserIds))perBatchResult
+               perBatchResult:
+                   (void (^)(NSArray<NSString *> *_Nullable friendUserIds,
+                             NSArray<NSString *> *_Nullable nonFriendUserIds))perBatchResult
                    completion:(void (^)(NCChatUIErrorCode status))completion {
-    
+
     if (!userIds || userIds.count == 0) {
         if (completion) {
             completion(NCChatUIErrorCodeSuccess);
@@ -647,70 +666,73 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         return;
     }
     [self processQueueItems:userIds
-                  batchSize:kNCOnlineStatusFriendQueryBatchSize
-                    context:nil
-                   executor:^(NSArray *batch,
-                              id context,
-                              NCBatchPendingSnapshotBlock pendingSnapshot,
-                              NCBatchCompletion batchCompletion,
-                              NCBatchRetryBlock retry,
-                              NCBatchFailBlock fail) {
-        NCLogD(@"Querying friends batch users:%@", batch);
-        
-        [[NCEngine userModule] getFriendsInfoWithUserIds:batch
-                                               completion:^(NSArray<NCFriendInfo *> * _Nullable friendInfos, NCError * _Nullable error) {
-            NSInteger errorCode = error ? error.code : NCChatUIErrorCodeSuccess;
-            if (errorCode == NCChatUIErrorCodeSuccess) {
-                NSMutableSet *friendIdSet = [NSMutableSet set];
-                for (NCFriendInfo *friendInfo in friendInfos) {
-                    if (friendInfo.userId && friendInfo.userId.length > 0) {
-                        [friendIdSet addObject:friendInfo.userId];
-                    }
-                }
-                NSMutableArray *batchFriends = [NSMutableArray array];
-                NSMutableArray *batchNonFriends = [NSMutableArray array];
-                for (NSString *userId in batch) {
-                    if ([friendIdSet containsObject:userId]) {
-                        [batchFriends addObject:userId];
-                    } else {
-                        [batchNonFriends addObject:userId];
-                    }
-                }
-                if (perBatchResult) {
-                    perBatchResult([batchFriends copy], [batchNonFriends copy]);
-                }
-                // The full batch succeeded; continue without retrying.
-                batchCompletion();
-            } else if (errorCode == NCChatUIErrorCodeRequestOverFrequency) {
-                NCLogD(@"batchQueryFriendsInfo over frequency, users:%@", batch);
-                retry(nil);
-            } else if (errorCode == NCChatUIErrorCodeUserProfileServiceUnavailable) {
-                NCLogD(@"User profile service unavailable, treat all as non-friends");
-                fail(NCChatUIErrorCodeUserProfileServiceUnavailable);
-            } else {
-                NCLogD(@"batchQueryFriendsInfo failed, code:%ld, users:%@", (long)errorCode, batch);
-                fail(errorCode);
-            }
-        }];
-    } completion:^(NCChatUIErrorCode status) {
-        if (completion) {
-            completion(status);
+        batchSize:kNCOnlineStatusFriendQueryBatchSize
+        context:nil
+        executor:^(NSArray *batch, id context, NCBatchPendingSnapshotBlock pendingSnapshot,
+                   NCBatchCompletion batchCompletion, NCBatchRetryBlock retry,
+                   NCBatchFailBlock fail) {
+          NCLogD(@"Querying friends batch users:%@", batch);
+
+          [[NCEngine userModule]
+              getFriendsInfoWithUserIds:batch
+                             completion:^(NSArray<NCFriendInfo *> *_Nullable friendInfos,
+                                          NCError *_Nullable error) {
+                               NSInteger errorCode = error ? error.code : NCChatUIErrorCodeSuccess;
+                               if (errorCode == NCChatUIErrorCodeSuccess) {
+                                   NSMutableSet *friendIdSet = [NSMutableSet set];
+                                   for (NCFriendInfo *friendInfo in friendInfos) {
+                                       if (friendInfo.userId && friendInfo.userId.length > 0) {
+                                           [friendIdSet addObject:friendInfo.userId];
+                                       }
+                                   }
+                                   NSMutableArray *batchFriends = [NSMutableArray array];
+                                   NSMutableArray *batchNonFriends = [NSMutableArray array];
+                                   for (NSString *userId in batch) {
+                                       if ([friendIdSet containsObject:userId]) {
+                                           [batchFriends addObject:userId];
+                                       } else {
+                                           [batchNonFriends addObject:userId];
+                                       }
+                                   }
+                                   if (perBatchResult) {
+                                       perBatchResult([batchFriends copy], [batchNonFriends copy]);
+                                   }
+                                   // The full batch succeeded; continue without retrying.
+                                   batchCompletion();
+                               } else if (errorCode == NCChatUIErrorCodeRequestOverFrequency) {
+                                   NCLogD(@"batchQueryFriendsInfo over frequency, users:%@", batch);
+                                   retry(nil);
+                               } else if (errorCode ==
+                                          NCChatUIErrorCodeUserProfileServiceUnavailable) {
+                                   NCLogD(@"User profile service unavailable, treat all as "
+                                          @"non-friends");
+                                   fail(NCChatUIErrorCodeUserProfileServiceUnavailable);
+                               } else {
+                                   NCLogD(@"batchQueryFriendsInfo failed, code:%ld, users:%@",
+                                          (long)errorCode, batch);
+                                   fail(errorCode);
+                               }
+                             }];
         }
-    }];
+        completion:^(NCChatUIErrorCode status) {
+          if (completion) {
+              completion(status);
+          }
+        }];
 }
 
 - (void)getSubscribeUsersOnlineStatus:(NSArray<NSString *> *)userIds {
     // Exclude IDs with a request already in flight.
     __block NSMutableArray *needFetchUserIds = [NSMutableArray array];
     [self performOnCacheQueueSyncSafe:^{
-        for (NSString *userId in userIds) {
-            if (userId.length > 0 && ![self.fetchingUserIds containsObject:userId]) {
-                [needFetchUserIds addObject:userId];
-                [self.fetchingUserIds addObject:userId];
-            }
-        }
+      for (NSString *userId in userIds) {
+          if (userId.length > 0 && ![self.fetchingUserIds containsObject:userId]) {
+              [needFetchUserIds addObject:userId];
+              [self.fetchingUserIds addObject:userId];
+          }
+      }
     }];
-    
+
     // Return when every ID is already being fetched.
     if (needFetchUserIds.count == 0) {
         NCLogD(@"Get subscribe users online status, no users to fetch");
@@ -721,28 +743,40 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     [self requestSubscribeUsersOnlineStatus:needFetchUserIds retryKey:retryKey];
 }
 
-- (void)requestSubscribeUsersOnlineStatus:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+- (void)requestSubscribeUsersOnlineStatus:(NSArray<NSString *> *)userIds
+                                 retryKey:(NSString *)retryKey {
     if (userIds.count == 0) {
         return;
     }
     NCLogD(@"Get subscribe users online status, users:%@", userIds);
 
-    [[NCEngine userModule] getSubscribeUsersOnlineStatusWithUserIds:userIds
-                                                          completion:^(NSArray<NCSubscribeUserOnlineStatus *> * _Nullable status, NCError * _Nullable error) {
-        NSInteger statusCode = error ? error.code : NCChatUIErrorCodeSuccess;
-        NCLogD(@"getSubscribeUsersOnlineStatus, code:%ld", (long)statusCode);
-        if (statusCode == NCChatUIErrorCodeSuccess) {
-            [self finishSubscribeOnlineStatusFetch:userIds retryKey:retryKey];
-            if (status) {
-                [self cacheOnlineStatusesAndNotify:status];
-            }
-        } else if (statusCode == NCChatUIErrorCodeRequestOverFrequency) {
-            [self scheduleSubscribeOnlineStatusRetry:userIds retryKey:retryKey];
-        } else {
-            [self finishSubscribeOnlineStatusFetch:userIds retryKey:retryKey];
-            NCLogD(@"getSubscribeUsersOnlineStatus failed, users:%@", userIds);
-        }
-    }];
+    [[NCEngine userModule]
+        getSubscribeUsersOnlineStatusWithUserIds:userIds
+                                      completion:^(
+                                          NSArray<NCSubscribeUserOnlineStatus *> *_Nullable status,
+                                          NCError *_Nullable error) {
+                                        NSInteger statusCode =
+                                            error ? error.code : NCChatUIErrorCodeSuccess;
+                                        NCLogD(@"getSubscribeUsersOnlineStatus, code:%ld",
+                                               (long)statusCode);
+                                        if (statusCode == NCChatUIErrorCodeSuccess) {
+                                            [self finishSubscribeOnlineStatusFetch:userIds
+                                                                          retryKey:retryKey];
+                                            if (status) {
+                                                [self cacheOnlineStatusesAndNotify:status];
+                                            }
+                                        } else if (statusCode ==
+                                                   NCChatUIErrorCodeRequestOverFrequency) {
+                                            [self scheduleSubscribeOnlineStatusRetry:userIds
+                                                                            retryKey:retryKey];
+                                        } else {
+                                            [self finishSubscribeOnlineStatusFetch:userIds
+                                                                          retryKey:retryKey];
+                                            NCLogD(
+                                                @"getSubscribeUsersOnlineStatus failed, users:%@",
+                                                userIds);
+                                        }
+                                      }];
 }
 
 - (NSString *)subscribeOnlineStatusRetryKeyForUserIds:(NSArray<NSString *> *)userIds {
@@ -752,53 +786,59 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
             [validUserIds addObject:userId];
         }
     }
-    NSArray<NSString *> *sortedUserIds = [[validUserIds array] sortedArrayUsingSelector:@selector(compare:)];
+    NSArray<NSString *> *sortedUserIds =
+        [[validUserIds array] sortedArrayUsingSelector:@selector(compare:)];
     return [sortedUserIds componentsJoinedByString:@"\n"];
 }
 
-- (void)scheduleSubscribeOnlineStatusRetry:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+- (void)scheduleSubscribeOnlineStatusRetry:(NSArray<NSString *> *)userIds
+                                  retryKey:(NSString *)retryKey {
     if (retryKey.length == 0) {
         [self finishSubscribeOnlineStatusFetch:userIds retryKey:retryKey];
         return;
     }
 
     dispatch_async(self.cacheQueue, ^{
-        NSInteger retryCount = [self.subscribeOnlineStatusRetryCounts[retryKey] integerValue];
-        if (retryCount >= kNCOnlineStatusSubscribeStatusMaxRetryCount) {
-            NCLogD(@"getSubscribeUsersOnlineStatus over frequency retry reached limit:%ld, users:%@",
-                   (long)retryCount, userIds);
-            [self finishSubscribeOnlineStatusFetchOnCacheQueue:userIds retryKey:retryKey];
-            return;
-        }
+      NSInteger retryCount = [self.subscribeOnlineStatusRetryCounts[retryKey] integerValue];
+      if (retryCount >= kNCOnlineStatusSubscribeStatusMaxRetryCount) {
+          NCLogD(@"getSubscribeUsersOnlineStatus over frequency retry reached limit:%ld, users:%@",
+                 (long)retryCount, userIds);
+          [self finishSubscribeOnlineStatusFetchOnCacheQueue:userIds retryKey:retryKey];
+          return;
+      }
 
-        if ([self.scheduledSubscribeOnlineStatusRetryKeys containsObject:retryKey]) {
-            NCLogD(@"getSubscribeUsersOnlineStatus over frequency retry already scheduled, users:%@", userIds);
-            return;
-        }
+      if ([self.scheduledSubscribeOnlineStatusRetryKeys containsObject:retryKey]) {
+          NCLogD(@"getSubscribeUsersOnlineStatus over frequency retry already scheduled, users:%@",
+                 userIds);
+          return;
+      }
 
-        NSInteger nextRetryCount = retryCount + 1;
-        self.subscribeOnlineStatusRetryCounts[retryKey] = @(nextRetryCount);
-        [self.scheduledSubscribeOnlineStatusRetryKeys addObject:retryKey];
-        NCLogD(@"getSubscribeUsersOnlineStatus over frequency, retry count:%ld, users:%@",
-               (long)nextRetryCount, userIds);
+      NSInteger nextRetryCount = retryCount + 1;
+      self.subscribeOnlineStatusRetryCounts[retryKey] = @(nextRetryCount);
+      [self.scheduledSubscribeOnlineStatusRetryKeys addObject:retryKey];
+      NCLogD(@"getSubscribeUsersOnlineStatus over frequency, retry count:%ld, users:%@",
+             (long)nextRetryCount, userIds);
 
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay), self.cacheQueue, ^{
+      dispatch_after(
+          dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay), self.cacheQueue, ^{
             if (![self.scheduledSubscribeOnlineStatusRetryKeys containsObject:retryKey]) {
                 return;
             }
             [self.scheduledSubscribeOnlineStatusRetryKeys removeObject:retryKey];
             [self requestSubscribeUsersOnlineStatus:userIds retryKey:retryKey];
-        });
+          });
     });
 }
 
-- (void)finishSubscribeOnlineStatusFetch:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+- (void)finishSubscribeOnlineStatusFetch:(NSArray<NSString *> *)userIds
+                                retryKey:(NSString *)retryKey {
     dispatch_async(self.cacheQueue, ^{
-        [self finishSubscribeOnlineStatusFetchOnCacheQueue:userIds retryKey:retryKey];
+      [self finishSubscribeOnlineStatusFetchOnCacheQueue:userIds retryKey:retryKey];
     });
 }
 
-- (void)finishSubscribeOnlineStatusFetchOnCacheQueue:(NSArray<NSString *> *)userIds retryKey:(NSString *)retryKey {
+- (void)finishSubscribeOnlineStatusFetchOnCacheQueue:(NSArray<NSString *> *)userIds
+                                            retryKey:(NSString *)retryKey {
     [self.fetchingUserIds minusSet:[NSSet setWithArray:userIds]];
     if (retryKey.length > 0) {
         [self.subscribeOnlineStatusRetryCounts removeObjectForKey:retryKey];
@@ -810,33 +850,36 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     if (!userIds || userIds.count == 0) {
         return;
     }
-    
+
     // Remove cached entries on the serial queue.
     dispatch_async(self.cacheQueue, ^{
-        NSMutableArray *clearedUserIds = [NSMutableArray array];
-        
-        for (NSString *userId in userIds) {
-            if (userId && userId.length > 0) {
-                // Notify only for entries that were actually present.
-                if ([self.statusCache objectForKey:userId] != nil) {
-                    // Remove the cached status.
-                    [self.statusCache removeObjectForKey:userId];
-                    [clearedUserIds addObject:userId];
-                }
-            }
-        }
-        
-        NCLogD(@"Cleared online status cache for %lu users, users: %@",
-               (unsigned long)clearedUserIds.count, [clearedUserIds copy]);
-        
-        // Notify observers on the main queue when entries were removed.
-        if (clearedUserIds.count > 0) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIUserOnlineStatusChangedNotification
-                                                                    object:nil
-                                                                  userInfo:@{NCChatUIUserOnlineStatusChangedUserIdsKey: [clearedUserIds copy]}];
-            });
-        }
+      NSMutableArray *clearedUserIds = [NSMutableArray array];
+
+      for (NSString *userId in userIds) {
+          if (userId && userId.length > 0) {
+              // Notify only for entries that were actually present.
+              if ([self.statusCache objectForKey:userId] != nil) {
+                  // Remove the cached status.
+                  [self.statusCache removeObjectForKey:userId];
+                  [clearedUserIds addObject:userId];
+              }
+          }
+      }
+
+      NCLogD(@"Cleared online status cache for %lu users, users: %@",
+             (unsigned long)clearedUserIds.count, [clearedUserIds copy]);
+
+      // Notify observers on the main queue when entries were removed.
+      if (clearedUserIds.count > 0) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:NCChatUIUserOnlineStatusChangedNotification
+                              object:nil
+                            userInfo:@{
+                                NCChatUIUserOnlineStatusChangedUserIdsKey : [clearedUserIds copy]
+                            }];
+          });
+      }
     });
 }
 
@@ -845,41 +888,42 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     if (!statuses || statuses.count == 0) {
         return;
     }
-    
+
     NSMutableArray<NCSubscribeUserOnlineStatus *> *validStatuses = [NSMutableArray array];
-    
+
     for (NCSubscribeUserOnlineStatus *status in statuses) {
         if (status.userId.length > 0) {
             [validStatuses addObject:status];
         }
     }
-    
+
     if (validStatuses.count == 0) {
         return;
     }
-    
+
     NSArray<NCSubscribeUserOnlineStatus *> *statusSnapshot = [validStatuses copy];
-    
+
     dispatch_async(self.cacheQueue, ^{
-        NSMutableArray<NSString *> *changedUserIds = [NSMutableArray array];
-        NSMutableDictionary <NSString *, NSString *> *changedStatus = [NSMutableDictionary dictionary];
-        
-        for (NCSubscribeUserOnlineStatus *status in statusSnapshot) {
-            [self.statusCache setObject:status forKey:status.userId];
-            [changedUserIds addObject:status.userId];
-            [changedStatus setValue:status.isOnline ? @"YES" : @"NO" forKey:status.userId];
-        }
-        
-        NCLogD(@"Cached online status for users:%@", changedStatus);
-        
-        if (changedUserIds.count > 0) {
-            NCLogD(@"Notify changed online status for users:%@", changedUserIds);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIUserOnlineStatusChangedNotification
-                                                                    object:nil
-                                                                  userInfo:@{NCChatUIUserOnlineStatusChangedUserIdsKey: changedUserIds}];
-            });
-        }
+      NSMutableArray<NSString *> *changedUserIds = [NSMutableArray array];
+      NSMutableDictionary<NSString *, NSString *> *changedStatus = [NSMutableDictionary dictionary];
+
+      for (NCSubscribeUserOnlineStatus *status in statusSnapshot) {
+          [self.statusCache setObject:status forKey:status.userId];
+          [changedUserIds addObject:status.userId];
+          [changedStatus setValue:status.isOnline ? @"YES" : @"NO" forKey:status.userId];
+      }
+
+      NCLogD(@"Cached online status for users:%@", changedStatus);
+
+      if (changedUserIds.count > 0) {
+          NCLogD(@"Notify changed online status for users:%@", changedUserIds);
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:NCChatUIUserOnlineStatusChangedNotification
+                              object:nil
+                            userInfo:@{NCChatUIUserOnlineStatusChangedUserIdsKey : changedUserIds}];
+          });
+      }
     });
 }
 
@@ -887,159 +931,184 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 
 /// Subscribes to user online status.
 - (void)subscribeUsers:(NSArray<NSString *> *)userIds
-              pageSize:(NSInteger)pageSize
- processSubscribeLimit:(BOOL)processSubscribeLimit {
+                 pageSize:(NSInteger)pageSize
+    processSubscribeLimit:(BOOL)processSubscribeLimit {
     if (userIds.count == 0) {
         return;
     }
     NSInteger batchSize = pageSize > 0 ? pageSize : kNCOnlineStatusSubscribeBatchSize;
-    
-    [self processQueueItems:userIds
-                  batchSize:batchSize
-                    context:nil
-                   executor:^(NSArray *batch,
-                              id context,
-                              NCBatchPendingSnapshotBlock pendingSnapshot,
-                              NCBatchCompletion batchCompletion,
-                              NCBatchRetryBlock retry,
-                              NCBatchFailBlock fail) {
-        
-        NCLogD(@"Subscribing batch users:%@", batch);
-        NCSubscribeEventParams *params = [[NCSubscribeEventParams alloc] initWithSubscribeType:NCSubscribeTypeOnlineStatus userIds:batch];
-        params.expiry = kNCOnlineStatusDefaultSubscribeExpiry;
-        
-        [[NCEngine userModule] subscribeEventWithParams:params completion:^(NSArray<NSString *> * _Nullable failedUserIds, NCError * _Nullable error) {
-            NSInteger statusCode = error ? error.code : NCChatUIErrorCodeSuccess;
-            NCLogD(@"subscribeEvent completion code:%ld, users:%@", (long)statusCode, batch);
-            switch (statusCode) {
-                case NCChatUIErrorCodeSuccess: {
-                    [self recordSubscribedUsers:batch];
-                    [self getSubscribeUsersOnlineStatus:batch];
-                    // The current batch succeeded.
-                    batchCompletion();
-                    break;
-                }
-                case NCChatUIErrorCodeSubscribeOnlineServiceUnavailable: {
-                    // Stop when the online-status subscription service is unavailable.
-                    NCLogD(@"Subscribe online service unavailable, terminate subscription process");
-                    fail(statusCode);
-                    break;
-                }
-                case NCChatUIErrorCodeBeSubscribedUserIdsCountExceedLimit: {
-                    // failedUserIds contains users rejected because their subscriber limit was reached.
-                    NSArray *failedList = failedUserIds ?: @[];
-                    NCLogD(@"Be-subscribed count exceeded limit for users:%@", failedList);
-                    NSMutableArray *retryUsers = [batch mutableCopy];
-                    if (failedList.count > 0) {
-                        [retryUsers removeObjectsInArray:failedList];
-                    }
-                    // Drop rejected IDs and retry the remainder of the batch.
-                    retry([retryUsers copy]);
-                    break;
-                }
-                case NCChatUIErrorCodeSubscribedUserIdsExceedLimit: {
-                    NCLogD(@"Subscribe count exceeded limit, processSubscribeLimit:%@", processSubscribeLimit ? @"YES" : @"NO");
-                    // The current account exceeded its subscription limit.
-                    if (processSubscribeLimit) {
-                        // Invoke the eviction strategy when limit handling is enabled.
-                        [self handleSubscribeExceedLimit];
-                    }
-                    fail(statusCode);
-                    break;
-                }
-                case NCChatUIErrorCodeRequestOverFrequency: {
-                    // Retry the current batch after the default rate-limit delay.
-                    NCLogD(@"subscribeEvent over frequency, retry users:%@", batch);
-                    retry(nil);
-                    break;
-                }
-                default: {
-                    NCLogD(@"subscribeEvent failed");
-                    fail(statusCode);
-                    break;
-                }
-            }
-        }];
-    } completion:^(NCChatUIErrorCode status) {
-        
-    }];
+
+    [self
+        processQueueItems:userIds
+                batchSize:batchSize
+                  context:nil
+                 executor:^(NSArray *batch, id context, NCBatchPendingSnapshotBlock pendingSnapshot,
+                            NCBatchCompletion batchCompletion, NCBatchRetryBlock retry,
+                            NCBatchFailBlock fail) {
+                   NCLogD(@"Subscribing batch users:%@", batch);
+                   NCSubscribeEventParams *params = [[NCSubscribeEventParams alloc]
+                       initWithSubscribeType:NCSubscribeTypeOnlineStatus
+                                     userIds:batch];
+                   params.expiry = kNCOnlineStatusDefaultSubscribeExpiry;
+
+                   [[NCEngine userModule]
+                       subscribeEventWithParams:params
+                                     completion:^(NSArray<NSString *> *_Nullable failedUserIds,
+                                                  NCError *_Nullable error) {
+                                       NSInteger statusCode =
+                                           error ? error.code : NCChatUIErrorCodeSuccess;
+                                       NCLogD(@"subscribeEvent completion code:%ld, users:%@",
+                                              (long)statusCode, batch);
+                                       switch (statusCode) {
+                                       case NCChatUIErrorCodeSuccess: {
+                                           [self recordSubscribedUsers:batch];
+                                           [self getSubscribeUsersOnlineStatus:batch];
+                                           // The current batch succeeded.
+                                           batchCompletion();
+                                           break;
+                                       }
+                                       case NCChatUIErrorCodeSubscribeOnlineServiceUnavailable: {
+                                           // Stop when the online-status subscription service is
+                                           // unavailable.
+                                           NCLogD(@"Subscribe online service unavailable, "
+                                                  @"terminate subscription process");
+                                           fail(statusCode);
+                                           break;
+                                       }
+                                       case NCChatUIErrorCodeBeSubscribedUserIdsCountExceedLimit: {
+                                           // failedUserIds contains users rejected because their
+                                           // subscriber limit was reached.
+                                           NSArray *failedList = failedUserIds ?: @[];
+                                           NCLogD(
+                                               @"Be-subscribed count exceeded limit for users:%@",
+                                               failedList);
+                                           NSMutableArray *retryUsers = [batch mutableCopy];
+                                           if (failedList.count > 0) {
+                                               [retryUsers removeObjectsInArray:failedList];
+                                           }
+                                           // Drop rejected IDs and retry the remainder of the
+                                           // batch.
+                                           retry([retryUsers copy]);
+                                           break;
+                                       }
+                                       case NCChatUIErrorCodeSubscribedUserIdsExceedLimit: {
+                                           NCLogD(@"Subscribe count exceeded limit, "
+                                                  @"processSubscribeLimit:%@",
+                                                  processSubscribeLimit ? @"YES" : @"NO");
+                                           // The current account exceeded its subscription limit.
+                                           if (processSubscribeLimit) {
+                                               // Invoke the eviction strategy when limit handling
+                                               // is enabled.
+                                               [self handleSubscribeExceedLimit];
+                                           }
+                                           fail(statusCode);
+                                           break;
+                                       }
+                                       case NCChatUIErrorCodeRequestOverFrequency: {
+                                           // Retry the current batch after the default rate-limit
+                                           // delay.
+                                           NCLogD(@"subscribeEvent over frequency, retry users:%@",
+                                                  batch);
+                                           retry(nil);
+                                           break;
+                                       }
+                                       default: {
+                                           NCLogD(@"subscribeEvent failed");
+                                           fail(statusCode);
+                                           break;
+                                       }
+                                       }
+                                     }];
+                 }
+               completion:^(NCChatUIErrorCode status){
+
+               }];
 }
 
 /// Unsubscribes from user online status.
-- (void)unsubscribeUsers:(NSArray<NSString *> *)userIds completion:(void (^)(NCChatUIErrorCode status, NSArray<NSString *> * _Nullable failedUserIds))completion {
+- (void)unsubscribeUsers:(NSArray<NSString *> *)userIds
+              completion:(void (^)(NCChatUIErrorCode status,
+                                   NSArray<NSString *> *_Nullable failedUserIds))completion {
     if (!userIds || userIds.count == 0) {
         if (completion) {
             completion(NCChatUIErrorCodeInvalidParameterUserIdList, nil);
         }
         return;
     }
-    
+
     // Unsubscribe in batches.
     [self batchUnsubscribeUsers:userIds
-                      pageSize:0
-               collectedFailed:[NSMutableArray array]
-                    completion:completion];
+                       pageSize:0
+                collectedFailed:[NSMutableArray array]
+                     completion:completion];
 }
 
 - (void)batchUnsubscribeUsers:(NSArray<NSString *> *)userIds
                      pageSize:(NSInteger)pageSize
               collectedFailed:(NSMutableArray<NSString *> *)collectedFailed
-                   completion:(void (^)(NCChatUIErrorCode status, NSArray<NSString *> * _Nullable failedUserIds))completion {
+                   completion:(void (^)(NCChatUIErrorCode status,
+                                        NSArray<NSString *> *_Nullable failedUserIds))completion {
     if (userIds.count == 0) {
         if (completion) {
-            completion(NCChatUIErrorCodeSuccess, collectedFailed.count > 0 ? [collectedFailed copy] : nil);
+            completion(NCChatUIErrorCodeSuccess,
+                       collectedFailed.count > 0 ? [collectedFailed copy] : nil);
         }
         return;
     }
-    
+
     NSInteger batchSize = pageSize > 0 ? pageSize : kNCOnlineStatusSubscribeBatchSize;
-    
+
     [self processQueueItems:userIds
-                  batchSize:batchSize
-                    context:collectedFailed
-                   executor:^(NSArray *batch,
-                              NSMutableArray<NSString *> *failedContext,
-                              NCBatchPendingSnapshotBlock pendingSnapshot,
-                              NCBatchCompletion batchCompletion,
-                              NCBatchRetryBlock retry,
-                              NCBatchFailBlock fail) {
-        
-        NCLogD(@"Unsubscribing batch users:%@", batch);
-        NCUnsubscribeEventParams *params = [[NCUnsubscribeEventParams alloc] initWithSubscribeType:NCSubscribeTypeOnlineStatus userIds:batch];
-        
-        [[NCEngine userModule] unsubscribeEventWithParams:params completion:^(NSArray<NSString *> * _Nullable failedUserIds, NCError * _Nullable error) {
-            NSInteger statusCode = error ? error.code : NCChatUIErrorCodeSuccess;
-            NCLogD(@"unSubscribeEvent completion code:%ld, users:%@, failedUserIds:%@", (long)statusCode, batch, failedUserIds);
-            if (statusCode == NCChatUIErrorCodeSuccess) {
-                [self removeSubscribedUsers:batch];
-                
-                NSArray<NSString *> *successUserIds = batch;
-                if (failedUserIds.count > 0) {
-                    NSMutableArray *successful = [batch mutableCopy];
-                    [successful removeObjectsInArray:failedUserIds];
-                    successUserIds = [successful copy];
-                    [failedContext addObjectsFromArray:failedUserIds];
-                }
-                [self clearOnlineStatusCache:successUserIds];                
-                // The current batch succeeded.
-                batchCompletion();
-            } else if (statusCode == NCChatUIErrorCodeRequestOverFrequency) {
-                NCLogD(@"unSubscribeEvent over frequency");
-                retry(nil);
-            } else {
-                if (failedUserIds.count > 0) {
-                    [failedContext addObjectsFromArray:failedUserIds];
-                }
-                NCLogD(@"unSubscribeEvent failed");
-                fail(statusCode);
-            }
-        }];
-    } completion:^(NCChatUIErrorCode status) {
-        NCLogD(@"batchUnsubscribeUsers completion code:%ld", (long)status);
-        if (completion) {
-            completion(status, collectedFailed.count > 0 ? [collectedFailed copy] : nil);
+        batchSize:batchSize
+        context:collectedFailed
+        executor:^(NSArray *batch, NSMutableArray<NSString *> *failedContext,
+                   NCBatchPendingSnapshotBlock pendingSnapshot, NCBatchCompletion batchCompletion,
+                   NCBatchRetryBlock retry, NCBatchFailBlock fail) {
+          NCLogD(@"Unsubscribing batch users:%@", batch);
+          NCUnsubscribeEventParams *params =
+              [[NCUnsubscribeEventParams alloc] initWithSubscribeType:NCSubscribeTypeOnlineStatus
+                                                              userIds:batch];
+
+          [[NCEngine userModule]
+              unsubscribeEventWithParams:params
+                              completion:^(NSArray<NSString *> *_Nullable failedUserIds,
+                                           NCError *_Nullable error) {
+                                NSInteger statusCode =
+                                    error ? error.code : NCChatUIErrorCodeSuccess;
+                                NCLogD(@"unSubscribeEvent completion code:%ld, users:%@, "
+                                       @"failedUserIds:%@",
+                                       (long)statusCode, batch, failedUserIds);
+                                if (statusCode == NCChatUIErrorCodeSuccess) {
+                                    [self removeSubscribedUsers:batch];
+
+                                    NSArray<NSString *> *successUserIds = batch;
+                                    if (failedUserIds.count > 0) {
+                                        NSMutableArray *successful = [batch mutableCopy];
+                                        [successful removeObjectsInArray:failedUserIds];
+                                        successUserIds = [successful copy];
+                                        [failedContext addObjectsFromArray:failedUserIds];
+                                    }
+                                    [self clearOnlineStatusCache:successUserIds];
+                                    // The current batch succeeded.
+                                    batchCompletion();
+                                } else if (statusCode == NCChatUIErrorCodeRequestOverFrequency) {
+                                    NCLogD(@"unSubscribeEvent over frequency");
+                                    retry(nil);
+                                } else {
+                                    if (failedUserIds.count > 0) {
+                                        [failedContext addObjectsFromArray:failedUserIds];
+                                    }
+                                    NCLogD(@"unSubscribeEvent failed");
+                                    fail(statusCode);
+                                }
+                              }];
         }
-    }];
+        completion:^(NCChatUIErrorCode status) {
+          NCLogD(@"batchUnsubscribeUsers completion code:%ld", (long)status);
+          if (completion) {
+              completion(status, collectedFailed.count > 0 ? [collectedFailed copy] : nil);
+          }
+        }];
 }
 
 /// Records subscribed user IDs.
@@ -1048,8 +1117,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         return;
     }
     dispatch_async(self.cacheQueue, ^{
-        NCLogD(@"Recorded subscribed users, users:%@", userIds);
-        [self.subscribedUserIds addObjectsFromArray:userIds];
+      NCLogD(@"Recorded subscribed users, users:%@", userIds);
+      [self.subscribedUserIds addObjectsFromArray:userIds];
     });
 }
 
@@ -1058,10 +1127,10 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     if (!userIds || userIds.count == 0) {
         return;
     }
-    
+
     dispatch_async(self.cacheQueue, ^{
-        [self.subscribedUserIds minusSet:[NSSet setWithArray:userIds]];
-        NCLogD(@"Removed subscribed users, users:%@", userIds);
+      [self.subscribedUserIds minusSet:[NSSet setWithArray:userIds]];
+      NCLogD(@"Removed subscribed users, users:%@", userIds);
     });
 }
 
@@ -1072,44 +1141,45 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         NCLogD(@"Delegate is not set, cannot handle subscribe exceed limit");
         return;
     }
-    
+
     NSArray<NSString *> *allUserIds = [self.delegate userIdsNeedOnlineStatus:self];
-    
+
     // Stop when the delegate supplies no users.
     if (!allUserIds || allUserIds.count == 0) {
         NCLogD(@"Delegate returned empty user list, no users need online status");
         return;
     }
-    
+
     // Treat IDs absent from the confirmed-friend cache as non-friends for this recovery pass.
     __block NSMutableArray *nonFriendUserIds = [NSMutableArray array];
     [self performOnCacheQueueSyncSafe:^{
-        for (NSString *userId in allUserIds) {
-            if (userId && userId.length > 0 && ![self.friendUserIds containsObject:userId]) {
-                [nonFriendUserIds addObject:userId];
-            }
-        }
+      for (NSString *userId in allUserIds) {
+          if (userId && userId.length > 0 && ![self.friendUserIds containsObject:userId]) {
+              [nonFriendUserIds addObject:userId];
+          }
+      }
     }];
-    
+
     if (nonFriendUserIds.count > 0) {
         // Apply the priority-based plan to IDs treated as non-friends.
         NCLogD(@"Delegate provided users:%@, filtered to users:%@ non-friends for subscription",
                allUserIds, nonFriendUserIds);
-        
+
         // Query all current subscription records, including subscribeTime.
-        [self getAllSubscribedEvents:^(NSArray<NCSubscriptionStatusInfo *> * _Nullable allSubscribedEvents) {
-            if (!allSubscribedEvents) {
-                // Stop if subscription records cannot be loaded.
-                NCLogD(@"Query all subscribed events failed, cannot handle subscribe exceed limit");
-                return;
-            }
-            
-            // Calculate and execute the recovery plan.
-            NCSubscriptionPlan *plan = [self calculateSubscriptionStrategy:allSubscribedEvents
-                                                          nonFriendUserIds:nonFriendUserIds];
-            [self executeSubscriptionPlan:plan];
+        [self getAllSubscribedEvents:^(
+                  NSArray<NCSubscriptionStatusInfo *> *_Nullable allSubscribedEvents) {
+          if (!allSubscribedEvents) {
+              // Stop if subscription records cannot be loaded.
+              NCLogD(@"Query all subscribed events failed, cannot handle subscribe exceed limit");
+              return;
+          }
+
+          // Calculate and execute the recovery plan.
+          NCSubscriptionPlan *plan = [self calculateSubscriptionStrategy:allSubscribedEvents
+                                                        nonFriendUserIds:nonFriendUserIds];
+          [self executeSubscriptionPlan:plan];
         }];
-        
+
     } else {
         // Every supplied ID is present in the confirmed-friend cache.
         NCLogD(@"All users are friends, no subscription needed");
@@ -1119,18 +1189,21 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 /// Selects users whose current raw remaining-time calculation is positive and within the threshold.
 - (NSArray<NSString *> *)findUsersNeedResubscribe:(NSArray<NCSubscriptionStatusInfo *> *)events {
     NSMutableArray *resubscribeList = [NSMutableArray array];
-    NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970] * 1000; // Current epoch time in milliseconds.
-    
+    NSTimeInterval currentTime =
+        [[NSDate date] timeIntervalSince1970] * 1000; // Current epoch time in milliseconds.
+
     for (NCSubscriptionStatusInfo *event in events) {
         if (event.userId && event.userId.length > 0) {
-            // Subtract the current millisecond timestamp from subscribeTime without unit conversion.
+            // Subtract the current millisecond timestamp from subscribeTime without unit
+            // conversion.
             NSTimeInterval remainingTime = event.subscribeTime - currentTime;
-            
+
             // Compare the positive raw difference directly with the seconds-based threshold.
             if (remainingTime > 0 && remainingTime <= kNCOnlineStatusSubscribeExpiryThreshold) {
                 [resubscribeList addObject:event.userId];
-                NCLogD(@"User %@ has raw remaining time %.0f (threshold: %ld), needs resubscription",
-                       event.userId, remainingTime, (long)kNCOnlineStatusSubscribeExpiryThreshold);
+                NCLogD(
+                    @"User %@ has raw remaining time %.0f (threshold: %ld), needs resubscription",
+                    event.userId, remainingTime, (long)kNCOnlineStatusSubscribeExpiryThreshold);
             }
         }
     }
@@ -1142,8 +1215,9 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 ///   - allSubscribedEvents: All current online-status subscription records.
 ///   - nonFriendUserIds: Candidate IDs ordered by priority.
 /// - Returns: A recovery plan.
-- (NCSubscriptionPlan *)calculateSubscriptionStrategy:(NSArray<NCSubscriptionStatusInfo *> *)allSubscribedEvents
-                                      nonFriendUserIds:(NSArray<NSString *> *)nonFriendUserIds {
+- (NCSubscriptionPlan *)calculateSubscriptionStrategy:
+                            (NSArray<NCSubscriptionStatusInfo *> *)allSubscribedEvents
+                                     nonFriendUserIds:(NSArray<NSString *> *)nonFriendUserIds {
     // Extract subscribed user IDs.
     NSMutableArray<NSString *> *allSubscribedUserIds = [NSMutableArray array];
     for (NCSubscriptionStatusInfo *event in allSubscribedEvents) {
@@ -1151,48 +1225,49 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
             [allSubscribedUserIds addObject:event.userId];
         }
     }
-    
+
     __block NSArray<NSString *> *usersToKeep = nil;
     __block NSArray<NSString *> *usersToUnsubscribe = nil;
     __block NSArray<NSString *> *usersToSubscribe = nil;
     __block NSArray<NSString *> *usersToResubscribe = nil;
-    
+
     [self performOnCacheQueueSyncSafe:^{
-        // 1. Truncate the priority list to the maximum subscription count.
-        NSInteger maxCount = kNCOnlineStatusMaxSubscribeCount;
-        usersToKeep = nonFriendUserIds.count > maxCount
-                    ? [nonFriendUserIds subarrayWithRange:NSMakeRange(0, maxCount)]
-                    : nonFriendUserIds;
-        
-        // 2. Unsubscribe current IDs that are outside the retained priority list.
-        NSSet *keepSet = [NSSet setWithArray:usersToKeep];
-        NSMutableArray *unsubscribeList = [NSMutableArray array];
-        
-        for (NSString *subscribedUserId in allSubscribedUserIds) {
-            if (![keepSet containsObject:subscribedUserId]) {
-                [unsubscribeList addObject:subscribedUserId];
-            }
-        }
-        usersToUnsubscribe = [unsubscribeList copy];
-        
-        // 3. Select current subscriptions that match the raw remaining-time threshold.
-        usersToResubscribe = [self findUsersNeedResubscribe:allSubscribedEvents];
-        
-        // 4. Subscribe retained IDs that are not currently subscribed.
-        NSSet *subscribedSet = [NSSet setWithArray:allSubscribedUserIds];
-        NSMutableArray *subscribeList = [NSMutableArray array];
-        
-        for (NSString *userId in usersToKeep) {
-            if (![subscribedSet containsObject:userId]) {
-                [subscribeList addObject:userId];
-            }
-        }
-        usersToSubscribe = [subscribeList copy];
-        
-        NCLogD(@"Priority-based handling - keep: %@, unsubscribe: %@, subscribe: %@, resubscribe: %@, limit: %ld",
-            usersToKeep, usersToUnsubscribe, usersToSubscribe, usersToResubscribe, (long)maxCount);
+      // 1. Truncate the priority list to the maximum subscription count.
+      NSInteger maxCount = kNCOnlineStatusMaxSubscribeCount;
+      usersToKeep = nonFriendUserIds.count > maxCount
+                        ? [nonFriendUserIds subarrayWithRange:NSMakeRange(0, maxCount)]
+                        : nonFriendUserIds;
+
+      // 2. Unsubscribe current IDs that are outside the retained priority list.
+      NSSet *keepSet = [NSSet setWithArray:usersToKeep];
+      NSMutableArray *unsubscribeList = [NSMutableArray array];
+
+      for (NSString *subscribedUserId in allSubscribedUserIds) {
+          if (![keepSet containsObject:subscribedUserId]) {
+              [unsubscribeList addObject:subscribedUserId];
+          }
+      }
+      usersToUnsubscribe = [unsubscribeList copy];
+
+      // 3. Select current subscriptions that match the raw remaining-time threshold.
+      usersToResubscribe = [self findUsersNeedResubscribe:allSubscribedEvents];
+
+      // 4. Subscribe retained IDs that are not currently subscribed.
+      NSSet *subscribedSet = [NSSet setWithArray:allSubscribedUserIds];
+      NSMutableArray *subscribeList = [NSMutableArray array];
+
+      for (NSString *userId in usersToKeep) {
+          if (![subscribedSet containsObject:userId]) {
+              [subscribeList addObject:userId];
+          }
+      }
+      usersToSubscribe = [subscribeList copy];
+
+      NCLogD(@"Priority-based handling - keep: %@, unsubscribe: %@, subscribe: %@, resubscribe: "
+             @"%@, limit: %ld",
+             usersToKeep, usersToUnsubscribe, usersToSubscribe, usersToResubscribe, (long)maxCount);
     }];
-    
+
     // 5. Merge new subscription and resubscription candidates.
     NSMutableSet *allUsersToSubscribeSet = [NSMutableSet set];
     if (usersToSubscribe) {
@@ -1206,7 +1281,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     NSMutableArray *keepUserIds = [NSMutableArray arrayWithArray:usersToKeep];
     [keepUserIds removeObjectsInArray:usersToUnsubscribe];
     [keepUserIds removeObjectsInArray:usersToSubscribe];
-    
+
     NCSubscriptionPlan *plan = [[NCSubscriptionPlan alloc] init];
     plan.keepUserIds = keepUserIds;
     plan.unsubscribeUserIds = usersToUnsubscribe;
@@ -1225,28 +1300,32 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         NCLogD(@"No users to unsubscribe or subscribe, completed");
         return;
     }
-    
+
     void (^handleSubscribe)(void) = ^{
-        NCLogD(@"handleSubscribe");
-        if (plan.subscribeUserIds.count > 0) {
-            NCLogD(@"Subscribing users:%@", plan.subscribeUserIds);
-            [self subscribeUsers:plan.subscribeUserIds pageSize:kNCOnlineStatusSubscribeMinBatchSize processSubscribeLimit:NO];
-        } else {
-            NCLogD(@"No users to subscribe, completed");
-        }
+      NCLogD(@"handleSubscribe");
+      if (plan.subscribeUserIds.count > 0) {
+          NCLogD(@"Subscribing users:%@", plan.subscribeUserIds);
+          [self subscribeUsers:plan.subscribeUserIds
+                           pageSize:kNCOnlineStatusSubscribeMinBatchSize
+              processSubscribeLimit:NO];
+      } else {
+          NCLogD(@"No users to subscribe, completed");
+      }
     };
-    
+
     // Unsubscribe first, then subscribe new and resubscription candidates.
     if (plan.unsubscribeUserIds.count > 0) {
         // 1. Remove obsolete subscriptions.
-        [self unsubscribeUsers:plan.unsubscribeUserIds completion:^(NCChatUIErrorCode status, NSArray<NSString *> * _Nullable failedUserIds) {
-            if (status == NCChatUIErrorCodeSuccess) {
-                // 2. Subscribe the plan's new and resubscription candidates.
-                handleSubscribe();
-            } else {
-                NCLogD(@"Unsubscribe failed, cannot subscribe new users");
-            }
-        }];
+        [self unsubscribeUsers:plan.unsubscribeUserIds
+                    completion:^(NCChatUIErrorCode status,
+                                 NSArray<NSString *> *_Nullable failedUserIds) {
+                      if (status == NCChatUIErrorCodeSuccess) {
+                          // 2. Subscribe the plan's new and resubscription candidates.
+                          handleSubscribe();
+                      } else {
+                          NCLogD(@"Unsubscribe failed, cannot subscribe new users");
+                      }
+                    }];
     } else {
         NCLogD(@"No users to unsubscribe");
         handleSubscribe();
@@ -1254,30 +1333,37 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 }
 
 /// Queries all current online-status subscription records.
-- (void)getAllSubscribedEvents:(void (^)(NSArray<NCSubscriptionStatusInfo *> * _Nullable events))completion {
+- (void)getAllSubscribedEvents:
+    (void (^)(NSArray<NCSubscriptionStatusInfo *> *_Nullable events))completion {
     NCGetSubscribeEventParams *params = [[NCGetSubscribeEventParams alloc] init];
     params.subscribeType = NCSubscribeTypeOnlineStatus;
     params.userIds = @[];
-    [[NCEngine userModule] getSubscribeEventWithParams:params completion:^(NSArray<NCSubscriptionStatusInfo *> * _Nullable events, NCError * _Nullable error) {
-        NSInteger statusCode = error ? error.code : NCChatUIErrorCodeSuccess;
-        if (statusCode == NCChatUIErrorCodeSuccess) {
-            NCLogD(@"querySubscribeEvent finished fetching all subscribed events, total: %lu",
-                   (unsigned long)events.count);
-            if (completion) {
-                completion(events ?: @[]);
-            }
-        } else if (statusCode == NCChatUIErrorCodeRequestOverFrequency) {
-            NCLogD(@"querySubscribeEvent over frequency");
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay), dispatch_get_main_queue(), ^{
-                [self getAllSubscribedEvents:completion];
-            });
-        } else {
-            NCLogD(@"querySubscribeEvent failed, status: %ld", (long)statusCode);
-            if (completion) {
-                completion(nil);
-            }
-        }
-    }];
+    [[NCEngine userModule]
+        getSubscribeEventWithParams:params
+                         completion:^(NSArray<NCSubscriptionStatusInfo *> *_Nullable events,
+                                      NCError *_Nullable error) {
+                           NSInteger statusCode = error ? error.code : NCChatUIErrorCodeSuccess;
+                           if (statusCode == NCChatUIErrorCodeSuccess) {
+                               NCLogD(@"querySubscribeEvent finished fetching all subscribed "
+                                      @"events, total: %lu",
+                                      (unsigned long)events.count);
+                               if (completion) {
+                                   completion(events ?: @[]);
+                               }
+                           } else if (statusCode == NCChatUIErrorCodeRequestOverFrequency) {
+                               NCLogD(@"querySubscribeEvent over frequency");
+                               dispatch_after(
+                                   dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay),
+                                   dispatch_get_main_queue(), ^{
+                                     [self getAllSubscribedEvents:completion];
+                                   });
+                           } else {
+                               NCLogD(@"querySubscribeEvent failed, status: %ld", (long)statusCode);
+                               if (completion) {
+                                   completion(nil);
+                               }
+                           }
+                         }];
 }
 
 /// Processes items in sequential batches.
@@ -1292,26 +1378,27 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
         }
         return;
     }
-    
+
     NSInteger safeBatchSize = batchSize > 0 ? batchSize : items.count;
     NSArray *fullItems = [items copy];
     // Drive batches on a serial queue and keep execution on a consistent context.
-    dispatch_queue_t workerQueue = dispatch_queue_create("ai.nexconn.batch.queue", DISPATCH_QUEUE_SERIAL);
-    
+    dispatch_queue_t workerQueue =
+        dispatch_queue_create("ai.nexconn.batch.queue", DISPATCH_QUEUE_SERIAL);
+
     dispatch_async(workerQueue, ^{
-        [self executeBatchItems:fullItems
-                       batchSize:safeBatchSize
-                       startIndex:0
-                         context:context
-                        executor:executor
-                      completion:completion
-                     workerQueue:workerQueue];
+      [self executeBatchItems:fullItems
+                    batchSize:safeBatchSize
+                   startIndex:0
+                      context:context
+                     executor:executor
+                   completion:completion
+                  workerQueue:workerQueue];
     });
 }
 
 - (void)executeBatchItems:(NSArray *)fullItems
                 batchSize:(NSInteger)batchSize
-                startIndex:(NSInteger)startIndex
+               startIndex:(NSInteger)startIndex
                   context:(id)context
                  executor:(NCBatchExecutorBlock)executor
                completion:(void (^)(NCChatUIErrorCode status))completion
@@ -1319,7 +1406,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     if (startIndex >= fullItems.count) {
         if (completion) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                completion(NCChatUIErrorCodeSuccess);
+              completion(NCChatUIErrorCodeSuccess);
             });
         }
         return;
@@ -1330,22 +1417,22 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
     // Retain the current range for advancing or retrying this batch.
     NSRange batchRange = NSMakeRange(startIndex, currentBatchSize);
     NSArray *batch = [fullItems subarrayWithRange:batchRange];
-    
+
     // Expose a snapshot of items remaining from the current start index.
     NCBatchPendingSnapshotBlock snapshotBlock = ^{
-        NSRange snapshotRange = NSMakeRange(startIndex, fullItems.count - startIndex);
-        return [[fullItems subarrayWithRange:snapshotRange] copy];
+      NSRange snapshotRange = NSMakeRange(startIndex, fullItems.count - startIndex);
+      return [[fullItems subarrayWithRange:snapshotRange] copy];
     };
-    
+
     [self runBatchItems:batch
-              fullItems:fullItems
-             batchRange:batchRange
-              batchSize:batchSize
-                context:context
-       snapshotProvider:snapshotBlock
-               executor:executor
-             completion:completion
-            workerQueue:workerQueue];
+               fullItems:fullItems
+              batchRange:batchRange
+               batchSize:batchSize
+                 context:context
+        snapshotProvider:snapshotBlock
+                executor:executor
+              completion:completion
+             workerQueue:workerQueue];
 }
 
 - (void)runBatchItems:(NSArray *)currentItems
@@ -1357,19 +1444,22 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
              executor:(NCBatchExecutorBlock)executor
            completion:(void (^)(NCChatUIErrorCode status))completion
           workerQueue:(dispatch_queue_t)workerQueue {
-    executor(currentItems, context, snapshotBlock, ^{
-        dispatch_async(workerQueue, ^{
+    executor(
+        currentItems, context, snapshotBlock,
+        ^{
+          dispatch_async(workerQueue, ^{
             NSInteger nextStartIndex = NSMaxRange(batchRange);
             [self executeBatchItems:fullItems
-                           batchSize:batchSize
-                           startIndex:nextStartIndex
-                             context:context
-                            executor:executor
-                          completion:completion
-                         workerQueue:workerQueue];
-        });
-    }, ^(NSArray *retryItems) {
-        dispatch_async(workerQueue, ^{
+                          batchSize:batchSize
+                         startIndex:nextStartIndex
+                            context:context
+                           executor:executor
+                         completion:completion
+                        workerQueue:workerQueue];
+          });
+        },
+        ^(NSArray *retryItems) {
+          dispatch_async(workerQueue, ^{
             if (retryItems.count > 0) {
                 // Retry an explicit subset immediately; nil retries are rate-limited below.
                 [self runBatchItems:retryItems
@@ -1382,26 +1472,28 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
                           completion:completion
                          workerQueue:workerQueue];
             } else {
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay), workerQueue, ^{
-                    [self runBatchItems:currentItems
-                                  fullItems:fullItems
-                                 batchRange:batchRange
-                                 batchSize:batchSize
-                                   context:context
-                          snapshotProvider:snapshotBlock
-                                  executor:executor
-                                completion:completion
-                               workerQueue:workerQueue];
-                });
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNCOnlineStatusBatchRetryDelay),
+                               workerQueue, ^{
+                                 [self runBatchItems:currentItems
+                                            fullItems:fullItems
+                                           batchRange:batchRange
+                                            batchSize:batchSize
+                                              context:context
+                                     snapshotProvider:snapshotBlock
+                                             executor:executor
+                                           completion:completion
+                                          workerQueue:workerQueue];
+                               });
             }
-        });
-    }, ^(NCChatUIErrorCode status) { // fail block
-        if (completion) {
-            dispatch_async(dispatch_get_main_queue(), ^{
+          });
+        },
+        ^(NCChatUIErrorCode status) { // fail block
+          if (completion) {
+              dispatch_async(dispatch_get_main_queue(), ^{
                 completion(status);
-            });
-        }
-    });
+              });
+          }
+        });
 }
 
 /// Returns whether the current execution context is cacheQueue.
@@ -1411,7 +1503,8 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch,
 
 /// Executes synchronously on cacheQueue, or inline when already on the queue.
 - (void)performOnCacheQueueSyncSafe:(dispatch_block_t)block {
-    if (!block) return;
+    if (!block)
+        return;
     if ([self isOnCacheQueue]) {
         block();
     } else {

@@ -28,34 +28,38 @@
     self.readButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.readButton.titleLabel.font = [UIFont systemFontOfSize:14];
     self.readButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.readButton addTarget:self action:@selector(readButtonTapped) forControlEvents:UIControlEventTouchUpInside];
+    [self.readButton addTarget:self
+                        action:@selector(readButtonTapped)
+              forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.readButton];
-    
+
     // Unread button.
     self.unreadButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.unreadButton.titleLabel.font = [UIFont systemFontOfSize:14];
     self.unreadButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.unreadButton addTarget:self action:@selector(unreadButtonTapped) forControlEvents:UIControlEventTouchUpInside];
+    [self.unreadButton addTarget:self
+                          action:@selector(unreadButtonTapped)
+                forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.unreadButton];
-    
+
     // Divider.
     self.separatorLine = [[UIView alloc] init];
-    self.separatorLine.translatesAutoresizingMaskIntoConstraints = NO;    
+    self.separatorLine.translatesAutoresizingMaskIntoConstraints = NO;
     self.separatorLine.backgroundColor = NCDynamicColor(@"line_background_color");
     [self addSubview:self.separatorLine];
-    
+
     // Selection indicator.
     self.indicatorView = [[UIView alloc] init];
     self.indicatorView.translatesAutoresizingMaskIntoConstraints = NO;
     self.indicatorView.backgroundColor = self.selectedColor;
     [self addSubview:self.indicatorView];
-    
+
     // Install constraints.
     [self setupViewConstraints];
-    
+
     // Update titles.
     [self updateButtonTitles];
-    
+
     // Apply the default selection.
     [self selectTabAtIndex:NCMessageReadDetailTabTypeRead];
 }
@@ -65,33 +69,40 @@
     // Layout constants.
     CGFloat horizontalMargin = 16;
     CGFloat lineHeight = 1;
-    
+
     // Read button constraints.
     [NSLayoutConstraint activateConstraints:@[
-        [self.readButton.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:horizontalMargin],
+        [self.readButton.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                      constant:horizontalMargin],
         [self.readButton.topAnchor constraintEqualToAnchor:self.topAnchor],
-        [self.readButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-lineHeight]
+        [self.readButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor
+                                                     constant:-lineHeight]
     ]];
-    
+
     // Unread button constraints.
     [NSLayoutConstraint activateConstraints:@[
         [self.unreadButton.leadingAnchor constraintEqualToAnchor:self.readButton.trailingAnchor],
-        [self.unreadButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-horizontalMargin],
+        [self.unreadButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                         constant:-horizontalMargin],
         [self.unreadButton.topAnchor constraintEqualToAnchor:self.topAnchor],
-        [self.unreadButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-lineHeight],
+        [self.unreadButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor
+                                                       constant:-lineHeight],
         [self.unreadButton.widthAnchor constraintEqualToAnchor:self.readButton.widthAnchor]
     ]];
-    
+
     // Divider constraints.
     [NSLayoutConstraint activateConstraints:@[
-        [self.separatorLine.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:horizontalMargin],
-        [self.separatorLine.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-horizontalMargin],
+        [self.separatorLine.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                         constant:horizontalMargin],
+        [self.separatorLine.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                          constant:-horizontalMargin],
         [self.separatorLine.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
         [self.separatorLine.heightAnchor constraintEqualToConstant:lineHeight]
     ]];
-    
+
     // Indicator constraints, initially below the read button.
-    self.indicatorLeadingConstraint = [self.indicatorView.leadingAnchor constraintEqualToAnchor:self.readButton.leadingAnchor];
+    self.indicatorLeadingConstraint =
+        [self.indicatorView.leadingAnchor constraintEqualToAnchor:self.readButton.leadingAnchor];
     [NSLayoutConstraint activateConstraints:@[
         self.indicatorLeadingConstraint,
         [self.indicatorView.widthAnchor constraintEqualToAnchor:self.readButton.widthAnchor],
@@ -114,9 +125,11 @@
 }
 
 - (void)updateButtonTitles {
-    NSString *readTitle = [NSString stringWithFormat:@"%@(%ld)", NCUILocalizedString(@"read"), (long)self.readCount];
-    NSString *unreadTitle = [NSString stringWithFormat:@"%@(%ld)", NCUILocalizedString(@"unread"), (long)self.unreadCount];
-    
+    NSString *readTitle =
+        [NSString stringWithFormat:@"%@(%ld)", NCUILocalizedString(@"read"), (long)self.readCount];
+    NSString *unreadTitle = [NSString
+        stringWithFormat:@"%@(%ld)", NCUILocalizedString(@"unread"), (long)self.unreadCount];
+
     [self.readButton setTitle:readTitle forState:UIControlStateNormal];
     [self.unreadButton setTitle:unreadTitle forState:UIControlStateNormal];
 }
@@ -145,16 +158,17 @@
         return;
     }
     self.currentTab = tabType;
-    
+
     // Update the indicator position constraint.
     [self updateIndicatorConstraint];
-    
+
     // Animate the selection change.
-    [UIView animateWithDuration:0.25 animations:^{
-        [self updateButtonTitleColors];
-        [self layoutIfNeeded];
-    }];
-    
+    [UIView animateWithDuration:0.25
+                     animations:^{
+                       [self updateButtonTitleColors];
+                       [self layoutIfNeeded];
+                     }];
+
     if ([self.delegate respondsToSelector:@selector(tabView:didSelectTabAtIndex:)]) {
         [self.delegate tabView:self didSelectTabAtIndex:tabType];
     }
@@ -164,14 +178,16 @@
 - (void)updateIndicatorConstraint {
     // Deactivate the previous constraint.
     self.indicatorLeadingConstraint.active = NO;
-    
+
     // Create a constraint for the selected tab.
     if (self.currentTab == NCMessageReadDetailTabTypeRead) {
-        self.indicatorLeadingConstraint = [self.indicatorView.leadingAnchor constraintEqualToAnchor:self.readButton.leadingAnchor];
+        self.indicatorLeadingConstraint = [self.indicatorView.leadingAnchor
+            constraintEqualToAnchor:self.readButton.leadingAnchor];
     } else {
-        self.indicatorLeadingConstraint = [self.indicatorView.leadingAnchor constraintEqualToAnchor:self.unreadButton.leadingAnchor];
+        self.indicatorLeadingConstraint = [self.indicatorView.leadingAnchor
+            constraintEqualToAnchor:self.unreadButton.leadingAnchor];
     }
-    
+
     // Activate the new constraint.
     self.indicatorLeadingConstraint.active = YES;
 }
@@ -180,7 +196,6 @@
 
 - (void)readButtonTapped {
     [self selectTabAtIndex:NCMessageReadDetailTabTypeRead];
-    
 }
 
 - (void)unreadButtonTapped {

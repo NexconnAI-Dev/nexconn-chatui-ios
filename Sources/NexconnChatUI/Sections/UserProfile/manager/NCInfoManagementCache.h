@@ -6,15 +6,15 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import "NCChatUIUserInfo.h"
 #import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NCInfoManagementCache : NSObject
 
-#pragma mark -- user
+#pragma mark-- user
 
 - (NCChatUIUserInfo *)getUserCache:(NSString *)userId;
 
@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeAllUserCache;
 
-#pragma mark -- group
+#pragma mark-- group
 
 - (NCChatUIGroup *)getGroupCache:(NSString *)groupId;
 
@@ -38,7 +38,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)cacheGroupMember:(NCChatUIUserInfo *)member groupId:(NSString *)groupId;
 
-- (void)removeGroupMemberCache:(NSString *)userId groupId:(NSString *)groupId;;
+- (void)removeGroupMemberCache:(NSString *)userId groupId:(NSString *)groupId;
+;
 
 - (void)removeGroupMemberCacheForGroupId:(NSString *)groupId;
 

@@ -25,10 +25,10 @@
 //
 
 #import "NCImageView.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCMediaManager.h"
-#import "NCImageLoader.h"
 #import "NCCache.h"
+#import "NCImageLoader.h"
+#import "NCMediaManager.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 @implementation NCImageView
 @synthesize imageURL, placeholderImage, delegate;
@@ -37,7 +37,8 @@
     return [self initWithPlaceholderImage:anImage delegate:nil];
 }
 
-- (instancetype)initWithPlaceholderImage:(UIImage *)anImage delegate:(id<NCImageViewDelegate>)aDelegate {
+- (instancetype)initWithPlaceholderImage:(UIImage *)anImage
+                                delegate:(id<NCImageViewDelegate>)aDelegate {
     if ((self = [super initWithImage:anImage])) {
         self.placeholderImage = anImage;
         self.delegate = aDelegate;
@@ -69,7 +70,7 @@
     [self p_downloadImage];
 }
 
-- (void)p_downloadImage{
+- (void)p_downloadImage {
     if (!imageURL.scheme || [imageURL.scheme.lowercaseString isEqualToString:@"file"]) {
         NSString *path = imageURL.absoluteString;
         if ([path length] > 0) {
@@ -83,30 +84,32 @@
             }
             UIImage *anImage = [[UIImage alloc] initWithContentsOfFile:path];
             if (anImage) {
-                // Small images complete immediately; large images are assembled asynchronously from processed tiles.
-                [[NCMediaManager sharedManager] downsizeImage:anImage
+                // Small images complete immediately; large images are assembled asynchronously from
+                // processed tiles.
+                [[NCMediaManager sharedManager]
+                      downsizeImage:anImage
                     completionBlock:^(UIImage *image, BOOL doNothing) {
-                        if (image) {
-                            if ([NSThread isMainThread]) {
+                      if (image) {
+                          if ([NSThread isMainThread]) {
+                              self.image = image;
+                          } else {
+                              dispatch_async(dispatch_get_main_queue(), ^{
                                 self.image = image;
-                            } else {
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    self.image = image;
-                                    if ([self.delegate respondsToSelector:@selector(imageViewLoadedImage:)]) {
-                                        [self.delegate imageViewLoadedImage:self];
-                                    }
-                                });
-                            }
-                        }
-                        if (!doNothing && image) {
-                            NSData *imageResource = UIImagePNGRepresentation(image);
-                            [imageResource writeToFile:path atomically:YES];
-                        }
-
+                                if ([self.delegate
+                                        respondsToSelector:@selector(imageViewLoadedImage:)]) {
+                                    [self.delegate imageViewLoadedImage:self];
+                                }
+                              });
+                          }
+                      }
+                      if (!doNothing && image) {
+                          NSData *imageResource = UIImagePNGRepresentation(image);
+                          [imageResource writeToFile:path atomically:YES];
+                      }
                     }
-                    progressBlock:^(UIImage *image, BOOL doNothing){
+                      progressBlock:^(UIImage *image, BOOL doNothing){
 
-                    }];
+                      }];
                 return;
             }
         } else {
@@ -116,35 +119,38 @@
     }
 
     [[NCImageLoader sharedImageLoader] removeObserver:self];
-    UIImage *anImage = [[NCImageLoader sharedImageLoader] imageForURL:imageURL shouldLoadWithObserver:self];
+    UIImage *anImage = [[NCImageLoader sharedImageLoader] imageForURL:imageURL
+                                               shouldLoadWithObserver:self];
 
     if (anImage) {
-        [[NCMediaManager sharedManager] downsizeImage:anImage
+        [[NCMediaManager sharedManager]
+              downsizeImage:anImage
             completionBlock:^(UIImage *image, BOOL doNothing) {
-                if (image) {
-                    if ([NSThread isMainThread]) {
+              if (image) {
+                  if ([NSThread isMainThread]) {
+                      self.image = image;
+                      if ([self.delegate respondsToSelector:@selector(imageViewLoadedImage:)]) {
+                          [self.delegate imageViewLoadedImage:self];
+                      }
+                  } else {
+                      dispatch_async(dispatch_get_main_queue(), ^{
                         self.image = image;
                         if ([self.delegate respondsToSelector:@selector(imageViewLoadedImage:)]) {
                             [self.delegate imageViewLoadedImage:self];
                         }
-                    } else {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            self.image = image;
-                            if ([self.delegate respondsToSelector:@selector(imageViewLoadedImage:)]) {
-                                [self.delegate imageViewLoadedImage:self];
-                            }
-                        });
-                    }
-                    if (!doNothing) {
-                        NSData *imageResource = UIImagePNGRepresentation(image);
-                        NSString *imagePath = [[NCImageLoader sharedImageLoader] cachePathForURL:imageURL];
-                        [imageResource writeToFile:imagePath atomically:YES];
-                    }
-                }
+                      });
+                  }
+                  if (!doNothing) {
+                      NSData *imageResource = UIImagePNGRepresentation(image);
+                      NSString *imagePath =
+                          [[NCImageLoader sharedImageLoader] cachePathForURL:imageURL];
+                      [imageResource writeToFile:imagePath atomically:YES];
+                  }
+              }
             }
-            progressBlock:^(UIImage *image, BOOL doNothing){
+              progressBlock:^(UIImage *image, BOOL doNothing){
 
-            }];
+              }];
 
     } else {
         self.image = self.placeholderImage;
@@ -169,26 +175,34 @@
 
 - (void)imageLoaderDidLoad:(NSNotification *)notification {
     NSURL *notifyURL = [notification userInfo][@"imageURL"];
-    if (![notifyURL isKindOfClass:[NSURL class]]) return;
-    if (![self.imageURL isEqual:notifyURL]) return;
+    if (![notifyURL isKindOfClass:[NSURL class]])
+        return;
+    if (![self.imageURL isEqual:notifyURL])
+        return;
     UIImage *anImage = [notification userInfo][@"image"];
-    if (!anImage || ![anImage isKindOfClass:[UIImage class]]) return;
-    [[NCMediaManager sharedManager] downsizeImage:anImage
-                                      completionBlock:^(UIImage *image, BOOL doNothing) {
-        if (!image || ![self.imageURL isEqual:notifyURL]) return;
-        dispatch_async(dispatch_get_main_queue(), ^{
+    if (!anImage || ![anImage isKindOfClass:[UIImage class]])
+        return;
+    [[NCMediaManager sharedManager]
+          downsizeImage:anImage
+        completionBlock:^(UIImage *image, BOOL doNothing) {
+          if (!image || ![self.imageURL isEqual:notifyURL])
+              return;
+          dispatch_async(dispatch_get_main_queue(), ^{
             self.image = image;
             if ([self.delegate respondsToSelector:@selector(imageViewLoadedImage:)]) {
                 [self.delegate imageViewLoadedImage:self];
             }
             [self setNeedsDisplay];
-        });
-        if (!doNothing) {
-            NSData *imageResource = UIImagePNGRepresentation(image);
-            NSString *imagePath = [[NCImageLoader sharedImageLoader] cachePathForURL:self.imageURL];
-            [imageResource writeToFile:imagePath atomically:YES];
+          });
+          if (!doNothing) {
+              NSData *imageResource = UIImagePNGRepresentation(image);
+              NSString *imagePath =
+                  [[NCImageLoader sharedImageLoader] cachePathForURL:self.imageURL];
+              [imageResource writeToFile:imagePath atomically:YES];
+          }
         }
-    } progressBlock:^(UIImage *image, BOOL doNothing){}];
+          progressBlock:^(UIImage *image, BOOL doNothing){
+          }];
 }
 
 - (void)imageLoaderDidFailToLoad:(NSNotification *)notification {

@@ -32,7 +32,7 @@ CGFloat const ncContentSpace = 10;
 CGFloat const ncTextLeadingX = 12;
 static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 
-@interface NCStreamMessageCellViewModel ()<NCMessageHandler, NCStreamContentViewModelDelegate>
+@interface NCStreamMessageCellViewModel () <NCMessageHandler, NCStreamContentViewModelDelegate>
 
 @property (nonatomic, copy) NSString *streamMessageHandlerIdentifier;
 
@@ -49,7 +49,8 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 - (instancetype)init {
     self = [super init];
     if (self) {
-        self.calculateHeightQueue = dispatch_queue_create("ai.nexconn.calculateHeightQueue", DISPATCH_QUEUE_SERIAL);
+        self.calculateHeightQueue =
+            dispatch_queue_create("ai.nexconn.calculateHeightQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -66,8 +67,7 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
     if (streamMessage.sync) {
         return;
     }
-    if (self.summaryComplete ||
-        (self.summary && !self.summaryComplete)) {
+    if (self.summaryComplete || (self.summary && !self.summaryComplete)) {
         return;
     }
     [self requestStreamMessage];
@@ -77,18 +77,19 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
     [self unregisterStreamMessageHandler];
     [self registerStreamMessageHandler];
     NCLogD(@"[Stream] mUid:%@; addMessageHandlerWithIdentifier", self.model.messageId);
-    [self refreshMessageFromStoreWithCompletion:^(NCMessage * _Nullable message) {
-        if (!message) {
-            [self requestStreamMessageResult:NCChatUIErrorCodeInvalidParameterMessageUid];
-            return;
+    [self refreshMessageFromStoreWithCompletion:^(NCMessage *_Nullable message) {
+      if (!message) {
+          [self requestStreamMessageResult:NCChatUIErrorCodeInvalidParameterMessageUid];
+          return;
+      }
+      [message requestStreamMessageWithCompletion:^(NCError *_Nullable error) {
+        NSInteger code = error ? error.code : NCChatUIErrorCodeSuccess;
+        NCLogD(@"[Stream] mUid:%@; requestStreamMessageWithCompletion, code:%@",
+               self.model.messageId, @(code));
+        if (code != NCChatUIErrorCodeSuccess) {
+            [self requestStreamMessageResult:code];
         }
-        [message requestStreamMessageWithCompletion:^(NCError * _Nullable error) {
-            NSInteger code = error ? error.code : NCChatUIErrorCodeSuccess;
-            NCLogD(@"[Stream] mUid:%@; requestStreamMessageWithCompletion, code:%@", self.model.messageId, @(code));
-            if (code != NCChatUIErrorCodeSuccess) {
-                [self requestStreamMessageResult:code];
-            }
-        }];
+      }];
     }];
 }
 
@@ -98,7 +99,8 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 
 - (void)registerStreamMessageHandler {
     if (self.streamMessageHandlerIdentifier.length == 0) {
-        self.streamMessageHandlerIdentifier = [NSString stringWithFormat:@"NCStreamMessageCellVM-%p", self];
+        self.streamMessageHandlerIdentifier =
+            [NSString stringWithFormat:@"NCStreamMessageCellVM-%p", self];
     }
     [NCEngine addMessageHandlerWithIdentifier:self.streamMessageHandlerIdentifier handler:self];
 }
@@ -123,7 +125,7 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
     }
 }
 
-- (void)refreshMessageFromStoreWithCompletion:(void (^)(NCMessage * _Nullable message))completion {
+- (void)refreshMessageFromStoreWithCompletion:(void (^)(NCMessage *_Nullable message))completion {
     NSString *messageId = self.model.messageId ?: @"";
     NCGetMessageByIdParams *params = nil;
     if (messageId.length > 0) {
@@ -137,16 +139,18 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
         }
         return;
     }
-    [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-        (void)error;
-        if (message) {
-            [self applyNCMessageToModel:message];
-            [self parserSummary];
-        }
-        if (completion) {
-            completion(message);
-        }
-    }];
+    [NCBaseChannel
+        getMessageByIdWithParams:params
+                      completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                        (void)error;
+                        if (message) {
+                            [self applyNCMessageToModel:message];
+                            [self parserSummary];
+                        }
+                        if (completion) {
+                            completion(message);
+                        }
+                      }];
 }
 
 - (void)asyncRefreshViewSizes {
@@ -154,30 +158,31 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
     __block CGSize textViewSize = CGSizeZero;
     __block CGFloat height = ncContentTop + ncContentBottom;
     dispatch_async(self.calculateHeightQueue, ^{
-        // Calculate the content height.
-        if (self.showReferMessage) {
-            referViewSize = [self getReferViewSize];
-            height += referViewSize.height + ncContentSpace;
+      // Calculate the content height.
+      if (self.showReferMessage) {
+          referViewSize = [self getReferViewSize];
+          height += referViewSize.height + ncContentSpace;
+      }
+
+      textViewSize = [self getTextViewSize];
+      height += textViewSize.height;
+
+      if (self.status == NCStreamMessageStatusBottomFailed ||
+          self.status == NCStreamMessageStatusBottomUnfold ||
+          self.status == NCStreamMessageStatusBottomLoading) {
+          height += ncUnfoldButtonHeight;
+      }
+      // Deliver the result on the main queue.
+      dispatch_async(dispatch_get_main_queue(), ^{
+        self.textViewSize = textViewSize;
+        self.referViewSize = referViewSize;
+        self.contentViewSize =
+            CGSizeMake([NCMessageCellTool getMessageContentViewMaxWidth], height);
+        self.model.cellSize = CGSizeZero;
+        if ([self.delegate respondsToSelector:@selector(contentLayoutDidUpdate)]) {
+            [self.delegate contentLayoutDidUpdate];
         }
-        
-        textViewSize = [self getTextViewSize];
-        height += textViewSize.height;
-        
-        if (self.status == NCStreamMessageStatusBottomFailed ||
-            self.status == NCStreamMessageStatusBottomUnfold ||
-            self.status == NCStreamMessageStatusBottomLoading) {
-            height += ncUnfoldButtonHeight;
-        }
-        // Deliver the result on the main queue.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.textViewSize = textViewSize;
-            self.referViewSize = referViewSize;
-            self.contentViewSize = CGSizeMake([NCMessageCellTool getMessageContentViewMaxWidth], height);
-            self.model.cellSize = CGSizeZero;
-            if ([self.delegate respondsToSelector:@selector(contentLayoutDidUpdate)]) {
-                [self.delegate contentLayoutDidUpdate];
-            }
-        });
+      });
     });
 }
 
@@ -188,10 +193,10 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
         self.referViewSize = [self getReferViewSize];
         height += self.referViewSize.height + ncContentSpace;
     }
-    
+
     self.textViewSize = [self getTextViewSize];
     height += self.textViewSize.height;
-    
+
     if (self.status == NCStreamMessageStatusBottomFailed ||
         self.status == NCStreamMessageStatusBottomUnfold ||
         self.status == NCStreamMessageStatusBottomLoading) {
@@ -208,12 +213,18 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
         return CGSizeMake([self.contentViewModel contentMaxWidth], 21);
     }
     if (self.status == NCStreamMessageStatusContentFailedWhenLoading) {
-        NSDictionary *attributes = @{NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfSecondLevel]};
-        CGSize size = [[self.contentViewModel.class failedInfo] boundingRectWithSize:CGSizeMake([self.contentViewModel contentMaxWidth], 200)
-                                                        options:(NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-                                                     attributes:attributes
-                                                        context:nil].size;
-        return CGSizeMake([self.contentViewModel contentMaxWidth],ceilf(size.height));
+        NSDictionary *attributes =
+            @{NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfSecondLevel]};
+        CGSize size =
+            [[self.contentViewModel.class failedInfo]
+                boundingRectWithSize:CGSizeMake([self.contentViewModel contentMaxWidth], 200)
+                             options:(NSStringDrawingTruncatesLastVisibleLine |
+                                      NSStringDrawingUsesLineFragmentOrigin |
+                                      NSStringDrawingUsesFontLeading)
+                          attributes:attributes
+                             context:nil]
+                .size;
+        return CGSizeMake([self.contentViewModel contentMaxWidth], ceilf(size.height));
     }
 
     return [self.contentViewModel calculateContentSize];
@@ -222,25 +233,26 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 - (CGSize)getReferViewSize {
     NCStreamMessage *streamMsg = (NCStreamMessage *)self.model.content;
     NCStreamReferenceInfo *streamReferInfo = streamMsg.referenceInfo;
-    CGFloat height = 17;// Height of one name line.
+    CGFloat height = 17; // Height of one name line.
     if ([streamReferInfo.content isKindOfClass:[NCImageMessage class]]) {
         NCImageMessage *msg = (NCImageMessage *)streamReferInfo.content;
         CGFloat space = 5.0;
-        height = [NCMessageCellTool getThumbnailImageSize:msg.thumbnailImage].height + height + space;
+        height =
+            [NCMessageCellTool getThumbnailImageSize:msg.thumbnailImage].height + height + space;
     } else {
-        height = 34;// Height of two text lines.
+        height = 34; // Height of two text lines.
     }
     return CGSizeMake([self.contentViewModel contentMaxWidth], height);
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)configMessage:(NCMessageModel *)model {
     self.model = model;
     NCStreamMessage *streamMsg = (NCStreamMessage *)self.model.content;
     if ([streamMsg.type.lowercaseString isEqualToString:@"markdown"]) {
         self.contentType = NCStreamContentTypeMarkdown;
-    }else if([streamMsg.type.lowercaseString isEqualToString:@"html"]) {
+    } else if ([streamMsg.type.lowercaseString isEqualToString:@"html"]) {
         self.contentType = NCStreamContentTypeHTML;
     } else {
         self.contentType = NCStreamContentTypeText;
@@ -253,9 +265,9 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 }
 
 - (void)createStreamContentModel {
-    if (self.contentType == NCStreamContentTypeMarkdown ) {
+    if (self.contentType == NCStreamContentTypeMarkdown) {
         self.contentViewModel = [[NCStreamMarkdownContentViewModel alloc] init];
-    } else if(self.contentType == NCStreamContentTypeHTML) {
+    } else if (self.contentType == NCStreamContentTypeHTML) {
         self.contentViewModel = [[NCStreamHTMLContentViewModel alloc] init];
     } else {
         self.contentViewModel = [[NCStreamTextContentViewModel alloc] init];
@@ -266,7 +278,9 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 
 - (void)checkStreamStatus {
     NCStreamMessage *streamMsg = (NCStreamMessage *)self.model.content;
-    NCLogD(@"[Stream] mUid:%@; checkStreamStatus %@, %@, %@, %@",self.model.messageId,@(streamMsg.sync), @(self.summaryComplete), @(self.summary.length), @(streamMsg.content.length));
+    NCLogD(@"[Stream] mUid:%@; checkStreamStatus %@, %@, %@, %@", self.model.messageId,
+           @(streamMsg.sync), @(self.summaryComplete), @(self.summary.length),
+           @(streamMsg.content.length));
     if (streamMsg.sync || self.summaryComplete) {
         self.status = NCStreamMessageStatusNormal;
     } else if (self.summary.length > 0 && !streamMsg.sync && !self.summaryComplete) {
@@ -292,24 +306,24 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
 }
 
 - (void)requestStreamMessageResult:(NSInteger)code {
-    [self refreshMessageFromStoreWithCompletion:^(NCMessage * _Nullable message) {
-        (void)message;
-        NCStreamMessage *streamMsg = (NCStreamMessage *)self.model.content;
-        if (streamMsg.sync || self.summaryComplete) {
-            [self reloadStreamContent:NCStreamMessageStatusNormal];
-        } else if (code == NCStreamMessageRequestInProcessErrorCode) {
-            return;
-        } else {
-            if (self.status == NCStreamMessageStatusBottomLoading) {
-                [self reloadStreamContent:NCStreamMessageStatusBottomFailed];
-            } else if (self.status == NCStreamMessageStatusContentLoading) {
-                [self reloadStreamContent:NCStreamMessageStatusContentFailedWhenLoading];
-            } else if (self.status == NCStreamMessageStatusNormal){
-                [self reloadStreamContent:NCStreamMessageStatusContentFailedWhenNormal];
-            }
-        }
-        [self unregisterStreamMessageHandler];
-        NCLogD(@"[Stream] mUid:%@; removeMessageHandlerForIdentifier", self.model.messageId);
+    [self refreshMessageFromStoreWithCompletion:^(NCMessage *_Nullable message) {
+      (void)message;
+      NCStreamMessage *streamMsg = (NCStreamMessage *)self.model.content;
+      if (streamMsg.sync || self.summaryComplete) {
+          [self reloadStreamContent:NCStreamMessageStatusNormal];
+      } else if (code == NCStreamMessageRequestInProcessErrorCode) {
+          return;
+      } else {
+          if (self.status == NCStreamMessageStatusBottomLoading) {
+              [self reloadStreamContent:NCStreamMessageStatusBottomFailed];
+          } else if (self.status == NCStreamMessageStatusContentLoading) {
+              [self reloadStreamContent:NCStreamMessageStatusContentFailedWhenLoading];
+          } else if (self.status == NCStreamMessageStatusNormal) {
+              [self reloadStreamContent:NCStreamMessageStatusContentFailedWhenNormal];
+          }
+      }
+      [self unregisterStreamMessageHandler];
+      NCLogD(@"[Stream] mUid:%@; removeMessageHandlerForIdentifier", self.model.messageId);
     }];
 }
 
@@ -319,7 +333,7 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
     self.summary = summary.summary;
 }
 
-#pragma mark -- NCMessageHandler
+#pragma mark-- NCMessageHandler
 /// Handles request preparation and clears stale data from a previously interrupted stream.
 - (void)onStreamMessageRequestInit:(NCStreamMessageRequestInitEvent *)event {
     if (![event.messageId isEqualToString:self.model.messageId]) {
@@ -346,7 +360,8 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
         [self checkStreamStatus];
     }
     [self reloadStreamContent:self.status];
-    NCLogD(@"[Stream] mUid:%@; onStreamMessageRequestDelta, content:%@", message.messageId, event.chunkInfo.content);
+    NCLogD(@"[Stream] mUid:%@; onStreamMessageRequestDelta, content:%@", message.messageId,
+           event.chunkInfo.content);
 }
 
 /// Handles completion of a streaming message response.
@@ -359,19 +374,23 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
     NCLogD(@"[Stream] mUid:%@; onStreamMessageRequestComplete, code:%@", event.messageId, @(code));
 }
 
-#pragma mark -- NCStreamContentViewModelDelegate
+#pragma mark-- NCStreamContentViewModelDelegate
 
 - (void)streamContentLayoutWillUpdate {
     [self asyncRefreshViewSizes];
 }
 
-#pragma mark -- Getter
+#pragma mark-- Getter
 
 - (NSString *)content {
-    if (self.status == NCStreamMessageStatusNone || self.status == NCStreamMessageStatusContentLoading || self.status == NCStreamMessageStatusContentFailedWhenLoading) {
+    if (self.status == NCStreamMessageStatusNone ||
+        self.status == NCStreamMessageStatusContentLoading ||
+        self.status == NCStreamMessageStatusContentFailedWhenLoading) {
         return @"";
     }
-    if (self.status == NCStreamMessageStatusBottomFailed || self.status == NCStreamMessageStatusBottomUnfold  || self.status == NCStreamMessageStatusBottomLoading) {
+    if (self.status == NCStreamMessageStatusBottomFailed ||
+        self.status == NCStreamMessageStatusBottomUnfold ||
+        self.status == NCStreamMessageStatusBottomLoading) {
         return self.summary;
     }
     NSString *content = ((NCStreamMessage *)(self.model.content)).content;
@@ -382,7 +401,9 @@ static NSInteger const NCStreamMessageRequestInProcessErrorCode = 39006;
         content = [content substringWithRange:NSMakeRange(0, NCStreamMessageCellDisplayTextLimit)];
     }
     if (self.status == NCStreamMessageStatusContentFailedWhenNormal) {
-        content = [content stringByAppendingFormat:@"\n\n%@",NCUILocalizedString(@"stream_failed_with_requesting")];
+        content =
+            [content stringByAppendingFormat:@"\n\n%@",
+                                             NCUILocalizedString(@"stream_failed_with_requesting")];
     }
     return content;
 }

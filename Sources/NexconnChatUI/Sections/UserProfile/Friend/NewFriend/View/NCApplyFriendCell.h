@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "NCPaddingTableViewCell.h"
 #import "NCApplyFriendCellViewModel.h"
+#import "NCPaddingTableViewCell.h"
 #import "NCSizeCalculateLabel.h"
-UIKIT_EXTERN NSString * _Nullable const NCFriendApplyCellIdentifier;
+#import <UIKit/UIKit.h>
+UIKIT_EXTERN NSString *_Nullable const NCFriendApplyCellIdentifier;
 UIKIT_EXTERN NSInteger const NCFriendApplyCellMargin;
 
 @class NCImageView;

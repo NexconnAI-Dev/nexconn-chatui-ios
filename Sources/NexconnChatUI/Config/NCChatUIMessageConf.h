@@ -15,20 +15,24 @@
 
 /// Whether to disable all local notifications. Default is NO.
 ///
-/// When the app is in the background, local notifications are shown by default. Set this to YES to disable all local notifications.
+/// When the app is in the background, local notifications are shown by default. Set this to YES to
+/// disable all local notifications.
 @property (nonatomic, assign) BOOL disableMessageNotificaiton;
 
 /// Whether to disable all foreground message alert sounds. Default is NO.
 ///
-/// When the app is in the foreground, alert sounds are played by default. Set this to YES to disable all foreground alert sounds.
+/// When the app is in the foreground, alert sounds are played by default. Set this to YES to
+/// disable all foreground alert sounds.
 @property (nonatomic, assign) BOOL disableMessageAlertSound;
 
-/// Whether to enable sending typing status. Default is YES. When enabled, the other party can see a "typing" indicator (currently only supported in direct chat).
+/// Whether to enable sending typing status. Default is YES. When enabled, the other party can see a
+/// "typing" indicator (currently only supported in direct chat).
 @property (nonatomic, assign) BOOL enableTypingStatus;
 
 /// Channel types that have read receipt enabled. Default includes direct and group chat.
 ///
-/// Messages in these channel types will send read receipts when displayed on the channel page. Currently supports direct and group chat.
+/// Messages in these channel types will send read receipts when displayed on the channel page.
+/// Currently supports direct and group chat.
 ///
 /// OC should pass NSNumber values (e.g. `@[ @(NCChannelTypeDirect) ]`).
 /// Swift should pass rawValue (e.g. `[ NCChannelType.direct.rawValue ]`).
@@ -36,10 +40,12 @@
 
 /// Whether to enable multi-device read status sync. Default is YES.
 ///
-/// When enabled, messages read on other devices will have their unread count cleared on this device. Currently supports direct and group chat.
+/// When enabled, messages read on other devices will have their unread count cleared on this
+/// device. Currently supports direct and group chat.
 @property (nonatomic, assign) BOOL enableSyncReadStatus;
 
-/// Whether to enable message mention (@) feature (supports group chat; app needs to implement groupMemberDataSource). Default is YES.
+/// Whether to enable message mention (@) feature (supports group chat; app needs to implement
+/// groupMemberDataSource). Default is YES.
 @property (nonatomic, assign) BOOL enableMessageMentioned;
 
 /// Whether to enable message recall. Default is YES.
@@ -48,28 +54,36 @@
 /// Maximum duration for message recall, in seconds. Default is 120s.
 @property (nonatomic, assign) NSUInteger maxRecallDuration;
 
-/// Whether to display unregistered message types on the channel page and channel list. Default is YES.
+/// Whether to display unregistered message types on the channel page and channel list. Default is
+/// YES.
 ///
-/// As the app evolves, new custom message types may be added in future versions that older versions cannot recognize.
-/// You can pre-define the display for unregistered messages to improve user experience (e.g., prompt to upgrade).
+/// As the app evolves, new custom message types may be added in future versions that older versions
+/// cannot recognize. You can pre-define the display for unregistered messages to improve user
+/// experience (e.g., prompt to upgrade).
 ///
-/// Unregistered messages can be customized on the channel page via ``NCChannelViewController/ncUnknownChannelCollectionView:cellForItemAtIndexPath:`` and ``NCChannelViewController/ncUnknownChannelCollectionView:layout:sizeForItemAtIndexPath:``.
-/// Unregistered messages can be customized on the channel list by modifying the `unknown_message_cell_tip` string resource.
+/// Unregistered messages can be customized on the channel page via
+/// ``NCChannelViewController/ncUnknownChannelCollectionView:cellForItemAtIndexPath:`` and
+/// ``NCChannelViewController/ncUnknownChannelCollectionView:layout:sizeForItemAtIndexPath:``.
+/// Unregistered messages can be customized on the channel list by modifying the
+/// `unknown_message_cell_tip` string resource.
 @property (nonatomic, assign) BOOL showUnkownMessage;
 
 /// Whether to show local notifications for unregistered message types. Default is NO.
 ///
-/// As the app evolves, new custom message types may be added in future versions that older versions cannot recognize.
-/// You can pre-define the display for unregistered messages to improve user experience (e.g., prompt to upgrade).
+/// As the app evolves, new custom message types may be added in future versions that older versions
+/// cannot recognize. You can pre-define the display for unregistered messages to improve user
+/// experience (e.g., prompt to upgrade).
 ///
-/// Unregistered messages can be customized in local notifications by modifying the `unknown_message_notification_tip` string resource.
+/// Unregistered messages can be customized in local notifications by modifying the
+/// `unknown_message_notification_tip` string resource.
 ///
 @property (nonatomic, assign) BOOL showUnkownMessageNotificaiton;
 
 /// Maximum duration for voice messages.
 ///
 /// Default is 60 seconds.
-/// @warning This property is deprecated. The maximum duration only supports 60-second voice messages.
+/// @warning This property is deprecated. The maximum duration only supports 60-second voice
+/// messages.
 @property (nonatomic, assign) NSUInteger maxVoiceDuration __deprecated_msg();
 
 /// Whether the app exclusively occupies the audio session.
@@ -87,20 +101,25 @@
 /// Size threshold for auto-downloading GIF messages, in KB.
 @property (nonatomic, assign) NSInteger gifAutoDownloadSizeLimit;
 
-/// Whether to enable combined message forwarding. Default is NO. When enabled, messages can be forwarded as combined messages (currently only supported in direct and group chat).
+/// Whether to enable combined message forwarding. Default is NO. When enabled, messages can be
+/// forwarded as combined messages (currently only supported in direct and group chat).
 @property (nonatomic, assign) BOOL enableSendCombineMessage;
 
 /// Duration after recall during which a message can be re-edited, in seconds. Default is 300s.
 ///
-/// Re-editing after recall is currently a local-only operation; it will not sync across reinstalls or device changes.
+/// Re-editing after recall is currently a local-only operation; it will not sync across reinstalls
+/// or device changes.
 @property (nonatomic, assign) NSUInteger reeditDuration;
 
-/// Whether to support message reference (quote) feature. Default is YES. Long-pressing a message on the channel page supports referencing (currently supports text, file, image messages, and references of references).
+/// Whether to support message reference (quote) feature. Default is YES. Long-pressing a message on
+/// the channel page supports referencing (currently supports text, file, image messages, and
+/// references of references).
 @property (nonatomic, assign) BOOL enableMessageReference;
 
 /// Maximum recording duration for short video, in seconds. Default is 10s.
 ///
-/// After integrating the short video feature, use this to set the maximum recording duration. The maximum cannot exceed 2 minutes.
+/// After integrating the short video feature, use this to set the maximum recording duration. The
+/// maximum cannot exceed 2 minutes.
 @property (nonatomic, assign) NSUInteger sightRecordMaxDuration;
 
 /// Whether to enable automatic message resend. Default is YES.

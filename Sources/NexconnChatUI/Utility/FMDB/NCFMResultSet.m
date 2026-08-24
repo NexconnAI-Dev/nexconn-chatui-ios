@@ -24,7 +24,8 @@
 @synthesize query = _query;
 @synthesize statement = _statement;
 
-+ (instancetype)resultSetWithStatement:(NCFMStatement *)statement usingParentDatabase:(NCFMDatabase *)aDB {
++ (instancetype)resultSetWithStatement:(NCFMStatement *)statement
+                   usingParentDatabase:(NCFMDatabase *)aDB {
 
     NCFMResultSet *rs = [[NCFMResultSet alloc] init];
 
@@ -74,12 +75,14 @@
 - (NSMutableDictionary *)columnNameToIndexMap {
     if (!_columnNameToIndexMap) {
         int columnCount = sqlite3_column_count([_statement statement]);
-        _columnNameToIndexMap = [[NSMutableDictionary alloc] initWithCapacity:(NSUInteger)columnCount];
+        _columnNameToIndexMap =
+            [[NSMutableDictionary alloc] initWithCapacity:(NSUInteger)columnCount];
         int columnIdx = 0;
         for (columnIdx = 0; columnIdx < columnCount; columnIdx++) {
             [_columnNameToIndexMap
                 setObject:[NSNumber numberWithInt:columnIdx]
-                   forKey:[[NSString stringWithUTF8String:sqlite3_column_name([_statement statement], columnIdx)]
+                   forKey:[[NSString stringWithUTF8String:sqlite3_column_name(
+                                                              [_statement statement], columnIdx)]
                               lowercaseString]];
         }
     }
@@ -99,8 +102,10 @@
         if (c) {
             NSString *s = [NSString stringWithUTF8String:c];
 
-            [object setValue:s
-                      forKey:[NSString stringWithUTF8String:sqlite3_column_name([_statement statement], columnIdx)]];
+            [object
+                setValue:s
+                  forKey:[NSString stringWithUTF8String:sqlite3_column_name([_statement statement],
+                                                                            columnIdx)]];
         }
     }
 }
@@ -144,8 +149,8 @@
         int columnIdx = 0;
         for (columnIdx = 0; columnIdx < columnCount; columnIdx++) {
 
-            NSString *columnName =
-                [NSString stringWithUTF8String:sqlite3_column_name([_statement statement], columnIdx)];
+            NSString *columnName = [NSString
+                stringWithUTF8String:sqlite3_column_name([_statement statement], columnIdx)];
             id objectValue = [self objectForColumnIndex:columnIdx];
             [dict setObject:objectValue forKey:columnName];
         }
@@ -175,13 +180,15 @@
     } else if (SQLITE_DONE == rc || SQLITE_ROW == rc) {
         // all is well, let's return.
     } else if (SQLITE_ERROR == rc) {
-        NCLogD(@"Error calling sqlite3_step (%d: %s) rs", rc, sqlite3_errmsg([_parentDB sqliteHandle]));
+        NCLogD(@"Error calling sqlite3_step (%d: %s) rs", rc,
+               sqlite3_errmsg([_parentDB sqliteHandle]));
         if (outErr) {
             *outErr = [_parentDB lastError];
         }
     } else if (SQLITE_MISUSE == rc) {
         // uh oh.
-        NCLogD(@"Error calling sqlite3_step (%d: %s) rs", rc, sqlite3_errmsg([_parentDB sqliteHandle]));
+        NCLogD(@"Error calling sqlite3_step (%d: %s) rs", rc,
+               sqlite3_errmsg([_parentDB sqliteHandle]));
         if (outErr) {
             if (_parentDB) {
                 *outErr = [_parentDB lastError];
@@ -189,13 +196,17 @@
                 // If 'next' or 'nextWithError' is called after the result set is closed,
                 // we need to return the appropriate error.
                 NSDictionary *errorMessage =
-                    [NSDictionary dictionaryWithObject:@"parentDB does not exist" forKey:NSLocalizedDescriptionKey];
-                *outErr = [NSError errorWithDomain:@"NCFMDatabase" code:SQLITE_MISUSE userInfo:errorMessage];
+                    [NSDictionary dictionaryWithObject:@"parentDB does not exist"
+                                                forKey:NSLocalizedDescriptionKey];
+                *outErr = [NSError errorWithDomain:@"NCFMDatabase"
+                                              code:SQLITE_MISUSE
+                                          userInfo:errorMessage];
             }
         }
     } else {
         // wtf?
-        NCLogD(@"Unknown error calling sqlite3_step (%d: %s) rs", rc, sqlite3_errmsg([_parentDB sqliteHandle]));
+        NCLogD(@"Unknown error calling sqlite3_step (%d: %s) rs", rc,
+               sqlite3_errmsg([_parentDB sqliteHandle]));
         if (outErr) {
             *outErr = [_parentDB lastError];
         }
@@ -304,8 +315,9 @@
         return nil;
     }
 
-    return [_parentDB hasDateFormatter] ? [_parentDB dateFromString:[self stringForColumnIndex:columnIdx]]
-                                        : [NSDate dateWithTimeIntervalSince1970:[self doubleForColumnIndex:columnIdx]];
+    return [_parentDB hasDateFormatter]
+               ? [_parentDB dateFromString:[self stringForColumnIndex:columnIdx]]
+               : [NSDate dateWithTimeIntervalSince1970:[self doubleForColumnIndex:columnIdx]];
 }
 
 - (NSData *)dataForColumn:(NSString *)columnName {
@@ -341,7 +353,9 @@
     const char *dataBuffer = sqlite3_column_blob([_statement statement], columnIdx);
     int dataSize = sqlite3_column_bytes([_statement statement], columnIdx);
 
-    NSData *data = [NSData dataWithBytesNoCopy:(void *)dataBuffer length:(NSUInteger)dataSize freeWhenDone:NO];
+    NSData *data = [NSData dataWithBytesNoCopy:(void *)dataBuffer
+                                        length:(NSUInteger)dataSize
+                                  freeWhenDone:NO];
 
     return data;
 }

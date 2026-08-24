@@ -24,7 +24,6 @@
         tip.layer.masksToBounds = YES;
         tip.layer.cornerRadius = 4.f;
         tip.backgroundColor = NCDynamicColor(@"tip_background_color");
-        
     }
     return tip;
 }

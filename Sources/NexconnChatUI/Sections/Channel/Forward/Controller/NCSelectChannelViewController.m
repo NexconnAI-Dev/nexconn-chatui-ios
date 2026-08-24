@@ -7,12 +7,12 @@
 //
 
 #import "NCSelectChannelViewController.h"
+#import "NCBaseTableView.h"
+#import "NCChatUI.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
 #import "NCSelectChannelCell.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUI.h"
-#import "NCChatUIConfig.h"
-#import "NCBaseTableView.h"
 typedef void (^CompleteBlock)(NSArray<NCBaseChannel *> *conversationList);
 
 @interface NCSelectChannelViewController () <UITableViewDataSource, UITableViewDelegate>
@@ -56,15 +56,16 @@ typedef void (^CompleteBlock)(NSArray<NCBaseChannel *> *conversationList);
     params.pageSize = 200;
     self.channelsQuery = [NCBaseChannel createChannelsQueryWithParams:params];
     __weak typeof(self) weakSelf = self;
-    [self.channelsQuery loadNextPageWithCompletion:^(NSArray<NCBaseChannel *> * _Nullable channels, NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            strongSelf.listingConversationArray = channels ?: @[];
-            [strongSelf.conversationTableView reloadData];
-        });
+    [self.channelsQuery loadNextPageWithCompletion:^(NSArray<NCBaseChannel *> *_Nullable channels,
+                                                     NCError *_Nullable error) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+          return;
+      }
+      dispatch_async(dispatch_get_main_queue(), ^{
+        strongSelf.listingConversationArray = channels ?: @[];
+        [strongSelf.conversationTableView reloadData];
+      });
     }];
 }
 
@@ -77,7 +78,8 @@ typedef void (^CompleteBlock)(NSArray<NCBaseChannel *> *conversationList);
     }
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.listingConversationArray.count <= indexPath.row) {
         return nil;
     }
@@ -85,7 +87,8 @@ typedef void (^CompleteBlock)(NSArray<NCBaseChannel *> *conversationList);
     static NSString *reusableID = @"NCSelectChannelCell";
     NCSelectChannelCell *cell = [tableView dequeueReusableCellWithIdentifier:reusableID];
     if (!cell) {
-        cell = [[NCSelectChannelCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:reusableID];
+        cell = [[NCSelectChannelCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                          reuseIdentifier:reusableID];
     }
 
     NCBaseChannel *conversation = self.listingConversationArray[indexPath.row];
@@ -115,10 +118,10 @@ typedef void (^CompleteBlock)(NSArray<NCBaseChannel *> *conversationList);
     }
     [self updateRightButton];
     [UIView performWithoutAnimation:^{
-        [self.conversationTableView reloadRowsAtIndexPaths:@[ indexPath ] withRowAnimation:UITableViewRowAnimationNone];
+      [self.conversationTableView reloadRowsAtIndexPaths:@[ indexPath ]
+                                        withRowAnimation:UITableViewRowAnimationNone];
     }];
 }
-
 
 #pragma mark - Target Action
 
@@ -167,8 +170,11 @@ typedef void (^CompleteBlock)(NSArray<NCBaseChannel *> *conversationList);
 - (NCBaseTableView *)conversationTableView {
     if (!_conversationTableView) {
         CGFloat homeBarHeight = [NCChatUIUtility getWindowSafeAreaInsets].bottom;
-        CGRect frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height-homeBarHeight);
-        _conversationTableView = [[NCBaseTableView alloc] initWithFrame:frame  style:UITableViewStyleGrouped];
+        CGRect frame =
+            CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y,
+                       self.view.frame.size.width, self.view.frame.size.height - homeBarHeight);
+        _conversationTableView = [[NCBaseTableView alloc] initWithFrame:frame
+                                                                  style:UITableViewStyleGrouped];
         _conversationTableView.estimatedRowHeight = 0;
         _conversationTableView.estimatedSectionHeaderHeight = 0;
         _conversationTableView.estimatedSectionFooterHeight = 0;

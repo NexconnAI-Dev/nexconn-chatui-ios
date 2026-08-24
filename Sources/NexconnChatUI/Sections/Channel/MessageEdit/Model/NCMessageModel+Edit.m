@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCMessageModel+Edit.h"
 #import "NCChatUIConfig.h"
-#import "NCMessageEditUtil.h"
 #import "NCChatUIUtility.h"
+#import "NCMessageEditUtil.h"
+#import "NCMessageModel+Edit.h"
 
 static NCTextMessage *NCEditTextMessageFromContent(NCMessageContent *content) {
     if (![content isMemberOfClass:[NCTextMessage class]]) {
@@ -38,8 +38,7 @@ static NCReferenceMessage *NCEditReferenceMessageFromMessage(NCMessage *message)
     if (!NCChatUIConfigCenter.message.enableEditMessage) {
         return NO;
     }
-    if (self.channelType != NCChannelTypeDirect
-        && self.channelType != NCChannelTypeGroup) {
+    if (self.channelType != NCChannelTypeDirect && self.channelType != NCChannelTypeGroup) {
         return NO;
     }
     // Only text and reference messages are editable.
@@ -47,17 +46,17 @@ static NCReferenceMessage *NCEditReferenceMessageFromMessage(NCMessage *message)
         ![self.content isMemberOfClass:[NCReferenceMessage class]]) {
         return NO;
     }
-    
+
     // A user can edit only messages they sent.
     if (self.messageDirection != NCMessageDirectionSend) {
         return NO;
     }
-    
+
     // Only successfully sent messages are editable.
     if (self.messageId.length == 0) {
         return NO;
     }
-    
+
     return [NCMessageEditUtil isEditTimeValid:self.sentTime];
 }
 
@@ -70,8 +69,8 @@ static NCReferenceMessage *NCEditReferenceMessageFromMessage(NCMessage *message)
     if (!referenceMessage) {
         return nil;
     }
-    if (referenceMessage.referMsgStatus != NCReferenceMessageStatusDefault
-        && referenceMessage.referMsgStatus != NCReferenceMessageStatusUpdated) {
+    if (referenceMessage.referMsgStatus != NCReferenceMessageStatusDefault &&
+        referenceMessage.referMsgStatus != NCReferenceMessageStatusUpdated) {
         return nil;
     }
     return message.messageId.length > 0 ? message.messageId : nil;
@@ -135,9 +134,9 @@ static NCReferenceMessage *NCEditReferenceMessageFromMessage(NCMessage *message)
         return nil;
     }
     NSString *formattedContent = [NCChatUIUtility formatMessage:referencedContent
-                                                    channelId:self.channelId
-                                            channelType:self.channelType
-                                                isAllMessage:YES];
+                                                      channelId:self.channelId
+                                                    channelType:self.channelType
+                                                   isAllMessage:YES];
     return formattedContent ?: @"";
 }
 

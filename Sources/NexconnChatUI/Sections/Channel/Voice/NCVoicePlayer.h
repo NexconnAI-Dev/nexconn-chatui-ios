@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCMessageModel.h"
+#import <Foundation/Foundation.h>
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 /// Notification posted when voice message playback stops.
 UIKIT_EXTERN NSString *const kNotificationVoiceWillPlayNotification;
@@ -29,12 +29,13 @@ UIKIT_EXTERN NSString *const kNCContinuousPlayNotification;
 
 - (void)playAudio:(NCMessageModel *)model;
 
-//- (BOOL)playVoice:(NSString *)clientId voiceData:(NSData *)data observer:(id<NCVoicePlayerObserver>)observer;
+//- (BOOL)playVoice:(NSString *)clientId voiceData:(NSData *)data
+// observer:(id<NCVoicePlayerObserver>)observer;
 - (BOOL)playVoice:(NCChannelType)channelType
-         channelId:(NSString *)channelId
-  messageClientId:(long)messageClientId
-        voiceData:(NSData *)data
-         observer:(id<NCVoicePlayerObserver>)observer;
+          channelId:(NSString *)channelId
+    messageClientId:(long)messageClientId
+          voiceData:(NSData *)data
+           observer:(id<NCVoicePlayerObserver>)observer;
 
 - (void)stopPlayVoice;
 

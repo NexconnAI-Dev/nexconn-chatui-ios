@@ -7,9 +7,9 @@
 //
 
 #import "NCMessageEditUtil.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
 @implementation NCMessageEditUtil
@@ -18,7 +18,7 @@
     if (!originalText) {
         originalText = @"";
     }
-    
+
     if (isEdited) {
         return [NSString stringWithFormat:@"%@%@", originalText, [self editedSuffix]];
     }
@@ -38,13 +38,13 @@
              isEdited:(BOOL)isEdited
                  font:(UIFont *)font
       constrainedSize:(CGSize)constrainedSize {
-    
+
     NSString *displayText = [self displayTextForOriginalText:originalText isEdited:isEdited];
-    
+
     CGSize textSize = [NCChatUIUtility getTextDrawingSize:displayText
-                                                  font:font
-                                       constrainedSize:constrainedSize];
-    
+                                                     font:font
+                                          constrainedSize:constrainedSize];
+
     return CGSizeMake(ceilf(textSize.width), ceilf(textSize.height));
 }
 

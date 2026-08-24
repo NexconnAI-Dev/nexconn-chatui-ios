@@ -7,22 +7,22 @@
 //
 
 #import "NCGroupMembersCollectionViewModel.h"
-#import "NCGroupMemberHeaderCell.h"
-#import "NCSelectUserViewController.h"
-#import "NCRemoveGroupMembersViewController.h"
+#import "NCAlertView.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIErrorCode.h"
 #import "NCGroupManager.h"
+#import "NCGroupMemberHeaderCell.h"
 #import "NCProfileViewController.h"
+#import "NCRemoveGroupMembersViewController.h"
+#import "NCSelectUserViewController.h"
 #import "NCUserProfileViewModel.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCChatUICommonDefine.h"
-#import "NCAlertView.h"
-#import "NCChatUIErrorCode.h"
 
 @interface NCGroupMembersCollectionViewModel ()
 
 @property (nonatomic, weak) UIViewController *inViewController;
 
-@property (nonatomic, strong) NSArray <NCGroupMemberInfo *> *members;
+@property (nonatomic, strong) NSArray<NCGroupMemberInfo *> *members;
 
 @property (nonatomic, copy) NSString *groupId;
 
@@ -30,7 +30,7 @@
 
 @property (nonatomic, assign) BOOL allowRemove;
 
-@property (nonatomic, copy) NSArray <NCFriendInfo *> *friends;
+@property (nonatomic, copy) NSArray<NCFriendInfo *> *friends;
 
 @end
 
@@ -38,7 +38,7 @@
 @dynamic delegate;
 
 + (instancetype)viewModelWithGroupId:(NSString *)groupId
-                             members:(NSArray <NCGroupMemberInfo *> *)members
+                             members:(NSArray<NCGroupMemberInfo *> *)members
                             allowAdd:(BOOL)allowAdd
                          allowRemove:(BOOL)allowRemove
                     inViewController:(UIViewController *)inViewController {
@@ -52,7 +52,7 @@
     return viewModel;
 }
 
-#pragma mark -- NCCollectionViewModelProtocol
+#pragma mark-- NCCollectionViewModelProtocol
 
 - (NSInteger)numberOfItemsInSection:(NSInteger)section {
     NSInteger count = self.members.count;
@@ -66,15 +66,20 @@
 }
 
 + (void)registerCollectionViewCell:(UICollectionView *)collectionView {
-    [collectionView registerClass:NCGroupMemberHeaderCell.class forCellWithReuseIdentifier:NCGroupMemberHeaderCellIdentifier];
+    [collectionView registerClass:NCGroupMemberHeaderCell.class
+        forCellWithReuseIdentifier:NCGroupMemberHeaderCellIdentifier];
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    NCGroupMemberHeaderCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:NCGroupMemberHeaderCellIdentifier forIndexPath:indexPath];
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
+                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    NCGroupMemberHeaderCell *cell =
+        [collectionView dequeueReusableCellWithReuseIdentifier:NCGroupMemberHeaderCellIdentifier
+                                                  forIndexPath:indexPath];
     if (self.members.count > indexPath.row) {
         NCGroupMemberInfo *member = self.members[indexPath.row];
         cell.nameLabel.hidden = NO;
-        cell.portraitImageView.placeholderImage = NCDynamicImage(@"channel-list_cell_portrait_msg_img");
+        cell.portraitImageView.placeholderImage =
+            NCDynamicImage(@"channel-list_cell_portrait_msg_img");
         cell.portraitImageView.imageURL = [NSURL URLWithString:member.avatarUrl];
         NSString *remark = [self remarkWithUserId:member.userId];
         if (remark.length > 0) {
@@ -94,7 +99,8 @@
     return cell;
 }
 
-- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+- (void)collectionView:(UICollectionView *)collectionView
+    didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (self.members.count > indexPath.row) {
         [self showMemberDetailVC:self.members[indexPath.row]];
     } else if ([self isAddItem:indexPath.row]) {
@@ -104,7 +110,7 @@
     }
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)fetchFriendInfos {
     NSMutableArray<NSString *> *userIds = [NSMutableArray arrayWithCapacity:self.members.count];
@@ -113,17 +119,20 @@
             [userIds addObject:member.userId];
         }
     }
-    [NCGroupManager fetchFriendInfosWithUserIds:userIds.copy complete:^(NSArray<NCFriendInfo *> * _Nullable friendInfos) {
-        if (friendInfos.count <= 0) {
-            return;
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.friends = friendInfos;
-            if ([self.responder respondsToSelector:@selector(reloadCollectionViewData)]) {
-                [self.responder reloadCollectionViewData];
-            }
-        });
-    }];
+    [NCGroupManager
+        fetchFriendInfosWithUserIds:userIds.copy
+                           complete:^(NSArray<NCFriendInfo *> *_Nullable friendInfos) {
+                             if (friendInfos.count <= 0) {
+                                 return;
+                             }
+                             dispatch_async(dispatch_get_main_queue(), ^{
+                               self.friends = friendInfos;
+                               if ([self.responder
+                                       respondsToSelector:@selector(reloadCollectionViewData)]) {
+                                   [self.responder reloadCollectionViewData];
+                               }
+                             });
+                           }];
 }
 
 - (NSString *)remarkWithUserId:(NSString *)userId {
@@ -134,8 +143,11 @@
 }
 
 - (void)showMemberDetailVC:(NCGroupMemberInfo *)member {
-    if ([self.delegate respondsToSelector:@selector(groupMembersCollectionViewModel:viewController:didSelectMember:)]) {
-        BOOL intercept = [self.delegate groupMembersCollectionViewModel:self viewController:self.inViewController didSelectMember:member];
+    if ([self.delegate respondsToSelector:@selector(groupMembersCollectionViewModel:viewController:
+                                                    didSelectMember:)]) {
+        BOOL intercept = [self.delegate groupMembersCollectionViewModel:self
+                                                         viewController:self.inViewController
+                                                        didSelectMember:member];
         if (intercept) {
             return;
         }
@@ -144,22 +156,28 @@
     if ([viewModel isKindOfClass:NCUserProfileViewModel.class]) {
         [((NCUserProfileViewModel *)viewModel) showGroupMemberInfo:self.groupId];
     }
-    NCProfileViewController *viewController = [[NCProfileViewController alloc] initWithViewModel:viewModel];
+    NCProfileViewController *viewController =
+        [[NCProfileViewController alloc] initWithViewModel:viewModel];
     [self.inViewController.navigationController pushViewController:viewController animated:YES];
 }
 
 - (void)addGroupMember {
-    if ([self.delegate respondsToSelector:@selector(groupMembersCollectionViewModel:didSelectAdd:)]) {
-        BOOL intercept = [self.delegate groupMembersCollectionViewModel:self didSelectAdd: self.inViewController];
+    if ([self.delegate
+            respondsToSelector:@selector(groupMembersCollectionViewModel:didSelectAdd:)]) {
+        BOOL intercept = [self.delegate groupMembersCollectionViewModel:self
+                                                           didSelectAdd:self.inViewController];
         if (intercept) {
             return;
         }
     }
-    NCSelectUserViewModel *vm = [NCSelectUserViewModel viewModelWithType:NCSelectUserTypeInviteJoinGroup groupId:self.groupId];
+    NCSelectUserViewModel *vm =
+        [NCSelectUserViewModel viewModelWithType:NCSelectUserTypeInviteJoinGroup
+                                         groupId:self.groupId];
     __weak typeof(self) weakSelf = self;
-    vm.selectionDidCompelteBlock = ^(NSArray<NSString *> * _Nonnull selectUserIds, UIViewController * _Nonnull selectVC) {
-        [weakSelf inviteJoinGroup:selectUserIds viewController:selectVC];
-    };
+    vm.selectionDidCompelteBlock =
+        ^(NSArray<NSString *> *_Nonnull selectUserIds, UIViewController *_Nonnull selectVC) {
+          [weakSelf inviteJoinGroup:selectUserIds viewController:selectVC];
+        };
     NCSelectUserViewController *vc = [[NCSelectUserViewController alloc] initWithViewModel:vm];
     [self.inViewController.navigationController pushViewController:vc animated:YES];
 }
@@ -168,45 +186,75 @@
     NCGroupChannel *channel = [[NCGroupChannel alloc] initWithChannelId:self.groupId ?: @""];
     if (!channel) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [NCAlertView showAlertController:nil message:NCUILocalizedString(@"invite_join_group_error") hiddenAfterDelay:2];
+          [NCAlertView showAlertController:nil
+                                   message:NCUILocalizedString(@"invite_join_group_error")
+                          hiddenAfterDelay:2];
         });
         return;
     }
-    [channel inviteUsersWithUserIds:selectUserIds completion:^(NSInteger processCode, NCError * _Nullable error) {
-        if (error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [NCAlertView showAlertController:nil message:NCUILocalizedString(@"invite_join_group_error") hiddenAfterDelay:2];
-            });
-            return;
-        }
-        if ([self.delegate respondsToSelector:@selector(groupMembersCollectionViewModel:didInviteUsers:processCode:viewController:)]) {
-            BOOL intercept = [self.delegate groupMembersCollectionViewModel:self didInviteUsers:selectUserIds processCode:processCode viewController:viewController];
-            if (intercept) {
-                return;
-            }
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [viewController.navigationController popViewControllerAnimated:YES];
-            if (processCode == NCChatUIErrorCodeGroupJoinNeedManagerAccept) {
-                [NCAlertView showAlertController:nil message:NCUILocalizedString(@"invite_join_group_need_owner_or_manager_accept_tip") hiddenAfterDelay:2];
-            } else if (processCode == NCChatUIErrorCodeGroupNeedInviteeAccept) {
-                [NCAlertView showAlertController:nil message:NCUILocalizedString(@"invite_join_group_need_invitee_accept_tip") hiddenAfterDelay:2];
-            } else {
-                [NCAlertView showAlertController:nil message:NCUILocalizedString(@"invite_join_group_success") hiddenAfterDelay:2];
-            }
-        });
-    }];
+    [channel
+        inviteUsersWithUserIds:selectUserIds
+                    completion:^(NSInteger processCode, NCError *_Nullable error) {
+                      if (error) {
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                            [NCAlertView
+                                showAlertController:nil
+                                            message:NCUILocalizedString(@"invite_join_group_error")
+                                   hiddenAfterDelay:2];
+                          });
+                          return;
+                      }
+                      if ([self.delegate
+                              respondsToSelector:@selector(
+                                                     groupMembersCollectionViewModel:didInviteUsers:
+                                                     processCode:viewController:)]) {
+                          BOOL intercept =
+                              [self.delegate groupMembersCollectionViewModel:self
+                                                              didInviteUsers:selectUserIds
+                                                                 processCode:processCode
+                                                              viewController:viewController];
+                          if (intercept) {
+                              return;
+                          }
+                      }
+                      dispatch_async(dispatch_get_main_queue(), ^{
+                        [viewController.navigationController popViewControllerAnimated:YES];
+                        if (processCode == NCChatUIErrorCodeGroupJoinNeedManagerAccept) {
+                            [NCAlertView showAlertController:nil
+                                                     message:NCUILocalizedString(
+                                                                 @"invite_join_group_need_owner_or_"
+                                                                 @"manager_accept_tip")
+                                            hiddenAfterDelay:2];
+                        } else if (processCode == NCChatUIErrorCodeGroupNeedInviteeAccept) {
+                            [NCAlertView
+                                showAlertController:nil
+                                            message:
+                                                NCUILocalizedString(
+                                                    @"invite_join_group_need_invitee_accept_tip")
+                                   hiddenAfterDelay:2];
+                        } else {
+                            [NCAlertView showAlertController:nil
+                                                     message:NCUILocalizedString(
+                                                                 @"invite_join_group_success")
+                                            hiddenAfterDelay:2];
+                        }
+                      });
+                    }];
 }
 
 - (void)removeGroupMember {
-    if ([self.delegate respondsToSelector:@selector(groupMembersCollectionViewModel:didSelectRemove:)]) {
-        BOOL intercept = [self.delegate groupMembersCollectionViewModel:self didSelectRemove:self.inViewController];
+    if ([self.delegate
+            respondsToSelector:@selector(groupMembersCollectionViewModel:didSelectRemove:)]) {
+        BOOL intercept = [self.delegate groupMembersCollectionViewModel:self
+                                                        didSelectRemove:self.inViewController];
         if (intercept) {
             return;
         }
     }
-    NCRemoveGroupMembersViewModel *vm = [NCRemoveGroupMembersViewModel viewModelWithGroupId:self.groupId];
-    NCRemoveGroupMembersViewController *vc = [[NCRemoveGroupMembersViewController alloc] initWithViewModel:vm];
+    NCRemoveGroupMembersViewModel *vm =
+        [NCRemoveGroupMembersViewModel viewModelWithGroupId:self.groupId];
+    NCRemoveGroupMembersViewController *vc =
+        [[NCRemoveGroupMembersViewController alloc] initWithViewModel:vm];
     [self.inViewController.navigationController pushViewController:vc animated:YES];
 }
 
@@ -218,7 +266,7 @@
 }
 
 - (BOOL)isRemoveItem:(NSInteger)index {
-    if (!self.allowRemove)  {
+    if (!self.allowRemove) {
         return NO;
     }
     if (self.allowAdd) {

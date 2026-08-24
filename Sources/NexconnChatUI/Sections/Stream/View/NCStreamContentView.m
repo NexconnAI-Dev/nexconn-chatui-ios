@@ -7,9 +7,9 @@
 //
 
 #import "NCStreamContentView.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
-#import "NCChatUICommonDefine.h"
 #import "NCMessageCellTool.h"
 #import "NCMessageModel+StreamCellVM.h"
 #import "NCStreamMarkdownContentViewModel.h"
@@ -68,7 +68,11 @@
     }
     // Initialize the dot counter and timer.
     self.dotCount = 1;
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:0.3 target:self selector:@selector(updateLoadingText) userInfo:nil repeats:YES];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:0.3
+                                                  target:self
+                                                selector:@selector(updateLoadingText)
+                                                userInfo:nil
+                                                 repeats:YES];
 }
 
 - (void)showFailed {
@@ -78,7 +82,7 @@
     self.statusLabel.text = [NCStreamContentViewModel failedInfo];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)invalidTimer {
     if (self.timer) {
@@ -93,7 +97,8 @@
     for (int i = 0; i < self.dotCount; i++) {
         dots = [dots stringByAppendingString:@"."];
     }
-    NSString *loading = [NSString stringWithFormat:@"%@%@", NCUILocalizedString(@"stream_message_typing"), dots];
+    NSString *loading =
+        [NSString stringWithFormat:@"%@%@", NCUILocalizedString(@"stream_message_typing"), dots];
     self.statusLabel.text = loading;
     // Cycle the loading dot count.
     if (self.dotCount == 3) {

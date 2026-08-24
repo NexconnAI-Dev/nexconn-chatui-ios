@@ -13,9 +13,9 @@
 
 /** To perform queries and updates on multiple threads, you'll want to use `NCFMDatabaseQueue`.
 
- Using a single instance of `<NCFMDatabase>` from multiple threads at once is a bad idea.  It has always been OK to
- make a `<NCFMDatabase>` object *per thread*.  Just don't share a single instance across threads, and definitely not
- across multiple threads at the same time.
+ Using a single instance of `<NCFMDatabase>` from multiple threads at once is a bad idea.  It has
+ always been OK to make a `<NCFMDatabase>` object *per thread*.  Just don't share a single instance
+ across threads, and definitely not across multiple threads at the same time.
 
  Instead, use `NCFMDatabaseQueue`. Here's how to use it:
 
@@ -51,19 +51,20 @@
         [db executeUpdate:@"INSERT INTO myTable VALUES (?)", [NSNumber numberWithInt:4]];
     }];
 
- `NCFMDatabaseQueue` will run the blocks on a serialized queue (hence the name of the class).  So if you call
- `NCFMDatabaseQueue`'s methods from multiple threads at the same time, they will be executed in the order they are
- received.  This way queries and updates won't step on each other's toes, and every one is happy.
+ `NCFMDatabaseQueue` will run the blocks on a serialized queue (hence the name of the class).  So if
+ you call `NCFMDatabaseQueue`'s methods from multiple threads at the same time, they will be
+ executed in the order they are received.  This way queries and updates won't step on each other's
+ toes, and every one is happy.
 
  ### See also
 
  - `<NCFMDatabase>`
 
- @warning Do not instantiate a single `<NCFMDatabase>` object and use it across multiple threads. Use
- `NCFMDatabaseQueue` instead.
+ @warning Do not instantiate a single `<NCFMDatabase>` object and use it across multiple threads.
+ Use `NCFMDatabaseQueue` instead.
 
- @warning The calls to `NCFMDatabaseQueue`'s methods are blocking.  So even though you are passing along blocks,
- they will **not** be run on another thread.
+ @warning The calls to `NCFMDatabaseQueue`'s methods are blocking.  So even though you are passing
+ along blocks, they will **not** be run on another thread.
 
  */
 
@@ -181,8 +182,9 @@
  @param block The code to be run on the queue of `NCFMDatabaseQueue`
  */
 
-// NOTE: you can not nest these, since calling it will pull another database out of the pool and you'll get a deadlock.
-// If you need to nest, use FMDatabase's startSavePointWithName:error: instead.
+// NOTE: you can not nest these, since calling it will pull another database out of the pool and
+// you'll get a deadlock. If you need to nest, use FMDatabase's startSavePointWithName:error:
+// instead.
 - (NSError *)inSavePoint:(void (^)(NCFMDatabase *db, BOOL *rollback))block;
 
 @end

@@ -32,11 +32,11 @@
 - (void)setScheme:(NSString *)scheme forModule:(NSString *)moduleName;
 
 - (NSArray<NCChatUIExtensionMessageCellInfo *> *)getMessageCellInfoList:(NCChannelType)channelType
-                                                         channelId:(NSString *)channelId;
+                                                              channelId:(NSString *)channelId;
 - (void)didTapMessageCell:(NCMessageModel *)messageModel;
 
 - (void)extensionViewWillAppear:(NCChannelType)channelType
-                       channelId:(NSString *)channelId
+                      channelId:(NSString *)channelId
                   extensionView:(UIView *)extensionView;
 
 - (void)extensionViewWillDisappear:(NCChannelType)channelType channelId:(NSString *)channelId;

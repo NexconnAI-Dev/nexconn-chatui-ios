@@ -7,13 +7,13 @@
 //
 
 #import "NCReferencingView.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
-#import "NCStreamUtilities.h"
 #import "NCChatUIUserInfo.h"
+#import "NCChatUIUtility.h"
 #import "NCInfoUpdateCenter.h"
 #import "NCMessageSenderInfo.h"
+#import "NCStreamUtilities.h"
 @interface NCReferencingView () <NCInfoUpdateDelegate>
 @property (nonatomic, strong) UIView *inView;
 @end
@@ -43,24 +43,42 @@
 - (void)setOffsetY:(CGFloat)offsetY {
     [UIView animateWithDuration:0.25
                      animations:^{
-                         CGRect rect = self.frame;
-                         rect.origin.y = offsetY;
-                         self.frame = rect;
+                       CGRect rect = self.frame;
+                       rect.origin.y = offsetY;
+                       self.frame = rect;
                      }];
 }
 
 #pragma mark - Private Methods
 
 - (void)setupSubviews {
-    self.frame = CGRectMake(0, self.inView.frame.size.height, self.inView.frame.size.width,60);
+    self.frame = CGRectMake(0, self.inView.frame.size.height, self.inView.frame.size.width, 60);
     if ([NCChatUIUtility isRTL]) {
-        self.dismissButton.frame = CGRectMake(dismiss_right_space, (self.frame.size.height - dismiss_width)/2, dismiss_width, dismiss_width);
-        self.nameLabel.frame = CGRectMake(textlabel_left_space, 10, self.frame.size.width - self.dismissButton.frame.origin.x - textlabel_left_space - textlabel_and_dismiss_space, 20);
-        self.textLabel.frame = CGRectMake(textlabel_left_space, CGRectGetMaxY(self.nameLabel.frame), self.frame.size.width - self.dismissButton.frame.origin.x - textlabel_left_space - textlabel_and_dismiss_space, 20);
+        self.dismissButton.frame =
+            CGRectMake(dismiss_right_space, (self.frame.size.height - dismiss_width) / 2,
+                       dismiss_width, dismiss_width);
+        self.nameLabel.frame =
+            CGRectMake(textlabel_left_space, 10,
+                       self.frame.size.width - self.dismissButton.frame.origin.x -
+                           textlabel_left_space - textlabel_and_dismiss_space,
+                       20);
+        self.textLabel.frame =
+            CGRectMake(textlabel_left_space, CGRectGetMaxY(self.nameLabel.frame),
+                       self.frame.size.width - self.dismissButton.frame.origin.x -
+                           textlabel_left_space - textlabel_and_dismiss_space,
+                       20);
     } else {
-        self.dismissButton.frame = CGRectMake(self.frame.size.width - dismiss_width - dismiss_right_space, 10, dismiss_width, dismiss_width);
-        self.nameLabel.frame = CGRectMake(textlabel_left_space, 10, self.dismissButton.frame.origin.x - textlabel_left_space - textlabel_and_dismiss_space, 20);
-        self.textLabel.frame = CGRectMake(textlabel_left_space, CGRectGetMaxY(self.nameLabel.frame), self.dismissButton.frame.origin.x - textlabel_left_space - textlabel_and_dismiss_space, 20);
+        self.dismissButton.frame =
+            CGRectMake(self.frame.size.width - dismiss_width - dismiss_right_space, 10,
+                       dismiss_width, dismiss_width);
+        self.nameLabel.frame = CGRectMake(textlabel_left_space, 10,
+                                          self.dismissButton.frame.origin.x - textlabel_left_space -
+                                              textlabel_and_dismiss_space,
+                                          20);
+        self.textLabel.frame = CGRectMake(textlabel_left_space, CGRectGetMaxY(self.nameLabel.frame),
+                                          self.dismissButton.frame.origin.x - textlabel_left_space -
+                                              textlabel_and_dismiss_space,
+                                          20);
     }
     [self addSubview:self.dismissButton];
     [self addSubview:self.nameLabel];
@@ -71,14 +89,14 @@
     NSString *messageInfo;
     if ([self.referModel.content isKindOfClass:[NCFileMessage class]]) {
         NCFileMessage *msg = (NCFileMessage *)self.referModel.content;
-        messageInfo = [NSString
-            stringWithFormat:@"%@ %@", NCUILocalizedString(@"file_message"), msg.name];
+        messageInfo =
+            [NSString stringWithFormat:@"%@ %@", NCUILocalizedString(@"file_message"), msg.name];
     } else if ([self.referModel.content isKindOfClass:[NCTextMessage class]] ||
                [self.referModel.content isKindOfClass:[NCReferenceMessage class]]) {
         messageInfo = [NCChatUIUtility formatMessage:self.referModel.content
-                                                 channelId:self.referModel.channelId
+                                           channelId:self.referModel.channelId
                                          channelType:self.referModel.channelType
-                                             isAllMessage:YES];
+                                        isAllMessage:YES];
     } else if ([self.referModel.content isKindOfClass:[NCStreamMessage class]]) {
         NCStreamMessage *msg = (NCStreamMessage *)self.referModel.content;
         if (msg.sync) {
@@ -90,28 +108,29 @@
                 msg.content = summary.summary;
             }
         }
-    }  else if ([self.referModel.content isKindOfClass:[NCMessageContent class]]) {
+    } else if ([self.referModel.content isKindOfClass:[NCMessageContent class]]) {
         messageInfo = [NCChatUIUtility formatMessage:self.referModel.content
-                                                 channelId:self.referModel.channelId
+                                           channelId:self.referModel.channelId
                                          channelType:self.referModel.channelType
-                                             isAllMessage:YES];
-        if (messageInfo <= 0 ||
-            [messageInfo isEqualToString:self.referModel.objectName]) {
+                                        isAllMessage:YES];
+        if (messageInfo <= 0 || [messageInfo isEqualToString:self.referModel.objectName]) {
             messageInfo = NCUILocalizedString(@"unknown_message_cell_tip");
         }
     }
     NSString *separator = NCUILocalizedString(@"message_sender_separator");
-    if([NCChatUIUtility isRTL]){
-        self.nameLabel.text = [NSString stringWithFormat:@"%@%@", separator, [self getUserDisplayName]];
-    }else{
-        self.nameLabel.text = [NSString stringWithFormat:@"%@%@", [self getUserDisplayName], separator];
+    if ([NCChatUIUtility isRTL]) {
+        self.nameLabel.text =
+            [NSString stringWithFormat:@"%@%@", separator, [self getUserDisplayName]];
+    } else {
+        self.nameLabel.text =
+            [NSString stringWithFormat:@"%@%@", [self getUserDisplayName], separator];
     }
-    
+
     // Replace line breaks with spaces.
     messageInfo = [messageInfo stringByReplacingOccurrencesOfString:@"\r\n" withString:@" "];
     messageInfo = [messageInfo stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
     messageInfo = [messageInfo stringByReplacingOccurrencesOfString:@"\r" withString:@" "];
-    self.textLabel.text = [NSString stringWithFormat:@"%@",messageInfo];
+    self.textLabel.text = [NSString stringWithFormat:@"%@", messageInfo];
 }
 
 - (void)didClickDismissButton:(UIButton *)button {
@@ -127,10 +146,11 @@
 }
 
 - (NCMessageSenderInfo *)senderInfoForReferencingModel {
-    NCChatUIUserInfo *userInfo = [NCMessageSenderUserInfoResolver userInfoForChannelType:self.referModel.channelType
-                                                                               channelId:self.referModel.channelId
-                                                                            senderUserId:self.referModel.senderUserId
-                                                                          senderUserInfo:self.referModel.content.senderUserInfo];
+    NCChatUIUserInfo *userInfo = [NCMessageSenderUserInfoResolver
+        userInfoForChannelType:self.referModel.channelType
+                     channelId:self.referModel.channelId
+                  senderUserId:self.referModel.senderUserId
+                senderUserInfo:self.referModel.content.senderUserInfo];
     return [NCMessageSenderInfo infoWithUserInfo:userInfo];
 }
 
@@ -143,7 +163,6 @@
         [self.delegate didTapReferencingView:self.referModel];
     }
 }
-
 
 #pragma mark - UserInfo Update
 - (void)onUserInfoUpdate:(NCChatUIUserInfo *)userInfo {
@@ -167,7 +186,8 @@
 - (NCBaseButton *)dismissButton {
     if (!_dismissButton) {
         _dismissButton = [NCBaseButton buttonWithType:UIButtonTypeCustom];
-        [_dismissButton setImage:NCDynamicImage(@"channel_msg_referencing_dismiss_img") forState:UIControlStateNormal];
+        [_dismissButton setImage:NCDynamicImage(@"channel_msg_referencing_dismiss_img")
+                        forState:UIControlStateNormal];
         [_dismissButton addTarget:self
                            action:@selector(didClickDismissButton:)
                  forControlEvents:UIControlEventTouchUpInside];
@@ -178,7 +198,7 @@
 - (NCBaseLabel *)nameLabel {
     if (!_nameLabel) {
         _nameLabel = [[NCBaseLabel alloc] init];
-        _nameLabel.textColor =  NCDynamicColor(@"text_primary_color");
+        _nameLabel.textColor = NCDynamicColor(@"text_primary_color");
         _nameLabel.font = [[NCChatUIConfig defaultConfig].font fontOfGuideLevel];
     }
     return _nameLabel;
@@ -192,7 +212,8 @@
         _textLabel.font = [[NCChatUIConfig defaultConfig].font fontOfGuideLevel];
         _textLabel.textColor = NCDynamicColor(@"text_primary_color");
         UITapGestureRecognizer *messageTap =
-            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapContentView:)];
+            [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                    action:@selector(didTapContentView:)];
         messageTap.numberOfTapsRequired = 1;
         messageTap.numberOfTouchesRequired = 1;
         [_textLabel addGestureRecognizer:messageTap];

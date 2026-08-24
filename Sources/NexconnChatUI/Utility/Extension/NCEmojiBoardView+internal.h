@@ -9,7 +9,7 @@
 #ifndef NCEmojiBoardView_internal_h
 #define NCEmojiBoardView_internal_h
 
-@interface NCEmojiBoardView()
+@interface NCEmojiBoardView ()
 /// Updates the selected emoji page and total page count.
 - (void)setCurrentIndex:(int)index withTotalPages:(int)totalPageNum;
 

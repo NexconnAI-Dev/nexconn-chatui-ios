@@ -19,14 +19,14 @@
 @interface NCFMDatabase ()
 
 - (NCFMResultSet *)executeQuery:(NSString *)sql
-               withArgumentsInArray:(NSArray *)arrayArgs
-                       orDictionary:(NSDictionary *)dictionaryArgs
-                           orVAList:(va_list)args;
+           withArgumentsInArray:(NSArray *)arrayArgs
+                   orDictionary:(NSDictionary *)dictionaryArgs
+                       orVAList:(va_list)args;
 - (BOOL)executeUpdate:(NSString *)sql
-                error:(NSError **)outErr
- withArgumentsInArray:(NSArray *)arrayArgs
-         orDictionary:(NSDictionary *)dictionaryArgs
-             orVAList:(va_list)args;
+                   error:(NSError **)outErr
+    withArgumentsInArray:(NSArray *)arrayArgs
+            orDictionary:(NSDictionary *)dictionaryArgs
+                orVAList:(va_list)args;
 
 @end
 
@@ -44,9 +44,10 @@ static int NCFMDBDatabaseBusyHandler(void *f, int count) {
         int requestedSleepInMillseconds = (int)arc4random_uniform(50) + 50;
         int actualSleepInMilliseconds = sqlite3_sleep(requestedSleepInMillseconds);
         if (actualSleepInMilliseconds != requestedSleepInMillseconds) {
-            NCLogD(@"WARNING: Requested sleep of %i milliseconds, but SQLite returned %i. Maybe SQLite wasn't built "
-                  @"with HAVE_USLEEP=1?",
-                  requestedSleepInMillseconds, actualSleepInMilliseconds);
+            NCLogD(@"WARNING: Requested sleep of %i milliseconds, but SQLite returned %i. Maybe "
+                   @"SQLite wasn't built "
+                   @"with HAVE_USLEEP=1?",
+                   requestedSleepInMillseconds, actualSleepInMilliseconds);
         }
         return 1;
     }
@@ -54,7 +55,8 @@ static int NCFMDBDatabaseBusyHandler(void *f, int count) {
     return 0;
 }
 
-int NCFMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **values, char **names); // shhh clang.
+int NCFMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **values,
+                                 char **names); // shhh clang.
 int NCFMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **values, char **names) {
 
     if (!theBlockAsVoid) {
@@ -64,7 +66,8 @@ int NCFMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **value
     int (^execCallbackBlock)(NSDictionary *resultsDictionary) =
         (__bridge int (^)(NSDictionary *__strong))(theBlockAsVoid);
 
-    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:(NSUInteger)columns];
+    NSMutableDictionary *dictionary =
+        [NSMutableDictionary dictionaryWithCapacity:(NSUInteger)columns];
 
     for (NSInteger i = 0; i < columns; i++) {
         NSString *key = [NSString stringWithUTF8String:names[i]];
@@ -79,12 +82,14 @@ static NSString *FMDBEscapeSavePointName(NSString *savepointName) {
 }
 
 void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc,
-                                           sqlite3_value **argv); // -Wmissing-prototypes
+                                       sqlite3_value **argv); // -Wmissing-prototypes
 void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3_value **argv) {
 #if !__has_feature(objc_arc)
-    void (^block)(sqlite3_context *context, int argc, sqlite3_value **argv) = (id)sqlite3_user_data(context);
+    void (^block)(sqlite3_context *context, int argc, sqlite3_value **argv) =
+        (id)sqlite3_user_data(context);
 #else
-    void (^block)(sqlite3_context *context, int argc, sqlite3_value **argv) = (__bridge id)sqlite3_user_data(context);
+    void (^block)(sqlite3_context *context, int argc, sqlite3_value **argv) =
+        (__bridge id)sqlite3_user_data(context);
 #endif
     if (block) {
         block(context, argc, argv);
@@ -110,7 +115,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
 - (instancetype)initWithPath:(NSString *)aPath {
 
-    assert(sqlite3_threadsafe()); // whoa there big boy- gotta make sure sqlite it happy with what we're going to do.
+    assert(sqlite3_threadsafe()); // whoa there big boy- gotta make sure sqlite it happy with what
+                                  // we're going to do.
 
     self = [super init];
 
@@ -163,17 +169,16 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     static SInt32 NCFMDBVersionVal = 0;
 
     dispatch_once(&once, ^{
-        NSString *prodVersion = [self NCFMDBUserVersion];
+      NSString *prodVersion = [self NCFMDBUserVersion];
 
-        if ([[prodVersion componentsSeparatedByString:@"."] count] < 3) {
-            prodVersion = [prodVersion stringByAppendingString:@".0"];
-        }
+      if ([[prodVersion componentsSeparatedByString:@"."] count] < 3) {
+          prodVersion = [prodVersion stringByAppendingString:@".0"];
+      }
 
-        NSString *junk = [prodVersion stringByReplacingOccurrencesOfString:@"." withString:@""];
+      NSString *junk = [prodVersion stringByReplacingOccurrencesOfString:@"." withString:@""];
 
-        char *e = nil;
-        NCFMDBVersionVal = (int)strtoul([junk UTF8String], &e, 16);
-
+      char *e = nil;
+      NCFMDBVersionVal = (int)strtoul([junk UTF8String], &e, 16);
     });
 
     return NCFMDBVersionVal;
@@ -214,8 +219,9 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
         return YES;
     }
 
-    int err = sqlite3_open_v2([self sqlitePath], (sqlite3 **)&_db,
-                              SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil);
+    int err =
+        sqlite3_open_v2([self sqlitePath], (sqlite3 **)&_db,
+                        SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil);
     if (err != SQLITE_OK) {
         NCLogD(@"error opening!: %d", err);
         return NO;
@@ -350,10 +356,10 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     NSSet *openSetCopy = NCFMDBReturnAutoreleased([_openResultSets copy]);
     for (NSValue *rsInWrappedInATastyValueMeal in openSetCopy) {
         id result = [rsInWrappedInATastyValueMeal pointerValue];
-        if(![result isKindOfClass:[NCFMResultSet class]]) {
+        if (![result isKindOfClass:[NCFMResultSet class]]) {
             continue;
         }
-        NCFMResultSet *rs = (NCFMResultSet*)result;
+        NCFMResultSet *rs = (NCFMResultSet *)result;
         [rs setParentDB:nil];
         [rs close];
 
@@ -383,10 +389,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     NSMutableSet *statements = [_cachedStatements objectForKey:query];
 
     return [[statements objectsPassingTest:^BOOL(NCFMStatement *statement, BOOL *stop) {
-
-        *stop = ![statement inUse];
-        return *stop;
-
+      *stop = ![statement inUse];
+      return *stop;
     }] anyObject];
 }
 
@@ -413,7 +417,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     if (!key) {
         return NO;
     }
-    NSData *keyData = [NSData dataWithBytes:(void *)[key UTF8String] length:(NSUInteger)strlen([key UTF8String])];
+    NSData *keyData = [NSData dataWithBytes:(void *)[key UTF8String]
+                                     length:(NSUInteger)strlen([key UTF8String])];
 
     return [self rekeyWithData:keyData];
 }
@@ -442,7 +447,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     if (!key) {
         return NO;
     }
-    NSData *keyData = [NSData dataWithBytes:[key UTF8String] length:(NSUInteger)strlen([key UTF8String])];
+    NSData *keyData = [NSData dataWithBytes:[key UTF8String]
+                                     length:(NSUInteger)strlen([key UTF8String])];
 
     return [self setKeyWithData:keyData];
 }
@@ -555,9 +561,12 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 }
 
 - (NSError *)errorWithMessage:(NSString *)message {
-    NSDictionary *errorMessage = [NSDictionary dictionaryWithObject:message forKey:NSLocalizedDescriptionKey];
+    NSDictionary *errorMessage = [NSDictionary dictionaryWithObject:message
+                                                             forKey:NSLocalizedDescriptionKey];
 
-    return [NSError errorWithDomain:@"NCFMDatabase" code:sqlite3_errcode(_db) userInfo:errorMessage];
+    return [NSError errorWithDomain:@"NCFMDatabase"
+                               code:sqlite3_errcode(_db)
+                           userInfo:errorMessage];
 }
 
 - (NSError *)lastError {
@@ -616,7 +625,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
         sqlite3_bind_blob(pStmt, idx, bytes, (int)[obj length], SQLITE_STATIC);
     } else if ([obj isKindOfClass:[NSDate class]]) {
         if (self.hasDateFormatter)
-            sqlite3_bind_text(pStmt, idx, [[self stringFromDate:obj] UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_text(pStmt, idx, [[self stringFromDate:obj] UTF8String], -1,
+                              SQLITE_STATIC);
         else
             sqlite3_bind_double(pStmt, idx, [obj timeIntervalSince1970]);
     } else if ([obj isKindOfClass:[NSNumber class]]) {
@@ -672,8 +682,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
                 arg = va_arg(args, id);
                 break;
             case 'c':
-                // warning: second argument to 'va_arg' is of promotable type 'char'; this va_arg has undefined behavior
-                // because arguments will be promoted to 'int'
+                // warning: second argument to 'va_arg' is of promotable type 'char'; this va_arg
+                // has undefined behavior because arguments will be promoted to 'int'
                 arg = [NSString stringWithFormat:@"%c", va_arg(args, int)];
                 break;
             case 's':
@@ -691,12 +701,13 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
             case 'h':
                 i++;
                 if (i < length && [sql characterAtIndex:i] == 'i') {
-                    //  warning: second argument to 'va_arg' is of promotable type 'short'; this va_arg has undefined
-                    //  behavior because arguments will be promoted to 'int'
+                    //  warning: second argument to 'va_arg' is of promotable type 'short'; this
+                    //  va_arg has undefined behavior because arguments will be promoted to 'int'
                     arg = [NSNumber numberWithShort:(short)(va_arg(args, int))];
                 } else if (i < length && [sql characterAtIndex:i] == 'u') {
-                    // warning: second argument to 'va_arg' is of promotable type 'unsigned short'; this va_arg has
-                    // undefined behavior because arguments will be promoted to 'int'
+                    // warning: second argument to 'va_arg' is of promotable type 'unsigned short';
+                    // this va_arg has undefined behavior because arguments will be promoted to
+                    // 'int'
                     arg = [NSNumber numberWithUnsignedShort:(unsigned short)(va_arg(args, uint))];
                 } else {
                     i--;
@@ -716,8 +727,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
                 arg = [NSNumber numberWithDouble:va_arg(args, double)];
                 break;
             case 'g':
-                // warning: second argument to 'va_arg' is of promotable type 'float'; this va_arg has undefined
-                // behavior because arguments will be promoted to 'double'
+                // warning: second argument to 'va_arg' is of promotable type 'float'; this va_arg
+                // has undefined behavior because arguments will be promoted to 'double'
                 arg = [NSNumber numberWithFloat:(float)(va_arg(args, double))];
                 break;
             case 'l':
@@ -731,7 +742,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
                             arg = [NSNumber numberWithLongLong:va_arg(args, long long)];
                         } else if (i < length && [sql characterAtIndex:i] == 'u') {
                             //%llu
-                            arg = [NSNumber numberWithUnsignedLongLong:va_arg(args, unsigned long long)];
+                            arg = [NSNumber
+                                numberWithUnsignedLongLong:va_arg(args, unsigned long long)];
                         } else {
                             i--;
                         }
@@ -776,9 +788,9 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 }
 
 - (NCFMResultSet *)executeQuery:(NSString *)sql
-               withArgumentsInArray:(NSArray *)arrayArgs
-                       orDictionary:(NSDictionary *)dictionaryArgs
-                           orVAList:(va_list)args {
+           withArgumentsInArray:(NSArray *)arrayArgs
+                   orDictionary:(NSDictionary *)dictionaryArgs
+                       orVAList:(va_list)args {
 
     if (![self databaseExists]) {
         return 0x00;
@@ -818,7 +830,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
             }
 
             if (_crashOnErrors) {
-                NSAssert(false, @"DB Error: %d \"%@\"", [self lastErrorCode], [self lastErrorMessage]);
+                NSAssert(false, @"DB Error: %d \"%@\"", [self lastErrorCode],
+                         [self lastErrorMessage]);
                 abort();
             }
 
@@ -851,7 +864,9 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
             if (namedIdx > 0) {
                 // Standard binding from here.
-                [self bindObject:[dictionaryArgs objectForKey:dictionaryKey] toColumn:namedIdx inStatement:pStmt];
+                [self bindObject:[dictionaryArgs objectForKey:dictionaryKey]
+                        toColumn:namedIdx
+                     inStatement:pStmt];
                 // increment the binding count, so our check below works out
                 idx++;
             } else {
@@ -946,8 +961,13 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     return [self executeQuery:sql withArgumentsInArray:arguments orDictionary:nil orVAList:nil];
 }
 
-- (NCFMResultSet *)executeQuery:(NSString *)sql values:(NSArray *)values error:(NSError *__autoreleasing *)error {
-    NCFMResultSet *rs = [self executeQuery:sql withArgumentsInArray:values orDictionary:nil orVAList:nil];
+- (NCFMResultSet *)executeQuery:(NSString *)sql
+                         values:(NSArray *)values
+                          error:(NSError *__autoreleasing *)error {
+    NCFMResultSet *rs = [self executeQuery:sql
+                      withArgumentsInArray:values
+                              orDictionary:nil
+                                  orVAList:nil];
     if (!rs && error) {
         *error = [self lastError];
     }
@@ -961,10 +981,10 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 #pragma mark Execute updates
 
 - (BOOL)executeUpdate:(NSString *)sql
-                error:(NSError **)outErr
- withArgumentsInArray:(NSArray *)arrayArgs
-         orDictionary:(NSDictionary *)dictionaryArgs
-             orVAList:(va_list)args {
+                   error:(NSError **)outErr
+    withArgumentsInArray:(NSArray *)arrayArgs
+            orDictionary:(NSDictionary *)dictionaryArgs
+                orVAList:(va_list)args {
 
     if (![self databaseExists]) {
         return NO;
@@ -1002,12 +1022,14 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
             }
 
             if (_crashOnErrors) {
-                NSAssert(false, @"DB Error: %d \"%@\"", [self lastErrorCode], [self lastErrorMessage]);
+                NSAssert(false, @"DB Error: %d \"%@\"", [self lastErrorCode],
+                         [self lastErrorMessage]);
                 abort();
             }
 
             if (outErr) {
-                *outErr = [self errorWithMessage:[NSString stringWithUTF8String:sqlite3_errmsg(_db)]];
+                *outErr =
+                    [self errorWithMessage:[NSString stringWithUTF8String:sqlite3_errmsg(_db)]];
             }
 
             sqlite3_finalize(pStmt);
@@ -1039,12 +1061,15 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
             if (namedIdx > 0) {
                 // Standard binding from here.
-                [self bindObject:[dictionaryArgs objectForKey:dictionaryKey] toColumn:namedIdx inStatement:pStmt];
+                [self bindObject:[dictionaryArgs objectForKey:dictionaryKey]
+                        toColumn:namedIdx
+                     inStatement:pStmt];
 
                 // increment the binding count, so our check below works out
                 idx++;
             } else {
-                NSString *message = [NSString stringWithFormat:@"Could not find index for %@", dictionaryKey];
+                NSString *message =
+                    [NSString stringWithFormat:@"Could not find index for %@", dictionaryKey];
 
                 if (_logsErrors) {
                     NCLogD(@"%@", message);
@@ -1082,9 +1107,10 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     }
 
     if (idx != queryCount) {
-        NSString *message = [NSString stringWithFormat:@"Error: the bind count (%d) is not correct for the # of "
-                                                       @"variables in the query (%d) (%@) (executeUpdate)",
-                                                       idx, queryCount, sql];
+        NSString *message =
+            [NSString stringWithFormat:@"Error: the bind count (%d) is not correct for the # of "
+                                       @"variables in the query (%d) (%@) (executeUpdate)",
+                                       idx, queryCount, sql];
         if (_logsErrors) {
             NCLogD(@"%@", message);
         }
@@ -1106,8 +1132,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     if (SQLITE_DONE == rc) {
         // all is well, let's return.
     } else if (rc == SQLITE_ROW) {
-        NSString *message =
-            [NSString stringWithFormat:@"A executeUpdate is being called with a query string '%@'", sql];
+        NSString *message = [NSString
+            stringWithFormat:@"A executeUpdate is being called with a query string '%@'", sql];
         if (_logsErrors) {
             NCLogD(@"%@", message);
             NCLogD(@"DB Query: %@", sql);
@@ -1122,13 +1148,15 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
         if (SQLITE_ERROR == rc) {
             if (_logsErrors) {
-                NCLogD(@"Error calling sqlite3_step (%d: %s) SQLITE_ERROR", rc, sqlite3_errmsg(_db));
+                NCLogD(@"Error calling sqlite3_step (%d: %s) SQLITE_ERROR", rc,
+                       sqlite3_errmsg(_db));
                 NCLogD(@"DB Query: %@", sql);
             }
         } else if (SQLITE_MISUSE == rc) {
             // uh oh.
             if (_logsErrors) {
-                NCLogD(@"Error calling sqlite3_step (%d: %s) SQLITE_MISUSE", rc, sqlite3_errmsg(_db));
+                NCLogD(@"Error calling sqlite3_step (%d: %s) SQLITE_MISUSE", rc,
+                       sqlite3_errmsg(_db));
                 NCLogD(@"DB Query: %@", sql);
             }
         } else {
@@ -1164,7 +1192,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
     if (closeErrorCode != SQLITE_OK) {
         if (_logsErrors) {
-            NCLogD(@"Unknown error finalizing or resetting statement (%d: %s)", closeErrorCode, sqlite3_errmsg(_db));
+            NCLogD(@"Unknown error finalizing or resetting statement (%d: %s)", closeErrorCode,
+                   sqlite3_errmsg(_db));
             NCLogD(@"DB Query: %@", sql);
         }
     }
@@ -1177,26 +1206,48 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     va_list args;
     va_start(args, sql);
 
-    BOOL result = [self executeUpdate:sql error:nil withArgumentsInArray:nil orDictionary:nil orVAList:args];
+    BOOL result = [self executeUpdate:sql
+                                error:nil
+                 withArgumentsInArray:nil
+                         orDictionary:nil
+                             orVAList:args];
 
     va_end(args);
     return result;
 }
 
 - (BOOL)executeUpdate:(NSString *)sql withArgumentsInArray:(NSArray *)arguments {
-    return [self executeUpdate:sql error:nil withArgumentsInArray:arguments orDictionary:nil orVAList:nil];
+    return [self executeUpdate:sql
+                         error:nil
+          withArgumentsInArray:arguments
+                  orDictionary:nil
+                      orVAList:nil];
 }
 
-- (BOOL)executeUpdate:(NSString *)sql values:(NSArray *)values error:(NSError *__autoreleasing *)error {
-    return [self executeUpdate:sql error:error withArgumentsInArray:values orDictionary:nil orVAList:nil];
+- (BOOL)executeUpdate:(NSString *)sql
+               values:(NSArray *)values
+                error:(NSError *__autoreleasing *)error {
+    return [self executeUpdate:sql
+                         error:error
+          withArgumentsInArray:values
+                  orDictionary:nil
+                      orVAList:nil];
 }
 
 - (BOOL)executeUpdate:(NSString *)sql withParameterDictionary:(NSDictionary *)arguments {
-    return [self executeUpdate:sql error:nil withArgumentsInArray:nil orDictionary:arguments orVAList:nil];
+    return [self executeUpdate:sql
+                         error:nil
+          withArgumentsInArray:nil
+                  orDictionary:arguments
+                      orVAList:nil];
 }
 
 - (BOOL)executeUpdate:(NSString *)sql withVAList:(va_list)args {
-    return [self executeUpdate:sql error:nil withArgumentsInArray:nil orDictionary:nil orVAList:args];
+    return [self executeUpdate:sql
+                         error:nil
+          withArgumentsInArray:nil
+                  orDictionary:nil
+                      orVAList:args];
 }
 
 - (BOOL)executeUpdateWithFormat:(NSString *)format, ... {
@@ -1217,13 +1268,15 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     return [self executeStatements:sql withResultBlock:nil];
 }
 
-- (BOOL)executeStatements:(NSString *)sql withResultBlock:(NCFMDBExecuteStatementsCallbackBlock)block {
+- (BOOL)executeStatements:(NSString *)sql
+          withResultBlock:(NCFMDBExecuteStatementsCallbackBlock)block {
 
     int rc;
     char *errmsg = nil;
 
-    rc = sqlite3_exec([self sqliteHandle], [sql UTF8String], block ? NCFMDBExecuteBulkSQLCallback : nil,
-                      (__bridge void *)(block), &errmsg);
+    rc =
+        sqlite3_exec([self sqliteHandle], [sql UTF8String],
+                     block ? NCFMDBExecuteBulkSQLCallback : nil, (__bridge void *)(block), &errmsg);
 
     if (errmsg && [self logsErrors]) {
         NCLogD(@"Error inserting batch: %s", errmsg);
@@ -1238,7 +1291,11 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     va_list args;
     va_start(args, outErr);
 
-    BOOL result = [self executeUpdate:sql error:outErr withArgumentsInArray:nil orDictionary:nil orVAList:args];
+    BOOL result = [self executeUpdate:sql
+                                error:outErr
+                 withArgumentsInArray:nil
+                         orDictionary:nil
+                             orVAList:args];
 
     va_end(args);
     return result;
@@ -1250,7 +1307,11 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     va_list args;
     va_start(args, outErr);
 
-    BOOL result = [self executeUpdate:sql error:outErr withArgumentsInArray:nil orDictionary:nil orVAList:args];
+    BOOL result = [self executeUpdate:sql
+                                error:outErr
+                 withArgumentsInArray:nil
+                         orDictionary:nil
+                             orVAList:args];
 
     va_end(args);
     return result;
@@ -1310,7 +1371,11 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
     NSString *sql = [NSString stringWithFormat:@"savepoint '%@';", FMDBEscapeSavePointName(name)];
 
-    return [self executeUpdate:sql error:outErr withArgumentsInArray:nil orDictionary:nil orVAList:nil];
+    return [self executeUpdate:sql
+                         error:outErr
+          withArgumentsInArray:nil
+                  orDictionary:nil
+                      orVAList:nil];
 #else
     NSString *errorMessage = NSLocalizedString(@"Save point functions require SQLite 3.7", nil);
     if (self.logsErrors)
@@ -1323,9 +1388,14 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 #if SQLITE_VERSION_NUMBER >= 3007000
     NSParameterAssert(name);
 
-    NSString *sql = [NSString stringWithFormat:@"release savepoint '%@';", FMDBEscapeSavePointName(name)];
+    NSString *sql =
+        [NSString stringWithFormat:@"release savepoint '%@';", FMDBEscapeSavePointName(name)];
 
-    return [self executeUpdate:sql error:outErr withArgumentsInArray:nil orDictionary:nil orVAList:nil];
+    return [self executeUpdate:sql
+                         error:outErr
+          withArgumentsInArray:nil
+                  orDictionary:nil
+                      orVAList:nil];
 #else
     NSString *errorMessage = NSLocalizedString(@"Save point functions require SQLite 3.7", nil);
     if (self.logsErrors)
@@ -1338,10 +1408,14 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 #if SQLITE_VERSION_NUMBER >= 3007000
     NSParameterAssert(name);
 
-    NSString *sql =
-        [NSString stringWithFormat:@"rollback transaction to savepoint '%@';", FMDBEscapeSavePointName(name)];
+    NSString *sql = [NSString
+        stringWithFormat:@"rollback transaction to savepoint '%@';", FMDBEscapeSavePointName(name)];
 
-    return [self executeUpdate:sql error:outErr withArgumentsInArray:nil orDictionary:nil orVAList:nil];
+    return [self executeUpdate:sql
+                         error:outErr
+          withArgumentsInArray:nil
+                  orDictionary:nil
+                      orVAList:nil];
 #else
     NSString *errorMessage = NSLocalizedString(@"Save point functions require SQLite 3.7", nil);
     if (self.logsErrors)
@@ -1379,7 +1453,9 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
     NSString *errorMessage = NSLocalizedString(@"Save point functions require SQLite 3.7", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
-    return [NSError errorWithDomain:@"NCFMDatabase" code:0 userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+    return [NSError errorWithDomain:@"NCFMDatabase"
+                               code:0
+                           userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
 #endif
 }
 
@@ -1415,14 +1491,14 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 
     [_openFunctions addObject:b];
 
-/* I tried adding custom functions to release the block when the connection is destroyed- but they seemed to never be
- * called, so we use _openFunctions to store the values instead. */
+/* I tried adding custom functions to release the block when the connection is destroyed- but they
+ * seemed to never be called, so we use _openFunctions to store the values instead. */
 #if !__has_feature(objc_arc)
     sqlite3_create_function([self sqliteHandle], [name UTF8String], count, SQLITE_UTF8, (void *)b,
                             &NCFMDBBlockSQLiteCallBackFunction, 0x00, 0x00);
 #else
-    sqlite3_create_function([self sqliteHandle], [name UTF8String], count, SQLITE_UTF8, (__bridge void *)b,
-                            &NCFMDBBlockSQLiteCallBackFunction, 0x00, 0x00);
+    sqlite3_create_function([self sqliteHandle], [name UTF8String], count, SQLITE_UTF8,
+                            (__bridge void *)b, &NCFMDBBlockSQLiteCallBackFunction, 0x00, 0x00);
 #endif
 }
 
@@ -1465,7 +1541,8 @@ void NCFMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlit
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"%@ %ld hit(s) for query %@", [super description], _useCount, _query];
+    return [NSString
+        stringWithFormat:@"%@ %ld hit(s) for query %@", [super description], _useCount, _query];
 }
 
 @end

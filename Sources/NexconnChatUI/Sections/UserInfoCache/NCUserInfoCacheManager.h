@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCChatUIUserInfo.h"
 #import "NCInfoUpdateCenter.h"
+#import <Foundation/Foundation.h>
 
 @class NCChatUIGroup;
 
@@ -45,7 +45,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NCChatUIUserInfo *)getUserInfoFromCacheOnly:(NSString *)userId inGroupId:(NSString *)groupId;
 
-- (void)updateUserInfo:(NCChatUIUserInfo *)userInfo forUserId:(NSString *)userId inGroup:(NSString *)groupId;
+- (void)updateUserInfo:(NCChatUIUserInfo *)userInfo
+             forUserId:(NSString *)userId
+               inGroup:(NSString *)groupId;
 
 - (void)clearGroupUserInfo:(NSString *)userId inGroup:(NSString *)groupId;
 
@@ -72,8 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)preloadUserInfos:(NSArray<NSString *> *)userIds;
 
 /// Preloads group member info. Uses cache first and automatically requests missing entries.
-- (void)preloadGroupMembers:(NSArray<NSString *> *)userIds
-                    inGroup:(NSString *)groupId;
+- (void)preloadGroupMembers:(NSArray<NSString *> *)userIds inGroup:(NSString *)groupId;
 
 /// Preloads group info. Uses cache first and automatically requests missing entries.
 /// @param groupIds Group ID array.

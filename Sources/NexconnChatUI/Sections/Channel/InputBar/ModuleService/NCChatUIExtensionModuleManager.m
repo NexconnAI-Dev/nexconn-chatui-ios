@@ -8,8 +8,8 @@
 
 #import "NCChatUIExtensionModuleManager.h"
 
-#define NCDisplayEmoticonConversationType                                                                              \
-    [NSArray arrayWithObjects:@(NCChannelTypeDirect), @(NCChannelTypeGroup),  \
+#define NCDisplayEmoticonConversationType                                                          \
+    [NSArray arrayWithObjects:@(NCChannelTypeDirect), @(NCChannelTypeGroup),                       \
                               @(NCChannelTypeSystem), nil]
 
 @interface NCChatUIExtensionModuleManager ()
@@ -23,11 +23,11 @@
     static NCChatUIExtensionModuleManager *pDefaultManager;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (pDefaultManager == nil) {
-            pDefaultManager = [[NCChatUIExtensionModuleManager alloc] init];
-            pDefaultManager.moduleList = [[NSMutableArray alloc] init];
-            pDefaultManager.schemeModuleDict = [[NSMutableDictionary alloc] init];
-        }
+      if (pDefaultManager == nil) {
+          pDefaultManager = [[NCChatUIExtensionModuleManager alloc] init];
+          pDefaultManager.moduleList = [[NSMutableArray alloc] init];
+          pDefaultManager.schemeModuleDict = [[NSMutableDictionary alloc] init];
+      }
     });
     return pDefaultManager;
 }
@@ -98,24 +98,27 @@
     }
 }
 
-- (NSArray<NCChatUIExtensionPluginItemInfo *> *)getPluginBoardItemInfoList:(NCChannelType)channelType
-                                                            channelId:(NSString *)channelId {
+- (NSArray<NCChatUIExtensionPluginItemInfo *> *)getPluginBoardItemInfoList:
+                                                    (NCChannelType)channelType
+                                                                 channelId:(NSString *)channelId {
     NSMutableArray<NCChatUIExtensionPluginItemInfo *> *items = [NSMutableArray new];
     for (id<NCChatUIExtensionModule> module in self.moduleList) {
         if ([module respondsToSelector:@selector(getPluginBoardItemInfoList:channelId:)]) {
-            [items addObjectsFromArray:[module getPluginBoardItemInfoList:channelType channelId:channelId]];
+            [items addObjectsFromArray:[module getPluginBoardItemInfoList:channelType
+                                                                channelId:channelId]];
         }
     }
     return [items copy];
 }
 
 - (NSArray<id<NCEmoticonTabSource>> *)getEmoticonTabList:(NCChannelType)channelType
-                                                channelId:(NSString *)channelId {
+                                               channelId:(NSString *)channelId {
     NSMutableArray *tabs = [NSMutableArray new];
     if ([NCDisplayEmoticonConversationType containsObject:@(channelType)]) {
         for (id<NCChatUIExtensionModule> module in self.moduleList) {
             if ([module respondsToSelector:@selector(getEmoticonTabList:channelId:)]) {
-                [tabs addObjectsFromArray:[module getEmoticonTabList:channelType channelId:channelId]];
+                [tabs addObjectsFromArray:[module getEmoticonTabList:channelType
+                                                           channelId:channelId]];
             }
         }
     }
@@ -143,7 +146,8 @@
                                         from:(NSString *)fromName
                                     userInfo:(NSDictionary *)userInfo {
     for (id<NCChatUIExtensionModule> module in self.moduleList) {
-        if ([module respondsToSelector:@selector(handleNotificationForMessageReceived:from:userInfo:)] &&
+        if ([module respondsToSelector:@selector(
+                                           handleNotificationForMessageReceived:from:userInfo:)] &&
             [module handleNotificationForMessageReceived:message from:fromName userInfo:userInfo])
             return YES;
     }
@@ -151,8 +155,8 @@
 }
 
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
-  didTouchAddButton:(UIButton *)addButton
-         inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
+    didTouchAddButton:(UIButton *)addButton
+           inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
     for (id<NCChatUIExtensionModule> module in self.moduleList) {
         if ([module respondsToSelector:@selector(emoticonTab:didTouchAddButton:inInputBar:)]) {
             [module emoticonTab:emojiView didTouchAddButton:addButton inInputBar:inputBarControl];
@@ -167,10 +171,8 @@
     if (self.moduleList.count > 0) {
         BOOL isModuleHandle = NO;
         for (id<NCChatUIExtensionModule> module in self.moduleList) {
-            if ([module respondsToSelector:@selector(emoticonTab:
-                                               didTouchEmotionIconIndex:
-                                                             inInputBar:
-                                                    isBlockDefaultEvent:)]) {
+            if ([module respondsToSelector:@selector(emoticonTab:didTouchEmotionIconIndex:
+                                                     inInputBar:isBlockDefaultEvent:)]) {
                 [module emoticonTab:emojiView
                     didTouchEmotionIconIndex:index
                                   inInputBar:inputBarControl
@@ -191,12 +193,15 @@
                inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
     for (id<NCChatUIExtensionModule> module in self.moduleList) {
         if ([module respondsToSelector:@selector(emoticonTab:didTouchSettingButton:inInputBar:)]) {
-            [module emoticonTab:emojiView didTouchSettingButton:settingButton inInputBar:inputBarControl];
+            [module emoticonTab:emojiView
+                didTouchSettingButton:settingButton
+                           inInputBar:inputBarControl];
         }
     }
 }
 
-- (void)inputTextViewDidChange:(UITextView *)inputTextView inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
+- (void)inputTextViewDidChange:(UITextView *)inputTextView
+                    inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
     for (id<NCChatUIExtensionModule> module in self.moduleList) {
         if ([module respondsToSelector:@selector(inputTextViewDidChange:inInputBar:)]) {
             [module inputTextViewDidChange:inputTextView inInputBar:inputBarControl];
@@ -204,7 +209,8 @@
     }
 }
 
-- (void)inputBarStatusDidChange:(KBottomBarStatus)status inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
+- (void)inputBarStatusDidChange:(KBottomBarStatus)status
+                     inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
     for (id<NCChatUIExtensionModule> module in self.moduleList) {
         if ([module respondsToSelector:@selector(inputBarStatusDidChange:inInputBar:)]) {
             [module inputBarStatusDidChange:status inInputBar:inputBarControl];

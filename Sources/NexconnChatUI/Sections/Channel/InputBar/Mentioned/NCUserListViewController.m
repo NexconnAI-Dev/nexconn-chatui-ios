@@ -7,16 +7,17 @@
 //
 
 #import "NCUserListViewController.h"
+#import "NCBaseTableView.h"
 #import "NCChatUICommonDefine.h"
-#import "NCUserListTableViewCell.h"
 #import "NCChatUIConfig.h"
 #import "NCImageView.h"
-#import "NCBaseTableView.h"
-#import "NCUserInfoCache.h"
 #import "NCInfoUpdateCenter.h"
+#import "NCUserInfoCache.h"
+#import "NCUserListTableViewCell.h"
 
-@interface NCUserListViewController () <UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate,
-                                        UISearchControllerDelegate, UISearchResultsUpdating, NCInfoUpdateDelegate> {
+@interface NCUserListViewController () <UITableViewDelegate, UITableViewDataSource,
+                                        UISearchBarDelegate, UISearchControllerDelegate,
+                                        UISearchResultsUpdating, NCInfoUpdateDelegate> {
     NSMutableArray *_tempOtherArr;
     NSMutableDictionary *allUsers;
     NSArray *allKeys;
@@ -65,7 +66,7 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     [self.tableView reloadData];
 
     [self.dataSource getSelectingUserIdList:^(NSArray<NSString *> *userIdList) {
-        [self loadAllUserInfoList:userIdList];
+      [self loadAllUserInfoList:userIdList];
     }];
 
     // configNav
@@ -113,7 +114,9 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
         return nil;
     }
 }
-- (NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
+- (NSInteger)tableView:(UITableView *)tableView
+    sectionForSectionIndexTitle:(NSString *)title
+                        atIndex:(NSInteger)index {
     return index;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
@@ -124,11 +127,13 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     return CGFLOAT_MIN;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *cellIde = @"cellIde";
     NCUserListTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIde];
     if (cell == nil) {
-        cell = [[NCUserListTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIde];
+        cell = [[NCUserListTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                              reuseIdentifier:cellIde];
     }
     [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
 
@@ -142,7 +147,7 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
         NCChatUIUserInfo *cachedUserInfo = [[NCUserInfoCache sharedCache] getUserInfo:user.userId];
         user.alias = cachedUserInfo.alias;
     }
-  
+
     [cell.nameLabel setText:NCManagedUserDisplayName(user)];
     cell.headImageView = [self portraitView:[NSURL URLWithString:user.avatarUrl]];
 
@@ -185,26 +190,27 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     }
     if (needUpdateUserInfo) {
         dispatch_async(self.sortDataQueue, ^{
-            NCChatUIUserInfo *userInfo = [self.dataSource getSelectingUserInfo:needUpdateUserInfo.userId];
-            if (!userInfo) {
-                return;
-            }
-            needUpdateUserInfo.name = userInfo.name;
-            needUpdateUserInfo.avatarUrl = userInfo.avatarUrl;
-            NSMutableDictionary *tmpDict = [self sortedArrayWithPinYinDic:safeArray];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                needUpdateUserInfo.alias = userInfo.alias;
-                allUsers = tmpDict;
-                allKeys = [[tmpDict allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-
-                    return [obj1 compare:obj2 options:NSNumericSearch];
+          NCChatUIUserInfo *userInfo =
+              [self.dataSource getSelectingUserInfo:needUpdateUserInfo.userId];
+          if (!userInfo) {
+              return;
+          }
+          needUpdateUserInfo.name = userInfo.name;
+          needUpdateUserInfo.avatarUrl = userInfo.avatarUrl;
+          NSMutableDictionary *tmpDict = [self sortedArrayWithPinYinDic:safeArray];
+          dispatch_async(dispatch_get_main_queue(), ^{
+            needUpdateUserInfo.alias = userInfo.alias;
+            allUsers = tmpDict;
+            allKeys = [[tmpDict allKeys]
+                sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                  return [obj1 compare:obj2 options:NSNumericSearch];
                 }];
-                if (self.searchController.active) {
-                    [self filterContentForSearchText:self.searchController.searchBar.text scope:nil];
-                } else {
-                    [self.tableView reloadData];
-                }
-            });
+            if (self.searchController.active) {
+                [self filterContentForSearchText:self.searchController.searchBar.text scope:nil];
+            } else {
+                [self.tableView reloadData];
+            }
+          });
         });
     }
 }
@@ -244,40 +250,40 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
 
 - (void)loadAllUserInfoList:(NSArray *)userIdList {
     dispatch_async(self.sortDataQueue, ^{
-        [self.dataArr removeAllObjects];
-        NSString *currentUserId = [NCEngine getCurrentUserId];
-        for (NSString *userId in userIdList) {
-            if (![userId isEqualToString:currentUserId]) {
-                NCChatUIUserInfo *userInfo = [self.dataSource getSelectingUserInfo:userId];
-                if (userInfo) {
-                    [self.dataArr addObject:userInfo];
-                } else {
-                    NCChatUIUserInfo *placeholderUserInfo = [NCChatUIUserInfo new];
-                    placeholderUserInfo.userId = userId;
-                    [self.dataArr addObject:placeholderUserInfo];
-                }
-            }
-        }
+      [self.dataArr removeAllObjects];
+      NSString *currentUserId = [NCEngine getCurrentUserId];
+      for (NSString *userId in userIdList) {
+          if (![userId isEqualToString:currentUserId]) {
+              NCChatUIUserInfo *userInfo = [self.dataSource getSelectingUserInfo:userId];
+              if (userInfo) {
+                  [self.dataArr addObject:userInfo];
+              } else {
+                  NCChatUIUserInfo *placeholderUserInfo = [NCChatUIUserInfo new];
+                  placeholderUserInfo.userId = userId;
+                  [self.dataArr addObject:placeholderUserInfo];
+              }
+          }
+      }
 
-        NSMutableDictionary *tmpDict = [self sortedArrayWithPinYinDic:self.dataArr];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            allUsers = tmpDict;
-            allKeys = [[tmpDict allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-
-                return [obj1 compare:obj2 options:NSNumericSearch];
+      NSMutableDictionary *tmpDict = [self sortedArrayWithPinYinDic:self.dataArr];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        allUsers = tmpDict;
+        allKeys =
+            [[tmpDict allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+              return [obj1 compare:obj2 options:NSNumericSearch];
             }];
 
-            [self.tableView reloadData];
-        });
+        [self.tableView reloadData];
+      });
     });
 }
 
 - (void)configNav {
     self.navigationItem.title = self.navigationTitle;
-    UIBarButtonItem *leftButton = [[UIBarButtonItem alloc] initWithTitle:NCUILocalizedString(@"cancel")
-                                                                   style:(UIBarButtonItemStylePlain)
-                                                                  target:self
-                                                                  action:@selector(leftBarButtonItemPressed:)];
+    UIBarButtonItem *leftButton =
+        [[UIBarButtonItem alloc] initWithTitle:NCUILocalizedString(@"cancel")
+                                         style:(UIBarButtonItemStylePlain)target:self
+                                        action:@selector(leftBarButtonItemPressed:)];
     [self.navigationItem setLeftBarButtonItem:leftButton];
 }
 
@@ -303,14 +309,12 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     for (NCChatUIUserInfo *user in safeArray) {
         NSString *displayName = NCManagedUserDisplayName(user);
         NSArray<NSString *> *candidates = @[
-            displayName,
-            user.alias ?: @"",
-            user.name ?: @"",
-            user.userId ?: @"",
+            displayName, user.alias ?: @"", user.name ?: @"", user.userId ?: @"",
             [NCChatUIUtility getPinYinUpperFirstLetters:displayName] ?: @""
         ];
         for (NSString *candidate in candidates) {
-            if (candidate.length > 0 && [candidate rangeOfString:searchText options:searchOptions].location != NSNotFound) {
+            if (candidate.length > 0 &&
+                [candidate rangeOfString:searchText options:searchOptions].location != NSNotFound) {
                 [tempResults addObject:user];
                 break;
             }
@@ -330,32 +334,8 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     if (!friends)
         return nil;
     NSArray *_keys = @[
-        @"A",
-        @"B",
-        @"C",
-        @"D",
-        @"E",
-        @"F",
-        @"G",
-        @"H",
-        @"I",
-        @"J",
-        @"K",
-        @"L",
-        @"M",
-        @"N",
-        @"O",
-        @"P",
-        @"Q",
-        @"R",
-        @"S",
-        @"T",
-        @"U",
-        @"V",
-        @"W",
-        @"X",
-        @"Y",
-        @"Z",
+        @"A", @"B", @"C", @"D", @"E", @"F", @"G", @"H", @"I", @"J", @"K", @"L", @"M",
+        @"N", @"O", @"P", @"Q", @"R", @"S", @"T", @"U", @"V", @"W", @"X", @"Y", @"Z",
     ];
 
     NSMutableDictionary *returnDic = [NSMutableDictionary new];
@@ -370,7 +350,8 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
 
         NSMutableArray *tempArr = [NSMutableArray new];
         for (NCChatUIUserInfo *user in friends) {
-            NSString *pyResult = [NCChatUIUtility getPinYinUpperFirstLetters:NCManagedUserDisplayName(user)];
+            NSString *pyResult =
+                [NCChatUIUtility getPinYinUpperFirstLetters:NCManagedUserDisplayName(user)];
             if (pyResult.length <= 0) {
                 if (!isReturn) {
                     [_tempOtherArr addObject:user];
@@ -400,14 +381,17 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     return returnDic;
 }
 
-
 - (UIImageView *)portraitView:(NSURL *)portraitURL {
     NCImageView *portraitView = [[NCImageView alloc] init];
-    portraitView.frame = CGRectMake(10.0, 5.0, NCChatUIConfigCenter.ui.globalMessagePortraitSize.width,
-                                    NCChatUIConfigCenter.ui.globalMessagePortraitSize.height);
-    if([NCChatUIUtility isRTL]){
-        portraitView.frame = CGRectMake(self.view.bounds.size.width-NCChatUIConfigCenter.ui.globalMessagePortraitSize.height-10, 5.0, NCChatUIConfigCenter.ui.globalMessagePortraitSize.width,
-                                        NCChatUIConfigCenter.ui.globalMessagePortraitSize.height);
+    portraitView.frame =
+        CGRectMake(10.0, 5.0, NCChatUIConfigCenter.ui.globalMessagePortraitSize.width,
+                   NCChatUIConfigCenter.ui.globalMessagePortraitSize.height);
+    if ([NCChatUIUtility isRTL]) {
+        portraitView.frame =
+            CGRectMake(self.view.bounds.size.width -
+                           NCChatUIConfigCenter.ui.globalMessagePortraitSize.height - 10,
+                       5.0, NCChatUIConfigCenter.ui.globalMessagePortraitSize.width,
+                       NCChatUIConfigCenter.ui.globalMessagePortraitSize.height);
     }
     [portraitView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
     [portraitView setImageURL:portraitURL];
@@ -415,7 +399,8 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
     if (NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_RECTANGLE) {
         portraitView.layer.cornerRadius = NCChatUIConfigCenter.ui.portraitImageViewCornerRadius;
     } else if (NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-        portraitView.layer.cornerRadius = NCChatUIConfigCenter.ui.globalMessagePortraitSize.height / 2;
+        portraitView.layer.cornerRadius =
+            NCChatUIConfigCenter.ui.globalMessagePortraitSize.height / 2;
     }
     portraitView.layer.masksToBounds = YES;
     portraitView.contentMode = UIViewContentModeScaleAspectFill;
@@ -435,16 +420,20 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
         [_searchController.searchBar setKeyboardType:UIKeyboardTypeDefault];
         // Configure the search bar background color.
         _searchController.searchBar.barTintColor = NCDynamicColor(@"common_background_color");
-        _searchController.searchBar.layer.borderColor = NCDynamicColor(@"common_background_color").CGColor;
+        _searchController.searchBar.layer.borderColor =
+            NCDynamicColor(@"common_background_color").CGColor;
         _searchController.searchBar.layer.borderWidth = 1;
         if (@available(iOS 13.0, *)) {
-            _searchController.searchBar.searchTextField.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
+            _searchController.searchBar.searchTextField.backgroundColor =
+                NCDynamicColor(@"auxiliary_background_1_color");
         }
         _searchController.dimsBackgroundDuringPresentation = NO;
         if ([NCChatUIUtility isRTL]) {
-            _searchController.searchBar.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-        }else{
-            _searchController.searchBar.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
+            _searchController.searchBar.semanticContentAttribute =
+                UISemanticContentAttributeForceRightToLeft;
+        } else {
+            _searchController.searchBar.semanticContentAttribute =
+                UISemanticContentAttributeForceLeftToRight;
         }
     }
     return _searchController;
@@ -452,8 +441,9 @@ static NSString *NCManagedUserDisplayName(NCChatUIUserInfo *user) {
 
 - (NCBaseTableView *)tableView {
     if (!_tableView) {
-        _tableView = [[NCBaseTableView alloc] initWithFrame:CGRectMake(0.0, 0.0, kScreenWidth, kScreenHeight)
-                                                  style:UITableViewStyleGrouped];
+        _tableView =
+            [[NCBaseTableView alloc] initWithFrame:CGRectMake(0.0, 0.0, kScreenWidth, kScreenHeight)
+                                             style:UITableViewStyleGrouped];
         _tableView.estimatedRowHeight = 0;
         _tableView.estimatedSectionHeaderHeight = 0;
         _tableView.estimatedSectionFooterHeight = 0;

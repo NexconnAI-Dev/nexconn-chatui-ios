@@ -19,7 +19,7 @@
 #define NCProfileCommonCellArrowWidth 8
 #define NCProfileCommonCellArrowHeight 15
 
-@interface NCProfileCommonCell()
+@interface NCProfileCommonCell ()
 @end
 
 @implementation NCProfileCommonCell
@@ -31,16 +31,22 @@
 
 - (void)setupConstraints {
     [super setupConstraints];
-    [self updateLineViewConstraints:NCUserManagementPadding
-                           trailing:-NCUserManagementPadding];
-    
+    [self updateLineViewConstraints:NCUserManagementPadding trailing:-NCUserManagementPadding];
+
     [NSLayoutConstraint activateConstraints:@[
-        [self.contentStackView.leadingAnchor constraintEqualToAnchor:self.paddingContainerView.leadingAnchor constant:NCProfileCommonCellArrowTrailing],
-        [self.contentStackView.trailingAnchor constraintEqualToAnchor:self.paddingContainerView.trailingAnchor constant:-NCProfileCommonCellArrowTrailing],
-        [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor],
-        [self.contentStackView.bottomAnchor constraintEqualToAnchor:self.paddingContainerView.bottomAnchor],
-        
-        [self.titleLabel.widthAnchor constraintGreaterThanOrEqualToConstant:NCProfileCommonCellTitleWidth],
+        [self.contentStackView.leadingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.leadingAnchor
+                           constant:NCProfileCommonCellArrowTrailing],
+        [self.contentStackView.trailingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.trailingAnchor
+                           constant:-NCProfileCommonCellArrowTrailing],
+        [self.contentStackView.topAnchor
+            constraintEqualToAnchor:self.paddingContainerView.topAnchor],
+        [self.contentStackView.bottomAnchor
+            constraintEqualToAnchor:self.paddingContainerView.bottomAnchor],
+
+        [self.titleLabel.widthAnchor
+            constraintGreaterThanOrEqualToConstant:NCProfileCommonCellTitleWidth],
         [self.arrowView.widthAnchor constraintEqualToConstant:NCProfileCommonCellArrowWidth],
         [self.arrowView.heightAnchor constraintEqualToConstant:NCProfileCommonCellArrowHeight]
     ]];
@@ -56,7 +62,8 @@
         _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
         [_titleLabel setContentHuggingPriority:UILayoutPriorityDefaultLow
                                        forAxis:UILayoutConstraintAxisHorizontal];
-        [_titleLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [_titleLabel setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                                     forAxis:UILayoutConstraintAxisHorizontal];
     }
     return _titleLabel;
 }
@@ -64,7 +71,8 @@
 - (NCBaseImageView *)arrowView {
     if (!_arrowView) {
         UIImage *image = NCDynamicImage(@"cell_right_arrow_img");
-        _arrowView = [[NCBaseImageView alloc] initWithImage: [NCSemanticContext imageflippedForRTL:image]];
+        _arrowView =
+            [[NCBaseImageView alloc] initWithImage:[NCSemanticContext imageflippedForRTL:image]];
         _arrowView.translatesAutoresizingMaskIntoConstraints = NO;
     }
     return _arrowView;

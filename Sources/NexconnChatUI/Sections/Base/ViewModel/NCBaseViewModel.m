@@ -7,9 +7,9 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCViewModelAdapterCenter.h"
-#import "NCLoadingTipView.h"
 #import "NCBaseCellViewModel.h"
+#import "NCLoadingTipView.h"
+#import "NCViewModelAdapterCenter.h"
 @interface NCBaseViewModel () {
     id __weak _delegate;
 }
@@ -17,7 +17,6 @@
 @end
 
 @implementation NCBaseViewModel
-
 
 - (id)delegate {
     if (!_delegate) {
@@ -33,21 +32,19 @@
 
 - (void)loadingWithTip:(NSString *)tip {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.loadingView) {
-            [self.loadingView stopLoading];
-        }
-        self.loadingView = [NCLoadingTipView loadingWithTip:tip];
-        [self.loadingView startLoading];
+      if (self.loadingView) {
+          [self.loadingView stopLoading];
+      }
+      self.loadingView = [NCLoadingTipView loadingWithTip:tip];
+      [self.loadingView startLoading];
     });
-   
 }
 
 - (void)stopLoading {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.loadingView stopLoading];
-        self.loadingView = nil;
+      [self.loadingView stopLoading];
+      self.loadingView = nil;
     });
-   
 }
 
 - (void)removeSeparatorLineIfNeed:(NSArray *)array {

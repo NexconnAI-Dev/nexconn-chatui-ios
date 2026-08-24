@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCCellViewModelProtocol.h"
 #import "NCBaseCellViewModel.h"
+#import "NCCellViewModelProtocol.h"
 #import "NCListViewModelProtocol.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)registerCellForTableView:(UITableView *)tableView;
 
 /// Binds the responder
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder;
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder;
 
 /// Accepts the request
 - (void)approveApplication;

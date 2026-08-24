@@ -7,10 +7,10 @@
 //
 
 #import "NCSightModel.h"
-#import "NCSightPlayerController+ChatUI.h"
 #import "NCMessageModel.h"
+#import "NCSightPlayerController+ChatUI.h"
 
-@interface NCSightModel()
+@interface NCSightModel ()
 @property (nonatomic, strong) NCSightPlayerController *playerController;
 @end
 
@@ -24,8 +24,10 @@
         self.playerController.preferredDownloadFileName = sightMessage.name;
         [self.playerController setFirstFrameThumbnail:sightMessage.thumbnailImage];
         // Prefer a valid localPath so locally inserted sight messages can use their local media.
-        if (sightMessage.localPath && [[NSFileManager defaultManager] fileExistsAtPath:sightMessage.localPath]) {
-            self.playerController.sightURL = [[NSURL alloc] initFileURLWithPath:sightMessage.localPath];
+        if (sightMessage.localPath &&
+            [[NSFileManager defaultManager] fileExistsAtPath:sightMessage.localPath]) {
+            self.playerController.sightURL =
+                [[NSURL alloc] initFileURLWithPath:sightMessage.localPath];
             [self.playerController setFirstFrameThumbnail:self.playerController.firstFrameImage];
         } else if (sightMessage.remoteUrl.length > 0) {
             self.playerController.sightURL = [NSURL URLWithString:sightMessage.remoteUrl];

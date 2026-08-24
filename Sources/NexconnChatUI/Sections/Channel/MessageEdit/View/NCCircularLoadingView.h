@@ -12,8 +12,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Circular rotating loading view.
- * Draws a 3/4 arc loading effect in code using CAShapeLayer and supports continuous rotation animation.
- * Default configuration: 2.0 line width, blue #007AFF, and a 270-degree arc from 3 o'clock to 12 o'clock.
+ * Draws a 3/4 arc loading effect in code using CAShapeLayer and supports continuous rotation
+ * animation. Default configuration: 2.0 line width, blue #007AFF, and a 270-degree arc from 3
+ * o'clock to 12 o'clock.
  */
 @interface NCCircularLoadingView : UIView
 
@@ -38,7 +39,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat startAngle;
 
 /**
- * The ring end angle in radians, defaulting to -π/2, ending at the 12 o'clock direction to form a 3/4 arc.
+ * The ring end angle in radians, defaulting to -π/2, ending at the 12 o'clock direction to form a
+ * 3/4 arc.
  */
 @property (nonatomic, assign) CGFloat endAngle;
 
@@ -68,4 +70,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-NS_ASSUME_NONNULL_END 
+NS_ASSUME_NONNULL_END

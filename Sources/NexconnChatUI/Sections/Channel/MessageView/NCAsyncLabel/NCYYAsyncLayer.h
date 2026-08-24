@@ -9,9 +9,8 @@
 //  LICENSE file in the root directory of this source tree.
 //
 
-#import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
-
+#import <UIKit/UIKit.h>
 
 #import "NCYYSentinel.h"
 #import "NCYYTransaction.h"
@@ -22,15 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  The YYAsyncLayer class is a subclass of CALayer used for render contents asynchronously.
- 
-  When the layer need update it's contents, it will ask the delegate 
+
+  When the layer need update it's contents, it will ask the delegate
  for a async display task to render the contents in a background queue.
  */
 @interface NCYYAsyncLayer : CALayer
 /// Whether the render code is executed in background. Default is YES.
 @property BOOL displaysAsynchronously;
 @end
-
 
 /**
  The YYAsyncLayer's delegate protocol. The delegate of the YYAsyncLayer (typically a UIView)
@@ -42,7 +40,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (NCYYAsyncLayerDisplayTask *)newAsyncDisplayTask;
 @end
 
-
 /**
  A display task used by YYAsyncLayer to render the contents in background queue.
  */
@@ -51,28 +48,29 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  This block will be called before the asynchronous drawing begins.
  It will be called on the main thread.
- 
+
  block param layer:  The layer.
  */
 @property (nullable, nonatomic, copy) void (^willDisplay)(CALayer *layer);
 
 /**
  This block is called to draw the layer's contents.
- 
+
   This block may be called on main thread or background thread,
  so is should be thread-safe.
- 
+
  block param context:      A new bitmap content created by layer.
  block param size:         The content size (typically same as layer's bound size).
  block param isCancelled:  If this block returns `YES`, the method should cancel the
    drawing process and return as quickly as possible.
  */
-@property (nullable, nonatomic, copy) void (^display)(CGContextRef context, CGSize size, BOOL(^isCancelled)(void));
+@property (nullable, nonatomic, copy) void (^display)
+    (CGContextRef context, CGSize size, BOOL (^isCancelled)(void));
 
 /**
  This block will be called after the asynchronous drawing finished.
  It will be called on the main thread.
- 
+
  block param layer:  The layer.
  block param finished:  If the draw process is cancelled, it's `NO`, otherwise it's `YES`.
  */

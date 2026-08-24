@@ -25,8 +25,8 @@
 #import "NCBaseButton.h"
 @interface NCSightSlideViewController () <UIScrollViewDelegate, NCSightCollectionViewCellDelegate,
                                           UICollectionViewDataSource, UICollectionViewDelegate,
-                                          UICollectionViewDelegateFlowLayout, UIGestureRecognizerDelegate,
-                                          NCChatUIMessageEventObserver>
+                                          UICollectionViewDelegateFlowLayout,
+                                          UIGestureRecognizerDelegate, NCChatUIMessageEventObserver>
 
 @property (nonatomic, strong) NCBaseImageView *imageView;
 
@@ -78,10 +78,10 @@
     // Make the navigation bar transparent.
     self.autoPlayFlag = YES;
     [self getMessageFromModel:self.messageModel];
-    
+
     [self.view addSubview:self.collectionView];
     [self strechToSuperview:self.collectionView];
-    
+
     [self.view addSubview:self.rightTopButton];
     self.navigationController.navigationBarHidden = YES;
     [self performSelector:@selector(setStatusBarHidden:) withObject:@(YES) afterDelay:0.6];
@@ -96,7 +96,6 @@
         return;
     }
     [self scrollToCurrentIndex];
-    
 }
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
@@ -108,7 +107,9 @@
     [self setStatusBarHidden:@(YES)];
     [self updateRightTopButtonFrame];
     self.isAppear = YES;
-    [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIViewSupportAutorotateNotification object:@(YES)];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:NCChatUIViewSupportAutorotateNotification
+                      object:@(YES)];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -121,7 +122,9 @@
     }
     [self resetPlay];
     self.isAppear = NO;
-    [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIViewSupportAutorotateNotification object:@(NO)];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:NCChatUIViewSupportAutorotateNotification
+                      object:@(NO)];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -145,32 +148,33 @@
 static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageModel *messageModel) {
     NSString *channelId = messageModel.channelId ?: @"";
     switch ((NCChannelType)messageModel.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
-                                                          channelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
-                                                          channelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
-                                                          channelId:channelId];
-        case NCChannelTypeOpen:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeOpen
-                                                          channelId:channelId];
-        case NCChannelTypeCommunity:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeCommunity
-                                                          channelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
+                                                      channelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
+                                                      channelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
+                                                      channelId:channelId];
+    case NCChannelTypeOpen:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeOpen
+                                                      channelId:channelId];
+    case NCChannelTypeCommunity:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeCommunity
+                                                      channelId:channelId];
+    default:
+        return nil;
     }
 }
 
 #pragma mark - Data Source Handling
 - (void)querySightMessagesWithAnchorModel:(NCMessageModel *)anchorModel
-                                     count:(NSInteger)count
-                               isAscending:(BOOL)isAscending
-                                completion:(void (^)(NSArray<NCMessage *> *messages))completion {
-    NCChannelIdentifier *channelIdentifier = self.previewChannelIdentifier ?: NCSightChannelIdentifierFromMessageModel(anchorModel);
+                                    count:(NSInteger)count
+                              isAscending:(BOOL)isAscending
+                               completion:(void (^)(NSArray<NCMessage *> *messages))completion {
+    NCChannelIdentifier *channelIdentifier =
+        self.previewChannelIdentifier ?: NCSightChannelIdentifierFromMessageModel(anchorModel);
     if (!channelIdentifier || channelIdentifier.channelId.length == 0) {
         if (completion) {
             completion(@[]);
@@ -183,21 +187,23 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     params.sentTime = anchorModel.sentTime;
     params.isAscending = isAscending;
     params.messageTypes = @[ NCMessageType.shortVideo ];
-    NCLocalMessagesByTimeQuery *query = [NCBaseChannel createLocalMessagesByTimeQueryWithParams:params];
-    @synchronized (self) {
+    NCLocalMessagesByTimeQuery *query =
+        [NCBaseChannel createLocalMessagesByTimeQueryWithParams:params];
+    @synchronized(self) {
         [self.activeSightQueries addObject:query];
     }
     __weak typeof(self) weakSelf = self;
-    [query loadNextPageWithCompletion:^(NSArray<NCMessage *> * _Nullable messages, NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf) {
-            @synchronized (strongSelf) {
-                [strongSelf.activeSightQueries removeObject:query];
-            }
-        }
-        if (completion) {
-            completion(error ? @[] : (messages ?: @[]));
-        }
+    [query loadNextPageWithCompletion:^(NSArray<NCMessage *> *_Nullable messages,
+                                        NCError *_Nullable error) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (strongSelf) {
+          @synchronized(strongSelf) {
+              [strongSelf.activeSightQueries removeObject:query];
+          }
+      }
+      if (completion) {
+          completion(error ? @[] : (messages ?: @[]));
+      }
     }];
 }
 
@@ -217,19 +223,28 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                           times:(int)times
                      completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
     // 向后（更新）翻页：Legacy isForward=NO 查询 anchor 之后的小视频。
-    [self querySightMessagesWithAnchorModel:model count:count isAscending:NO completion:^(NSArray<NCMessage *> *messages) {
-        NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
-        if (times < 2 && messageModels.count == 0 && messages.count == count && messages.lastObject) {
-            NCMessageModel *nextModel = [NCMessageModel modelWithNCMessage:messages.lastObject];
-            if (nextModel) {
-                [self getBackMessagesForModel:nextModel count:count times:times + 1 completion:completion];
-                return;
-            }
-        }
-        if (completion) {
-            completion(messageModels ?: @[]);
-        }
-    }];
+    [self querySightMessagesWithAnchorModel:model
+                                      count:count
+                                isAscending:NO
+                                 completion:^(NSArray<NCMessage *> *messages) {
+                                   NSArray<NCMessageModel *> *messageModels =
+                                       [self messageModelsWithMessages:messages];
+                                   if (times < 2 && messageModels.count == 0 &&
+                                       messages.count == count && messages.lastObject) {
+                                       NCMessageModel *nextModel =
+                                           [NCMessageModel modelWithNCMessage:messages.lastObject];
+                                       if (nextModel) {
+                                           [self getBackMessagesForModel:nextModel
+                                                                   count:count
+                                                                   times:times + 1
+                                                              completion:completion];
+                                           return;
+                                       }
+                                   }
+                                   if (completion) {
+                                       completion(messageModels ?: @[]);
+                                   }
+                                 }];
 }
 
 - (void)getFrontMessagesForModel:(NCMessageModel *)model
@@ -237,19 +252,28 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
                            times:(int)times
                       completion:(void (^)(NSArray<NCMessageModel *> *models))completion {
     // 向前（更旧）翻页：Legacy isForward=YES 查询 anchor 之前的小视频。
-    [self querySightMessagesWithAnchorModel:model count:count isAscending:YES completion:^(NSArray<NCMessage *> *messages) {
-        NSArray<NCMessageModel *> *messageModels = [self messageModelsWithMessages:messages];
-        if (times < 2 && messages.count == count && messageModels.count == 0 && messages.lastObject) {
-            NCMessageModel *nextModel = [NCMessageModel modelWithNCMessage:messages.lastObject];
-            if (nextModel) {
-                [self getFrontMessagesForModel:nextModel count:count times:times + 1 completion:completion];
-                return;
-            }
-        }
-        if (completion) {
-            completion(messageModels ?: @[]);
-        }
-    }];
+    [self querySightMessagesWithAnchorModel:model
+                                      count:count
+                                isAscending:YES
+                                 completion:^(NSArray<NCMessage *> *messages) {
+                                   NSArray<NCMessageModel *> *messageModels =
+                                       [self messageModelsWithMessages:messages];
+                                   if (times < 2 && messages.count == count &&
+                                       messageModels.count == 0 && messages.lastObject) {
+                                       NCMessageModel *nextModel =
+                                           [NCMessageModel modelWithNCMessage:messages.lastObject];
+                                       if (nextModel) {
+                                           [self getFrontMessagesForModel:nextModel
+                                                                    count:count
+                                                                    times:times + 1
+                                                               completion:completion];
+                                           return;
+                                       }
+                                   }
+                                   if (completion) {
+                                       completion(messageModels ?: @[]);
+                                   }
+                                 }];
 }
 
 - (void)getMessageFromModel:(NCMessageModel *)model {
@@ -268,48 +292,67 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     }
     self.previewChannelIdentifier = NCSightChannelIdentifierFromMessageModel(model);
     __weak typeof(self) weakSelf = self;
-    [self getFrontMessagesForModel:model count:5 times:0 completion:^(NSArray<NCMessageModel *> *frontMessagesArray) {
-        [weakSelf getBackMessagesForModel:model count:5 times:0 completion:^(NSArray<NCMessageModel *> *backMessageArray) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (!strongSelf) {
-                    return;
-                }
-                NSMutableArray<NCMessageModel *> *modelsArray = [[NSMutableArray alloc] init];
-                // 横向预览按从新到旧排列：向前滑动时进入上一条旧小视频。
-                NSArray<NCMessageModel *> *backMessagesForDisplay =
-                    backMessageArray.reverseObjectEnumerator.allObjects;
-                [strongSelf appendModels:backMessagesForDisplay toArray:modelsArray];
-                [strongSelf appendModels:@[ model ] toArray:modelsArray];
-                NSArray<NCMessageModel *> *frontMessagesForDisplay =
-                    frontMessagesArray.reverseObjectEnumerator.allObjects;
-                [strongSelf appendModels:frontMessagesForDisplay toArray:modelsArray];
-                if (modelsArray.count == 0) {
-                    [modelsArray addObject:model];
-                }
-                strongSelf.currentIndex = 0;
-                for (NSInteger i = 0; i < modelsArray.count; i++) {
-                    if ([strongSelf isSameModel:model asModel:modelsArray[i]]) {
-                        strongSelf.currentIndex = i;
-                        break;
-                    }
-                }
-                strongSelf.messageModelArray =
-                    [strongSelf getSightModels:modelsArray reusingSightModels:strongSelf.messageModelArray].mutableCopy;
-                [strongSelf.collectionView reloadData];
-                [strongSelf scrollToCurrentIndex];
-            });
-        }];
-    }];
+    [self
+        getFrontMessagesForModel:model
+                           count:5
+                           times:0
+                      completion:^(NSArray<NCMessageModel *> *frontMessagesArray) {
+                        [weakSelf
+                            getBackMessagesForModel:model
+                                              count:5
+                                              times:0
+                                         completion:^(NSArray<NCMessageModel *> *backMessageArray) {
+                                           dispatch_async(dispatch_get_main_queue(), ^{
+                                             __strong typeof(weakSelf) strongSelf = weakSelf;
+                                             if (!strongSelf) {
+                                                 return;
+                                             }
+                                             NSMutableArray<NCMessageModel *> *modelsArray =
+                                                 [[NSMutableArray alloc] init];
+                                             // 横向预览按从新到旧排列：向前滑动时进入上一条旧小视频。
+                                             NSArray<NCMessageModel *> *backMessagesForDisplay =
+                                                 backMessageArray.reverseObjectEnumerator
+                                                     .allObjects;
+                                             [strongSelf appendModels:backMessagesForDisplay
+                                                              toArray:modelsArray];
+                                             [strongSelf appendModels:@[ model ]
+                                                              toArray:modelsArray];
+                                             NSArray<NCMessageModel *> *frontMessagesForDisplay =
+                                                 frontMessagesArray.reverseObjectEnumerator
+                                                     .allObjects;
+                                             [strongSelf appendModels:frontMessagesForDisplay
+                                                              toArray:modelsArray];
+                                             if (modelsArray.count == 0) {
+                                                 [modelsArray addObject:model];
+                                             }
+                                             strongSelf.currentIndex = 0;
+                                             for (NSInteger i = 0; i < modelsArray.count; i++) {
+                                                 if ([strongSelf isSameModel:model
+                                                                     asModel:modelsArray[i]]) {
+                                                     strongSelf.currentIndex = i;
+                                                     break;
+                                                 }
+                                             }
+                                             strongSelf.messageModelArray =
+                                                 [strongSelf getSightModels:modelsArray
+                                                         reusingSightModels:strongSelf
+                                                                                .messageModelArray]
+                                                     .mutableCopy;
+                                             [strongSelf.collectionView reloadData];
+                                             [strongSelf scrollToCurrentIndex];
+                                           });
+                                         }];
+                      }];
 }
 
-- (NSArray <NCSightModel *> *)getSightModels:(NSArray *)messages{
+- (NSArray<NCSightModel *> *)getSightModels:(NSArray *)messages {
     return [self getSightModels:messages reusingSightModels:nil];
 }
 
 - (NSArray<NCSightModel *> *)getSightModels:(NSArray<NCMessageModel *> *)messages
                          reusingSightModels:(NSArray<NCSightModel *> *)existingSightModels {
-    NSMutableDictionary<NSNumber *, NCSightModel *> *existingSightModelsByClientId = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSNumber *, NCSightModel *> *existingSightModelsByClientId =
+        [NSMutableDictionary dictionary];
     for (NCSightModel *sightModel in existingSightModels) {
         existingSightModelsByClientId[@(sightModel.messageModel.clientId)] = sightModel;
     }
@@ -333,15 +376,15 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     if (a.clientId > 0 && a.clientId == b.clientId) {
         return YES;
     }
-    if ((a.messageId ?: @"").length > 0 &&
-        [a.messageId isEqualToString:(b.messageId ?: @"")]) {
+    if ((a.messageId ?: @"").length > 0 && [a.messageId isEqualToString:(b.messageId ?: @"")]) {
         return YES;
     }
     return NO;
 }
 
 // 底层 by_time 查询可能返回锚点或同毫秒重复消息，拼装列表时按消息身份去重。
-- (void)appendModels:(NSArray<NCMessageModel *> *)models toArray:(NSMutableArray<NCMessageModel *> *)target {
+- (void)appendModels:(NSArray<NCMessageModel *> *)models
+             toArray:(NSMutableArray<NCMessageModel *> *)target {
     for (NCMessageModel *model in models) {
         BOOL exists = NO;
         for (NCMessageModel *existing in target) {
@@ -379,14 +422,16 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     return 1;
 }
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionView:(UICollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
     return self.messageModelArray.count;
 }
 
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                            cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     NCSightCollectionViewCell *cell =
-        [self.collectionView dequeueReusableCellWithReuseIdentifier:@"RCSightCell" forIndexPath:indexPath];
+        [self.collectionView dequeueReusableCellWithReuseIdentifier:@"RCSightCell"
+                                                       forIndexPath:indexPath];
     cell.delegate = self;
     NCSightModel *model = self.messageModelArray[indexPath.row];
     [cell setDataModel:model];
@@ -409,7 +454,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
             }
         }
     }
-    
+
     return cell;
 }
 
@@ -428,13 +473,13 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView
-                  layout:(UICollectionViewLayout *)collectionViewLayout
-  sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+                    layout:(UICollectionViewLayout *)collectionViewLayout
+    sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
     return collectionView.bounds.size;
 }
 
 #pragma mark - UIScrollViewDelegate
-- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     self.isTouchScroll = YES;
     if (self.onlyPreviewCurrentMessage) {
         return;
@@ -450,12 +495,12 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         return;
     }
     NSInteger midIndex = self.messageModelArray.count / 2;
-    
+
     int index = (int)(scrollView.contentOffset.x / self.view.bounds.size.width);
     if (index < self.messageModelArray.count && self.viewWidth == self.view.bounds.size.width) {
         self.currentIndex = index;
     }
-    
+
     if (self.currentIndex >= midIndex && scrollView.contentOffset.x > self.previousContentOffsetX) {
         if (self.isLoadingBack) {
             return;
@@ -466,36 +511,50 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         }
         self.isLoadingBack = YES;
         __weak typeof(self) weakSelf = self;
-        [self getFrontMessagesForModel:anchorModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (!strongSelf) {
-                    return;
-                }
-                strongSelf.isLoadingBack = NO;
-                NSArray<NCMessageModel *> *newModels = [strongSelf modelsExcludingExisting:models];
-                if (newModels.count == 0) {
-                    [strongSelf scrollToCurrentIndex];
-                    strongSelf.previousContentOffsetX = strongSelf.currentIndex * strongSelf.view.bounds.size.width;
-                    return;
-                }
-                newModels = newModels.reverseObjectEnumerator.allObjects;
-                NSMutableArray<NSIndexPath *> *indexPathes = [NSMutableArray new];
-                NSInteger lastIndex = strongSelf.messageModelArray.count;
-                for (NSInteger i = 0; i < newModels.count; i++) {
-                    NSIndexPath *indexpath = [NSIndexPath indexPathForRow:lastIndex + i inSection:0];
-                    [indexPathes addObject:indexpath];
-                }
-                [strongSelf.messageModelArray addObjectsFromArray:[strongSelf getSightModels:newModels]];
-                [strongSelf.collectionView insertItemsAtIndexPaths:[indexPathes copy]];
-                [strongSelf.collectionView
-                    scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:strongSelf.currentIndex inSection:0]
-                           atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
-                                   animated:NO];
-                strongSelf.previousContentOffsetX = strongSelf.currentIndex * strongSelf.view.bounds.size.width;
-            });
-        }];
-    } else if (self.currentIndex <= midIndex && scrollView.contentOffset.x < self.previousContentOffsetX) {
+        [self getFrontMessagesForModel:anchorModel
+                                 count:5
+                                 times:0
+                            completion:^(NSArray<NCMessageModel *> *models) {
+                              dispatch_async(dispatch_get_main_queue(), ^{
+                                __strong typeof(weakSelf) strongSelf = weakSelf;
+                                if (!strongSelf) {
+                                    return;
+                                }
+                                strongSelf.isLoadingBack = NO;
+                                NSArray<NCMessageModel *> *newModels =
+                                    [strongSelf modelsExcludingExisting:models];
+                                if (newModels.count == 0) {
+                                    [strongSelf scrollToCurrentIndex];
+                                    strongSelf.previousContentOffsetX =
+                                        strongSelf.currentIndex * strongSelf.view.bounds.size.width;
+                                    return;
+                                }
+                                newModels = newModels.reverseObjectEnumerator.allObjects;
+                                NSMutableArray<NSIndexPath *> *indexPathes = [NSMutableArray new];
+                                NSInteger lastIndex = strongSelf.messageModelArray.count;
+                                for (NSInteger i = 0; i < newModels.count; i++) {
+                                    NSIndexPath *indexpath =
+                                        [NSIndexPath indexPathForRow:lastIndex + i inSection:0];
+                                    [indexPathes addObject:indexpath];
+                                }
+                                [strongSelf.messageModelArray
+                                    addObjectsFromArray:[strongSelf getSightModels:newModels]];
+                                [strongSelf.collectionView
+                                    insertItemsAtIndexPaths:[indexPathes copy]];
+                                [strongSelf.collectionView
+                                    scrollToItemAtIndexPath:[NSIndexPath
+                                                                indexPathForRow:strongSelf
+                                                                                    .currentIndex
+                                                                      inSection:0]
+                                           atScrollPosition:
+                                               UICollectionViewScrollPositionCenteredHorizontally
+                                                   animated:NO];
+                                strongSelf.previousContentOffsetX =
+                                    strongSelf.currentIndex * strongSelf.view.bounds.size.width;
+                              });
+                            }];
+    } else if (self.currentIndex <= midIndex &&
+               scrollView.contentOffset.x < self.previousContentOffsetX) {
         if (self.isLoadingFront) {
             return;
         }
@@ -505,45 +564,62 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         }
         self.isLoadingFront = YES;
         __weak typeof(self) weakSelf = self;
-        [self getBackMessagesForModel:anchorModel count:5 times:0 completion:^(NSArray<NCMessageModel *> *models) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (!strongSelf) {
-                    return;
-                }
-                strongSelf.isLoadingFront = NO;
-                NSArray<NCMessageModel *> *newModels = [strongSelf modelsExcludingExisting:models];
-                if (newModels.count == 0) {
-                    [strongSelf scrollToCurrentIndex];
-                    strongSelf.previousContentOffsetX = strongSelf.currentIndex * strongSelf.view.bounds.size.width;
-                    return;
-                }
-                newModels = newModels.reverseObjectEnumerator.allObjects;
-                NSMutableArray<NSIndexPath *> *indexPathes = [NSMutableArray new];
-                for (NSInteger i = 0; i < newModels.count; i++) {
-                    NSIndexPath *indexpath = [NSIndexPath indexPathForRow:i inSection:0];
-                    [indexPathes addObject:indexpath];
-                }
-                [strongSelf.messageModelArray insertObjects:[strongSelf getSightModels:newModels]
-                                                  atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, newModels.count)]];
-                [strongSelf.collectionView reloadData];
-                strongSelf.currentIndex = strongSelf.currentIndex + newModels.count;
-                [strongSelf.collectionView
-                    scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:strongSelf.currentIndex inSection:0]
-                           atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
-                                   animated:NO];
-                strongSelf.previousContentOffsetX = strongSelf.currentIndex * strongSelf.view.bounds.size.width;
-            });
-        }];
-    }else{
+        [self
+            getBackMessagesForModel:anchorModel
+                              count:5
+                              times:0
+                         completion:^(NSArray<NCMessageModel *> *models) {
+                           dispatch_async(dispatch_get_main_queue(), ^{
+                             __strong typeof(weakSelf) strongSelf = weakSelf;
+                             if (!strongSelf) {
+                                 return;
+                             }
+                             strongSelf.isLoadingFront = NO;
+                             NSArray<NCMessageModel *> *newModels =
+                                 [strongSelf modelsExcludingExisting:models];
+                             if (newModels.count == 0) {
+                                 [strongSelf scrollToCurrentIndex];
+                                 strongSelf.previousContentOffsetX =
+                                     strongSelf.currentIndex * strongSelf.view.bounds.size.width;
+                                 return;
+                             }
+                             newModels = newModels.reverseObjectEnumerator.allObjects;
+                             NSMutableArray<NSIndexPath *> *indexPathes = [NSMutableArray new];
+                             for (NSInteger i = 0; i < newModels.count; i++) {
+                                 NSIndexPath *indexpath = [NSIndexPath indexPathForRow:i
+                                                                             inSection:0];
+                                 [indexPathes addObject:indexpath];
+                             }
+                             [strongSelf.messageModelArray
+                                 insertObjects:[strongSelf getSightModels:newModels]
+                                     atIndexes:[NSIndexSet
+                                                   indexSetWithIndexesInRange:NSMakeRange(
+                                                                                  0, newModels
+                                                                                         .count)]];
+                             [strongSelf.collectionView reloadData];
+                             strongSelf.currentIndex = strongSelf.currentIndex + newModels.count;
+                             [strongSelf.collectionView
+                                 scrollToItemAtIndexPath:[NSIndexPath
+                                                             indexPathForRow:strongSelf.currentIndex
+                                                                   inSection:0]
+                                        atScrollPosition:
+                                            UICollectionViewScrollPositionCenteredHorizontally
+                                                animated:NO];
+                             strongSelf.previousContentOffsetX =
+                                 strongSelf.currentIndex * strongSelf.view.bounds.size.width;
+                           });
+                         }];
+    } else {
         [self scrollToCurrentIndex];
         self.previousContentOffsetX = self.currentIndex * self.view.bounds.size.width;
     }
 }
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
-    int index = (round)(scrollView.contentOffset.x / self.view.bounds.size.width); // Round to the nearest item index.
-    if (index < self.messageModelArray.count && self.viewWidth == self.view.bounds.size.width && self.isTouchScroll) {
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    int index = (round)(scrollView.contentOffset.x /
+                        self.view.bounds.size.width); // Round to the nearest item index.
+    if (index < self.messageModelArray.count && self.viewWidth == self.view.bounds.size.width &&
+        self.isTouchScroll) {
         if (index != self.currentIndex) {
             [self resetPlay];
         }
@@ -559,21 +635,26 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
 }
 
 - (void)sightLongPressed:(NSString *)localPath {
-    [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"save")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
-        [self saveSight:localPath];
-    } cancelBlock:^{
-            
-    }];
+    [NCActionSheetView showActionSheetView:nil
+                                 cellArray:@[ NCUILocalizedString(@"save") ]
+                               cancelTitle:NCUILocalizedString(@"cancel")
+                             selectedBlock:^(NSInteger index) {
+                               [self saveSight:localPath];
+                             }
+                               cancelBlock:^{
+
+                               }];
 }
 
 #pragma mark - Notification
 - (void)registerNotificationCenter {
     [[NCChatUI shared] addMessageEventObserver:self];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(deviceOrientationDidChange:)
-                                                 name:UIApplicationDidChangeStatusBarFrameNotification
-                                               object:nil];
+
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(deviceOrientationDidChange:)
+               name:UIApplicationDidChangeStatusBarFrameNotification
+             object:nil];
 }
 
 - (void)deviceOrientationDidChange:(NSNotification *)notification {
@@ -581,7 +662,9 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         return;
     }
     UIDeviceOrientation interfaceOrientation = [UIDevice currentDevice].orientation;
-    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft || interfaceOrientation == UIDeviceOrientationLandscapeRight || interfaceOrientation == UIDeviceOrientationPortrait){
+    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft ||
+        interfaceOrientation == UIDeviceOrientationLandscapeRight ||
+        interfaceOrientation == UIDeviceOrientationPortrait) {
         [self updateRightTopButtonFrame];
     }
 }
@@ -591,21 +674,21 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-        for (NCMessage *message in messages) {
-            long deletedMessageClientId = (long)message.clientId;
-            NCSightModel *currentModel = self.messageModelArray[self.currentIndex];
-            if (deletedMessageClientId == currentModel.messageModel.clientId) {
-                [self didSightMessageRemoveWithCurrentIndex];
-                return;
-            }
-            for (NSInteger index = 0; index < self.messageModelArray.count; index++) {
-                NCSightModel *model = self.messageModelArray[index];
-                if (deletedMessageClientId == model.messageModel.clientId) {
-                    [self didSightMessageRemove:index];
-                    break;
-                }
-            }
-        }
+      for (NCMessage *message in messages) {
+          long deletedMessageClientId = (long)message.clientId;
+          NCSightModel *currentModel = self.messageModelArray[self.currentIndex];
+          if (deletedMessageClientId == currentModel.messageModel.clientId) {
+              [self didSightMessageRemoveWithCurrentIndex];
+              return;
+          }
+          for (NSInteger index = 0; index < self.messageModelArray.count; index++) {
+              NCSightModel *model = self.messageModelArray[index];
+              if (deletedMessageClientId == model.messageModel.clientId) {
+                  [self didSightMessageRemove:index];
+                  break;
+              }
+          }
+      }
     });
 }
 
@@ -615,50 +698,62 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.currentIndex inSection:0];
     UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
     [(NCSightCollectionViewCell *)cell stopPlay];
-    
+
     // Present the deletion alert.
-    UIAlertController *controller = [UIAlertController alertControllerWithTitle:nil
-                                                                        message:NCUILocalizedString(@"message_delete_for_all_alert")
-                                                                 preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *controller = [UIAlertController
+        alertControllerWithTitle:nil
+                         message:NCUILocalizedString(@"message_delete_for_all_alert")
+                  preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *action = [UIAlertAction actionWithTitle:NCUILocalizedString(@"confirm")
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *_Nonnull action) {
-        [self dismissViewControllerAnimated:YES completion:nil];
-    }];
+                                                     [self dismissViewControllerAnimated:YES
+                                                                              completion:nil];
+                                                   }];
     [controller addAction:action];
     [self presentViewController:controller animated:YES completion:nil];
 }
 
 - (void)didSightMessageRemove:(NSInteger)index {
-    if (index >= self.messageModelArray.count) return;
+    if (index >= self.messageModelArray.count)
+        return;
     [self.messageModelArray removeObjectAtIndex:index];
     NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-    [self.collectionView performBatchUpdates:^{
-        [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
-    } completion:^(BOOL finished) {
-        // update completion
-    }];
+    [self.collectionView
+        performBatchUpdates:^{
+          [self.collectionView deleteItemsAtIndexPaths:@[ indexPath ]];
+        }
+                 completion:^(BOOL finished){
+                     // update completion
+                 }];
 }
 
 #pragma mark - helper
-- (void)scrollToCurrentIndex{
+- (void)scrollToCurrentIndex {
     if (_isNotchScreen) {
         [CATransaction begin];
         [CATransaction disableActions];
-        self.collectionView.contentSize = CGSizeMake(self.messageModelArray.count*self.view.frame.size.width, self.view.frame.size.height);
-        self.collectionView.contentOffset = CGPointMake(self.view.frame.size.width*self.currentIndex, 0);
+        self.collectionView.contentSize = CGSizeMake(
+            self.messageModelArray.count * self.view.frame.size.width, self.view.frame.size.height);
+        self.collectionView.contentOffset =
+            CGPointMake(self.view.frame.size.width * self.currentIndex, 0);
         [CATransaction commit];
-    }else{
-        [self.collectionView performBatchUpdates:^{
-            self.collectionView.contentSize = CGSizeMake(self.messageModelArray.count*self.view.frame.size.width, self.view.frame.size.height);
-            self.collectionView.contentOffset = CGPointMake(self.view.frame.size.width*self.currentIndex, 0);
-        } completion:^(BOOL finished) {
-            
-        }];
+    } else {
+        [self.collectionView
+            performBatchUpdates:^{
+              self.collectionView.contentSize =
+                  CGSizeMake(self.messageModelArray.count * self.view.frame.size.width,
+                             self.view.frame.size.height);
+              self.collectionView.contentOffset =
+                  CGPointMake(self.view.frame.size.width * self.currentIndex, 0);
+            }
+                     completion:^(BOOL finished){
+
+                     }];
     }
 }
 
-- (void)resetPlay{
+- (void)resetPlay {
     for (NCSightModel *model in self.messageModelArray) {
         if (model.messageModel.clientId == self.previousMessageId) {
             [model.playerController resetSightPlayer:NO];
@@ -667,12 +762,13 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     }
 }
 
-- (void)updateRightTopButtonFrame{
+- (void)updateRightTopButtonFrame {
     CGFloat safeAreaTop = [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].top;
     if ([NCChatUIUtility isRTL]) {
         self.rightTopButton.frame = CGRectMake(8, safeAreaTop + 30, 44, 44);
     } else {
-        self.rightTopButton.frame = CGRectMake(self.view.frame.size.width - 44 - 8, safeAreaTop + 30, 44, 44);
+        self.rightTopButton.frame =
+            CGRectMake(self.view.frame.size.width - 44 - 8, safeAreaTop + 30, 44, 44);
     }
 }
 
@@ -680,10 +776,10 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     view.translatesAutoresizingMaskIntoConstraints = NO;
     NSArray *formats = @[ @"H:|[view]|", @"V:|[view]|" ];
     for (NSString *each in formats) {
-        NSArray *constraints =
-            [NSLayoutConstraint constraintsWithVisualFormat:each options:0 metrics:nil views:@{
-                @"view" : view
-            }];
+        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
+                                                                       options:0
+                                                                       metrics:nil
+                                                                         views:@{@"view" : view}];
         [view.superview addConstraints:constraints];
     }
 }
@@ -692,13 +788,15 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     if (!localPath) {
         return;
     }
-    [NCAssetHelper savePhotosAlbumWithVideoPath:localPath authorizationStatusBlock:^{
-        [self showAlertController:NCUILocalizedString(@"access_right_title")
-                          message:NCUILocalizedString(@"photo_access_right")
-                      cancelTitle:NCUILocalizedString(@"ok")];
-    } resultBlock:^(BOOL success) {
-        [self showAlertWithSuccess:success];
-    }];
+    [NCAssetHelper savePhotosAlbumWithVideoPath:localPath
+        authorizationStatusBlock:^{
+          [self showAlertController:NCUILocalizedString(@"access_right_title")
+                            message:NCUILocalizedString(@"photo_access_right")
+                        cancelTitle:NCUILocalizedString(@"ok")];
+        }
+        resultBlock:^(BOOL success) {
+          [self showAlertWithSuccess:success];
+        }];
 }
 
 - (void)showAlertWithSuccess:(BOOL)success {
@@ -719,8 +817,13 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     return [NSString stringWithFormat:@"%02ld:%02ld", (long)minutes, (long)seconds];
 }
 
-- (void)showAlertController:(NSString *)title message:(NSString *)message cancelTitle:(NSString *)cancelTitle {
-    [NCAlertView showAlertController:title message:message cancelTitle:cancelTitle inViewController:self];
+- (void)showAlertController:(NSString *)title
+                    message:(NSString *)message
+                cancelTitle:(NSString *)cancelTitle {
+    [NCAlertView showAlertController:title
+                             message:message
+                         cancelTitle:cancelTitle
+                    inViewController:self];
 }
 
 #pragma mark - Target Action
@@ -744,13 +847,16 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
 #pragma mark - Getters and Setters
 
 - (NCSightCollectionView *)collectionView {
-    if(!_collectionView) {
-        UICollectionViewFlowLayout *flowLayout = [[NCPhotoPreviewCollectionViewFlowLayout alloc] init];
+    if (!_collectionView) {
+        UICollectionViewFlowLayout *flowLayout =
+            [[NCPhotoPreviewCollectionViewFlowLayout alloc] init];
         [flowLayout setScrollDirection:UICollectionViewScrollDirectionHorizontal];
         flowLayout.minimumLineSpacing = 0;
         flowLayout.minimumInteritemSpacing = 0;
-        _collectionView = [[NCSightCollectionView alloc] initWithFrame:CGRectZero collectionViewLayout:flowLayout];
-        [_collectionView registerClass:[NCSightCollectionViewCell class] forCellWithReuseIdentifier:@"RCSightCell"];
+        _collectionView = [[NCSightCollectionView alloc] initWithFrame:CGRectZero
+                                                  collectionViewLayout:flowLayout];
+        [_collectionView registerClass:[NCSightCollectionViewCell class]
+            forCellWithReuseIdentifier:@"RCSightCell"];
         _collectionView.dataSource = self;
         _collectionView.alwaysBounceHorizontal = YES;
         _collectionView.delegate = self;
@@ -793,7 +899,7 @@ static NCChannelIdentifier *NCSightChannelIdentifierFromMessageModel(NCMessageMo
     _statusBarHidden = [hidden boolValue];
     [UIView animateWithDuration:0.25
                      animations:^{
-                         [self setNeedsStatusBarAppearanceUpdate];
+                       [self setNeedsStatusBarAppearanceUpdate];
                      }];
 }
 @end

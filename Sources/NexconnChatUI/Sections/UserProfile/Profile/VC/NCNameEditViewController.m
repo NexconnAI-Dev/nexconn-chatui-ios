@@ -7,16 +7,13 @@
 //
 
 #import "NCNameEditViewController.h"
-#import "NCNameEditView.h"
+#import "NCAlertView.h"
 #import "NCBaseButton.h"
 #import "NCChatUICommonDefine.h"
-#import "NCAlertView.h"
+#import "NCNameEditView.h"
 #define NCNameEditViewTop 15
 
-@interface NCNameEditViewController ()<
-NCNameEditViewModelDelegate,
-UITextFieldDelegate
->
+@interface NCNameEditViewController () <NCNameEditViewModelDelegate, UITextFieldDelegate>
 
 @property (nonatomic, strong) NCBaseButton *confirmButton;
 
@@ -44,10 +41,10 @@ UITextFieldDelegate
     [self setupView];
     [self setNavigationBarItems];
     __weak typeof(self) weakSelf = self;
-    [self.viewModel getCurrentName:^(NSString * name) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            weakSelf.nameEditView.textField.text = name;
-        });
+    [self.viewModel getCurrentName:^(NSString *name) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        weakSelf.nameEditView.textField.text = name;
+      });
     }];
 }
 
@@ -56,7 +53,7 @@ UITextFieldDelegate
     [self.view addSubview:self.nameEditView];
     self.nameEditView.frame = CGRectOffset(self.view.bounds, 0, NCNameEditViewTop);
 }
-#pragma mark -- NCNameEditViewModelDelegate
+#pragma mark-- NCNameEditViewModelDelegate
 
 - (void)nameUpdateDidSuccess {
     [self.navigationController popViewControllerAnimated:YES];
@@ -67,9 +64,7 @@ UITextFieldDelegate
 
 - (void)nameUpdateDidError:(NSString *)errorInfo {
     if (errorInfo.length > 0) {
-        [NCAlertView showAlertController:nil 
-                                 message:errorInfo
-                        hiddenAfterDelay:2];
+        [NCAlertView showAlertController:nil message:errorInfo hiddenAfterDelay:2];
     }
 }
 
@@ -77,9 +72,11 @@ UITextFieldDelegate
     return self;
 }
 
-#pragma mark -- UITextFieldDelegate
+#pragma mark-- UITextFieldDelegate
 
-- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+- (BOOL)textField:(UITextField *)textField
+    shouldChangeCharactersInRange:(NSRange)range
+                replacementString:(NSString *)string {
     self.confirmButton.enabled = YES;
     NSString *newText = [textField.text stringByReplacingCharactersInRange:range withString:string];
     if (newText.length > self.viewModel.limit) {
@@ -88,18 +85,22 @@ UITextFieldDelegate
     return YES;
 }
 
-
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
+    self.navigationItem.rightBarButtonItem =
+        [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
     self.confirmButton.enabled = NO;
-    
+
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
@@ -109,7 +110,7 @@ UITextFieldDelegate
     [self.viewModel updateName:self.nameEditView.textField.text];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCNameEditView *)nameEditView {
     if (!_nameEditView) {
@@ -126,9 +127,13 @@ UITextFieldDelegate
     if (!_confirmButton) {
         _confirmButton = [[NCBaseButton alloc] init];
         [_confirmButton setTitle:NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color") forState:(UIControlStateNormal)];
-        [_confirmButton setTitleColor:NCDynamicColor(@"disabled_color") forState:(UIControlStateDisabled)];
-        [_confirmButton addTarget:self action:@selector(confirmButtonDidClick) forControlEvents:UIControlEventTouchUpInside];
+        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color")
+                             forState:(UIControlStateNormal)];
+        [_confirmButton setTitleColor:NCDynamicColor(@"disabled_color")
+                             forState:(UIControlStateDisabled)];
+        [_confirmButton addTarget:self
+                           action:@selector(confirmButtonDidClick)
+                 forControlEvents:UIControlEventTouchUpInside];
         [_confirmButton.titleLabel setFont:[UIFont systemFontOfSize:15]];
         _confirmButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
         [_confirmButton sizeToFit];

@@ -30,25 +30,29 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)getGroupMemberInfos:(NSString *)groupId
                      option:(NCUIPagingQueryOption *)option
                        role:(NCGroupMemberRole)role
-                   complete:(void (^)(NCUIPagingQueryResult<NCGroupMemberInfo *> * _Nullable result))complete;
+                   complete:(void (^)(NCUIPagingQueryResult<NCGroupMemberInfo *> *_Nullable result))
+                                complete;
 
 + (void)getGroupMemberInfos:(NSString *)groupId
                     userIds:(NSArray<NSString *> *)userIds
-                   complete:(void (^)(NSArray<NCGroupMemberInfo *> * _Nullable members))complete;
+                   complete:(void (^)(NSArray<NCGroupMemberInfo *> *_Nullable members))complete;
 
 + (void)getJoinedGroupInfosByRole:(NCGroupMemberRole)role
                            option:(NCUIPagingQueryOption *)option
-                         complete:(void (^)(NCUIPagingQueryResult<NCGroupInfo *> * _Nullable result))complete;
+                         complete:(void (^)(NCUIPagingQueryResult<NCGroupInfo *> *_Nullable result))
+                                      complete;
 
 + (void)searchJoinedGroupInfos:(NSString *)keyword
                         option:(NCUIPagingQueryOption *)option
-                      complete:(void (^)(NCUIPagingQueryResult<NCGroupInfo *> * _Nullable result))complete;
+                      complete:(void (^)(NCUIPagingQueryResult<NCGroupInfo *> *_Nullable result))
+                                   complete;
 
 + (void)fetchFriendInfosWithUserIds:(NSArray<NSString *> *)userIds
-                           complete:(void (^)(NSArray<NCFriendInfo *> * _Nullable friendInfos))complete;
+                           complete:
+                               (void (^)(NSArray<NCFriendInfo *> *_Nullable friendInfos))complete;
 
-+ (void)fetchFriendInfos:(NSArray <NCGroupMemberInfo *> *)members
-                complete:(void (^)(NSArray<NCFriendInfo *> * _Nullable friendInfos))complete;
++ (void)fetchFriendInfos:(NSArray<NCGroupMemberInfo *> *)members
+                complete:(void (^)(NSArray<NCFriendInfo *> *_Nullable friendInfos))complete;
 
 + (nullable NCFriendInfo *)friendWithUserId:(NSString *)userId
                               inFriendInfos:(NSArray<NCFriendInfo *> *)friendInfos;

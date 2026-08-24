@@ -8,11 +8,11 @@
 
 #import <WebKit/WebKit.h>
 
-#import "NCStreamMarkdownContentView.h"
-#import "NCStreamMarkdownContentViewModel.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
-#import "NCChatUICommonDefine.h"
+#import "NCStreamMarkdownContentView.h"
+#import "NCStreamMarkdownContentViewModel.h"
 
 extern NSString *const NCConversationViewScrollNotification;
 
@@ -30,12 +30,14 @@ extern NSString *const NCConversationViewScrollNotification;
     return self;
 }
 
-- (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
+- (void)userContentController:(WKUserContentController *)userContentController
+      didReceiveScriptMessage:(WKScriptMessage *)message {
     [self.delegate userContentController:userContentController didReceiveScriptMessage:message];
 }
 @end
 
-@interface NCStreamMarkdownContentView ()<WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate>
+@interface NCStreamMarkdownContentView () <WKNavigationDelegate, WKScriptMessageHandler,
+                                           WKUIDelegate>
 
 @property (nonatomic, strong) WKWebView *webView;
 @property (nonatomic, weak) NCStreamMarkdownContentViewModel *viewModel;
@@ -61,7 +63,8 @@ extern NSString *const NCConversationViewScrollNotification;
     if (![contentViewModel isKindOfClass:NCStreamMarkdownContentViewModel.class]) {
         return;
     }
-    NCStreamMarkdownContentViewModel *viewModel = (NCStreamMarkdownContentViewModel *)contentViewModel;
+    NCStreamMarkdownContentViewModel *viewModel =
+        (NCStreamMarkdownContentViewModel *)contentViewModel;
     self.viewModel = viewModel;
     [self loadWebView];
 }
@@ -74,31 +77,44 @@ extern NSString *const NCConversationViewScrollNotification;
 
 - (void)dealloc {
     NCLogD(@"dealloc");
-    [self.webView.configuration.userContentController removeScriptMessageHandlerForName:@"longpress"];
-    [self.webView.configuration.userContentController removeScriptMessageHandlerForName:@"heightChanged"];
+    [self.webView.configuration.userContentController
+        removeScriptMessageHandlerForName:@"longpress"];
+    [self.webView.configuration.userContentController
+        removeScriptMessageHandlerForName:@"heightChanged"];
     [self.webView.configuration.userContentController removeAllUserScripts];
-    
+
     self.webView.navigationDelegate = nil;
     self.webView.UIDelegate = nil;
     [self.webView stopLoading];
     self.webView = nil;
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)loadWebView {
     if (!self.webView) {
         WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
-        [config.userContentController addScriptMessageHandler:[[WeakScriptMessageHandler alloc] initWithDelegate:self] name:@"heightChanged"];
-        
-        // Set the viewport before loading; repeated loadHTMLString: calls can otherwise produce an incorrect web view size.
-        NSString *viewportScript = @"var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'); document.getElementsByTagName('head')[0].appendChild(meta);";
-        WKUserScript *script = [[WKUserScript alloc] initWithSource:viewportScript injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
+        [config.userContentController
+            addScriptMessageHandler:[[WeakScriptMessageHandler alloc] initWithDelegate:self]
+                               name:@"heightChanged"];
+
+        // Set the viewport before loading; repeated loadHTMLString: calls can otherwise produce an
+        // incorrect web view size.
+        NSString *viewportScript =
+            @"var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); "
+            @"meta.setAttribute('content', 'width=device-width, initial-scale=1.0, "
+            @"maximum-scale=1.0, user-scalable=no'); "
+            @"document.getElementsByTagName('head')[0].appendChild(meta);";
+        WKUserScript *script =
+            [[WKUserScript alloc] initWithSource:viewportScript
+                                   injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
+                                forMainFrameOnly:YES];
         [config.userContentController addUserScript:script];
-        
+
         self.webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:config];
         self.webView.backgroundColor = [UIColor clearColor];
-        self.webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        self.webView.autoresizingMask =
+            UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.webView setOpaque:NO];
         self.webView.scrollView.scrollEnabled = NO;
         self.webView.navigationDelegate = self;
@@ -106,17 +122,20 @@ extern NSString *const NCConversationViewScrollNotification;
         [self addSubview:self.webView];
     }
     NSString *bundlePath = [NCChatUIUtility bundlePathWithName:@"NCChatUI"];
-    
-    [self.webView loadHTMLString:self.viewModel.htmlContent baseURL:[NSURL fileURLWithPath:bundlePath]];
+
+    [self.webView loadHTMLString:self.viewModel.htmlContent
+                         baseURL:[NSURL fileURLWithPath:bundlePath]];
 }
 
 #pragma mark - WKNavigationDelegate
 
-- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+- (void)webView:(WKWebView *)webView
+    decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                    decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
     // Navigation outside the main frame generally represents a link tap.
     if (navigationAction.navigationType == WKNavigationTypeLinkActivated) {
         NSURL *url = navigationAction.request.URL;
-        if ([self.delegate respondsToSelector:@selector(streamContentViewDidClickUrl:)]){
+        if ([self.delegate respondsToSelector:@selector(streamContentViewDidClickUrl:)]) {
             [self.delegate streamContentViewDidClickUrl:url.absoluteString];
         }
         // Allow other links to load in the WKWebView.
@@ -129,16 +148,18 @@ extern NSString *const NCConversationViewScrollNotification;
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     NSString *js = [self.viewModel javascriptStringForHeight];
-    [webView evaluateJavaScript:js completionHandler:^(id _Nullable result, NSError * _Nullable error) {
-        // Handle the result the same way as above.
-        CGFloat height = [result floatValue];
-        [self.viewModel reloadContentHeight:height];
-    }];
+    [webView evaluateJavaScript:js
+              completionHandler:^(id _Nullable result, NSError *_Nullable error) {
+                // Handle the result the same way as above.
+                CGFloat height = [result floatValue];
+                [self.viewModel reloadContentHeight:height];
+              }];
 }
 
-#pragma mark -- WKScriptMessageHandler
+#pragma mark-- WKScriptMessageHandler
 
-- (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
+- (void)userContentController:(WKUserContentController *)userContentController
+      didReceiveScriptMessage:(WKScriptMessage *)message {
     if ([message.name isEqualToString:@"heightChanged"]) {
         NSNumber *height = message.body;
         if (height.floatValue > 0) {

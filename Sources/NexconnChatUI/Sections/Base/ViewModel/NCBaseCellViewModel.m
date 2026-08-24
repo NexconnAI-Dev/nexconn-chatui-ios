@@ -20,6 +20,5 @@ NSInteger const NCUserManagementCellHeight = 54;
 }
 
 - (void)itemDidSelectedByViewController:(UIViewController *)vc {
-    
 }
 @end

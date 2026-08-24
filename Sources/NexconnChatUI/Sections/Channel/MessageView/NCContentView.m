@@ -7,7 +7,7 @@
 //
 
 #import "NCContentView.h"
-@interface NCContentView()
+@interface NCContentView ()
 /*!
  Callback invoked when the frame changes.
  */
@@ -38,18 +38,17 @@
     if (_eventBlock) {
         _eventBlock(frame);
     }
-
 }
 
 - (void)registerFrameChangedEvent:(void (^)(CGRect frame))eventBlock {
     self.eventBlock = eventBlock;
 }
 
-- (void)registerSizeChangedEvent:(void (^)(CGSize size))eventBlock{
+- (void)registerSizeChangedEvent:(void (^)(CGSize size))eventBlock {
     self.changeSizeBlock = eventBlock;
 }
 
-- (void)setContentSize:(CGSize)contentSize{
+- (void)setContentSize:(CGSize)contentSize {
     CGSize beforeSize = self.contentSize;
     _contentSize = contentSize;
     if (beforeSize.width != contentSize.width || beforeSize.height != contentSize.height) {

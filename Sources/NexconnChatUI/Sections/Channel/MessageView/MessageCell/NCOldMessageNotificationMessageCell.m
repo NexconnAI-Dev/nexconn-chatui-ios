@@ -8,8 +8,8 @@
 
 #import "NCOldMessageNotificationMessageCell.h"
 #import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 
 @interface NCOldMessageNotificationMessageCell ()
 @property (nonatomic, strong) UIView *leftView;
@@ -60,34 +60,37 @@
     [super setDataModel:model];
     CGFloat maxMessageLabelWidth = [self labelWiden:self.tipMessageLabel];
     NSString *__text = NCUILocalizedString(@"history_message_tip");
-    CGSize __textSize = [NCChatUIUtility getTextDrawingSize:__text
-                                                    font:[[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel]
-                                         constrainedSize:CGSizeMake(maxMessageLabelWidth, MAXFLOAT)];
+    CGSize __textSize = [NCChatUIUtility
+        getTextDrawingSize:__text
+                      font:[[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel]
+           constrainedSize:CGSizeMake(maxMessageLabelWidth, MAXFLOAT)];
     __textSize = CGSizeMake(ceilf(__textSize.width), ceilf(__textSize.height));
     CGSize __labelSize = CGSizeMake(__textSize.width + 10, __textSize.height + 6);
     self.tipMessageLabel.text = __text;
-    self.tipMessageLabel.frame = CGRectMake((self.baseContentView.bounds.size.width - __labelSize.width) / 2.0f, 0,
-                                            __labelSize.width, __labelSize.height);
+    self.tipMessageLabel.frame =
+        CGRectMake((self.baseContentView.bounds.size.width - __labelSize.width) / 2.0f, 0,
+                   __labelSize.width, __labelSize.height);
 
     [self.leftView setFrame:CGRectMake(10, CGRectGetMidY(self.tipMessageLabel.frame) - 0.5,
                                        CGRectGetMinX(self.tipMessageLabel.frame) - 17, 1)];
 
-    [self.rightView
-        setFrame:CGRectMake(CGRectGetMaxX(self.tipMessageLabel.frame) + 7, CGRectGetMinY(self.leftView.frame),
-                            CGRectGetWidth(self.baseContentView.frame) - 7 - CGRectGetMaxX(self.tipMessageLabel.frame) -
-                                10,
-                            1)];
+    [self.rightView setFrame:CGRectMake(CGRectGetMaxX(self.tipMessageLabel.frame) + 7,
+                                        CGRectGetMinY(self.leftView.frame),
+                                        CGRectGetWidth(self.baseContentView.frame) - 7 -
+                                            CGRectGetMaxX(self.tipMessageLabel.frame) - 10,
+                                        1)];
 }
 
 #pragma mark - Private Methods
 
 - (CGFloat)labelWiden:(UILabel *)sender {
-    CGRect rect = [sender.text boundingRectWithSize:CGSizeMake(2000, sender.frame.size.height)
-                                            options:(NSStringDrawingUsesLineFragmentOrigin)
-                                         attributes:@{
-                                             NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
-                                         }
-                                            context:nil];
+    CGRect rect =
+        [sender.text boundingRectWithSize:CGSizeMake(2000, sender.frame.size.height)
+                                  options:(NSStringDrawingUsesLineFragmentOrigin)attributes:@{
+                                      NSFontAttributeName :
+                                          [[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
+                                  }
+                                  context:nil];
     return rect.size.width;
 }
 

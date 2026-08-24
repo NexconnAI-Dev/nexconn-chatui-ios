@@ -42,9 +42,12 @@
     if (self) {
         __autoreleasing NSError *error = nil;
         if (mentionedInfoString) {
-            NSData *mentionedInfoData = [mentionedInfoString dataUsingEncoding:NSUTF8StringEncoding];
+            NSData *mentionedInfoData =
+                [mentionedInfoString dataUsingEncoding:NSUTF8StringEncoding];
             NSDictionary *mentionedInfoDict =
-                [NSJSONSerialization JSONObjectWithData:mentionedInfoData options:kNilOptions error:&error];
+                [NSJSONSerialization JSONObjectWithData:mentionedInfoData
+                                                options:kNilOptions
+                                                  error:&error];
             if (!error && [mentionedInfoDict count] > 0) {
                 self.content = [mentionedInfoDict objectForKey:@"content"];
                 self.userId = [mentionedInfoDict objectForKey:@"userId"];

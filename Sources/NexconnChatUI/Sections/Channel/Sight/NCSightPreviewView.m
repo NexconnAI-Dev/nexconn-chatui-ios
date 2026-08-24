@@ -47,10 +47,10 @@
     view.translatesAutoresizingMaskIntoConstraints = NO;
     NSArray *formats = @[ @"H:|[view]|", @"V:|[view]|" ];
     for (NSString *each in formats) {
-        NSArray *constraints =
-            [NSLayoutConstraint constraintsWithVisualFormat:each options:0 metrics:nil views:@{
-                @"view" : view
-            }];
+        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
+                                                                       options:0
+                                                                       metrics:nil
+                                                                         views:@{@"view" : view}];
         [view.superview addConstraints:constraints];
     }
 }
@@ -77,7 +77,8 @@
 
 - (UITapGestureRecognizer *)singleTapRecognizer {
     if (!_singleTapRecognizer) {
-        _singleTapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleSingleTap:)];
+        _singleTapRecognizer =
+            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleSingleTap:)];
         _singleTapRecognizer.delegate = self;
     }
     return _singleTapRecognizer;
@@ -94,35 +95,37 @@
     if (!self.focusBox.hidden) {
         return;
     }
-    [self.delegate tappedToFocusAtPoint:[self.previewLayer captureDevicePointOfInterestForPoint:point]];
+    [self.delegate
+        tappedToFocusAtPoint:[self.previewLayer captureDevicePointOfInterestForPoint:point]];
 }
 
 - (void)showFocusBoxAnimationAtPoint:(CGPoint)point {
     self.focusBox.center = point;
     self.focusBox.hidden = NO;
     void (^focusBoxAnimationBlock)(void) = ^{
-        [UIView animateWithDuration:0.25
-            delay:0
-            options:UIViewAnimationOptionCurveEaseInOut
-            animations:^{
-                self.focusBox.layer.transform = CATransform3DMakeScale(0.7, 0.7, 1.0);
-            }
-            completion:^(BOOL finished) {
-                double delayInSeconds = 0.5f;
-                dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-                dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
-                    self.focusBox.hidden = YES;
-                    self.focusBox.layer.transform = CATransform3DMakeScale(1.0, 1.0f, 1.0);
-                });
-            }];
+      [UIView animateWithDuration:0.25
+          delay:0
+          options:UIViewAnimationOptionCurveEaseInOut
+          animations:^{
+            self.focusBox.layer.transform = CATransform3DMakeScale(0.7, 0.7, 1.0);
+          }
+          completion:^(BOOL finished) {
+            double delayInSeconds = 0.5f;
+            dispatch_time_t popTime =
+                dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
+              self.focusBox.hidden = YES;
+              self.focusBox.layer.transform = CATransform3DMakeScale(1.0, 1.0f, 1.0);
+            });
+          }];
     };
     if (self.overlayView.alpha != 0) {
         [UIView animateWithDuration:0.5
             animations:^{
-                self.overlayView.alpha = 0;
+              self.overlayView.alpha = 0;
             }
             completion:^(BOOL finished) {
-                focusBoxAnimationBlock();
+              focusBoxAnimationBlock();
             }];
     } else {
         focusBoxAnimationBlock();

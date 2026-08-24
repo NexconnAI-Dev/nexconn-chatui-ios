@@ -7,12 +7,12 @@
 //
 
 #import "NCResendManager.h"
-#import <NexconnChatUI/NCChatUILog.h>
-#import "NCChatUIErrorCode.h"
 #import "NCChatUI.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIErrorCode.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <NexconnChatUI/NCChatUILog.h>
 
 static NSString *const NCResendManagerConnectionStatusHandlerIdentifier = @"NCResendManager";
 
@@ -35,22 +35,22 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
         return nil;
     }
     switch (identifier.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCDirectChannel alloc] initWithChannelId:identifier.channelId];
-        case NCChannelTypeGroup:
-            return [[NCGroupChannel alloc] initWithChannelId:identifier.channelId];
-        case NCChannelTypeSystem:
-            return [[NCSystemChannel alloc] initWithChannelId:identifier.channelId];
-        case NCChannelTypeCommunity: {
-            NSString *subChannelId =
-                [identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
-                    ? (((NCCommunitySubChannelIdentifier *)identifier).subChannelId ?: @"")
-                    : @"";
-            return [[NCCommunitySubChannel alloc] initWithChannelId:identifier.channelId
-                                                        subChannelId:subChannelId];
-        }
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCDirectChannel alloc] initWithChannelId:identifier.channelId];
+    case NCChannelTypeGroup:
+        return [[NCGroupChannel alloc] initWithChannelId:identifier.channelId];
+    case NCChannelTypeSystem:
+        return [[NCSystemChannel alloc] initWithChannelId:identifier.channelId];
+    case NCChannelTypeCommunity: {
+        NSString *subChannelId =
+            [identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+                ? (((NCCommunitySubChannelIdentifier *)identifier).subChannelId ?: @"")
+                : @"";
+        return [[NCCommunitySubChannel alloc] initWithChannelId:identifier.channelId
+                                                   subChannelId:subChannelId];
+    }
+    default:
+        return nil;
     }
 }
 
@@ -60,9 +60,9 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
     static NCResendManager *resendManager;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (resendManager == nil) {
-            resendManager = [[NCResendManager alloc] init];
-        }
+      if (resendManager == nil) {
+          resendManager = [[NCResendManager alloc] init];
+      }
     });
     return resendManager;
 }
@@ -73,14 +73,16 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
         self.currentUserId = [NCEngine getCurrentUserId];
         self.messageCacheDict = [[NSMutableDictionary alloc] init];
         self.messageClientIds = [[NSMutableArray alloc] init];
-        [NCEngine addConnectionStatusHandlerWithIdentifier:NCResendManagerConnectionStatusHandlerIdentifier
+        [NCEngine addConnectionStatusHandlerWithIdentifier:
+                      NCResendManagerConnectionStatusHandlerIdentifier
                                                    handler:self];
     }
     return self;
 }
 
 - (void)dealloc {
-    [NCEngine removeConnectionStatusHandlerForIdentifier:NCResendManagerConnectionStatusHandlerIdentifier];
+    [NCEngine removeConnectionStatusHandlerForIdentifier:
+                  NCResendManagerConnectionStatusHandlerIdentifier];
 }
 
 - (BOOL)needResend:(long)clientId {
@@ -94,13 +96,11 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
 - (BOOL)isResendErrorCode:(NCChatUIErrorCode)code {
     NCConnectionStatus status = [[NCChatUI shared] getConnectionStatus];
     if (NCConnectionStatusKickedOfflineByOtherClient == status ||
-        NCConnectionStatusSignOut == status ||
-        NCConnectionStatusUserAbandon == status ||
-        NCConnectionStatusProxyUnavailable == status){
+        NCConnectionStatusSignOut == status || NCConnectionStatusUserAbandon == status ||
+        NCConnectionStatusProxyUnavailable == status) {
         return NO;
     }
-    if (code == NCChatUIErrorCodeChannelInvalid ||
-        code == NCChatUIErrorCodeNetworkUnavailable ||
+    if (code == NCChatUIErrorCodeChannelInvalid || code == NCChatUIErrorCodeNetworkUnavailable ||
         code == NCChatUIErrorCodeMessageResponseTimeout ||
         code == NCChatUIErrorCodeFileUploadFailed) {
         return YES;
@@ -110,26 +110,29 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
 
 - (void)addResendMessageIfNeed:(long)clientId error:(NCChatUIErrorCode)code {
     dispatch_main_async_safe((^{
-        if (NCChatUIConfigCenter.message.enableMessageResend && [self isResendErrorCode:code]) {
-            NSString *key = [NSString stringWithFormat:@"%ld", clientId];
-            if (![self.messageCacheDict objectForKey:key]) {
-                NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageClientId:clientId];
-                [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-                    (void)error;
-                    if (!message) {
-                        return;
-                    }
-                    dispatch_main_async_safe(^{
-                        if ([self.messageCacheDict objectForKey:key]) {
-                            return;
-                        }
-                        [self.messageCacheDict setObject:message forKey:key];
-                        [self.messageClientIds addObject:key];
-                        [self beginResend];
-                    });
-                }];
-            }
-        }
+      if (NCChatUIConfigCenter.message.enableMessageResend && [self isResendErrorCode:code]) {
+          NSString *key = [NSString stringWithFormat:@"%ld", clientId];
+          if (![self.messageCacheDict objectForKey:key]) {
+              NCGetMessageByIdParams *params =
+                  [[NCGetMessageByIdParams alloc] initWithMessageClientId:clientId];
+              [NCBaseChannel getMessageByIdWithParams:params
+                                           completion:^(NCMessage *_Nullable message,
+                                                        NCError *_Nullable error) {
+                                             (void)error;
+                                             if (!message) {
+                                                 return;
+                                             }
+                                             dispatch_main_async_safe(^{
+                                               if ([self.messageCacheDict objectForKey:key]) {
+                                                   return;
+                                               }
+                                               [self.messageCacheDict setObject:message forKey:key];
+                                               [self.messageClientIds addObject:key];
+                                               [self beginResend];
+                                             });
+                                           }];
+          }
+      }
     }));
 }
 
@@ -157,10 +160,14 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
     [self sendAfterTimer];
 }
 
-//loop
+// loop
 - (void)sendAfterTimer {
     // This method normally runs on the main thread.
-    self.resendTimer = [NSTimer scheduledTimerWithTimeInterval:0.3 target:self selector:@selector(sendFirstMessage) userInfo:nil repeats:NO];
+    self.resendTimer = [NSTimer scheduledTimerWithTimeInterval:0.3
+                                                        target:self
+                                                      selector:@selector(sendFirstMessage)
+                                                      userInfo:nil
+                                                       repeats:NO];
 }
 
 - (void)sendFirstMessage {
@@ -182,7 +189,8 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
         [self sendAfterTimer];
         return;
     }
-    NCLogI(@"%s messageClientId is %lld, message is %@", __FUNCTION__, message.clientId, message.messageType);
+    NCLogI(@"%s messageClientId is %lld, message is %@", __FUNCTION__, message.clientId,
+           message.messageType);
     [self resendMessage:message];
 }
 
@@ -203,7 +211,7 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
         [self sendAfterTimer];
         return;
     }
-    
+
     NCMessageContent *ncMessageContent = (NCMessageContent *)messageContent;
     NCChannelType channelType = identifier.channelType;
     NSString *channelId = identifier.channelId ?: @"";
@@ -219,39 +227,40 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
     }
 
     if ([ncMessageContent isKindOfClass:[NCMediaMessageContent class]]) {
-        
+
         if ([ncMessageContent isMemberOfClass:NCImageMessage.class]) {
             NCImageMessage *imageMessage = (NCImageMessage *)ncMessageContent;
             if (imageMessage.localPath.length > 0) {
-                imageMessage.originalImage = [UIImage imageWithContentsOfFile:imageMessage.localPath];
+                imageMessage.originalImage =
+                    [UIImage imageWithContentsOfFile:imageMessage.localPath];
             } else {
                 imageMessage.originalImage = nil;
             }
         }
-        
-        NCChatUISendMediaMessageParams *params =
-            [[NCChatUISendMediaMessageParams alloc] initWithContent:(NCMediaMessageContent *)ncMessageContent];
+
+        NCChatUISendMediaMessageParams *params = [[NCChatUISendMediaMessageParams alloc]
+            initWithContent:(NCMediaMessageContent *)ncMessageContent];
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
         params.needReceipt = message.needReceipt;
-        NCSendMediaMessageParams *sendParams =
-            [[NCSendMediaMessageParams alloc] initWithContent:(NCMediaMessageContent *)ncMessageContent];
+        NCSendMediaMessageParams *sendParams = [[NCSendMediaMessageParams alloc]
+            initWithContent:(NCMediaMessageContent *)ncMessageContent];
         sendParams.needReceipt = params.needReceipt;
         [channel sendMediaMessageWithParams:sendParams
-                            attachedHandler:nil
-                            progressHandler:^(NSInteger progress, NCMessage * _Nullable progressMessage) {
-            dispatch_main_async_safe(^{
+            attachedHandler:nil
+            progressHandler:^(NSInteger progress, NCMessage *_Nullable progressMessage) {
+              dispatch_main_async_safe(^{
                 [self postSendMessageNotificationWithMessage:progressMessage ?: message
-                                          originalClientId:(long)message.clientId
-                                                 sentStatus:NCMessageSentStatusSending
-                                                      error:NCChatUIErrorCodeSuccess
-                                                   progress:@(progress)
-                                                 markResend:NO];
-            });
-        }
-                          completionHandler:^(NCMessage * _Nullable successMessage, NCError * _Nullable error) {
-            dispatch_main_async_safe(^{
+                                            originalClientId:(long)message.clientId
+                                                  sentStatus:NCMessageSentStatusSending
+                                                       error:NCChatUIErrorCodeSuccess
+                                                    progress:@(progress)
+                                                  markResend:NO];
+              });
+            }
+            completionHandler:^(NCMessage *_Nullable successMessage, NCError *_Nullable error) {
+              dispatch_main_async_safe(^{
                 if (!successMessage || error) {
                     NCChatUIErrorCode resendErrorCode = (NCChatUIErrorCode)error.code;
                     long latestClientId = (long)successMessage.clientId;
@@ -262,91 +271,94 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
                         [self removeResendMessage:(long)message.clientId];
                     }
                     [self postSendMessageNotificationWithMessage:message
-                                              originalClientId:(long)message.clientId
-                                                     sentStatus:NCMessageSentStatusFailed
-                                                          error:resendErrorCode
-                                                       progress:nil
-                                                     markResend:YES];
+                                                originalClientId:(long)message.clientId
+                                                      sentStatus:NCMessageSentStatusFailed
+                                                           error:resendErrorCode
+                                                        progress:nil
+                                                      markResend:YES];
                     [self sendAfterTimer];
                     return;
                 }
                 [self deleteLocalMessageIfNeeded:(long)message.clientId];
                 [self removeResendMessage:(long)message.clientId];
                 [self postSendMessageNotificationWithMessage:successMessage
-                                          originalClientId:(long)message.clientId
-                                                 sentStatus:NCMessageSentStatusSent
-                                                      error:NCChatUIErrorCodeSuccess
-                                                   progress:nil
-                                                 markResend:NO];
+                                            originalClientId:(long)message.clientId
+                                                  sentStatus:NCMessageSentStatusSent
+                                                       error:NCChatUIErrorCodeSuccess
+                                                    progress:nil
+                                                  markResend:NO];
                 [self sendAfterTimer];
-            });
-        }
-                              cancelHandler:^(NCMessage * _Nullable cancelMessage) {
-            dispatch_main_async_safe(^{
+              });
+            }
+            cancelHandler:^(NCMessage *_Nullable cancelMessage) {
+              dispatch_main_async_safe(^{
                 long cancelMessageId = (long)cancelMessage.clientId;
                 if (cancelMessageId > 0 && cancelMessageId != (long)message.clientId) {
                     [self deleteLocalMessageIfNeeded:cancelMessageId];
                 }
                 [self removeResendMessage:(long)message.clientId];
                 [self postSendMessageNotificationWithMessage:message
-                                          originalClientId:(long)message.clientId
-                                                 sentStatus:NCMessageSentStatusCanceled
-                                                      error:NCChatUIErrorCodeSuccess
-                                                   progress:nil
-                                                 markResend:NO];
+                                            originalClientId:(long)message.clientId
+                                                  sentStatus:NCMessageSentStatusCanceled
+                                                       error:NCChatUIErrorCodeSuccess
+                                                    progress:nil
+                                                  markResend:NO];
                 [self sendAfterTimer];
-            });
-        }];
+              });
+            }];
     } else {
-        NCChatUISendMessageParams *params = [[NCChatUISendMessageParams alloc] initWithContent:ncMessageContent];
+        NCChatUISendMessageParams *params =
+            [[NCChatUISendMessageParams alloc] initWithContent:ncMessageContent];
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
         params.needReceipt = message.needReceipt;
-        NCSendMessageParams *sendParams = [[NCSendMessageParams alloc] initWithContent:ncMessageContent];
+        NCSendMessageParams *sendParams =
+            [[NCSendMessageParams alloc] initWithContent:ncMessageContent];
         sendParams.needReceipt = params.needReceipt;
-        [channel sendMessageWithParams:sendParams
-                       attachedHandler:nil
-                     completionHandler:^(NCMessage * _Nullable successMessage, NCError * _Nullable error) {
-            dispatch_main_async_safe(^{
-                if (!successMessage || error) {
-                    NCChatUIErrorCode resendErrorCode = (NCChatUIErrorCode)error.code;
-                    long latestClientId = (long)successMessage.clientId;
-                    if (latestClientId > 0 && latestClientId != (long)message.clientId) {
-                        [self deleteLocalMessageIfNeeded:latestClientId];
+        [channel
+            sendMessageWithParams:sendParams
+                  attachedHandler:nil
+                completionHandler:^(NCMessage *_Nullable successMessage, NCError *_Nullable error) {
+                  dispatch_main_async_safe(^{
+                    if (!successMessage || error) {
+                        NCChatUIErrorCode resendErrorCode = (NCChatUIErrorCode)error.code;
+                        long latestClientId = (long)successMessage.clientId;
+                        if (latestClientId > 0 && latestClientId != (long)message.clientId) {
+                            [self deleteLocalMessageIfNeeded:latestClientId];
+                        }
+                        if (![self isResendErrorCode:resendErrorCode]) {
+                            [self removeResendMessage:(long)message.clientId];
+                        }
+                        [self postSendMessageNotificationWithMessage:message
+                                                    originalClientId:(long)message.clientId
+                                                          sentStatus:NCMessageSentStatusFailed
+                                                               error:resendErrorCode
+                                                            progress:nil
+                                                          markResend:YES];
+                        [self sendAfterTimer];
+                        return;
                     }
-                    if (![self isResendErrorCode:resendErrorCode]) {
-                        [self removeResendMessage:(long)message.clientId];
-                    }
-                    [self postSendMessageNotificationWithMessage:message
-                                              originalClientId:(long)message.clientId
-                                                     sentStatus:NCMessageSentStatusFailed
-                                                          error:resendErrorCode
-                                                       progress:nil
-                                                     markResend:YES];
+                    [self deleteLocalMessageIfNeeded:(long)message.clientId];
+                    [self removeResendMessage:(long)message.clientId];
+                    [self postSendMessageNotificationWithMessage:successMessage
+                                                originalClientId:(long)message.clientId
+                                                      sentStatus:NCMessageSentStatusSent
+                                                           error:NCChatUIErrorCodeSuccess
+                                                        progress:nil
+                                                      markResend:NO];
                     [self sendAfterTimer];
-                    return;
-                }
-                [self deleteLocalMessageIfNeeded:(long)message.clientId];
-                [self removeResendMessage:(long)message.clientId];
-                [self postSendMessageNotificationWithMessage:successMessage
-                                          originalClientId:(long)message.clientId
-                                                 sentStatus:NCMessageSentStatusSent
-                                                      error:NCChatUIErrorCodeSuccess
-                                                   progress:nil
-                                                 markResend:NO];
-                [self sendAfterTimer];
-            });
-        }];
+                  });
+                }];
     }
 }
 
 - (void)postSendMessageNotificationWithMessage:(NCMessage *)message
                               originalClientId:(long)originalClientId
-                                     sentStatus:(NCMessageSentStatus)sentStatus
-                                          error:(NCChatUIErrorCode)nErrorCode
-                                       progress:(NSNumber *)progress
-                                     markResend:(BOOL)markResend {
+                                    sentStatus:(NCMessageSentStatus)sentStatus
+                                         error:(NCChatUIErrorCode)nErrorCode
+                                      progress:(NSNumber *)progress
+                                    markResend:(BOOL)markResend {
     if (!message) {
         return;
     }
@@ -387,38 +399,39 @@ static NCBaseChannel *NCResendChannelFromIdentifier(NCChannelIdentifier *identif
 
 - (void)onConnectionStatusChangedNotification:(NSNotification *)status {
     dispatch_main_async_safe(^{
-        NCLogI(@"connection status changed");
-        NCConnectionStatus connectionStatus = [status.object integerValue];
-        switch (connectionStatus) {
-            case NCConnectionStatusConnected: {
-                if ([self.currentUserId isEqualToString:[NCEngine getCurrentUserId]]){
-                    if (!self.isProcessing) {
-                        [self beginResend];
-                    }
-                }else{
-                    self.currentUserId = [NCEngine getCurrentUserId];
-                    [self removeAllResendMessage];
-                }
-            } break;
-            // Since 5.3.0, sign-out, timeout, and unavailable proxy errors immediately show send failure.
-            // Since 5.3.1, kicked-offline errors immediately show send failure.
-            case NCConnectionStatusKickedOfflineByOtherClient:
-            case NCConnectionStatusSignOut:
-            case NCConnectionStatusTimeout:
-            case NCConnectionStatusProxyUnavailable: {
-                [self removeAllResendMessage];
-            } break;
-            default:
-                break;
-        }
+      NCLogI(@"connection status changed");
+      NCConnectionStatus connectionStatus = [status.object integerValue];
+      switch (connectionStatus) {
+      case NCConnectionStatusConnected: {
+          if ([self.currentUserId isEqualToString:[NCEngine getCurrentUserId]]) {
+              if (!self.isProcessing) {
+                  [self beginResend];
+              }
+          } else {
+              self.currentUserId = [NCEngine getCurrentUserId];
+              [self removeAllResendMessage];
+          }
+      } break;
+      // Since 5.3.0, sign-out, timeout, and unavailable proxy errors immediately show send failure.
+      // Since 5.3.1, kicked-offline errors immediately show send failure.
+      case NCConnectionStatusKickedOfflineByOtherClient:
+      case NCConnectionStatusSignOut:
+      case NCConnectionStatusTimeout:
+      case NCConnectionStatusProxyUnavailable: {
+          [self removeAllResendMessage];
+      } break;
+      default:
+          break;
+      }
     });
 }
 
 #pragma mark - NCConnectionStatusHandler
 
 - (void)onConnectionStatusChanged:(NCConnectionStatusChangedEvent *)event {
-    NSNotification *statusNotification = [NSNotification notificationWithName:NCChatUIDispatchConnectionStatusChangedNotification
-                                                                       object:@(event.status)];
+    NSNotification *statusNotification =
+        [NSNotification notificationWithName:NCChatUIDispatchConnectionStatusChangedNotification
+                                      object:@(event.status)];
     [self onConnectionStatusChangedNotification:statusNotification];
 }
 

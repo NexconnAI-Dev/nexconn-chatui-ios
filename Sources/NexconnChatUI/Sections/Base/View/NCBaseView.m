@@ -21,9 +21,9 @@ NSInteger NCUserManagementViewPadding = 16;
     return self;
 }
 
-- (instancetype)initWithCoder:(NSCoder *)coder{
+- (instancetype)initWithCoder:(NSCoder *)coder {
     self = [super initWithCoder:coder];
-    if(self){
+    if (self) {
         [self updateRTLUI];
         [self setupView];
         [self setupConstraints];
@@ -31,19 +31,17 @@ NSInteger NCUserManagementViewPadding = 16;
     return self;
 }
 
-- (void)updateRTLUI{
+- (void)updateRTLUI {
     if ([NCSemanticContext isRTL]) {
         self.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-    }else{
+    } else {
         self.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
     }
 }
 
 - (void)setupView {
-    
 }
 
 - (void)setupConstraints {
-    
 }
 @end

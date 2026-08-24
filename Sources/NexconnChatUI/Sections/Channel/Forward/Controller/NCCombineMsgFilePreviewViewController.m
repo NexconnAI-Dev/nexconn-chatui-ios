@@ -7,18 +7,18 @@
 //
 
 #import "NCCombineMsgFilePreviewViewController.h"
-#import "NCChatUI.h"
-#import "NCChatUIErrorCode.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import <WebKit/WebKit.h>
-#import "NCChatUIConfig.h"
 #import "NCActionSheetView.h"
-#import "NCSemanticContext.h"
-#import "NCButton.h"
-#import "NCBaseImageView.h"
 #import "NCAlertView.h"
+#import "NCBaseImageView.h"
+#import "NCButton.h"
+#import "NCChatUI.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIErrorCode.h"
+#import "NCChatUIUtility.h"
 #import "NCFileUtility.h"
+#import "NCSemanticContext.h"
+#import <WebKit/WebKit.h>
 
 extern NSString *const NCUIDispatchDownloadMediaNotification;
 
@@ -49,7 +49,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 #pragma mark - Life Cycle
 - (instancetype)initWithRemoteURL:(NSString *)remoteURL
                       channelType:(NCChannelType)channelType
-                         channelId:(NSString *)channelId
+                        channelId:(NSString *)channelId
                          fileSize:(long long)fileSize
                          fileName:(NSString *)fileName
                          fileType:(NSString *)fileType {
@@ -81,17 +81,23 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     rightBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
     UIImage *rightImage = NCDynamicImage(@"file_preview_forward_img");
     [rightBtn setImage:rightImage forState:UIControlStateNormal];
-    [rightBtn addTarget:self action:@selector(moreAction) forControlEvents:UIControlEventTouchUpInside];
+    [rightBtn addTarget:self
+                  action:@selector(moreAction)
+        forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:rightBtn];
 
     // Configure the left navigation item.
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
     imgMirror = [NCSemanticContext imageflippedForRTL:imgMirror];
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:NCUILocalizedString(@"back") target:self action:@selector(clickBackBtn:)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:NCUILocalizedString(@"back")
+                                         target:self
+                                         action:@selector(clickBackBtn:)];
 
     [self registerNotificationCenter];
     [self setupSubviews];
-    
+
     if ([self isFileDownloaded] && [self isFileSupported]) {
         [self layoutAndPreviewFile];
     } else {
@@ -119,31 +125,30 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     }
     NSString *type = statusDic[@"type"];
     dispatch_main_async_safe(^{
-        if ([type isEqualToString:@"progress"]) {
-            [self layoutForDownloading];
-            float progress = (float)[statusDic[@"progress"] intValue] / 100.0f;
-            [self downloading:progress];
-        } else if ([type isEqualToString:@"success"]) {
-            self.localPath = statusDic[@"mediaPath"];
-            if ([self isFileSupported]) {
-                [self layoutAndPreviewFile];
-            } else {
-                [self layoutForShowFileInfo];
-            }
-        } else if ([type isEqualToString:@"error"]) {
-            [self layoutForShowFileInfo];
-            if ([statusDic[@"errorCode"] intValue] == NCChatUIErrorCodeNetworkUnavailable) {
-                [self showAlertController:NCUILocalizedString(@"connection_is_not_reachable")];
-            } else {
-                [self showAlertController:NCUILocalizedString(@"file_download_failed")];
-            }
-        } else if ([type isEqualToString:@"cancel"]) {
-            [self layoutForShowFileInfo];
-            [self showAlertController:NCUILocalizedString(@"file_download_canceled")];
-        }
+      if ([type isEqualToString:@"progress"]) {
+          [self layoutForDownloading];
+          float progress = (float)[statusDic[@"progress"] intValue] / 100.0f;
+          [self downloading:progress];
+      } else if ([type isEqualToString:@"success"]) {
+          self.localPath = statusDic[@"mediaPath"];
+          if ([self isFileSupported]) {
+              [self layoutAndPreviewFile];
+          } else {
+              [self layoutForShowFileInfo];
+          }
+      } else if ([type isEqualToString:@"error"]) {
+          [self layoutForShowFileInfo];
+          if ([statusDic[@"errorCode"] intValue] == NCChatUIErrorCodeNetworkUnavailable) {
+              [self showAlertController:NCUILocalizedString(@"connection_is_not_reachable")];
+          } else {
+              [self showAlertController:NCUILocalizedString(@"file_download_failed")];
+          }
+      } else if ([type isEqualToString:@"cancel"]) {
+          [self layoutForShowFileInfo];
+          [self showAlertController:NCUILocalizedString(@"file_download_canceled")];
+      }
     });
 }
-
 
 - (void)setupSubviews {
     [self.view addSubview:self.webView];
@@ -161,33 +166,37 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 - (void)startFileDownLoad {
     [self layoutForDownloading];
     [NCBaseChannel downloadMediaUrl:self.remoteURL
-                           fileName:self.fileName
-                    progressHandler:^(NSInteger progress){
-                               (void)progress;
-                           }
-                  completionHandler:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-                               (void)mediaPath;
-                               (void)error;
-                           }
-                      cancelHandler:^{
-                      }];
+        fileName:self.fileName
+        progressHandler:^(NSInteger progress) {
+          (void)progress;
+        }
+        completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+          (void)mediaPath;
+          (void)error;
+        }
+        cancelHandler:^{
+        }];
 }
 
 - (void)showAlertController:(NSString *)message {
-    [NCAlertView showAlertController:nil message:message cancelTitle:NCUILocalizedString(@"ok") inViewController:self];
+    [NCAlertView showAlertController:nil
+                             message:message
+                         cancelTitle:NCUILocalizedString(@"ok")
+                    inViewController:self];
 }
 
 - (void)downloading:(float)progress {
     [self.progressView setProgress:progress animated:YES];
-    self.progressLabel.text =
-        [NSString stringWithFormat:@"%@(%@/%@)", NCUILocalizedString(@"file_is_downloading"),
-                                   [NCChatUIUtility getReadableStringForFileSize:progress * self.fileSize],
-                                   [NCChatUIUtility getReadableStringForFileSize:self.fileSize]];
+    self.progressLabel.text = [NSString
+        stringWithFormat:@"%@(%@/%@)", NCUILocalizedString(@"file_is_downloading"),
+                         [NCChatUIUtility getReadableStringForFileSize:progress * self.fileSize],
+                         [NCChatUIUtility getReadableStringForFileSize:self.fileSize]];
 }
 
 - (BOOL)isFileDownloaded {
     NSString *fileLocalPath = self.localPath;
-    /// fileLocalPath is absolute and must be corrected when the sandbox path changes after relaunch.
+    /// fileLocalPath is absolute and must be corrected when the sandbox path changes after
+    /// relaunch.
     if (fileLocalPath) {
         fileLocalPath = [NCFileUtility correctedFilePath:fileLocalPath];
     }
@@ -263,11 +272,15 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 }
 
 - (void)moreAction {
-    [NCActionSheetView showActionSheetView:nil cellArray:@[NCUILocalizedString(@"open_file_in_other_app")] cancelTitle:NCUILocalizedString(@"cancel") selectedBlock:^(NSInteger index) {
-        [self openInOtherApp:self.localPath];
-    } cancelBlock:^{
-            
-    }];
+    [NCActionSheetView showActionSheetView:nil
+                                 cellArray:@[ NCUILocalizedString(@"open_file_in_other_app") ]
+                               cancelTitle:NCUILocalizedString(@"cancel")
+                             selectedBlock:^(NSInteger index) {
+                               [self openInOtherApp:self.localPath];
+                             }
+                               cancelBlock:^{
+
+                               }];
 }
 
 - (void)clickBackBtn:(id)sender {
@@ -278,14 +291,15 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     if (!localPath) {
         return;
     }
-    UIActivityViewController *activityVC =
-        [[UIActivityViewController alloc] initWithActivityItems:@[ [NSURL fileURLWithPath:localPath] ]
-                                          applicationActivities:nil];
+    UIActivityViewController *activityVC = [[UIActivityViewController alloc]
+        initWithActivityItems:@[ [NSURL fileURLWithPath:localPath] ]
+        applicationActivities:nil];
     if ([NCChatUIUtility currentDeviceIsIPad]) {
         UIPopoverPresentationController *popPresenter = [activityVC popoverPresentationController];
         UIWindow *window = [NCChatUIUtility getWindowForView:self.view];
         popPresenter.sourceView = window;
-        popPresenter.sourceRect = CGRectMake(window.frame.size.width / 2, window.frame.size.height / 2, 0, 0);
+        popPresenter.sourceRect =
+            CGRectMake(window.frame.size.width / 2, window.frame.size.height / 2, 0, 0);
         popPresenter.permittedArrowDirections = 0;
     }
     [self presentViewController:activityVC animated:YES completion:nil];
@@ -302,11 +316,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 #pragma mark - Text File Encoding
 - (NSString *)examineTheFilePathStr:(NSString *)str {
     NSStringEncoding *useEncodeing = nil; // Detect encodings with a byte-order mark, such as UTF-8.
-    NSString *body = [NSString
-        stringWithContentsOfFile:str
-                    usedEncoding:useEncodeing
-                           error:
-                               nil];
+    NSString *body = [NSString stringWithContentsOfFile:str usedEncoding:useEncodeing error:nil];
     if (!body) {
         // If detection fails, try GB18030 first (0x80000632).
         body = [NSString stringWithContentsOfFile:str encoding:0x80000632 error:nil];
@@ -318,21 +328,22 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     return body;
 }
 
-- (void)transformEncodingFromFilePath:(NSString *)filePath {       // Decode the file into a valid string.
-    NSString *body = [self examineTheFilePathStr:filePath];        // Read and decode the file contents.
-    NSData *data = [body dataUsingEncoding:NSUTF16StringEncoding]; // Replace the original file with UTF-16 data.
-    [data writeToFile:filePath atomically:YES];                    // Subsequent reads use the normalized encoding.
+- (void)transformEncodingFromFilePath:(NSString *)filePath { // Decode the file into a valid string.
+    NSString *body = [self examineTheFilePathStr:filePath];  // Read and decode the file contents.
+    NSData *data = [body
+        dataUsingEncoding:NSUTF16StringEncoding]; // Replace the original file with UTF-16 data.
+    [data writeToFile:filePath atomically:YES];   // Subsequent reads use the normalized encoding.
 }
 
 #pragma mark - Getters and Setters
 - (WKWebView *)webView {
     if (!_webView) {
         _webView = [[WKWebView alloc]
-            initWithFrame:CGRectMake(0, self.extentLayoutForY, [UIScreen mainScreen].bounds.size.width,
-                                     [UIScreen mainScreen].bounds.size.height - self.extentLayoutForY)];
+            initWithFrame:CGRectMake(
+                              0, self.extentLayoutForY, [UIScreen mainScreen].bounds.size.width,
+                              [UIScreen mainScreen].bounds.size.height - self.extentLayoutForY)];
         _webView.scrollView.contentInset = (UIEdgeInsets){8, 8, 8, 8};
         _webView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
-        
     }
     return _webView;
 }
@@ -340,7 +351,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 - (NCBaseImageView *)typeIconView {
     if (!_typeIconView) {
         _typeIconView = [[NCBaseImageView alloc]
-            initWithFrame:CGRectMake((self.view.bounds.size.width - 75) / 2, 30 + self.extentLayoutForY, 75, 75)];
+            initWithFrame:CGRectMake((self.view.bounds.size.width - 75) / 2,
+                                     30 + self.extentLayoutForY, 75, 75)];
         _typeIconView.image = [NCChatUIUtility imageWithFileSuffix:self.fileType];
     }
 
@@ -349,8 +361,9 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (UILabel *)nameLabel {
     if (!_nameLabel) {
-        _nameLabel = [[UILabel alloc]
-            initWithFrame:CGRectMake(10, 122 + self.extentLayoutForY, self.view.bounds.size.width - 10 * 2, 21)];
+        _nameLabel =
+            [[UILabel alloc] initWithFrame:CGRectMake(10, 122 + self.extentLayoutForY,
+                                                      self.view.bounds.size.width - 10 * 2, 21)];
         _nameLabel.font = [[NCChatUIConfig defaultConfig].font fontOfSecondLevel];
         _nameLabel.text = self.fileName;
         _nameLabel.textAlignment = NSTextAlignmentCenter;
@@ -362,8 +375,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (UILabel *)sizeLabel {
     if (!_sizeLabel) {
-        _sizeLabel =
-            [[UILabel alloc] initWithFrame:CGRectMake(0, 151 + self.extentLayoutForY, self.view.bounds.size.width, 12)];
+        _sizeLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 151 + self.extentLayoutForY,
+                                                               self.view.bounds.size.width, 12)];
         _sizeLabel.font = [[NCChatUIConfig defaultConfig].font fontOfGuideLevel];
         _sizeLabel.text = [NCChatUIUtility getReadableStringForFileSize:self.fileSize];
         _sizeLabel.textAlignment = NSTextAlignmentCenter;
@@ -374,8 +387,9 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 - (UILabel *)progressLabel {
     if (!_progressLabel) {
-        _progressLabel = [[UILabel alloc]
-            initWithFrame:CGRectMake(10, 151 + self.extentLayoutForY, self.view.bounds.size.width - 10 * 2, 21)];
+        _progressLabel =
+            [[UILabel alloc] initWithFrame:CGRectMake(10, 151 + self.extentLayoutForY,
+                                                      self.view.bounds.size.width - 10 * 2, 21)];
         _progressLabel.textColor = NCDynamicColor(@"text_secondary_color");
         _progressLabel.textAlignment = NSTextAlignmentCenter;
         _progressLabel.font = [[NCChatUIConfig defaultConfig].font fontOfGuideLevel];
@@ -386,7 +400,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 - (UIProgressView *)progressView {
     if (!_progressView) {
         _progressView = [[UIProgressView alloc]
-            initWithFrame:CGRectMake(10, 184 + self.extentLayoutForY, self.view.bounds.size.width - 10 * 3, 8)];
+            initWithFrame:CGRectMake(10, 184 + self.extentLayoutForY,
+                                     self.view.bounds.size.width - 10 * 3, 8)];
         _progressView.transform = CGAffineTransformMakeScale(1.0f, 4.0f);
         _progressView.progressViewStyle = UIProgressViewStyleDefault;
         _progressView.progressTintColor = NCDynamicColor(@"primary_color");
@@ -397,11 +412,12 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 - (NCBaseButton *)downloadButton {
     if (!_downloadButton) {
         _downloadButton = [[NCBaseButton alloc]
-            initWithFrame:CGRectMake(10, 197 + self.extentLayoutForY, self.view.bounds.size.width - 10 * 2, 40)];
+            initWithFrame:CGRectMake(10, 197 + self.extentLayoutForY,
+                                     self.view.bounds.size.width - 10 * 2, 40)];
         _downloadButton.backgroundColor = NCDynamicColor(@"primary_color");
         _downloadButton.layer.cornerRadius = 5.0f;
-//        _downloadButton.layer.borderWidth = 0.5f;
-//        _downloadButton.layer.borderColor = [HEXCOLOR(0x0181dd) CGColor];
+        //        _downloadButton.layer.borderWidth = 0.5f;
+        //        _downloadButton.layer.borderColor = [HEXCOLOR(0x0181dd) CGColor];
         [_downloadButton setTitle:NCUILocalizedString(@"start_download_file")
                          forState:UIControlStateNormal];
         [_downloadButton addTarget:self
@@ -414,11 +430,12 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
 - (NCBaseButton *)openInOtherAppButton {
     if (!_openInOtherAppButton) {
         _openInOtherAppButton = [[NCBaseButton alloc]
-            initWithFrame:CGRectMake(10, 197 + self.extentLayoutForY, self.view.bounds.size.width - 10 * 2, 40)];
+            initWithFrame:CGRectMake(10, 197 + self.extentLayoutForY,
+                                     self.view.bounds.size.width - 10 * 2, 40)];
         _openInOtherAppButton.backgroundColor = NCDynamicColor(@"primary_color");
         _openInOtherAppButton.layer.cornerRadius = 5.0f;
-//        _openInOtherAppButton.layer.borderWidth = 0.5f;
-//        _openInOtherAppButton.layer.borderColor = [HEXCOLOR(0x0181dd) CGColor];
+        //        _openInOtherAppButton.layer.borderWidth = 0.5f;
+        //        _openInOtherAppButton.layer.borderColor = [HEXCOLOR(0x0181dd) CGColor];
         [_openInOtherAppButton setTitle:NCUILocalizedString(@"open_file_in_other_app")
                                forState:UIControlStateNormal];
         [_openInOtherAppButton addTarget:self
@@ -437,8 +454,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                 forControlEvents:UIControlEventTouchUpInside];
         _cancelButton.backgroundColor = NCDynamicColor(@"primary_color");
         _cancelButton.layer.cornerRadius = 5.0f;
-//        _cancelButton.layer.borderWidth = 0.5f;
-//        _cancelButton.layer.borderColor = [HEXCOLOR(0x0181dd) CGColor];
+        //        _cancelButton.layer.borderWidth = 0.5f;
+        //        _cancelButton.layer.borderColor = [HEXCOLOR(0x0181dd) CGColor];
     }
     return _cancelButton;
 }

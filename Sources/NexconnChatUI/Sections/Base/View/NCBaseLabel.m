@@ -18,26 +18,26 @@
     return self;
 }
 
-- (instancetype)init{
+- (instancetype)init {
     self = [super init];
-    if(self){
+    if (self) {
         [self updateRTLUI];
     }
     return self;
 }
 
-- (instancetype)initWithCoder:(NSCoder *)coder{
+- (instancetype)initWithCoder:(NSCoder *)coder {
     self = [super initWithCoder:coder];
-    if(self){
+    if (self) {
         [self updateRTLUI];
     }
     return self;
 }
 
-- (void)updateRTLUI{
+- (void)updateRTLUI {
     if ([NCSemanticContext isRTL]) {
         self.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-    }else{
+    } else {
         self.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
     }
 }

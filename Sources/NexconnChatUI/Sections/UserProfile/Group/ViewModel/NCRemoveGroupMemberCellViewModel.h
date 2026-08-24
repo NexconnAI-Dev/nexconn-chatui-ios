@@ -12,7 +12,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 /// Select group member cell
-@interface NCRemoveGroupMemberCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCRemoveGroupMemberCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 
 /// Group member
 @property (nonatomic, strong, readonly) NCGroupMemberInfo *member;

@@ -18,7 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)isRemoteURL:(nullable NSString *)url;
 + (nullable NSString *)correctedFilePath:(nullable NSString *)localPath;
 + (nullable NSString *)imageCacheRootDirectory;
-+ (nullable UIImage *)imageByScalingAndCropSize:(nullable UIImage *)image targetSize:(CGSize)targetSize;
++ (nullable UIImage *)imageByScalingAndCropSize:(nullable UIImage *)image
+                                     targetSize:(CGSize)targetSize;
 + (nullable NSString *)fileKeyForURL:(nullable NSString *)fileURL;
 + (BOOL)isFileExist:(nullable NSString *)path;
 + (nullable NSString *)fileLocalPathForRemoteURL:(nullable NSString *)remoteURL;

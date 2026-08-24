@@ -9,15 +9,13 @@
 #import "NCGroupMemberAdditionalCellViewModel.h"
 #import "NCGroupMemberAdditionalCell.h"
 
-@interface NCGroupMemberAdditionalCellViewModel()
+@interface NCGroupMemberAdditionalCellViewModel ()
 
 @end
 
 @implementation NCGroupMemberAdditionalCellViewModel
 
-- (instancetype)initWithTitle:(NSString *)title
-                     portrait:(UIImage *)portrait
-{
+- (instancetype)initWithTitle:(NSString *)title portrait:(UIImage *)portrait {
     self = [super init];
     if (self) {
         self.title = title;
@@ -27,13 +25,15 @@
 }
 
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:[NCGroupMemberAdditionalCell class] forCellReuseIdentifier:NCGroupMemberAdditionalCellIdentifier];
+    [tableView registerClass:[NCGroupMemberAdditionalCell class]
+        forCellReuseIdentifier:NCGroupMemberAdditionalCellIdentifier];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCGroupMemberAdditionalCell *cell = [tableView dequeueReusableCellWithIdentifier:NCGroupMemberAdditionalCellIdentifier
-                                                                      forIndexPath:indexPath];
+    NCGroupMemberAdditionalCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCGroupMemberAdditionalCellIdentifier
+                                        forIndexPath:indexPath];
     cell.labName.text = self.title;
     cell.portraitImageView.image = self.portrait;
     cell.hideSeparatorLine = self.hideSeparatorLine;
@@ -41,7 +41,6 @@
 }
 
 - (void)itemDidSelectedByViewController:(UIViewController *)vc {
-
 }
 
 @end

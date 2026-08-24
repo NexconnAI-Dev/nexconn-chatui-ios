@@ -6,14 +6,14 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseNavigationController.h"
+#import "NCChatUIUserInfo.h"
 #import "NCEmojiBoardView.h"
+#import "NCInputContainerView.h"
 #import "NCPluginBoardView.h"
 #import "NCTextView.h"
-#import "NCChatUIUserInfo.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
 #import <UIKit/UIKit.h>
-#import "NCInputContainerView.h"
-#import "NCBaseNavigationController.h"
 #define NC_ChatSessionInputBar_Height 49.5f
 /// Unique tags for input bar extension items.
 #define INPUT_MENTIONED_SELECT_TAG 1000
@@ -61,7 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic, nullable) id<NCChatSessionInputBarControlDataSource> dataSource;
 
 /// Deprecated. Tapping the edit button calls onClickEditPicture on this delegate.
-@property (weak, nonatomic, nullable) id<NCPictureEditDelegate> photoEditorDelegate __deprecated_msg("Deprecated");
+@property (weak, nonatomic, nullable) id<NCPictureEditDelegate> photoEditorDelegate
+    __deprecated_msg("Deprecated");
 
 #pragma mark - View Display
 
@@ -110,7 +111,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Settings
 
 /// Current input bar status.
-@property (nonatomic,assign) KBottomBarStatus currentBottomBarStatus;
+@property (nonatomic, assign) KBottomBarStatus currentBottomBarStatus;
 
 /// Maximum number of input lines.
 ///
@@ -151,7 +152,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param style Layout style.
 ///
 /// Set this after viewDidLoad of the channel page to change the input bar style.
-- (void)setInputBarType:(NCChatSessionInputBarControlType)type style:(NCChatSessionInputBarControlStyle)style;
+- (void)setInputBarType:(NCChatSessionInputBarControlType)type
+                  style:(NCChatSessionInputBarControlStyle)style;
 
 /// Cancel voice recording.
 - (void)cancelVoiceRecord;
@@ -182,7 +184,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Called when the content area size changes (without animation).
 ///
-/// Call this when the parent view's frame changes and this view's frame needs recalculation, without animation.
+/// Call this when the parent view's frame changes and this view's frame needs recalculation,
+/// without animation.
 - (void)containerViewSizeChangedNoAnnimation;
 
 /// Set the default input type.
@@ -214,7 +217,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param functionTag The tag of the plugin item.
 - (void)openDynamicFunction:(NSInteger)functionTag;
-
 
 @end
 
@@ -286,7 +288,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)inputBarIsCameraHolding:(NCChatSessionInputBarControl *)chatInputBar;
 
 /// Called when voice recording is about to begin.
-/// @return YES to continue recording; NO to stop (e.g., when audio is held by another module, show an alert).
+/// @return YES to continue recording; NO to stop (e.g., when audio is held by another module, show
+/// an alert).
 - (BOOL)recordWillBegin;
 
 /// Called when voice recording has begun.
@@ -308,7 +311,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param url URL of the short video.
 /// @param image Thumbnail image (first frame) of the short video.
 /// @param duration Duration of the short video in seconds.
-- (void)sightDidFinishRecord:(NSString *)url thumbnail:(UIImage *)image duration:(NSUInteger)duration;
+- (void)sightDidFinishRecord:(NSString *)url
+                   thumbnail:(UIImage *)image
+                    duration:(NSUInteger)duration;
 
 /// Called when short video recording fails.
 ///
@@ -349,7 +354,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param completion  Callback when retrieval is complete.
 /// @param functionTag Function tag identifier.
-- (void)getSelectingUserIdList:(void (^)(NSArray<NSString *> *userIdList))completion functionTag:(NSInteger)functionTag;
+- (void)getSelectingUserIdList:(void (^)(NSArray<NSString *> *userIdList))completion
+                   functionTag:(NSInteger)functionTag;
 
 /// Get the user info for a user ID being selected.
 ///
@@ -377,14 +383,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// Delegate for picture editing.
 @protocol NCPictureEditDelegate <NSObject>
 
-/// Called when the edit button is tapped. Use rootCtrl for navigation. Defaults to NCPictureEditViewController.
+/// Called when the edit button is tapped. Use rootCtrl for navigation. Defaults to
+/// NCPictureEditViewController.
 ///
 /// @param rootCtrl The root controller for navigation.
 /// @param originalImage The original image.
 /// @param editCompletion Block to pass the edited image back to the SDK.
 - (void)onClickEditPicture:(UIViewController *)rootCtrl
              originalImage:(UIImage *)originalImage
-            editCompletion:(void (^)(UIImage *editedImage))editCompletion __attribute__((deprecated));
+            editCompletion:(void (^)(UIImage *editedImage))editCompletion
+    __attribute__((deprecated));
 
 @end
 

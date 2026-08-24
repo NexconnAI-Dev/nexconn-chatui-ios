@@ -161,8 +161,9 @@
 
  - Returns: `NSError` object if error; `nil` if successful.
 
- @warning You can not nest these, since calling it will pull another database out of the pool and you'll get a deadlock.
- If you need to nest, use `<[NCFMDatabase startSavePointWithName:error:]>` instead.
+ @warning You can not nest these, since calling it will pull another database out of the pool and
+ you'll get a deadlock. If you need to nest, use `<[NCFMDatabase startSavePointWithName:error:]>`
+ instead.
 */
 
 - (NSError *)inSavePoint:(void (^)(NCFMDatabase *db, BOOL *rollback))block;

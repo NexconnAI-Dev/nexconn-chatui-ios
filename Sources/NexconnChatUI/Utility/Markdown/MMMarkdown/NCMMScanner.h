@@ -12,10 +12,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,16 +27,15 @@
 
 #import <Foundation/Foundation.h>
 
-
 @interface NCMMScanner : NSObject
 
 // Constant info
 @property (strong, nonatomic, readonly) NSString *string;
-@property (copy,   nonatomic, readonly) NSArray  *lineRanges;
+@property (copy, nonatomic, readonly) NSArray *lineRanges;
 
 // Changing
 @property (assign, nonatomic, readonly) NSUInteger startLocation;
-@property (assign, nonatomic, readonly) NSRange    currentRange;
+@property (assign, nonatomic, readonly) NSRange currentRange;
 
 // Settable
 @property (assign, nonatomic) NSUInteger location;

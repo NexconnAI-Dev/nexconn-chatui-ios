@@ -12,10 +12,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,9 +27,7 @@
 
 #import <Foundation/Foundation.h>
 
-
-typedef enum
-{
+typedef enum {
     MMElementTypeNone = 0,
     MMElementTypeHeader = 1,
     MMElementTypeParagraph = 2,
@@ -57,8 +55,7 @@ typedef enum
     MMElementTypeTableRowCell = 24,
 } MMElementType;
 
-typedef NS_ENUM(NSInteger, MMTableCellAlignment)
-{
+typedef NS_ENUM(NSInteger, MMTableCellAlignment) {
     MMTableCellAlignmentNone,
     MMTableCellAlignmentLeft,
     MMTableCellAlignmentCenter,
@@ -67,21 +64,21 @@ typedef NS_ENUM(NSInteger, MMTableCellAlignment)
 
 @interface NCMMElement : NSObject
 
-@property (assign, nonatomic) NSRange        range;
-@property (assign, nonatomic) MMElementType  type;
-@property (copy,   nonatomic) NSArray       *innerRanges;
+@property (assign, nonatomic) NSRange range;
+@property (assign, nonatomic) MMElementType type;
+@property (copy, nonatomic) NSArray *innerRanges;
 
 @property (assign, nonatomic) MMTableCellAlignment alignment;
-@property (assign, nonatomic) NSUInteger     level;
-@property (copy,   nonatomic) NSString      *href;
-@property (copy,   nonatomic) NSString      *title;
-@property (copy,   nonatomic) NSString      *identifier;
-@property (copy,   nonatomic) NSString      *stringValue;
+@property (assign, nonatomic) NSUInteger level;
+@property (copy, nonatomic) NSString *href;
+@property (copy, nonatomic) NSString *title;
+@property (copy, nonatomic) NSString *identifier;
+@property (copy, nonatomic) NSString *stringValue;
 
 @property (assign, nonatomic) NCMMElement *parent;
-@property (copy,   nonatomic) NSArray   *children;
+@property (copy, nonatomic) NSArray *children;
 
-@property (copy,   nonatomic) NSString  *language;
+@property (copy, nonatomic) NSString *language;
 
 - (void)addInnerRange:(NSRange)aRange;
 - (void)removeLastInnerRange;

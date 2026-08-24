@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "NCChatUIConf.h"
 #import "NCChatUIFontConf.h"
 #import "NCChatUIMessageConf.h"
-#import "NCChatUIConf.h"
+#import <Foundation/Foundation.h>
 
 #define NCChatUIConfigCenter [NCChatUIConfig defaultConfig]
 

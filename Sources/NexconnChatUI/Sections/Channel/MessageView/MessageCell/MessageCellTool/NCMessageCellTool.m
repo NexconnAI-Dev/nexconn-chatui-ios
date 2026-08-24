@@ -12,14 +12,14 @@
 #import <NexconnChatSDK/NexconnChatSDK.h>
 
 @implementation NCMessageCellTool
-+ (UIImage *)getDefaultMessageCellBackgroundImage:(NCMessageModel *)model{
++ (UIImage *)getDefaultMessageCellBackgroundImage:(NCMessageModel *)model {
     UIImage *bubbleImage;
     if (NCMessageDirectionReceive == model.messageDirection) {
         bubbleImage = NCDynamicImage(@"channel_msg_cell_bg_from_img");
     } else {
         if ([self isWhiteBubbleImageWithSendMesageCell:model.objectName]) {
             bubbleImage = NCDynamicImage(@"channel_msg_cell_bg_white_img");
-        }else{
+        } else {
             bubbleImage = NCDynamicImage(@"channel_msg_cell_bg_to_img");
         }
     }
@@ -30,15 +30,15 @@
     return bubbleImage;
 }
 
-+ (BOOL)isWhiteBubbleImageWithSendMesageCell:(NSString *)objectName{
-    NSArray *list = @[@"RC:FileMsg",@"RC:CardMsg"];
++ (BOOL)isWhiteBubbleImageWithSendMesageCell:(NSString *)objectName {
+    NSArray *list = @[ @"RC:FileMsg", @"RC:CardMsg" ];
     if ([list containsObject:objectName]) {
         return YES;
     }
     return NO;
 }
 
-+ (CGFloat)getMessageContentViewMaxWidth{
++ (CGFloat)getMessageContentViewMaxWidth {
     float screenRatio = 0.637;
     if (SCREEN_WIDTH <= 320) {
         screenRatio = 0.6;
@@ -49,10 +49,11 @@
 
 + (CGSize)getThumbnailImageSize:(UIImage *)image {
     // Size thumbnails using the minimum and maximum lengths from the SDK compression options.
-    // If either edge is below the minimum, scale from the shorter edge and cap the longer edge at the maximum.
-    // If both edges are within the range, scale the longer edge to the maximum while preserving the aspect ratio.
-    // If either edge exceeds the maximum, fit moderate aspect ratios by the longer edge; for extreme ratios,
-    // fit the shorter edge to the minimum and cap the longer edge at the maximum.
+    // If either edge is below the minimum, scale from the shorter edge and cap the longer edge at
+    // the maximum. If both edges are within the range, scale the longer edge to the maximum while
+    // preserving the aspect ratio. If either edge exceeds the maximum, fit moderate aspect ratios
+    // by the longer edge; for extreme ratios, fit the shorter edge to the minimum and cap the
+    // longer edge at the maximum.
     CGSize imageSize = image.size;
     NCCompressOptions *compressOptions = [NCEngine getCompressOptions];
     CGFloat maxSize = compressOptions.thumbnailMaxSize.floatValue / 2;
@@ -65,7 +66,9 @@
     CGFloat imageWidth = 0;
     CGFloat imageHeight = 0;
     if (imageSize.width < imageMinLength || imageSize.height < imageMinLength) {
-        return [self p_getSizeForBelowStandard:imageSize imageMinLength:imageMinLength imageMaxLength:imageMaxLength];
+        return [self p_getSizeForBelowStandard:imageSize
+                                imageMinLength:imageMinLength
+                                imageMaxLength:imageMaxLength];
     } else if (imageSize.width < imageMaxLength && imageSize.height < imageMaxLength &&
                imageSize.width >= imageMinLength && imageSize.height >= imageMinLength) {
         if (imageSize.width > imageSize.height) {
@@ -76,12 +79,16 @@
             imageWidth = imageMaxLength * imageSize.width / imageSize.height;
         }
     } else if (imageSize.width >= imageMaxLength || imageSize.height >= imageMaxLength) {
-        return [self p_getSizeForAboveStandard:imageSize imageMinLength:imageMinLength imageMaxLength:imageMaxLength];
+        return [self p_getSizeForAboveStandard:imageSize
+                                imageMinLength:imageMinLength
+                                imageMaxLength:imageMaxLength];
     }
     return CGSizeMake(imageWidth, imageHeight);
 }
 
-+ (CGSize)p_getSizeForBelowStandard:(CGSize)imageSize imageMinLength:(CGFloat)imageMinLength imageMaxLength:(CGFloat)imageMaxLength{
++ (CGSize)p_getSizeForBelowStandard:(CGSize)imageSize
+                     imageMinLength:(CGFloat)imageMinLength
+                     imageMaxLength:(CGFloat)imageMaxLength {
     CGFloat imageWidth = 0;
     CGFloat imageHeight = 0;
     if (imageSize.width < imageSize.height) {
@@ -100,7 +107,9 @@
     return CGSizeMake(imageWidth, imageHeight);
 }
 
-+ (CGSize)p_getSizeForAboveStandard:(CGSize)imageSize imageMinLength:(CGFloat)imageMinLength imageMaxLength:(CGFloat)imageMaxLength{
++ (CGSize)p_getSizeForAboveStandard:(CGSize)imageSize
+                     imageMinLength:(CGFloat)imageMinLength
+                     imageMaxLength:(CGFloat)imageMaxLength {
     CGFloat imageWidth = 0;
     CGFloat imageHeight = 0;
     if (imageSize.width > imageSize.height) {
@@ -129,43 +138,57 @@
     return CGSizeMake(imageWidth, imageHeight);
 }
 
-+ (NSDictionary *)getTextLinkOrPhoneNumberAttributeDictionary:(NCMessageDirection)msgDirection{
-    return [self getTextLinkOrPhoneNumberAttributeDictionary:msgDirection linkColorKey:@"link_color"];
++ (NSDictionary *)getTextLinkOrPhoneNumberAttributeDictionary:(NCMessageDirection)msgDirection {
+    return [self getTextLinkOrPhoneNumberAttributeDictionary:msgDirection
+                                                linkColorKey:@"link_color"];
 }
 
 + (NSDictionary *)getTextLinkOrPhoneNumberAttributeDictionary:(NCMessageDirection)msgDirection
-                                                 linkColorKey:(NSString *)linkColorKey{
+                                                 linkColorKey:(NSString *)linkColorKey {
 
-    if (msgDirection == NCMessageDirectionSend ) {
+    if (msgDirection == NCMessageDirectionSend) {
         UIColor *linkColor = NCDynamicColor(linkColorKey);
         if (linkColor) {
-            return @{@(NSTextCheckingTypeLink) :
-                         @{NSForegroundColorAttributeName : linkColor,
-                           NSUnderlineColorAttributeName :linkColor,
-                           NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle)
-                         },
-                     @(NSTextCheckingTypePhoneNumber) : @{ NSForegroundColorAttributeName : linkColor}
+            return @{
+                @(NSTextCheckingTypeLink) : @{
+                    NSForegroundColorAttributeName : linkColor,
+                    NSUnderlineColorAttributeName : linkColor,
+                    NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle)
+                },
+                @(NSTextCheckingTypePhoneNumber) : @{NSForegroundColorAttributeName : linkColor}
             };
         }
-        return @{@(NSTextCheckingTypeLink) : @{NSForegroundColorAttributeName : NCDYCOLOR(0x0099ff, 0x005F9E)},
-                 @(NSTextCheckingTypePhoneNumber) : @{ NSForegroundColorAttributeName : [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x0099ff) darkColor:HEXCOLOR(0x005F9E)]
-                 }
+        return @{
+            @(NSTextCheckingTypeLink) :
+                @{NSForegroundColorAttributeName : NCDYCOLOR(0x0099ff, 0x005F9E)},
+            @(NSTextCheckingTypePhoneNumber) : @{
+                NSForegroundColorAttributeName :
+                    [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x0099ff)
+                                                darkColor:HEXCOLOR(0x005F9E)]
+            }
         };
-    }else{
+    } else {
         UIColor *linkColor = NCDynamicColor(linkColorKey);
         if (linkColor) {
-            return @{@(NSTextCheckingTypeLink) : @{NSForegroundColorAttributeName : linkColor,
-                                                   NSUnderlineColorAttributeName :linkColor,
-                                                   NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle)},
-                     @(NSTextCheckingTypePhoneNumber) : @{ NSForegroundColorAttributeName : linkColor}
+            return @{
+                @(NSTextCheckingTypeLink) : @{
+                    NSForegroundColorAttributeName : linkColor,
+                    NSUnderlineColorAttributeName : linkColor,
+                    NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle)
+                },
+                @(NSTextCheckingTypePhoneNumber) : @{NSForegroundColorAttributeName : linkColor}
             };
         }
-        return @{@(NSTextCheckingTypeLink) : @{NSForegroundColorAttributeName : NCDYCOLOR(0x0099ff, 0x1290e2)},
-                 @(NSTextCheckingTypePhoneNumber) : @{ NSForegroundColorAttributeName : [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x0099ff) darkColor:HEXCOLOR(0x1290e2)]
-                 }
+        return @{
+            @(NSTextCheckingTypeLink) :
+                @{NSForegroundColorAttributeName : NCDYCOLOR(0x0099ff, 0x1290e2)},
+            @(NSTextCheckingTypePhoneNumber) : @{
+                NSForegroundColorAttributeName :
+                    [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x0099ff)
+                                                darkColor:HEXCOLOR(0x1290e2)]
+            }
         };
     }
-    
 }
 
 + (NSString *)phoneURLStringWithPhoneNumber:(NSString *)phoneNumber {
@@ -174,20 +197,24 @@
         return nil;
     }
 
-    NSString *trimmedPhoneNumber = [phoneNumber stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *trimmedPhoneNumber = [phoneNumber
+        stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (trimmedPhoneNumber.length == 0) {
         NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is empty");
         return nil;
     }
 
-    if ([trimmedPhoneNumber rangeOfCharacterFromSet:[NSCharacterSet decimalDigitCharacterSet]].location == NSNotFound) {
+    if ([trimmedPhoneNumber rangeOfCharacterFromSet:[NSCharacterSet decimalDigitCharacterSet]]
+            .location == NSNotFound) {
         NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is invalid");
         return nil;
     }
 
-    NSMutableCharacterSet *allowedCharacters = [[NSMutableCharacterSet decimalDigitCharacterSet] mutableCopy];
+    NSMutableCharacterSet *allowedCharacters =
+        [[NSMutableCharacterSet decimalDigitCharacterSet] mutableCopy];
     [allowedCharacters addCharactersInString:@"+-() "];
-    if ([trimmedPhoneNumber rangeOfCharacterFromSet:allowedCharacters.invertedSet].location != NSNotFound) {
+    if ([trimmedPhoneNumber rangeOfCharacterFromSet:allowedCharacters.invertedSet].location !=
+        NSNotFound) {
         NCLogD(@"didSelectLinkWithPhoneNumber phoneNumber is invalid");
         return nil;
     }
@@ -196,7 +223,9 @@
 }
 
 #pragma mark - Private Methods
-+ (UIImage *)getResizableImage:(UIImage *)image{
-    return [image resizableImageWithCapInsets:UIEdgeInsetsMake(image.size.height * 0.5, image.size.width * 0.5, image.size.height * 0.5, image.size.width * 0.5)];
++ (UIImage *)getResizableImage:(UIImage *)image {
+    return [image resizableImageWithCapInsets:UIEdgeInsetsMake(
+                                                  image.size.height * 0.5, image.size.width * 0.5,
+                                                  image.size.height * 0.5, image.size.width * 0.5)];
 }
 @end

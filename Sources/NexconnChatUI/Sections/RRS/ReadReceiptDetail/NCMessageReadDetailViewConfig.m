@@ -9,7 +9,6 @@
 #import "NCMessageReadDetailViewConfig.h"
 #import "NCChatUICommonDefine.h"
 
-
 @implementation NCMessageReadDetailViewConfig
 
 - (instancetype)init {

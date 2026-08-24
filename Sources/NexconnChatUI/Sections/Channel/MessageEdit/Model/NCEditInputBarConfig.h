@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCMentionedStringRangeInfo.h"
 #import <Foundation/Foundation.h>
 #import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCMentionedStringRangeInfo.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

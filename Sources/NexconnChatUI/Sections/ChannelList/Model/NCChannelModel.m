@@ -11,15 +11,14 @@
 
 @implementation NCChannelModel
 
-- (instancetype)initWithChannel:(NCBaseChannel *)channel
-                              extend:(id)extend {
+- (instancetype)initWithChannel:(NCBaseChannel *)channel extend:(id)extend {
     NCChannelModelType modelType = NC_CONVERSATION_MODEL_TYPE_NORMAL;
     return [self init:modelType conversation:channel extend:extend];
 }
 
 - (instancetype)init:(NCChannelModelType)conversationModelType
         conversation:(NCBaseChannel *)channel
-             extend:(id)extend {
+              extend:(id)extend {
     self = [super init];
     if (self) {
         self.extend = extend;
@@ -88,8 +87,7 @@
     self.receivedStatusInfo = message.receivedStatusInfo;
     self.latestMessageDirection = message.direction;
 
-    if (message.direction == NCMessageDirectionReceive &&
-        !message.receivedStatusInfo.isRead &&
+    if (message.direction == NCMessageDirectionReceive && !message.receivedStatusInfo.isRead &&
         !message.receivedStatusInfo.isListened) {
         if (message.isCounted) {
             self.unreadMessageCount += 1;
@@ -101,34 +99,28 @@
 }
 
 - (BOOL)hasLatestMessage {
-    return self.latestMessage != nil ||
-        self.latestMessageClientId > 0 ||
-        self.latestMessageId.length > 0;
+    return self.latestMessage != nil || self.latestMessageClientId > 0 ||
+           self.latestMessageId.length > 0;
 }
 
 - (BOOL)lastMessageIsSend {
-    return [self hasLatestMessage] &&
-        self.latestMessageDirection == NCMessageDirectionSend;
+    return [self hasLatestMessage] && self.latestMessageDirection == NCMessageDirectionSend;
 }
 
 - (BOOL)lastMessageIsReceive {
-    return [self hasLatestMessage] &&
-        self.latestMessageDirection == NCMessageDirectionReceive;
+    return [self hasLatestMessage] && self.latestMessageDirection == NCMessageDirectionReceive;
 }
 
 - (BOOL)lastMessageIsSending {
-    return [self hasLatestMessage] &&
-        self.sentStatus == NCMessageSentStatusSending;
+    return [self hasLatestMessage] && self.sentStatus == NCMessageSentStatusSending;
 }
 
 - (BOOL)lastMessageIsFailed {
-    return [self hasLatestMessage] &&
-        self.sentStatus == NCMessageSentStatusFailed;
+    return [self hasLatestMessage] && self.sentStatus == NCMessageSentStatusFailed;
 }
 
 - (BOOL)lastMessageIsListened {
-    return [self hasLatestMessage] &&
-        self.receivedStatusInfo.isListened;
+    return [self hasLatestMessage] && self.receivedStatusInfo.isListened;
 }
 
 - (BOOL)conversationIsMuted {
@@ -139,8 +131,7 @@
     return self.channelType == channelType;
 }
 
-- (BOOL)isMatchingChannelType:(NCChannelType)channelType
-                     channelId:(NSString *)channelId {
+- (BOOL)isMatchingChannelType:(NCChannelType)channelType channelId:(NSString *)channelId {
     if (self.channelType != channelType) {
         return NO;
     }
@@ -156,8 +147,7 @@
         return NO;
     }
     NCChannelModel *model = (NCChannelModel *)object;
-    return [self isMatchingChannelType:model.channelType
-                             channelId:model.channelId];
+    return [self isMatchingChannelType:model.channelType channelId:model.channelId];
 }
 
 - (void)setDraft:(NSString *)draft {
@@ -167,8 +157,9 @@
         if (!draftData) {
             _draft = draft;
         } else {
-            NSDictionary *draftDict =
-                [NSJSONSerialization JSONObjectWithData:draftData options:kNilOptions error:&error];
+            NSDictionary *draftDict = [NSJSONSerialization JSONObjectWithData:draftData
+                                                                      options:kNilOptions
+                                                                        error:&error];
             if (error) {
                 _draft = draft;
             } else if ([draftDict isKindOfClass:[NSDictionary class]] &&

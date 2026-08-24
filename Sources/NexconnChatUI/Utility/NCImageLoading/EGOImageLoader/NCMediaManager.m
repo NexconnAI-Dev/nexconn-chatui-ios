@@ -25,7 +25,7 @@
     static NCMediaManager *_manager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _manager = [[self alloc] init];
+      _manager = [[self alloc] init];
     });
     return _manager;
 }
@@ -35,7 +35,7 @@
       completionBlock:(nonnull NCDownsizeImageBlock)completionBlock
         progressBlock:(nonnull NCDownsizeImageBlock)progressBlock {
     if (!sourceImage) {
-        if(completionBlock){
+        if (completionBlock) {
             completionBlock(nil, YES);
         }
         return;
@@ -53,103 +53,107 @@
     }
 
     if (!_imageProcessQueue) {
-        _imageProcessQueue = dispatch_queue_create("ai.nexconn.imageProcessQueue", DISPATCH_QUEUE_CONCURRENT);
+        _imageProcessQueue =
+            dispatch_queue_create("ai.nexconn.imageProcessQueue", DISPATCH_QUEUE_CONCURRENT);
     }
     dispatch_async(_imageProcessQueue, ^{
-        CGFloat imageScale = destTotalPixels / sourceTotalPixels;
-        CGSize destResolution;
+      CGFloat imageScale = destTotalPixels / sourceTotalPixels;
+      CGSize destResolution;
 
-        destResolution.width = (int)(sourceResolution.width * imageScale);
-        destResolution.height = (int)(sourceResolution.height * imageScale);
+      destResolution.width = (int)(sourceResolution.width * imageScale);
+      destResolution.height = (int)(sourceResolution.height * imageScale);
 
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        int bytesPerRow = bytesPerPixel * destResolution.width;
-        void *destBitmapData = malloc(bytesPerRow * destResolution.height);
-        if (destBitmapData == NULL) {
-            NCLogD(@"failed to allocate space for the output image!");
-            CGColorSpaceRelease(colorSpace);
-            completionBlock(nil, YES);
-            return;
-        };
+      CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+      int bytesPerRow = bytesPerPixel * destResolution.width;
+      void *destBitmapData = malloc(bytesPerRow * destResolution.height);
+      if (destBitmapData == NULL) {
+          NCLogD(@"failed to allocate space for the output image!");
+          CGColorSpaceRelease(colorSpace);
+          completionBlock(nil, YES);
+          return;
+      };
 
-        CGContextRef _destContext = CGBitmapContextCreate(destBitmapData, destResolution.width, destResolution.height,
-                                                          8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
-        if (_destContext == NULL) {
-            free(destBitmapData);
-            CGColorSpaceRelease(colorSpace);
-            completionBlock(nil, YES);
-            return;
-        }
-        CGColorSpaceRelease(colorSpace);
+      CGContextRef _destContext =
+          CGBitmapContextCreate(destBitmapData, destResolution.width, destResolution.height, 8,
+                                bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
+      if (_destContext == NULL) {
+          free(destBitmapData);
+          CGColorSpaceRelease(colorSpace);
+          completionBlock(nil, YES);
+          return;
+      }
+      CGColorSpaceRelease(colorSpace);
 
-        CGRect sourceTile;
-        CGRect destTile;
+      CGRect sourceTile;
+      CGRect destTile;
 
-        sourceTile.size.width = sourceResolution.width;
-        sourceTile.size.height = (int)(tileTotalPixels / sourceTile.size.width);
-        sourceTile.origin.x = 0.0f;
+      sourceTile.size.width = sourceResolution.width;
+      sourceTile.size.height = (int)(tileTotalPixels / sourceTile.size.width);
+      sourceTile.origin.x = 0.0f;
 
-        destTile.size.width = destResolution.width;
-        destTile.size.height = sourceTile.size.height * imageScale;
-        destTile.origin.x = 0.0f;
+      destTile.size.width = destResolution.width;
+      destTile.size.height = sourceTile.size.height * imageScale;
+      destTile.origin.x = 0.0f;
 
-        CGFloat sourceSeemOverlap = (int)((destSeemOverlap / destResolution.height) * sourceResolution.height);
+      CGFloat sourceSeemOverlap =
+          (int)((destSeemOverlap / destResolution.height) * sourceResolution.height);
 
-        CGImageRef sourceTileImageRef;
+      CGImageRef sourceTileImageRef;
 
-        int iterations = (int)(sourceResolution.height / sourceTile.size.height);
+      int iterations = (int)(sourceResolution.height / sourceTile.size.height);
 
-        int remainder = (int)sourceResolution.height % (int)sourceTile.size.height;
-        if (remainder)
-            iterations++;
+      int remainder = (int)sourceResolution.height % (int)sourceTile.size.height;
+      if (remainder)
+          iterations++;
 
-        float sourceTileHeightMinusOverlap = sourceTile.size.height;
-        sourceTile.size.height += sourceSeemOverlap;
-        destTile.size.height += destSeemOverlap;
+      float sourceTileHeightMinusOverlap = sourceTile.size.height;
+      sourceTile.size.height += sourceSeemOverlap;
+      destTile.size.height += destSeemOverlap;
 
-        for (NSInteger y = 0; y < iterations; ++y) {
-            NCLogD(@"iteration %ld of %d", (long)y + 1, iterations);
-            sourceTile.origin.y = y * sourceTileHeightMinusOverlap + sourceSeemOverlap;
-            destTile.origin.y =
-                (destResolution.height) - ((y + 1) * sourceTileHeightMinusOverlap * imageScale + destSeemOverlap);
+      for (NSInteger y = 0; y < iterations; ++y) {
+          NCLogD(@"iteration %ld of %d", (long)y + 1, iterations);
+          sourceTile.origin.y = y * sourceTileHeightMinusOverlap + sourceSeemOverlap;
+          destTile.origin.y =
+              (destResolution.height) -
+              ((y + 1) * sourceTileHeightMinusOverlap * imageScale + destSeemOverlap);
 
-            sourceTileImageRef = CGImageCreateWithImageInRect(sourceImage.CGImage, sourceTile);
+          sourceTileImageRef = CGImageCreateWithImageInRect(sourceImage.CGImage, sourceTile);
 
-            if (y == iterations - 1 && remainder) {
-                float dify = destTile.size.height;
-                destTile.size.height = CGImageGetHeight(sourceTileImageRef) * imageScale;
-                dify -= destTile.size.height;
-                destTile.origin.y += dify;
-            }
-            CGContextDrawImage(_destContext, destTile, sourceTileImageRef);
-            CGImageRelease(sourceTileImageRef);
-            if (y < (iterations - 1) && progressBlock) {
-                CGImageRef destImageRef = CGBitmapContextCreateImage(_destContext);
-                if (destImageRef == NULL) {
-                    NCLogD(@"destImageRef is null.");
-                    CGContextRelease(_destContext);
-                    free(destBitmapData);
-                    return;
-                }
-                UIImage *progressImage = [UIImage imageWithCGImage:destImageRef];
-                progressBlock(progressImage, NO);
-                CGImageRelease(destImageRef);
-            }
-        }
-        CGImageRef destImageRef = CGBitmapContextCreateImage(_destContext);
-        if (destImageRef == NULL) {
-            NCLogD(@"destImageRef is null.");
-            CGContextRelease(_destContext);
-            free(destBitmapData);
-            return;
-        }
-        UIImage *progressImage = [UIImage imageWithCGImage:destImageRef];
-        if (completionBlock) {
-            completionBlock(progressImage, NO);
-        }
-        CGContextRelease(_destContext);
-        CGImageRelease(destImageRef);
-        free(destBitmapData);
+          if (y == iterations - 1 && remainder) {
+              float dify = destTile.size.height;
+              destTile.size.height = CGImageGetHeight(sourceTileImageRef) * imageScale;
+              dify -= destTile.size.height;
+              destTile.origin.y += dify;
+          }
+          CGContextDrawImage(_destContext, destTile, sourceTileImageRef);
+          CGImageRelease(sourceTileImageRef);
+          if (y < (iterations - 1) && progressBlock) {
+              CGImageRef destImageRef = CGBitmapContextCreateImage(_destContext);
+              if (destImageRef == NULL) {
+                  NCLogD(@"destImageRef is null.");
+                  CGContextRelease(_destContext);
+                  free(destBitmapData);
+                  return;
+              }
+              UIImage *progressImage = [UIImage imageWithCGImage:destImageRef];
+              progressBlock(progressImage, NO);
+              CGImageRelease(destImageRef);
+          }
+      }
+      CGImageRef destImageRef = CGBitmapContextCreateImage(_destContext);
+      if (destImageRef == NULL) {
+          NCLogD(@"destImageRef is null.");
+          CGContextRelease(_destContext);
+          free(destBitmapData);
+          return;
+      }
+      UIImage *progressImage = [UIImage imageWithCGImage:destImageRef];
+      if (completionBlock) {
+          completionBlock(progressImage, NO);
+      }
+      CGContextRelease(_destContext);
+      CGImageRelease(destImageRef);
+      free(destBitmapData);
     });
 }
 - (UIImage *)downsizeImage:(UIImage *)sourceImage {
@@ -178,8 +182,9 @@
         return [UIImage new];
     };
 
-    CGContextRef _destContext = CGBitmapContextCreate(destBitmapData, destResolution.width, destResolution.height, 8,
-                                                      bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
+    CGContextRef _destContext =
+        CGBitmapContextCreate(destBitmapData, destResolution.width, destResolution.height, 8,
+                              bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
     if (_destContext == NULL) {
         free(destBitmapData);
         CGColorSpaceRelease(colorSpace);
@@ -198,7 +203,8 @@
     destTile.size.height = sourceTile.size.height * imageScale;
     destTile.origin.x = 0.0f;
 
-    CGFloat sourceSeemOverlap = (int)((destSeemOverlap / destResolution.height) * sourceResolution.height);
+    CGFloat sourceSeemOverlap =
+        (int)((destSeemOverlap / destResolution.height) * sourceResolution.height);
 
     CGImageRef sourceTileImageRef;
 
@@ -215,8 +221,8 @@
     for (NSInteger y = 0; y < iterations; ++y) {
         NCLogD(@"iteration %ld of %d", (long)y + 1, iterations);
         sourceTile.origin.y = y * sourceTileHeightMinusOverlap + sourceSeemOverlap;
-        destTile.origin.y =
-            (destResolution.height) - ((y + 1) * sourceTileHeightMinusOverlap * imageScale + destSeemOverlap);
+        destTile.origin.y = (destResolution.height) -
+                            ((y + 1) * sourceTileHeightMinusOverlap * imageScale + destSeemOverlap);
 
         sourceTileImageRef = CGImageCreateWithImageInRect(sourceImage.CGImage, sourceTile);
 

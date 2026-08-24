@@ -6,15 +6,15 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCBaseViewController.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 @interface NCCombineMsgFilePreviewViewController : NCBaseViewController
 
 - (instancetype)initWithRemoteURL:(NSString *)remoteURL
                       channelType:(NCChannelType)channelType
-                         channelId:(NSString *)channelId
+                        channelId:(NSString *)channelId
                          fileSize:(long long)fileSize
                          fileName:(NSString *)fileName
                          fileType:(NSString *)fileType;

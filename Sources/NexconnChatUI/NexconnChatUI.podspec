@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = "NexconnChatUI"
-  s.version = "26.4.0"
+  s.version = "0.100.2"
   s.summary = "Source-based Nexconn ChatUI components for local integration."
 
   s.homepage = "https://www.nexconn.ai"
@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.platform = :ios, "13.0"
   s.source = {
     :git => "https://github.com/NexconnAI-Dev/nexconn-chatui-ios.git",
-    :tag => "v26.4.0"
+    :tag => "v0.100.2"
   }
 
   s.source_files = "**/*.{h,m,mm,c}"
@@ -32,5 +32,5 @@ Pod::Spec.new do |s|
     "OTHER_LDFLAGS" => "$(inherited) -ObjC",
     "DEFINES_MODULE" => "YES"
   }
-  s.dependency "NexconnChat/Chat", "= 26.4.0"
+  s.dependency "NexconnChat/Chat", "= 0.100.2"
 end

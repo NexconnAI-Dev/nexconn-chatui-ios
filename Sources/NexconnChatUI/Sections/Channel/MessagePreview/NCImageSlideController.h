@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseViewController.h"
+#import <UIKit/UIKit.h>
 
 @class NCMessageModel;
 @class NCImageMessage;
@@ -25,7 +25,8 @@
 @property (nonatomic, strong) NCImageMessage *currentPreviewImage;
 
 /*!
- Whether to preview only the current image; defaults to NO (supports swiping through images in the conversation); set YES to preview only the current image
+ Whether to preview only the current image; defaults to NO (supports swiping through images in the
+ conversation); set YES to preview only the current image
  */
 @property (nonatomic, assign) BOOL onlyPreviewCurrentMessage;
 

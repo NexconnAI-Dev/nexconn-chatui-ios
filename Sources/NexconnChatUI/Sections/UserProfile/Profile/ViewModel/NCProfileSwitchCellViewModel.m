@@ -9,14 +9,17 @@
 #import "NCProfileSwitchCellViewModel.h"
 #import "NCProfileCommonSwitchCell.h"
 
-@interface NCProfileSwitchCellViewModel ()<NCProfileCommonSwitchCellDelegate>
+@interface NCProfileSwitchCellViewModel () <NCProfileCommonSwitchCellDelegate>
 
 @end
 
 @implementation NCProfileSwitchCellViewModel
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCProfileCommonSwitchCell *cell = [tableView dequeueReusableCellWithIdentifier:NCProfileCommonSwitchCellIdentifier forIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCProfileCommonSwitchCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCProfileCommonSwitchCellIdentifier
+                                        forIndexPath:indexPath];
     cell.titleLabel.text = self.title;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.arrowView.hidden = YES;
@@ -30,10 +33,10 @@
     return NCUserManagementCellHeight;
 }
 
-#pragma mark -- NCProfileCommonSwitchCellDelegate
+#pragma mark-- NCProfileCommonSwitchCellDelegate
 
 - (void)switchValueChanged:(nonnull UISwitch *)switchView {
-    if(self.switchValueChanged) {
+    if (self.switchValueChanged) {
         self.switchValueChanged(switchView.on);
     }
 }

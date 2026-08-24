@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCProfileCellViewModel.h"
 #import "NCGroupMembersCollectionViewModel.h"
+#import "NCProfileCellViewModel.h"
 NS_ASSUME_NONNULL_BEGIN
 /// Group profile members cell view model
 @interface NCGroupProfileMembersCellViewModel : NCProfileCellViewModel

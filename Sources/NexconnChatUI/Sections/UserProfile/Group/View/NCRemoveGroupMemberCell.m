@@ -8,7 +8,7 @@
 
 #import "NCRemoveGroupMemberCell.h"
 #import "NCChatUICommonDefine.h"
-NSString  * const NCRemoveGroupMemberCellIdentifier = @"NCRemoveGroupMemberCellIdentifier";
+NSString *const NCRemoveGroupMemberCellIdentifier = @"NCRemoveGroupMemberCellIdentifier";
 
 #define NCSelectUserCellRoleTrailingSpace 16
 
@@ -31,8 +31,8 @@ NSString  * const NCRemoveGroupMemberCellIdentifier = @"NCRemoveGroupMemberCellI
         _roleLabel.textColor = NCDynamicColor(@"text_secondary_color");
         _roleLabel.textAlignment = NSTextAlignmentRight;
         _roleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        [_roleLabel setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-
+        [_roleLabel setContentHuggingPriority:UILayoutPriorityRequired
+                                      forAxis:UILayoutConstraintAxisHorizontal];
     }
     return _roleLabel;
 }

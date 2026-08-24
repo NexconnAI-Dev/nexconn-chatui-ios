@@ -30,15 +30,17 @@ typedef NS_ENUM(NSUInteger, NCChatUINetworkStatus) {
 ///
 /// Set the connection status delegate to monitor the SDK connection state.
 ///
-/// @warning If you use ChatUI, you can set and implement this delegate to monitor connection status.
-/// If you use IMLib directly, use the NCConnectionStatusChangeDelegate in NCIMClient instead.
+/// @warning If you use ChatUI, you can set and implement this delegate to monitor connection
+/// status. If you use IMLib directly, use the NCConnectionStatusChangeDelegate in NCIMClient
+/// instead.
 @protocol NCChatUIConnectionStatusDelegate <NSObject>
 
 /// Called when the ChatUI connection status changes.
 ///
 /// @param status  The connection status between the SDK and the server.
 ///
-/// After you set the ChatUI connection status delegate, this method is called whenever the connection status changes.
+/// After you set the ChatUI connection status delegate, this method is called whenever the
+/// connection status changes.
 - (void)onNCChatUIConnectionStatusChanged:(NCConnectionStatus)status;
 
 @end
@@ -58,7 +60,8 @@ typedef NS_ENUM(NSUInteger, NCChatUINetworkStatus) {
 @optional
 - (BOOL)shouldInterceptMessage:(NCMessage *)message;
 - (BOOL)shouldSuppressAlertSoundForMessage:(NCMessage *)message;
-- (BOOL)shouldSuppressLocalNotificationForMessage:(NCMessage *)message senderName:(NSString *)senderName;
+- (BOOL)shouldSuppressLocalNotificationForMessage:(NCMessage *)message
+                                       senderName:(NSString *)senderName;
 @end
 
 /// ChatUI message event observer.

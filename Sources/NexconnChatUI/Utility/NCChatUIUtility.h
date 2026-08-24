@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCMessageModel.h"
 #import <Foundation/Foundation.h>
 #import <NexconnChatSDK/NexconnChatSDK.h>
 #import <UIKit/UIKit.h>
-#import "NCMessageModel.h"
 
 @class NCChannelModel;
 @class NCChatUIUserInfo;
@@ -47,7 +47,8 @@
 
 /// Get the icon for a file type in channel messages.
 /// @param type File type suffix.
-/// Returns the custom icon from NCChatUIConf's registerFileSuffixTypes if configured; otherwise returns the default icon from NCChatUI.bundle.
+/// Returns the custom icon from NCChatUIConf's registerFileSuffixTypes if configured; otherwise
+/// returns the default icon from NCChatUI.bundle.
 + (UIImage *)imageWithFileSuffix:(NSString *)type;
 
 /// Calculate the display size for text.
@@ -58,20 +59,60 @@
 /// @return The calculated text display size.
 ///
 /// For iOS 7 and below, this method defaults to NSLineBreakByTruncatingTail mode.
-+ (CGSize)getTextDrawingSize:(NSString *)text font:(UIFont *)font constrainedSize:(CGSize)constrainedSize;
++ (CGSize)getTextDrawingSize:(NSString *)text
+                        font:(UIFont *)font
+             constrainedSize:(CGSize)constrainedSize;
+
+/// Count user-visible characters in text.
+///
+/// @param text Text content.
+/// @return The number of composed character sequences.
++ (NSUInteger)visibleCharacterCountForText:(NSString *)text;
+
+/// Whether text exceeds a user-visible character limit.
+///
+/// @param text Text content.
+/// @param limit Maximum visible character count.
+/// @return YES if the visible character count is greater than limit.
++ (BOOL)text:(NSString *)text hasVisibleCharacterCountOverLimit:(NSUInteger)limit;
+
+/// Whether replacing a range would exceed a user-visible character limit.
+///
+/// @param text Current text content.
+/// @param limit Maximum visible character count.
+/// @param range UTF-16 range to replace.
+/// @param replacementText Replacement text.
+/// @return YES if the updated text would exceed limit, or if range is invalid.
++ (BOOL)text:(NSString *)text
+    wouldExceedVisibleCharacterLimit:(NSUInteger)limit
+                      replacingRange:(NSRange)range
+                            withText:(NSString *)replacementText;
+
+/// Maximum user-visible character count for text message send and edit.
++ (NSUInteger)messageTextMaxVisibleCharacterCount;
+
+/// Whether a text message exceeds the shared send/edit text length limit.
++ (BOOL)isMessageTextOverMaxVisibleCharacterLimit:(NSString *)text;
+
+/// Whether replacing a range would exceed the shared text message limit.
++ (BOOL)messageText:(NSString *)text
+    wouldExceedMaxVisibleCharacterLimitReplacingRange:(NSRange)range
+                                             withText:(NSString *)replacementText;
 
 /// Get a digest summary of message content for a specific channel type.
 ///
 /// @param messageContent  Message content.
 /// @param channelId  Channel ID.
 /// @param channelType  Channel type.
-/// @param isAllMessage  Whether to get the full digest. If NO, content longer than 500 characters may be truncated.
+/// @param isAllMessage  Whether to get the full digest. If NO, content longer than 500 characters
+/// may be truncated.
 /// @return A digest string of the message content.
 ///
-/// Built-in message types have default handling. Custom messages use the NCMessageContent digest capability via conversationDigest.
+/// Built-in message types have default handling. Custom messages use the NCMessageContent digest
+/// capability via conversationDigest.
 + (NSString *)formatMessage:(id)messageContent
-                   channelId:(NSString *)channelId
-           channelType:(NSInteger)channelType
+                  channelId:(NSString *)channelId
+                channelType:(NSInteger)channelType
                isAllMessage:(BOOL)isAllMessage;
 
 /// Get the content digest for message notifications.
@@ -79,7 +120,8 @@
 /// @param message  The message.
 /// @return A digest string of the message content.
 ///
-/// Built-in message types have default handling. Custom messages use the NCMessageContent digest capability via conversationDigest.
+/// Built-in message types have default handling. Custom messages use the NCMessageContent digest
+/// capability via conversationDigest.
 + (NSString *)formatLocalNotification:(id)message;
 
 /// NCMessage version of formatLocalNotification.
@@ -94,10 +136,11 @@
 ///
 /// Built-in message types have default handling.
 /// Custom messages use the NCMessageContent digest capability.
-/// Unlike formatMessage:channelId:channelType:isAllMessage:, content longer than 500 characters may be truncated.
+/// Unlike formatMessage:channelId:channelType:isAllMessage:, content longer than 500 characters may
+/// be truncated.
 + (NSString *)formatMessage:(id)messageContent
-                   channelId:(NSString *)channelId
-           channelType:(NSInteger)channelType;
+                  channelId:(NSString *)channelId
+                channelType:(NSInteger)channelType;
 
 /// Get a digest summary of message content.
 ///
@@ -106,7 +149,8 @@
 ///
 /// Built-in message types have default handling.
 /// Custom messages use the NCMessageContent digest capability.
-/// Unlike formatMessage:channelId:channelType:isAllMessage:, content longer than 500 characters may be truncated.
+/// Unlike formatMessage:channelId:channelType:isAllMessage:, content longer than 500 characters may
+/// be truncated.
 + (NSString *)formatMessage:(id)messageContent;
 
 /// Whether a message should be displayed.
@@ -140,7 +184,7 @@
 /// @return The local notification dictionary.
 + (NSDictionary *)getNotificationUserInfoDictionary:(NSInteger)channelType
                                          fromUserId:(NSString *)fromUserId
-                                           channelId:(NSString *)channelId
+                                          channelId:(NSString *)channelId
                                          objectName:(NSString *)objectName;
 
 /// Get the icon image name for a file type in file messages.
@@ -164,7 +208,8 @@
 /// Get the unread mentioned message count for a channel model.
 ///
 /// @param model The channel data model.
-+ (void)getConversationUnreadMentionedCount:(NCChannelModel *)model result:(void(^)(int num))result;
++ (void)getConversationUnreadMentionedCount:(NCChannelModel *)model
+                                     result:(void (^)(int num))result;
 
 /// Sync the multi-device read status for a channel.
 ///
@@ -288,11 +333,15 @@
 /// @param title  The button title (can be nil).
 /// @return An array of left bar button items.
 /// When using RTL layout, the image is flipped internally; no developer handling needed.
-+ (NSArray <UIBarButtonItem *> *)getLeftNavigationItems:(UIImage *)image title:(NSString *)title target:(id)target action:(SEL)action;
++ (NSArray<UIBarButtonItem *> *)getLeftNavigationItems:(UIImage *)image
+                                                 title:(NSString *)title
+                                                target:(id)target
+                                                action:(SEL)action;
 
 /// Whether RTL layout is required.
 ///
-/// Returns YES when the system version is above 9.0 and the system or app layout is UISemanticContentAttributeForceRightToLeft; otherwise returns NO.
+/// Returns YES when the system version is above 9.0 and the system or app layout is
+/// UISemanticContentAttributeForceRightToLeft; otherwise returns NO.
 + (BOOL)isRTL;
 
 /// Whether another module is currently using the audio channel.
@@ -309,7 +358,6 @@
 ///
 /// Returns the alias if available; otherwise returns the name.
 + (NSString *)getDisplayName:(NCChatUIUserInfo *)userInfo;
-
 
 /// Get a localized string.
 /// @param key The localization key.

@@ -8,8 +8,7 @@
 
 #import "NCSelectUserCell.h"
 
-UIKIT_EXTERN NSString  * _Nonnull const NCRemoveGroupMemberCellIdentifier;
-
+UIKIT_EXTERN NSString *_Nonnull const NCRemoveGroupMemberCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

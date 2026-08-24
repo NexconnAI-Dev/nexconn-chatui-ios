@@ -7,9 +7,10 @@
 //
 
 #import "NCGroupCreateViewController.h"
-#import "NCGroupCreateView.h"
 #import "NCChatUICommonDefine.h"
-@interface NCGroupCreateViewController ()<NCGroupCreateViewDelegate, NCGroupCreateViewModelResponder, UITextFieldDelegate>
+#import "NCGroupCreateView.h"
+@interface NCGroupCreateViewController () <NCGroupCreateViewDelegate,
+                                           NCGroupCreateViewModelResponder, UITextFieldDelegate>
 
 @property (nonatomic, strong) NCGroupCreateView *createView;
 
@@ -39,9 +40,11 @@
     [self setNavigationBarItems];
 }
 
-#pragma mark -- UITextFieldDelegate
+#pragma mark-- UITextFieldDelegate
 
-- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+- (BOOL)textField:(UITextField *)textField
+    shouldChangeCharactersInRange:(NSRange)range
+                replacementString:(NSString *)string {
     NSString *newText = [textField.text stringByReplacingCharactersInRange:range withString:string];
     if (newText.length > self.viewModel.groupNameLimit) {
         return NO;
@@ -49,19 +52,19 @@
     return YES;
 }
 
-#pragma mark -- NCGroupCreateViewModelResponder
+#pragma mark-- NCGroupCreateViewModelResponder
 
 - (void)groupPortraitDidUpdate:(NSString *)avatarUrl {
     self.createView.portraitImageView.imageURL = [NSURL URLWithString:avatarUrl];
 }
 
-#pragma mark -- NCGroupCreateViewDelegate
+#pragma mark-- NCGroupCreateViewDelegate
 
 - (void)portaitImageViewDidClick {
     [self.viewModel portraitImageViewDidClick:self];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)createButtonDidClick {
     [self.viewModel createGroup:self.createView.nameEditView.textField.text inViewController:self];
@@ -71,19 +74,25 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCGroupCreateView *)createView {
     if (!_createView) {
         _createView = [NCGroupCreateView new];
-        [_createView.createButton addTarget:self action:@selector(createButtonDidClick) forControlEvents:UIControlEventTouchUpInside];
+        [_createView.createButton addTarget:self
+                                     action:@selector(createButtonDidClick)
+                           forControlEvents:UIControlEventTouchUpInside];
         _createView.delegate = self;
         _createView.nameEditView.textField.delegate = self;
     }

@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseCellViewModel.h"
 #import "NCBaseViewModel.h"
 #import "NCListViewModelProtocol.h"
-#import "NCBaseCellViewModel.h"
 NS_ASSUME_NONNULL_BEGIN
 @class NCGroupManagerListViewModel;
 @protocol NCGroupManagerListViewModelDelegate <NSObject>
@@ -22,11 +22,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param cellViewModel cellViewModel
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
-- (BOOL)  groupAdmins:(NCGroupManagerListViewModel *)viewModel
-         viewController:(UIViewController*)viewController
-              tableView:(UITableView *)tableView
-           didSelectRow:(NSIndexPath *)indexPath
-          cellViewModel:(NCBaseCellViewModel *)cellViewModel;
+- (BOOL)groupAdmins:(NCGroupManagerListViewModel *)viewModel
+     viewController:(UIViewController *)viewController
+          tableView:(UITableView *)tableView
+       didSelectRow:(NSIndexPath *)indexPath
+      cellViewModel:(NCBaseCellViewModel *)cellViewModel;
 
 /// Called when admins have been added
 /// @param groupId The group identifier
@@ -35,8 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupAdminsDidAdd:(NSString *)groupId
-                 addUserIds:(NSArray <NSString *>*)addUserIds
-             viewController:(UIViewController*)viewController;
+               addUserIds:(NSArray<NSString *> *)addUserIds
+           viewController:(UIViewController *)viewController;
 
 /// Called when an admin is about to be removed
 /// @param groupId The group identifier
@@ -45,8 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupAdminsWillRemove:(NSString *)groupId
-                  removeUserIds:(NSArray <NSString *>*)removeUserIds
-                 viewController:(UIViewController*)viewController;
+                removeUserIds:(NSArray<NSString *> *)removeUserIds
+               viewController:(UIViewController *)viewController;
 
 /// Called when admins have been removed
 /// @param groupId The group identifier
@@ -55,12 +55,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupAdminsDidRemove:(NSString *)groupId
-                 removeUserIds:(NSArray <NSString *>*)removeUserIds
-                viewController:(UIViewController*)viewController;
+               removeUserIds:(NSArray<NSString *> *)removeUserIds
+              viewController:(UIViewController *)viewController;
 @end
 
 /// Group admin list view model
-@interface NCGroupManagerListViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCGroupManagerListViewModel : NCBaseViewModel <NCListViewModelProtocol>
 /// Delegate
 @property (nonatomic, weak) id<NCGroupManagerListViewModelDelegate> delegate;
 

@@ -103,7 +103,8 @@
  @param orientation Capture orientation.
  @param completion Callback block for the captured image.
  */
-- (void)captureStillImage:(AVCaptureVideoOrientation)orientation completion:(void (^)(UIImage *image))completion;
+- (void)captureStillImage:(AVCaptureVideoOrientation)orientation
+               completion:(void (^)(UIImage *image))completion;
 
 - (BOOL)resetSessionInput;
 - (void)resetAudioSession;

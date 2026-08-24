@@ -7,12 +7,12 @@
 //
 
 #import "NCReferenceMessageCell.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCMessageCellTool.h"
-#import "NCChatUIConfig.h"
 #import "NCAttributedLabel+Edit.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 #import "NCMessageCell+Edit.h"
+#import "NCMessageCellTool.h"
 
 #define bubble_top_space 12
 #define bubble_bottom_space 12
@@ -57,18 +57,21 @@
       withCollectionViewWidth:(CGFloat)collectionViewWidth
          referenceExtraHeight:(CGFloat)extraHeight {
     float maxWidth = [NCMessageCellTool getMessageContentViewMaxWidth];
-    NSString *displayText = [NCMessageEditUtil displayTextForOriginalText:[model referenceMessageContent] isEdited:model.hasChanged];
-    CGSize textLabelSize = [[self class] getTextLabelSize:displayText
-                                                 maxWidth:maxWidth - 33
-                                                     font:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
+    NSString *displayText =
+        [NCMessageEditUtil displayTextForOriginalText:[model referenceMessageContent]
+                                             isEdited:model.hasChanged];
+    CGSize textLabelSize =
+        [[self class] getTextLabelSize:displayText
+                              maxWidth:maxWidth - 33
+                                  font:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
     CGSize contentSize = [[self class] contentInfoSizeWithContent:model maxWidth:maxWidth - 33];
-    CGSize messageContentSize =
-        CGSizeMake(textLabelSize.width, textLabelSize.height + contentSize.height + bubble_top_space +
-                                            bubble_bottom_space + refer_and_text_space);
+    CGSize messageContentSize = CGSizeMake(
+        textLabelSize.width, textLabelSize.height + contentSize.height + bubble_top_space +
+                                 bubble_bottom_space + refer_and_text_space);
     CGFloat __messagecontentview_height = messageContentSize.height;
     __messagecontentview_height += extraHeight;
     __messagecontentview_height += [self edit_editStatusBarHeightWithModel:model];
-    
+
     return CGSizeMake(collectionViewWidth, __messagecontentview_height);
 }
 
@@ -102,7 +105,8 @@
     }
 }
 
-- (void)attributedLabel:(NCAttributedLabel *)label didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
+- (void)attributedLabel:(NCAttributedLabel *)label
+    didSelectLinkWithPhoneNumber:(NSString *)phoneNumber {
     NSString *number = [NCMessageCellTool phoneURLStringWithPhoneNumber:phoneNumber];
     if (!number) {
         return;
@@ -129,40 +133,52 @@
 }
 
 - (void)setAutoLayout {
-    if(self.model.messageDirection == NCMessageDirectionReceive){
+    if (self.model.messageDirection == NCMessageDirectionReceive) {
         [self.contentLabel setTextColor:NCDynamicColor(@"text_primary_color")];
-    }else{
+    } else {
         [self.contentLabel setTextColor:NCDynamicColor(@"text_primary_color")];
     }
     if ([self.model referenceMessageContent]) {
-        [self.contentLabel edit_setTextWithEditedState:[self.model referenceMessageContent] isEdited:self.model.hasChanged];
+        [self.contentLabel edit_setTextWithEditedState:[self.model referenceMessageContent]
+                                              isEdited:self.model.hasChanged];
     }
     float maxWidth = [NCMessageCellTool getMessageContentViewMaxWidth];
-    CGSize textLabelSize = [[self class] getTextLabelSize:self.contentLabel.text
-                                                 maxWidth:maxWidth - 33
-                                                     font:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
-    CGSize contentSize = [[self class] contentInfoSizeWithContent:self.model maxWidth:maxWidth - 33];
+    CGSize textLabelSize =
+        [[self class] getTextLabelSize:self.contentLabel.text
+                              maxWidth:maxWidth - 33
+                                  font:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
+    CGSize contentSize = [[self class] contentInfoSizeWithContent:self.model
+                                                         maxWidth:maxWidth - 33];
     CGSize messageContentSize =
-        CGSizeMake(textLabelSize.width + 16 + 10, textLabelSize.height + contentSize.height + bubble_top_space +
-                                                      bubble_bottom_space + refer_and_text_space);
+        CGSizeMake(textLabelSize.width + 16 + 10, textLabelSize.height + contentSize.height +
+                                                      bubble_top_space + bubble_bottom_space +
+                                                      refer_and_text_space);
     [self.referencedContentView setMessage:self.model contentSize:contentSize];
-    
-    self.referencedContentView.frame = CGRectMake(content_space_left, 10, contentSize.width, contentSize.height);
-    self.lineView.frame = CGRectMake(content_space_left, CGRectGetMaxY(self.referencedContentView.frame) + refer_and_text_space/2, contentSize.width, 1);
-    self.contentLabel.frame = CGRectMake(content_space_left, CGRectGetMaxY(self.referencedContentView.frame) + refer_and_text_space,
-                                         textLabelSize.width, textLabelSize.height);
-    self.messageContentView.contentSize = CGSizeMake(messageContentSize.width, messageContentSize.height);
+
+    self.referencedContentView.frame =
+        CGRectMake(content_space_left, 10, contentSize.width, contentSize.height);
+    self.lineView.frame =
+        CGRectMake(content_space_left,
+                   CGRectGetMaxY(self.referencedContentView.frame) + refer_and_text_space / 2,
+                   contentSize.width, 1);
+    self.contentLabel.frame = CGRectMake(
+        content_space_left, CGRectGetMaxY(self.referencedContentView.frame) + refer_and_text_space,
+        textLabelSize.width, textLabelSize.height);
+    self.messageContentView.contentSize =
+        CGSizeMake(messageContentSize.width, messageContentSize.height);
 }
 
 - (NSDictionary *)attributeDictionary {
-    return [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:self.model.messageDirection];
+    return
+        [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:self.model.messageDirection];
 }
 
 + (CGSize)contentInfoSizeWithContent:(NCMessageModel *)model maxWidth:(CGFloat)maxWidth {
     CGFloat height = 17; // Height of the sender name.
     UIImage *thumbnailImage = [model referenceMessageReferencedThumbnailImage];
     if (thumbnailImage && ![model referenceMessageIsDeletedOrRecalled]) {
-        height = [NCMessageCellTool getThumbnailImageSize:thumbnailImage].height + height + name_and_image_view_space;
+        height = [NCMessageCellTool getThumbnailImageSize:thumbnailImage].height + height +
+                 name_and_image_view_space;
     } else {
         height = 34; // Height for two lines of text.
     }
@@ -171,7 +187,9 @@
 
 + (CGSize)getTextLabelSize:(NSString *)message maxWidth:(CGFloat)maxWidth font:(UIFont *)font {
     if ([message length] > 0) {
-        CGSize textSize = [NCChatUIUtility getTextDrawingSize:message font:font constrainedSize:CGSizeMake(maxWidth, MAXFLOAT)];
+        CGSize textSize = [NCChatUIUtility getTextDrawingSize:message
+                                                         font:font
+                                              constrainedSize:CGSizeMake(maxWidth, MAXFLOAT)];
         textSize.height = ceilf(textSize.height);
         return CGSizeMake(maxWidth, textSize.height);
     } else {
@@ -180,7 +198,7 @@
 }
 
 #pragma mark - Getter
-- (NCAttributedLabel *)contentLabel{
+- (NCAttributedLabel *)contentLabel {
     if (!_contentLabel) {
         _contentLabel = [[NCAttributedLabel alloc] initWithFrame:CGRectZero];
         _contentLabel.attributeDictionary = [self attributeDictionary];
@@ -194,7 +212,7 @@
     return _contentLabel;
 }
 
-- (NCReferencedContentView *)referencedContentView{
+- (NCReferencedContentView *)referencedContentView {
     if (!_referencedContentView) {
         _referencedContentView = [[NCReferencedContentView alloc] init];
         _referencedContentView.delegate = self;

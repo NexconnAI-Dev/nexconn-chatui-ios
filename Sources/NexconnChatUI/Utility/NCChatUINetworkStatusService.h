@@ -1,5 +1,5 @@
-#import <Foundation/Foundation.h>
 #import "NCChatUIEventProtocols.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -10,7 +10,8 @@ typedef void (^NCChatUINetworkStatusChangedHandler)(NCChatUINetworkStatus status
 @property (atomic, assign, readonly) NCChatUINetworkStatus currentNetworkStatus;
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithStatusChangedHandler:(nullable NCChatUINetworkStatusChangedHandler)statusChangedHandler NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithStatusChangedHandler:
+    (nullable NCChatUINetworkStatusChangedHandler)statusChangedHandler NS_DESIGNATED_INITIALIZER;
 
 - (void)startMonitorIfNeeded;
 - (void)stopMonitor;

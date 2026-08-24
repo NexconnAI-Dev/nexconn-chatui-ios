@@ -6,15 +6,17 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCAttributedLabel.h"
-#import "NCMessageModel.h"
 #import "NCBaseScrollView.h"
+#import "NCMessageModel.h"
+#import <UIKit/UIKit.h>
 @protocol NCTextPreviewViewDelegate;
 
 @interface NCTextPreviewView : NCBaseScrollView
 
-+ (void)showText:(NSString *)text clientId:(long)clientId delegate:(id<NCTextPreviewViewDelegate>)delegate;
++ (void)showText:(NSString *)text
+        clientId:(long)clientId
+        delegate:(id<NCTextPreviewViewDelegate>)delegate;
 
 @end
 
@@ -29,7 +31,6 @@
   Tapping a URL in a cell invokes this callback and does not trigger didTapMessageCell:.
  */
 - (void)didTapUrlInMessageCell:(NSString *)url model:(NCMessageModel *)model;
-
 
 /*!
  Callback for tapping a phone number in a cell.

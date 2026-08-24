@@ -11,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Group member cell view model
-@interface NCGroupMemberCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCGroupMemberCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 
 /// Group member
 @property (nonatomic, strong, readonly) NCGroupMemberInfo *memberInfo;
@@ -21,7 +21,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Whether to hide the arrow indicator
 @property (nonatomic, assign) BOOL hiddenArrow;
-
 
 /// Local cell portrait image. Once set, `memberInfo.avatarUrl` is ignored.
 @property (nonatomic, strong, nullable) UIImage *cellPortraitImage;

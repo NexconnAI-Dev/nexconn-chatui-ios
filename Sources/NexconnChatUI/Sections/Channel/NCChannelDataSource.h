@@ -13,8 +13,8 @@
 - (void)noMoreMessageToFetch;
 @end
 
-
-@class NCChannelViewController,NCMessageModel,NCChannelViewLayout,NCMessageResult,NCMessage,NCBaseChannel;
+@class NCChannelViewController, NCMessageModel, NCChannelViewLayout, NCMessageResult, NCMessage,
+    NCBaseChannel;
 
 @interface NCChannelDataSource : NSObject
 
@@ -26,7 +26,8 @@
 @property (nonatomic, strong, readonly) NCChannelViewLayout *customFlowLayout;
 // The message ID used for showing unread messages.
 @property (nonatomic, assign, readonly) long long showUnreadViewMessageId;
-// YES while the channel page is showing the loading indicator for more messages; reset to NO when loading completes to avoid repeated fast loads.
+// YES while the channel page is showing the loading indicator for more messages; reset to NO when
+// loading completes to avoid repeated fast loads.
 @property (nonatomic, assign, readonly) BOOL isIndicatorLoading;
 // Whether historical messages are being loaded.
 @property (nonatomic, assign, readonly) BOOL isLoadingHistoryMessage;
@@ -61,7 +62,8 @@
 - (void)scrollToLoadMoreHistoryMessage;
 // Loads more newer messages while scrolling the channel page.
 - (void)scrollToLoadMoreNewerMessage;
-// Scrolls the channel page to the suitable position, such as the first unread mentioned message or a message at the user-specified time.
+// Scrolls the channel page to the suitable position, such as the first unread mentioned message or
+// a message at the user-specified time.
 - (void)scrollToSuitablePosition;
 // Cancels all queued data-source message append operations when the channel page disappears.
 - (void)cancelAppendMessageQueue;
@@ -73,7 +75,7 @@
 
 - (void)setupUnReadMentionedButton;
 
-- (void)removeMentionedMessage:(long )curMessageId;
+- (void)removeMentionedMessage:(long)curMessageId;
 
 - (void)scrollDidEnd;
 #pragma mark - Notification

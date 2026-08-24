@@ -22,7 +22,7 @@
     return @{};
 }
 
-- (void)decodeWithFields:(NSDictionary<NSString *,id> *)fields {
+- (void)decodeWithFields:(NSDictionary<NSString *, id> *)fields {
     (void)fields;
 }
 
@@ -58,7 +58,7 @@
     return notif;
 }
 
-- (NSDictionary<NSString *,id> *)encodeFields {
+- (NSDictionary<NSString *, id> *)encodeFields {
     NSMutableDictionary<NSString *, id> *fields = [NSMutableDictionary dictionary];
     if (self.message.length > 0) {
         fields[@"message"] = self.message;
@@ -66,7 +66,7 @@
     return fields;
 }
 
-- (void)decodeWithFields:(NSDictionary<NSString *,id> *)fields {
+- (void)decodeWithFields:(NSDictionary<NSString *, id> *)fields {
     self.message = [fields[@"message"] isKindOfClass:[NSString class]] ? fields[@"message"] : @"";
 }
 
@@ -100,7 +100,7 @@
     return notif;
 }
 
-- (NSDictionary<NSString *,id> *)encodeFields {
+- (NSDictionary<NSString *, id> *)encodeFields {
     NSMutableDictionary<NSString *, id> *fields = [NSMutableDictionary dictionary];
     if (self.operation.length > 0) {
         fields[@"operation"] = self.operation;
@@ -117,9 +117,12 @@
     return fields;
 }
 
-- (void)decodeWithFields:(NSDictionary<NSString *,id> *)fields {
-    self.operation = [fields[@"operation"] isKindOfClass:[NSString class]] ? fields[@"operation"] : @"";
-    self.operatorUserId = [fields[@"operatorUserId"] isKindOfClass:[NSString class]] ? fields[@"operatorUserId"] : @"";
+- (void)decodeWithFields:(NSDictionary<NSString *, id> *)fields {
+    self.operation =
+        [fields[@"operation"] isKindOfClass:[NSString class]] ? fields[@"operation"] : @"";
+    self.operatorUserId = [fields[@"operatorUserId"] isKindOfClass:[NSString class]]
+                              ? fields[@"operatorUserId"]
+                              : @"";
     self.data = [fields[@"data"] isKindOfClass:[NSString class]] ? fields[@"data"] : @"";
     self.message = [fields[@"message"] isKindOfClass:[NSString class]] ? fields[@"message"] : @"";
 }

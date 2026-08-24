@@ -15,9 +15,9 @@
     static NCChatUIExtensionService *pDefaultService;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (pDefaultService == nil) {
-            pDefaultService = [[NCChatUIExtensionService alloc] init];
-        }
+      if (pDefaultService == nil) {
+          pDefaultService = [[NCChatUIExtensionService alloc] init];
+      }
     });
     return pDefaultService;
 }
@@ -54,14 +54,17 @@
     [[NCChatUIExtensionModuleManager sharedManager] setScheme:scheme forModule:moduleName];
 }
 
-- (NSArray<NCChatUIExtensionPluginItemInfo *> *)getPluginBoardItemInfoList:(NCChannelType)channelType
-                                                            channelId:(NSString *)channelId {
-    return [[NCChatUIExtensionModuleManager sharedManager] getPluginBoardItemInfoList:channelType channelId:channelId];
+- (NSArray<NCChatUIExtensionPluginItemInfo *> *)getPluginBoardItemInfoList:
+                                                    (NCChannelType)channelType
+                                                                 channelId:(NSString *)channelId {
+    return [[NCChatUIExtensionModuleManager sharedManager] getPluginBoardItemInfoList:channelType
+                                                                            channelId:channelId];
 }
 
 - (NSArray<id<NCEmoticonTabSource>> *)getEmoticonTabList:(NCChannelType)channelType
-                                                channelId:(NSString *)channelId {
-    return [[NCChatUIExtensionModuleManager sharedManager] getEmoticonTabList:channelType channelId:channelId];
+                                               channelId:(NSString *)channelId {
+    return [[NCChatUIExtensionModuleManager sharedManager] getEmoticonTabList:channelType
+                                                                    channelId:channelId];
 }
 
 - (void)onMessageReceived:(NCMessage *)message {
@@ -75,17 +78,18 @@
 - (BOOL)handleNotificationForMessageReceived:(NCMessage *)message
                                         from:(NSString *)fromName
                                     userInfo:(NSDictionary *)userInfo {
-    return [[NCChatUIExtensionModuleManager sharedManager] handleNotificationForMessageReceived:message
-                                                                                     from:fromName
-                                                                                 userInfo:userInfo];
+    return [[NCChatUIExtensionModuleManager sharedManager]
+        handleNotificationForMessageReceived:message
+                                        from:fromName
+                                    userInfo:userInfo];
 }
 
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
-  didTouchAddButton:(UIButton *)addButton
-         inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
+    didTouchAddButton:(UIButton *)addButton
+           inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
     [[NCChatUIExtensionModuleManager sharedManager] emoticonTab:emojiView
-                                        didTouchAddButton:addButton
-                                               inInputBar:inputBarControl];
+                                              didTouchAddButton:addButton
+                                                     inInputBar:inputBarControl];
 }
 
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
@@ -93,24 +97,28 @@
                   inInputBar:(NCChatSessionInputBarControl *)inputBarControl
          isBlockDefaultEvent:(void (^)(BOOL isBlockDefaultEvent))block {
     [[NCChatUIExtensionModuleManager sharedManager] emoticonTab:emojiView
-                                 didTouchEmotionIconIndex:index
-                                               inInputBar:inputBarControl
-                                      isBlockDefaultEvent:block];
+                                       didTouchEmotionIconIndex:index
+                                                     inInputBar:inputBarControl
+                                            isBlockDefaultEvent:block];
 }
 
 - (void)emoticonTab:(NCEmojiBoardView *)emojiView
     didTouchSettingButton:(UIButton *)settingButton
                inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
     [[NCChatUIExtensionModuleManager sharedManager] emoticonTab:emojiView
-                                    didTouchSettingButton:settingButton
-                                               inInputBar:inputBarControl];
+                                          didTouchSettingButton:settingButton
+                                                     inInputBar:inputBarControl];
 }
 
-- (void)inputTextViewDidChange:(UITextView *)inputTextView inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
-    [[NCChatUIExtensionModuleManager sharedManager] inputTextViewDidChange:inputTextView inInputBar:inputBarControl];
+- (void)inputTextViewDidChange:(UITextView *)inputTextView
+                    inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
+    [[NCChatUIExtensionModuleManager sharedManager] inputTextViewDidChange:inputTextView
+                                                                inInputBar:inputBarControl];
 }
-- (void)inputBarStatusDidChange:(KBottomBarStatus)status inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
-    [[NCChatUIExtensionModuleManager sharedManager] inputBarStatusDidChange:status inInputBar:inputBarControl];
+- (void)inputBarStatusDidChange:(KBottomBarStatus)status
+                     inInputBar:(NCChatSessionInputBarControl *)inputBarControl {
+    [[NCChatUIExtensionModuleManager sharedManager] inputBarStatusDidChange:status
+                                                                 inInputBar:inputBarControl];
 }
 
 /*!
@@ -119,7 +127,8 @@
  @param inputBarControl The input bar.
  */
 - (BOOL)isEmoticonAddButtonEnabled:(NCChatSessionInputBarControl *)inputBarControl {
-    return [[NCChatUIExtensionModuleManager sharedManager] isEmoticonAddButtonEnabled:inputBarControl];
+    return
+        [[NCChatUIExtensionModuleManager sharedManager] isEmoticonAddButtonEnabled:inputBarControl];
 }
 
 /*!
@@ -128,7 +137,8 @@
  @param inputBarControl The input bar.
  */
 - (BOOL)isEmoticonSettingButtonEnabled:(NCChatSessionInputBarControl *)inputBarControl {
-    return [[NCChatUIExtensionModuleManager sharedManager] isEmoticonSettingButtonEnabled:inputBarControl];
+    return [[NCChatUIExtensionModuleManager sharedManager]
+        isEmoticonSettingButtonEnabled:inputBarControl];
 }
 
 - (BOOL)isAudioHolding {

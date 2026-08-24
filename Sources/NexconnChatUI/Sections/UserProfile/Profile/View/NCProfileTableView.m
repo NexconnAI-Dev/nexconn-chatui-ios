@@ -10,10 +10,8 @@
 
 @implementation NCProfileTableView
 
-
 - (void)layoutSubviews {
     [super layoutSubviews];
-   
 }
 
 @end

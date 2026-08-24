@@ -7,8 +7,8 @@
 //
 
 #import "NCProfileGenderCellViewModel.h"
-#import "NCProfileGenderCell.h"
 #import "NCChatUICommonDefine.h"
+#import "NCProfileGenderCell.h"
 
 @interface NCProfileGenderCellViewModel ()
 @property (nonatomic, weak) UITableView *tableView;
@@ -22,10 +22,13 @@
     return viewModel;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     self.tableView = tableView;
     self.indexPath = indexPath;
-    NCProfileGenderCell *cell = [tableView dequeueReusableCellWithIdentifier:NCProfileGenderCellIdentifier forIndexPath:indexPath];
+    NCProfileGenderCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCProfileGenderCellIdentifier
+                                        forIndexPath:indexPath];
     cell.titleLabel.text = [self getGenderString:self.gender];
     cell.selectView.hidden = !self.isSelect;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -44,16 +47,16 @@
     }
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NSString *)getGenderString:(NCChatUIUserGender)gender {
     switch (gender) {
-        case NCChatUIUserGenderMale:
-            return NCUILocalizedString(@"male");
-        case NCChatUIUserGenderFemale:
-            return NCUILocalizedString(@"female");
-        default:
-            break;
+    case NCChatUIUserGenderMale:
+        return NCUILocalizedString(@"male");
+    case NCChatUIUserGenderFemale:
+        return NCUILocalizedString(@"female");
+    default:
+        break;
     }
     return NCUILocalizedString(@"unknown");
 }

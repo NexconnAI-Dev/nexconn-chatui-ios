@@ -19,7 +19,8 @@
  */
 + (NCLocalNotification *)defaultCenter;
 
-/// Posts an iOS 10-compatible local notification. On iOS 10 and later, local notifications can be grouped and replaced.
+/// Posts an iOS 10-compatible local notification. On iOS 10 and later, local notifications can be
+/// grouped and replaced.
 - (void)postLocalNotificationWithMessage:(NCMessage *)message userInfo:(NSDictionary *)userInfo;
 
 /// Used for encrypted channels.

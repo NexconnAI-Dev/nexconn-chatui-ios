@@ -11,8 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 @protocol NCSizeCalculateLabelDelegate <NSObject>
 
-- (void)labelLayoutFinished:(UILabel *)label
-                 natureSize:(CGSize)natureSize;
+- (void)labelLayoutFinished:(UILabel *)label natureSize:(CGSize)natureSize;
 
 @end
 @interface NCSizeCalculateLabel : UILabel

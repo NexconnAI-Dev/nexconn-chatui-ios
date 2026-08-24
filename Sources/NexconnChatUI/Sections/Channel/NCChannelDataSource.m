@@ -40,9 +40,8 @@ typedef NS_ENUM(NSUInteger, NCChannelHistoryMessageOrder) {
 
 static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController *chatVC) {
     return [NSString stringWithFormat:@"ai.nexconn.chatui.datasource.message.%ld.%@.%@",
-            (long)chatVC.channelType,
-            chatVC.channelId ?: @"",
-            chatVC.subChannelId ?: @""];
+                                      (long)chatVC.channelType, chatVC.channelId ?: @"",
+                                      chatVC.subChannelId ?: @""];
 }
 
 @interface NCChannelDataSource (EditPrivate)
@@ -74,18 +73,22 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 
 @property (nonatomic, assign) BOOL isLoadingHistoryMessage; // Whether history is being loaded.
 
-@property (nonatomic, assign) BOOL isShowingLastestMessage; // Whether the newest message is visible.
+@property (nonatomic, assign)
+    BOOL isShowingLastestMessage; // Whether the newest message is visible.
 
-@property (nonatomic, assign) BOOL allMessagesAreLoaded; /// YES when all messages are loaded; NO when more remain.
+@property (nonatomic, assign)
+    BOOL allMessagesAreLoaded; /// YES when all messages are loaded; NO when more remain.
 @property (nonatomic, assign) BOOL isIndicatorLoading;
 
 @property (nonatomic, assign) long long recordTime;
-@property (nonatomic, assign) long long showUnreadViewMessageId; // Message ID used by the unread jump control.
+@property (nonatomic, assign)
+    long long showUnreadViewMessageId; // Message ID used by the unread jump control.
 
 // Collection view layout for the channel page.
 @property (nonatomic, strong) NCChannelViewLayout *customFlowLayout;
-@property (nonatomic, strong) NCMessage *firstUnreadMessage; // Captured on entry because loading messages changes unread state.
-@property (nonatomic, copy) void(^throttleReloadAction)(void);
+@property (nonatomic, strong) NCMessage
+    *firstUnreadMessage; // Captured on entry because loading messages changes unread state.
+@property (nonatomic, copy) void (^throttleReloadAction)(void);
 
 // Whether unread controls should be checked after tapping a mention jump button.
 @property (nonatomic, assign) BOOL hideUnreadBtnForMentioned;
@@ -93,7 +96,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 @property (nonatomic, strong) NSMutableOrderedSet<NSString *> *receivedMessageDedupKeys;
 @property (nonatomic, strong) NSMutableOrderedSet<NSString *> *modifiedMessageDedupKeys;
 @property (nonatomic, strong) NSMutableArray<NCMessagesQuery *> *activeMessagesQueries;
-@property (nonatomic, strong) NSMutableArray<NCLocalMessagesByTimeQuery *> *activeLocalMessagesQueries;
+@property (nonatomic, strong)
+    NSMutableArray<NCLocalMessagesByTimeQuery *> *activeLocalMessagesQueries;
 @property (nonatomic, strong) NSMutableSet *referenceRefreshContexts;
 @property (nonatomic, assign) BOOL didCleanupForChannelRelease;
 
@@ -104,7 +108,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 @implementation NCChannelDataSource
 - (instancetype)init:(NCChannelViewController *)chatVC {
     self = [super init];
-    if(self) {
+    if (self) {
         self.cachedReloadMessages = [NSMutableArray new];
         self.chatVC = chatVC;
         self.allMessagesAreLoaded = NO;
@@ -122,7 +126,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         self.activeMessagesQueries = [[NSMutableArray alloc] init];
         self.activeLocalMessagesQueries = [[NSMutableArray alloc] init];
         self.referenceRefreshContexts = [[NSMutableSet alloc] init];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(streamMessageCellDidUpdate:) name:NCStreamMessageCellUpdateEndNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(streamMessageCellDidUpdate:)
+                                                     name:NCStreamMessageCellUpdateEndNotification
+                                                   object:nil];
         self.ncMessageHandlerIdentifier = NCConversationMessageHandlerIdentifier(chatVC);
         [NCEngine addMessageHandlerWithIdentifier:self.ncMessageHandlerIdentifier handler:self];
         [[NCChatUI shared] addMessageEventObserver:self];
@@ -131,7 +138,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 }
 
 - (void)cleanupForChannelViewControllerRelease {
-    @synchronized (self) {
+    @synchronized(self) {
         if (self.didCleanupForChannelRelease) {
             return;
         }
@@ -148,7 +155,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     [self edit_cleanupAllReferenceRefreshContexts];
     self.firstUnreadMessage = nil;
 
-    @synchronized (self) {
+    @synchronized(self) {
         [self.activeMessagesQueries removeAllObjects];
         [self.activeLocalMessagesQueries removeAllObjects];
     }
@@ -169,23 +176,25 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     [self loadLatestHistoryMessage];
     self.chatVC.unReadMessage = (int)channel.unreadCount;
     if (self.chatVC.unReadMessage) {
-        [channel getFirstUnreadMessageWithCompletion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-            (void)error;
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.firstUnreadMessage = message;
-            });
+        [channel getFirstUnreadMessageWithCompletion:^(NCMessage *_Nullable message,
+                                                       NCError *_Nullable error) {
+          (void)error;
+          dispatch_async(dispatch_get_main_queue(), ^{
+            self.firstUnreadMessage = message;
+          });
         }];
     }
     if (self.chatVC.channelType == NCChannelTypeGroup) {
-        if(NCChatUIConfigCenter.message.enableMessageMentioned) {
+        if (NCChatUIConfigCenter.message.enableMessageMentioned) {
             self.chatVC.chatSessionInputBarControl.isMentionedEnabled = YES;
             self.chatVC.editInputBarControl.isMentionedEnabled = YES;
             if (channel.mentionedMeCount > 0) {
-                [channel getUnreadMentionedMessagesWithCompletion:^(NSArray<NCMessage *> * _Nullable messages, NCError * _Nullable error) {
-                    (void)error;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        self.unreadMentionedMessages = messages.mutableCopy ?: [NSMutableArray array];
-                    });
+                [channel getUnreadMentionedMessagesWithCompletion:^(
+                             NSArray<NCMessage *> *_Nullable messages, NCError *_Nullable error) {
+                  (void)error;
+                  dispatch_async(dispatch_get_main_queue(), ^{
+                    self.unreadMentionedMessages = messages.mutableCopy ?: [NSMutableArray array];
+                  });
                 }];
             }
         }
@@ -196,7 +205,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 - (void)loadNCMessagesWithPageSize:(NSInteger)pageSize
                               time:(long long)time
                              order:(NCChannelHistoryMessageOrder)order
-                        completion:(void (^)(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code))completion
+                        completion:(void (^)(NSArray<NCMessage *> *messages, BOOL isRemaining,
+                                             NCChatUIErrorCode code))completion
                           fallback:(void (^)(void))fallback {
     NCChannelIdentifier *channelIdentifier = self.chatVC.currentChannelIdentifier;
     if (!channelIdentifier) {
@@ -211,21 +221,22 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     params.startTime = time;
     params.isAscending = (order == NCChannelHistoryMessageOrderAsc);
     NCMessagesQuery *messagesQuery = [NCBaseChannel createMessagesQueryWithParams:params];
-    @synchronized (self) {
+    @synchronized(self) {
         [self.activeMessagesQueries addObject:messagesQuery];
     }
     __weak typeof(self) weakSelf = self;
-    [messagesQuery loadNextPageWithCompletion:^(NSArray<NCMessage *> * _Nullable messages, NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf) {
-            @synchronized (strongSelf) {
-                [strongSelf.activeMessagesQueries removeObject:messagesQuery];
-            }
-        }
-        NCChatUIErrorCode code = error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeSuccess;
-        if (completion) {
-            completion(messages ?: @[], messagesQuery.hasNextPage, code);
-        }
+    [messagesQuery loadNextPageWithCompletion:^(NSArray<NCMessage *> *_Nullable messages,
+                                                NCError *_Nullable error) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (strongSelf) {
+          @synchronized(strongSelf) {
+              [strongSelf.activeMessagesQueries removeObject:messagesQuery];
+          }
+      }
+      NCChatUIErrorCode code = error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeSuccess;
+      if (completion) {
+          completion(messages ?: @[], messagesQuery.hasNextPage, code);
+      }
     }];
 }
 
@@ -233,7 +244,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 - (void)loadLocalNCMessagesWithPageSize:(NSInteger)pageSize
                                sentTime:(long long)sentTime
                                   order:(NCChannelHistoryMessageOrder)order
-                             completion:(void (^)(NSArray<NCMessage *> *messages, NCChatUIErrorCode code))completion
+                             completion:(void (^)(NSArray<NCMessage *> *messages,
+                                                  NCChatUIErrorCode code))completion
                                fallback:(void (^)(void))fallback {
     NCChannelIdentifier *channelIdentifier = self.chatVC.currentChannelIdentifier;
     if (!channelIdentifier) {
@@ -249,21 +261,22 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     params.isAscending = (order == NCChannelHistoryMessageOrderAsc);
     NCLocalMessagesByTimeQuery *messagesQuery =
         [NCBaseChannel createLocalMessagesByTimeQueryWithParams:params];
-    @synchronized (self) {
+    @synchronized(self) {
         [self.activeLocalMessagesQueries addObject:messagesQuery];
     }
     __weak typeof(self) weakSelf = self;
-    [messagesQuery loadNextPageWithCompletion:^(NSArray<NCMessage *> * _Nullable messages, NCError * _Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf) {
-            @synchronized (strongSelf) {
-                [strongSelf.activeLocalMessagesQueries removeObject:messagesQuery];
-            }
-        }
-        NCChatUIErrorCode code = error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeSuccess;
-        if (completion) {
-            completion(messages ?: @[], code);
-        }
+    [messagesQuery loadNextPageWithCompletion:^(NSArray<NCMessage *> *_Nullable messages,
+                                                NCError *_Nullable error) {
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (strongSelf) {
+          @synchronized(strongSelf) {
+              [strongSelf.activeLocalMessagesQueries removeObject:messagesQuery];
+          }
+      }
+      NCChatUIErrorCode code = error ? (NCChatUIErrorCode)error.code : NCChatUIErrorCodeSuccess;
+      if (completion) {
+          completion(messages ?: @[], code);
+      }
     }];
 }
 
@@ -273,96 +286,112 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
     __weak typeof(self) ws = self;
     [self.appendMessageQueue addOperationWithBlock:^{
+      __strong typeof(ws) strongSelf = ws;
+      if (!strongSelf) {
+          return;
+      }
+      dispatch_async(dispatch_get_main_queue(), ^{
         __strong typeof(ws) strongSelf = ws;
         if (!strongSelf) {
             return;
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(ws) strongSelf = ws;
-            if (!strongSelf) {
-                return;
+        @autoreleasepool {
+            NCChannelViewController *chatVC = strongSelf.chatVC;
+            NCMessageModel *model = [NCMessageModel modelWithNCMessage:message];
+            [chatVC.util figureOutLatestModel:model];
+            if ([strongSelf appendMessageModel:model]) {
+                [strongSelf.cachedReloadMessages addObject:model];
+                strongSelf.throttleReloadAction();
             }
-            @autoreleasepool {
-                NCChannelViewController *chatVC = strongSelf.chatVC;
-                NCMessageModel *model = [NCMessageModel modelWithNCMessage:message];
-                [chatVC.util figureOutLatestModel:model];
-                if ([strongSelf appendMessageModel:model]) {
-                    [strongSelf.cachedReloadMessages addObject:model];
-                    strongSelf.throttleReloadAction();
-                }
-            }
-        });
-        [NSThread sleepForTimeInterval:0.01];
+        }
+      });
+      [NSThread sleepForTimeInterval:0.01];
     }];
 }
 
-- (void(^)(void))getThrottleActionWithTimeInteval:(double)timeInteval action:(void(^)(void))action {
+- (void (^)(void))getThrottleActionWithTimeInteval:(double)timeInteval
+                                            action:(void (^)(void))action {
     __block BOOL canAction = NO;
     __weak typeof(self) weakSelf = self;
     return ^{
-        if (weakSelf.chatVC.sendMsgAndNeedScrollToBottom) {
-            canAction = NO;
-            dispatch_main_async_safe(^{
-                action();
-            });
-            return;
-        }else if (canAction == NO) {
-            canAction = YES;
-        } else {
-            return;
-        }
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeInteval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            if (!canAction) {
-                return;
-            }
-            canAction = NO;
+      if (weakSelf.chatVC.sendMsgAndNeedScrollToBottom) {
+          canAction = NO;
+          dispatch_main_async_safe(^{
             action();
-        });
+          });
+          return;
+      } else if (canAction == NO) {
+          canAction = YES;
+      } else {
+          return;
+      }
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeInteval * NSEC_PER_SEC)),
+                     dispatch_get_main_queue(), ^{
+                       if (!canAction) {
+                           return;
+                       }
+                       canAction = NO;
+                       action();
+                     });
     };
 }
 
-- (void (^)(void))throttleReloadAction{
+- (void (^)(void))throttleReloadAction {
     if (!_throttleReloadAction) {
         __weak typeof(self) ws = self;
-        _throttleReloadAction = [self getThrottleActionWithTimeInteval:0.3 action:^{
-                __strong typeof(ws) strongSelf = ws;
-                if (!strongSelf || strongSelf.cachedReloadMessages.count <= 0) {
-                    return;
-                }
-                NCChannelViewController *chatVC = strongSelf.chatVC;
-                NSUInteger dataRepositorycount = strongSelf.chatVC.channelDataRepository.count;
-                [chatVC.channelDataRepository addObjectsFromArray:strongSelf.cachedReloadMessages];
-            
-                // v5
-                NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
-                [itemToFetchReceipt addObjectsFromArray:strongSelf.cachedReloadMessages];
-                [strongSelf rrs_fetchReadReceiptInfo:itemToFetchReceipt];
-            
-                NSInteger itemsCount = [chatVC.messageCollectionView numberOfItemsInSection:0];
-                NSInteger differenceValue = chatVC.channelDataRepository.count - itemsCount;
-            
-                // 符合insert条件才执行
-                if (itemsCount > 0 && strongSelf.cachedReloadMessages.count == differenceValue) {
-                    NSMutableArray *reloadIndexPaths = [NSMutableArray new];
-                    for (int i=0 ; i<strongSelf.cachedReloadMessages.count ; i++) {
-                        NSIndexPath *indexPath = [NSIndexPath indexPathForItem:(dataRepositorycount + i) inSection:0];
-                        [reloadIndexPaths addObject:indexPath];
-                    }
-                    [chatVC.messageCollectionView insertItemsAtIndexPaths:reloadIndexPaths];
-                } else {
-                    [chatVC.messageCollectionView reloadData];
-                }
+        _throttleReloadAction = [self
+            getThrottleActionWithTimeInteval:0.3
+                                      action:^{
+                                        __strong typeof(ws) strongSelf = ws;
+                                        if (!strongSelf ||
+                                            strongSelf.cachedReloadMessages.count <= 0) {
+                                            return;
+                                        }
+                                        NCChannelViewController *chatVC = strongSelf.chatVC;
+                                        NSUInteger dataRepositorycount =
+                                            strongSelf.chatVC.channelDataRepository.count;
+                                        [chatVC.channelDataRepository
+                                            addObjectsFromArray:strongSelf.cachedReloadMessages];
 
-                [strongSelf.cachedReloadMessages removeAllObjects];
-       
-                if (chatVC.sendMsgAndNeedScrollToBottom || [strongSelf isAtTheBottomOfTableView]) {
-                    [chatVC scrollToBottomAnimated:YES];
-                    chatVC.sendMsgAndNeedScrollToBottom = NO;
-                } else {
-                    [chatVC updateUnreadMsgCountLabel];
-                }
-          
-        }];
+                                        // v5
+                                        NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
+                                        [itemToFetchReceipt
+                                            addObjectsFromArray:strongSelf.cachedReloadMessages];
+                                        [strongSelf rrs_fetchReadReceiptInfo:itemToFetchReceipt];
+
+                                        NSInteger itemsCount =
+                                            [chatVC.messageCollectionView numberOfItemsInSection:0];
+                                        NSInteger differenceValue =
+                                            chatVC.channelDataRepository.count - itemsCount;
+
+                                        // 符合insert条件才执行
+                                        if (itemsCount > 0 &&
+                                            strongSelf.cachedReloadMessages.count ==
+                                                differenceValue) {
+                                            NSMutableArray *reloadIndexPaths = [NSMutableArray new];
+                                            for (int i = 0;
+                                                 i < strongSelf.cachedReloadMessages.count; i++) {
+                                                NSIndexPath *indexPath = [NSIndexPath
+                                                    indexPathForItem:(dataRepositorycount + i)
+                                                           inSection:0];
+                                                [reloadIndexPaths addObject:indexPath];
+                                            }
+                                            [chatVC.messageCollectionView
+                                                insertItemsAtIndexPaths:reloadIndexPaths];
+                                        } else {
+                                            [chatVC.messageCollectionView reloadData];
+                                        }
+
+                                        [strongSelf.cachedReloadMessages removeAllObjects];
+
+                                        if (chatVC.sendMsgAndNeedScrollToBottom ||
+                                            [strongSelf isAtTheBottomOfTableView]) {
+                                            [chatVC scrollToBottomAnimated:YES];
+                                            chatVC.sendMsgAndNeedScrollToBottom = NO;
+                                        } else {
+                                            [chatVC updateUnreadMsgCountLabel];
+                                        }
+                                      }];
     }
     return _throttleReloadAction;
 }
@@ -389,9 +418,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
             return NO;
         }
     }
-    
+
     BOOL isUnknown = [NCChatUIUtility isUnkownMessage:model.clientId content:model.content];
-    if (isUnknown && !NCChatUIConfigCenter.message.showUnkownMessage) { // Unknown messages are hidden by configuration.
+    if (isUnknown && !NCChatUIConfigCenter.message
+                          .showUnkownMessage) { // Unknown messages are hidden by configuration.
         return NO;
     }
     if (newId != -1 && !model.isPersisted) { // Non-persisted messages are not displayed.
@@ -403,9 +433,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 }
 
 - (BOOL)pushOldMessageModel:(NCMessageModel *)model {
-    
+
     BOOL isUnknown = [NCChatUIUtility isUnkownMessage:model.clientId content:model.content];
-    if (isUnknown && !NCChatUIConfigCenter.message.showUnkownMessage) { // Unknown messages are hidden by configuration.
+    if (isUnknown && !NCChatUIConfigCenter.message
+                          .showUnkownMessage) { // Unknown messages are hidden by configuration.
         return NO;
     }
     if (!model.isPersisted) {
@@ -429,9 +460,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 - (void)loadLatestHistoryMessage {
     if (self.chatVC.locatedMessageSentTime > 0) {
         [self loadHistorylocatedMessageV2];
-    }else{
+    } else {
         [self loadHistoryMessageBeforeTimeV2:0];
-        // PAASIOSDEV-77: Avoid repeated input refreshes while history is loading after the user taps New Messages.
+        // PAASIOSDEV-77: Avoid repeated input refreshes while history is loading after the user
+        // taps New Messages.
         self.isLoadingHistoryMessage = NO;
     }
 }
@@ -449,7 +481,6 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     [self loadHistoryMessageBeforeTimeV2:self.recordTime];
 }
 
-
 - (void)loadMoreHistoryMessageIfNeed {
     if (!self.isIndicatorLoading && !self.allMessagesAreLoaded) {
         self.isIndicatorLoading = YES;
@@ -466,16 +497,17 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 - (void)appendLastestMessageToDataSourceWithCompletion:(void (^)(NSInteger count))completion {
     __weak typeof(self) weakSelf = self;
     [self loadNCMessagesWithPageSize:self.chatVC.defaultMessageCount
-                                time:0
-                               order:NCChannelHistoryMessageOrderAsc
-                          completion:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code) {
-        (void)isRemaining;
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (code != NCChatUIErrorCodeSuccess || !messages || messages.count < strongSelf.chatVC.defaultMessageCount) {
+        time:0
+        order:NCChannelHistoryMessageOrderAsc
+        completion:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code) {
+          (void)isRemaining;
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          if (!strongSelf) {
+              return;
+          }
+          dispatch_async(dispatch_get_main_queue(), ^{
+            if (code != NCChatUIErrorCodeSuccess || !messages ||
+                messages.count < strongSelf.chatVC.defaultMessageCount) {
                 strongSelf.isLoadingHistoryMessage = NO;
             }
             NSInteger count = 0;
@@ -495,40 +527,44 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
             if (completion) {
                 completion(count);
             }
-        });
-    } fallback:^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
+          });
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
+        fallback:^{
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          if (!strongSelf) {
+              return;
+          }
+          dispatch_async(dispatch_get_main_queue(), ^{
             strongSelf.isLoadingHistoryMessage = NO;
             strongSelf.isIndicatorLoading = NO;
             if (completion) {
                 completion(0);
             }
-        });
-    }];
+          });
+        }];
 }
 - (void)handleMessagesAfterLoadMore:(NSArray<NCMessage *> *)messages {
     [self handleMessagesAfterLoadMore:messages checkUnreadMessage:YES];
 }
-- (void)handleMessagesAfterLoadMore:(NSArray<NCMessage *> *)messages checkUnreadMessage:(BOOL)check {
-    NSMutableArray *indexPathes = [[NSMutableArray alloc] initWithCapacity:self.chatVC.defaultMessageCount];
+- (void)handleMessagesAfterLoadMore:(NSArray<NCMessage *> *)messages
+                 checkUnreadMessage:(BOOL)check {
+    NSMutableArray *indexPathes =
+        [[NSMutableArray alloc] initWithCapacity:self.chatVC.defaultMessageCount];
     int indexPathCount = 0;
     NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
-    
+
     for (int i = 0; i < messages.count; i++) {
         NCMessage *message = [messages objectAtIndex:i];
         NCMessageModel *model = [NCMessageModel modelWithNCMessage:message];
         // The message data source is in reverse order.
-        
+
         if ([self pushOldMessageModel:model]) {
             [itemToFetchReceipt addObject:model];
             [indexPathes addObject:[NSIndexPath indexPathForItem:indexPathCount++ inSection:0]];
         }
         if (self.firstUnreadMessage && model.clientId == self.firstUnreadMessage.clientId &&
-            self.chatVC.enableUnreadMessageIcon && !self.chatVC.unReadButton.selected && self.chatVC.unReadMessage > self.chatVC.defaultMessageCount) {
+            self.chatVC.enableUnreadMessageIcon && !self.chatVC.unReadButton.selected &&
+            self.chatVC.unReadMessage > self.chatVC.defaultMessageCount) {
             // Guard an empty data source when a channel contains only unregistered custom messages.
             if (self.chatVC.channelDataRepository.count > 0) {
                 NCMessageModel *oldModel = [self generateOldMessageModel];
@@ -559,12 +595,12 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     BOOL boundaryDisplayTimeBefore = NO;
     BOOL hasBoundary = (boundaryIndex < self.chatVC.channelDataRepository.count);
     if (hasBoundary) {
-        NCMessageModel *boundaryModel = [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+        NCMessageModel *boundaryModel =
+            [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
         boundaryHeightBefore = boundaryModel.cellSize.height;
         boundaryDisplayTimeBefore = boundaryModel.isDisplayMessageTime;
     }
-    [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0
-                                                           toIndex:indexPathes.count - 1];
+    [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0 toIndex:indexPathes.count - 1];
 
     // 下拉加载历史后，边界消息（加载前的顶部消息）的时间显示状态可能翻转，
     // 但它是在屏未复用的 cell，performBatchUpdates 只插入新项不会重新配置它，
@@ -572,8 +608,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     // 稍后在批量更新完成回调中显式刷新它。
     BOOL boundaryDisplayTimeChanged = NO;
     if (hasBoundary && boundaryIndex < self.chatVC.channelDataRepository.count) {
-        NCMessageModel *boundaryModel = [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
-        boundaryDisplayTimeChanged = (boundaryModel.isDisplayMessageTime != boundaryDisplayTimeBefore);
+        NCMessageModel *boundaryModel =
+            [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+        boundaryDisplayTimeChanged =
+            (boundaryModel.isDisplayMessageTime != boundaryDisplayTimeBefore);
     }
 
     CGFloat increasedHeight = 0;
@@ -584,7 +622,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         increasedHeight += itemSize.height;
     }
     if (boundaryHeightBefore > 0 && boundaryIndex < self.chatVC.channelDataRepository.count) {
-        NCMessageModel *boundaryModel = [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+        NCMessageModel *boundaryModel =
+            [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
         if (boundaryModel.cellSize.height > 0) {
             increasedHeight += boundaryModel.cellSize.height - boundaryHeightBefore;
         }
@@ -596,7 +635,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         contentSize.height -= COLLECTION_VIEW_REFRESH_CONTROL_HEIGHT;
     }
     self.customFlowLayout.collectionViewNewContentSize = contentSize;
-    
+
     [UIView setAnimationsEnabled:NO];
     @try {
         if (self.chatVC.channelDataRepository.count == 1 ||
@@ -604,26 +643,30 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                 self.chatVC.channelDataRepository.count) {
             [self.chatVC.messageCollectionView reloadData];
         } else {
-            if (check) { // A mention jump refreshes again in scrollToSpecifiedPosition:, so skip this update when check is NO.
+            if (check) { // A mention jump refreshes again in scrollToSpecifiedPosition:, so skip
+                         // this update when check is NO.
                 // On iOS 15, insertion without reload can leave a reused cell stale.
-                [self.chatVC.messageCollectionView performBatchUpdates:^{
-                    [self.chatVC.messageCollectionView insertItemsAtIndexPaths:indexPathes];
-                } completion:^(BOOL finished) {
-                    // 边界 cell 的时间显示状态翻转后，同步刷新在屏的它，避免时间戳与内容重叠。
-                    if (boundaryDisplayTimeChanged
-                        && boundaryIndex < self.chatVC.channelDataRepository.count) {
-                        NCMessageModel *boundaryModel =
-                            [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
-                        NSIndexPath *boundaryIndexPath = [NSIndexPath indexPathForItem:boundaryIndex inSection:0];
-                        NCMessageCell *boundaryCell = (NCMessageCell *)[self.chatVC.messageCollectionView
-                            cellForItemAtIndexPath:boundaryIndexPath];
-                        if ([boundaryCell respondsToSelector:@selector(setDataModel:)]) {
-                            [boundaryCell setDataModel:boundaryModel];
-                        }
+                [self.chatVC.messageCollectionView
+                    performBatchUpdates:^{
+                      [self.chatVC.messageCollectionView insertItemsAtIndexPaths:indexPathes];
                     }
-                }];
+                    completion:^(BOOL finished) {
+                      // 边界 cell 的时间显示状态翻转后，同步刷新在屏的它，避免时间戳与内容重叠。
+                      if (boundaryDisplayTimeChanged &&
+                          boundaryIndex < self.chatVC.channelDataRepository.count) {
+                          NCMessageModel *boundaryModel =
+                              [self.chatVC.channelDataRepository objectAtIndex:boundaryIndex];
+                          NSIndexPath *boundaryIndexPath =
+                              [NSIndexPath indexPathForItem:boundaryIndex inSection:0];
+                          NCMessageCell *boundaryCell =
+                              (NCMessageCell *)[self.chatVC.messageCollectionView
+                                  cellForItemAtIndexPath:boundaryIndexPath];
+                          if ([boundaryCell respondsToSelector:@selector(setDataModel:)]) {
+                              [boundaryCell setDataModel:boundaryModel];
+                          }
+                      }
+                    }];
             }
-           
         }
         [UIView setAnimationsEnabled:YES];
         [self.chatVC.collectionViewHeader stopAnimating];
@@ -640,67 +683,91 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 
 #pragma mark - loadMessageV2
 
-- (void)loadHistorylocatedMessageV2{
+- (void)loadHistorylocatedMessageV2 {
     __weak typeof(self) weakSelf = self;
-    [self getHistoryMessageV2:self.chatVC.locatedMessageSentTime+1 order:NCChannelHistoryMessageOrderDesc loadType:self.chatVC.loadMessageType complete:^(NSArray<NCMessage *> *oldMsgs, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-        long long time = self.chatVC.locatedMessageSentTime-1;
-        if (oldMsgs.count > 0) {
-            NCMessage *msg = oldMsgs.firstObject;
-            time = msg.sentTime;
-        }
-        [self getHistoryMessageV2:time order:NCChannelHistoryMessageOrderAsc loadType:type complete:^(NSArray<NCMessage *> *newMsgs, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (oldMsgs.count < strongSelf.chatVC.defaultMessageCount) {
-                strongSelf.allMessagesAreLoaded = YES;
-            }else{
-                strongSelf.allMessagesAreLoaded = NO;
-            }
-            if (newMsgs.count < strongSelf.chatVC.defaultMessageCount) {
-                weakSelf.isLoadingHistoryMessage = NO;
-            }else{
-                strongSelf.isLoadingHistoryMessage = YES;
-            }
-            NSMutableArray *msgArr = [[NSMutableArray alloc] init];
-            [msgArr addObjectsFromArray:[[newMsgs reverseObjectEnumerator] allObjects]];
-            [msgArr addObjectsFromArray:oldMsgs];
-            [strongSelf loadLatestHistoryMessageV2:msgArr isDoubleCallback:isDoubleCallback];
-        }];
-    }];
+    [self
+        getHistoryMessageV2:self.chatVC.locatedMessageSentTime + 1
+                      order:NCChannelHistoryMessageOrderDesc
+                   loadType:self.chatVC.loadMessageType
+                   complete:^(NSArray<NCMessage *> *oldMsgs, BOOL isRemaining,
+                              NCChannelLoadMessageType type, BOOL isDoubleCallback) {
+                     long long time = self.chatVC.locatedMessageSentTime - 1;
+                     if (oldMsgs.count > 0) {
+                         NCMessage *msg = oldMsgs.firstObject;
+                         time = msg.sentTime;
+                     }
+                     [self
+                         getHistoryMessageV2:time
+                                       order:NCChannelHistoryMessageOrderAsc
+                                    loadType:type
+                                    complete:^(NSArray<NCMessage *> *newMsgs, BOOL isRemaining,
+                                               NCChannelLoadMessageType type,
+                                               BOOL isDoubleCallback) {
+                                      __strong typeof(weakSelf) strongSelf = weakSelf;
+                                      if (oldMsgs.count < strongSelf.chatVC.defaultMessageCount) {
+                                          strongSelf.allMessagesAreLoaded = YES;
+                                      } else {
+                                          strongSelf.allMessagesAreLoaded = NO;
+                                      }
+                                      if (newMsgs.count < strongSelf.chatVC.defaultMessageCount) {
+                                          weakSelf.isLoadingHistoryMessage = NO;
+                                      } else {
+                                          strongSelf.isLoadingHistoryMessage = YES;
+                                      }
+                                      NSMutableArray *msgArr = [[NSMutableArray alloc] init];
+                                      [msgArr addObjectsFromArray:[[newMsgs reverseObjectEnumerator]
+                                                                      allObjects]];
+                                      [msgArr addObjectsFromArray:oldMsgs];
+                                      [strongSelf loadLatestHistoryMessageV2:msgArr
+                                                            isDoubleCallback:isDoubleCallback];
+                                    }];
+                   }];
 }
 
-- (void)loadHistoryMessageBeforeTimeV2:(long long)time{
+- (void)loadHistoryMessageBeforeTimeV2:(long long)time {
     __weak typeof(self) weakSelf = self;
-    [self getHistoryMessageV2:time order:NCChannelHistoryMessageOrderDesc loadType:self.chatVC.loadMessageType complete:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        strongSelf.allMessagesAreLoaded = !isRemaining;
-        
-        if (messages.count > 0) {
-            if (time == 0) {
-                [strongSelf loadLatestHistoryMessageV2:messages isDoubleCallback:isDoubleCallback];
-            }else{
-                [strongSelf handleMessagesAfterLoadMore:messages];
-                NCMessage *message = messages.lastObject;
-                strongSelf.recordTime = message.sentTime;
-            }
-        }
-    }];
+    [self getHistoryMessageV2:time
+                        order:NCChannelHistoryMessageOrderDesc
+                     loadType:self.chatVC.loadMessageType
+                     complete:^(NSArray<NCMessage *> *messages, BOOL isRemaining,
+                                NCChannelLoadMessageType type, BOOL isDoubleCallback) {
+                       __strong typeof(weakSelf) strongSelf = weakSelf;
+                       strongSelf.allMessagesAreLoaded = !isRemaining;
+
+                       if (messages.count > 0) {
+                           if (time == 0) {
+                               [strongSelf loadLatestHistoryMessageV2:messages
+                                                     isDoubleCallback:isDoubleCallback];
+                           } else {
+                               [strongSelf handleMessagesAfterLoadMore:messages];
+                               NCMessage *message = messages.lastObject;
+                               strongSelf.recordTime = message.sentTime;
+                           }
+                       }
+                     }];
 }
 
-- (void)loadHistoryMessageAfterTimeV2:(long long)time{
+- (void)loadHistoryMessageAfterTimeV2:(long long)time {
     __weak typeof(self) weakSelf = self;
-    [self getHistoryMessageV2:time order:NCChannelHistoryMessageOrderAsc loadType:self.chatVC.loadMessageType complete:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (messages.count < strongSelf.chatVC.defaultMessageCount) {
-            strongSelf.isLoadingHistoryMessage = NO;
-        }else{
-            strongSelf.isLoadingHistoryMessage = YES;
-        }
-        [strongSelf loadMoreNewerMessageV2:messages];
-    }];
+    [self getHistoryMessageV2:time
+                        order:NCChannelHistoryMessageOrderAsc
+                     loadType:self.chatVC.loadMessageType
+                     complete:^(NSArray<NCMessage *> *messages, BOOL isRemaining,
+                                NCChannelLoadMessageType type, BOOL isDoubleCallback) {
+                       __strong typeof(weakSelf) strongSelf = weakSelf;
+                       if (messages.count < strongSelf.chatVC.defaultMessageCount) {
+                           strongSelf.isLoadingHistoryMessage = NO;
+                       } else {
+                           strongSelf.isLoadingHistoryMessage = YES;
+                       }
+                       [strongSelf loadMoreNewerMessageV2:messages];
+                     }];
 }
 
-// Only the initial load can call back twice. isDoubleCallback marks local and remote versions of the same page; the remote result wins.
-- (void)loadLatestHistoryMessageV2:(NSArray<NCMessage *> *)messages isDoubleCallback:(BOOL)isDoubleCallback {
+// Only the initial load can call back twice. isDoubleCallback marks local and remote versions of
+// the same page; the remote result wins.
+- (void)loadLatestHistoryMessageV2:(NSArray<NCMessage *> *)messages
+                  isDoubleCallback:(BOOL)isDoubleCallback {
     if (messages.count <= 0) {
         return;
     }
@@ -709,13 +776,14 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         self.recordTime = messages.lastObject.sentTime;
     }
 
-    // For an initial double callback, remove the first local page before applying the authoritative remote page.
+    // For an initial double callback, remove the first local page before applying the authoritative
+    // remote page.
     if (isDoubleCallback) {
         [self.chatVC.channelDataRepository removeAllObjects];
     }
     NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
     NSInteger insertedCount = 0;
-    
+
     for (int i = 0; i < messages.count; i++) {
         NCMessage *message = [messages objectAtIndex:i];
         NCMessageModel *model = [NCMessageModel modelWithNCMessage:message];
@@ -726,14 +794,13 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
     [self rrs_fetchReadReceiptInfo:itemToFetchReceipt];
     if (insertedCount > 0) {
-        [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0
-                                                               toIndex:insertedCount - 1];
+        [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0 toIndex:insertedCount - 1];
     }
     [self.chatVC.messageCollectionView reloadData];
     [self handleAfterLoadLastestMessage];
 }
 
-- (void)loadMoreNewerMessageV2:(NSArray<NCMessage *> *)messages{
+- (void)loadMoreNewerMessageV2:(NSArray<NCMessage *> *)messages {
     if (messages.count <= 0) {
         return;
     }
@@ -747,139 +814,179 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
             if ([self appendMessageModel:model]) {
                 [self.chatVC.channelDataRepository addObject:model];
                 [itemToFetchReceipt addObject:model];
-                NSIndexPath *indexPath = [NSIndexPath indexPathForItem:self.chatVC.channelDataRepository.count - 1 inSection:0];
+                NSIndexPath *indexPath =
+                    [NSIndexPath indexPathForItem:self.chatVC.channelDataRepository.count - 1
+                                        inSection:0];
                 [indexPaths addObject:indexPath];
             }
         }
     }
     [self rrs_fetchReadReceiptInfo:itemToFetchReceipt];
     if (indexPaths.count > 0) {
-        [self.chatVC.util figureOutConversationDataRepositoryFromIndex:previousItemCount
-                                                               toIndex:self.chatVC.channelDataRepository.count - 1];
+        [self.chatVC.util
+            figureOutConversationDataRepositoryFromIndex:previousItemCount
+                                                 toIndex:self.chatVC.channelDataRepository.count -
+                                                         1];
         /* bugfix:PAASIOSDEV-259
          insertItemsAtIndexPaths: requires this invariant:
          updated index path count + current collection view cell count = data source count.
          Violating it crashes on iOS 12.
          */
-        NSInteger collectionViewItemCount = [self.chatVC.messageCollectionView numberOfItemsInSection:0];
-        BOOL canInsertItems = collectionViewItemCount > 0 &&
-            collectionViewItemCount == previousItemCount &&
+        NSInteger collectionViewItemCount =
+            [self.chatVC.messageCollectionView numberOfItemsInSection:0];
+        BOOL canInsertItems =
+            collectionViewItemCount > 0 && collectionViewItemCount == previousItemCount &&
             collectionViewItemCount + indexPaths.count == self.chatVC.channelDataRepository.count;
         if (canInsertItems) {
-            [self.chatVC.messageCollectionView performBatchUpdates:^{
-                [self.chatVC.messageCollectionView insertItemsAtIndexPaths:indexPaths];
-            } completion:nil];
+            [self.chatVC.messageCollectionView
+                performBatchUpdates:^{
+                  [self.chatVC.messageCollectionView insertItemsAtIndexPaths:indexPaths];
+                }
+                         completion:nil];
         } else {
             [self.chatVC.messageCollectionView reloadData];
         }
     }
 }
-    
-// Only the initial load can call back twice. isDoubleCallback marks local and remote versions of the same page; the remote result wins.
-- (void)getHistoryMessageV2:(long long)time order:(NCChannelHistoryMessageOrder)order loadType:(NCChannelLoadMessageType)loadType complete:(void (^)(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback))complete{
+
+// Only the initial load can call back twice. isDoubleCallback marks local and remote versions of
+// the same page; the remote result wins.
+- (void)getHistoryMessageV2:(long long)time
+                      order:(NCChannelHistoryMessageOrder)order
+                   loadType:(NCChannelLoadMessageType)loadType
+                   complete:(void (^)(NSArray<NCMessage *> *messages, BOOL isRemaining,
+                                      NCChannelLoadMessageType type,
+                                      BOOL isDoubleCallback))complete {
     __weak typeof(self) weakSelf = self;
-    
-    void (^updateMessageListBlock)(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code, BOOL isDoubleCallback) = ^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code, BOOL isDoubleCallback) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        dispatch_async(dispatch_get_main_queue(), ^{
+
+    void (^updateMessageListBlock)(NSArray<NCMessage *> *messages, BOOL isRemaining,
+                                   NCChatUIErrorCode code, BOOL isDoubleCallback) =
+        ^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code,
+          BOOL isDoubleCallback) {
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          dispatch_async(dispatch_get_main_queue(), ^{
             strongSelf.isIndicatorLoading = NO;
             [strongSelf.chatVC.collectionViewHeader stopAnimating];
             if (code == NCChatUIErrorCodeSuccess) {
                 if (complete) {
                     complete(messages, isRemaining, loadType, isDoubleCallback);
                 }
-            }else{
+            } else {
                 switch (loadType) {
-                    case NCChannelLoadMessageTypeAlways:{
-                        if (complete) {
-                            complete(messages, isRemaining,loadType, isDoubleCallback);
-                        }
-                    }break;
-                    case NCChannelLoadMessageTypeAsk:{
-                        [NCAlertView showAlertController:nil message:NCUILocalizedString(@"load_msg_ask_info") actionTitles:nil cancelTitle:NCUILocalizedString(@"cancel") confirmTitle:NCUILocalizedString(@"ok") preferredStyle:(UIAlertControllerStyleAlert) actionsBlock:nil cancelBlock:nil confirmBlock:^{
-                            if (complete) {
-                                complete(messages, isRemaining, NCChannelLoadMessageTypeAlways, isDoubleCallback);
-                            }
-                        } inViewController:strongSelf.chatVC];
-                    }break;
-                    default:
-                        break;
+                case NCChannelLoadMessageTypeAlways: {
+                    if (complete) {
+                        complete(messages, isRemaining, loadType, isDoubleCallback);
+                    }
+                } break;
+                case NCChannelLoadMessageTypeAsk: {
+                    [NCAlertView
+                        showAlertController:nil
+                                    message:NCUILocalizedString(@"load_msg_ask_info")
+                               actionTitles:nil
+                                cancelTitle:NCUILocalizedString(@"cancel")
+                               confirmTitle:NCUILocalizedString(@"ok")
+                             preferredStyle:(UIAlertControllerStyleAlert)actionsBlock:nil
+                                cancelBlock:nil
+                               confirmBlock:^{
+                                 if (complete) {
+                                     complete(messages, isRemaining, NCChannelLoadMessageTypeAlways,
+                                              isDoubleCallback);
+                                 }
+                               }
+                           inViewController:strongSelf.chatVC];
+                } break;
+                default:
+                    break;
                 }
             }
-        });
-    };
-    
-    
-    void (^completeHandle)(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code, BOOL isDoubleCallback) = ^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code, BOOL isDoubleCallback) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf edit_refreshReferenceMessage:messages complete:^(NSArray<NCMessage *> *results) {
-            updateMessageListBlock(results, isRemaining, code, isDoubleCallback);
-        }];
-    };
-    
+          });
+        };
+
+    void (^completeHandle)(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code,
+                           BOOL isDoubleCallback) =
+        ^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code,
+          BOOL isDoubleCallback) {
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          [strongSelf edit_refreshReferenceMessage:messages
+                                          complete:^(NSArray<NCMessage *> *results) {
+                                            updateMessageListBlock(results, isRemaining, code,
+                                                                   isDoubleCallback);
+                                          }];
+        };
+
     // Load local data first only for the initial page, where time is zero.
     BOOL isFirstLoadLocal = (0 == time);
     if (isFirstLoadLocal) {
-            // Since V5.6.1, direct and group channels load local data before the gap-recovery query
-            // so the initial page is not blank on a weak network.
-            // 1. Load local messages.
-            [self loadLocalNCMessagesWithPageSize:self.chatVC.defaultMessageCount
-                                         sentTime:0
-                                            order:order
-                                       completion:^(NSArray<NCMessage *> *messages, NCChatUIErrorCode code) {
-                completeHandle(messages, YES, code, NO);
+        // Since V5.6.1, direct and group channels load local data before the gap-recovery query
+        // so the initial page is not blank on a weak network.
+        // 1. Load local messages.
+        [self loadLocalNCMessagesWithPageSize:self.chatVC.defaultMessageCount
+            sentTime:0
+            order:order
+            completion:^(NSArray<NCMessage *> *messages, NCChatUIErrorCode code) {
+              completeHandle(messages, YES, code, NO);
 
-                // 2. Run the gap-recovery query.
-                [self loadNCMessagesWithPageSize:self.chatVC.defaultMessageCount
-                                            time:time
-                                           order:order
-                                      completion:^(NSArray<NCMessage *> *remoteMessages, BOOL isRemaining, NCChatUIErrorCode code) {
-                    // Message deduplication requires removing the local page before applying gap-recovery results to preserve ordering.
-                    // Signal the second callback so the caller clears its data and UI together before applying this page.
-                    // isDoubleCallback identifies the remote replacement for the first local result.
+              // 2. Run the gap-recovery query.
+              [self loadNCMessagesWithPageSize:self.chatVC.defaultMessageCount
+                  time:time
+                  order:order
+                  completion:^(NSArray<NCMessage *> *remoteMessages, BOOL isRemaining,
+                               NCChatUIErrorCode code) {
+                    // Message deduplication requires removing the local page before applying
+                    // gap-recovery results to preserve ordering. Signal the second callback so the
+                    // caller clears its data and UI together before applying this page.
+                    // isDoubleCallback identifies the remote replacement for the first local
+                    // result.
                     completeHandle(remoteMessages, isRemaining, code, YES);
-                } fallback:^{
+                  }
+                  fallback:^{
                     completeHandle(nil, YES, NCChatUIErrorCodeSuccess, YES);
-                }];
-            } fallback:^{
-                completeHandle(nil, YES, NCChatUIErrorCodeSuccess, NO);
+                  }];
+            }
+            fallback:^{
+              completeHandle(nil, YES, NCChatUIErrorCodeSuccess, NO);
 
-                // 2. Run the gap-recovery query.
-                [self loadNCMessagesWithPageSize:self.chatVC.defaultMessageCount
-                                            time:time
-                                           order:order
-                                      completion:^(NSArray<NCMessage *> *remoteMessages, BOOL isRemaining, NCChatUIErrorCode code) {
-                    // Message deduplication requires removing the local page before applying gap-recovery results to preserve ordering.
-                    // Signal the second callback so the caller clears its data and UI together before applying this page.
-                    // isDoubleCallback identifies the remote replacement for the first local result.
+              // 2. Run the gap-recovery query.
+              [self loadNCMessagesWithPageSize:self.chatVC.defaultMessageCount
+                  time:time
+                  order:order
+                  completion:^(NSArray<NCMessage *> *remoteMessages, BOOL isRemaining,
+                               NCChatUIErrorCode code) {
+                    // Message deduplication requires removing the local page before applying
+                    // gap-recovery results to preserve ordering. Signal the second callback so the
+                    // caller clears its data and UI together before applying this page.
+                    // isDoubleCallback identifies the remote replacement for the first local
+                    // result.
                     completeHandle(remoteMessages, isRemaining, code, YES);
-                } fallback:^{
+                  }
+                  fallback:^{
                     completeHandle(nil, YES, NCChatUIErrorCodeSuccess, YES);
-                }];
+                  }];
             }];
-    }else {
+    } else {
         [self loadNCMessagesWithPageSize:self.chatVC.defaultMessageCount
-                                    time:time
-                                   order:order
-                              completion:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code) {
-            completeHandle(messages, isRemaining, code, NO);
-        } fallback:^{
-            completeHandle(nil, YES, NCChatUIErrorCodeSuccess, NO);
-        }];
+            time:time
+            order:order
+            completion:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChatUIErrorCode code) {
+              completeHandle(messages, isRemaining, code, NO);
+            }
+            fallback:^{
+              completeHandle(nil, YES, NCChatUIErrorCodeSuccess, NO);
+            }];
     }
 }
 
-- (void)handleAfterLoadLastestMessage{
+- (void)handleAfterLoadLastestMessage {
     [self.chatVC updateUnreadMsgCountLabel];
     if (self.chatVC.unReadMessage > 0 && [self.chatVC shouldMarkMessagesAsRead]) {
         NCBaseChannel *channel = self.chatVC.currentChannel;
-        [channel clearUnreadCountWithCompletion:^(BOOL isCleared, NCError * _Nullable error) {
-            (void)isCleared;
-            (void)error;
-            /// Notify the UI after unread state is cleared.
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.chatVC notifyUpdateUnreadMessageCount];
-            });
+        [channel clearUnreadCountWithCompletion:^(BOOL isCleared, NCError *_Nullable error) {
+          (void)isCleared;
+          (void)error;
+          /// Notify the UI after unread state is cleared.
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [self.chatVC notifyUpdateUnreadMessageCount];
+          });
         }];
     }
 
@@ -887,12 +994,13 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         [self.chatVC.unReadButton removeFromSuperview];
         self.chatVC.unReadMessage = 0;
     }
-    if (self.chatVC.unReadMessage > self.chatVC.defaultMessageCount && self.chatVC.enableUnreadMessageIcon == YES && !self.chatVC.unReadButton.selected) {
+    if (self.chatVC.unReadMessage > self.chatVC.defaultMessageCount &&
+        self.chatVC.enableUnreadMessageIcon == YES && !self.chatVC.unReadButton.selected) {
         [self.chatVC setupUnReadMessageView];
     }
     if (self.chatVC.locatedMessageSentTime > 0) {
         [self scrollToSuitablePosition];
-    }else{
+    } else {
         [self.chatVC scrollToBottomAnimated:NO];
     }
     [self setupUnReadMentionedButton];
@@ -905,68 +1013,67 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     NCMessageModel *model = [NCMessageModel modelWithNCMessage:ncMessage];
     if ([self p_enableCurrentConversationWithIdentifier:ncMessage.channelIdentifier]) {
         [self p_setNCMessageReadStats:ncMessage];
-        
+
         BOOL isPersisted = model.isPersisted;
         BOOL isCounted = ncMessage.isCounted;
-        // When receipts are enabled, send one for each received message; failed receipts remain persisted for retry.
+        // When receipts are enabled, send one for each received message; failed receipts remain
+        // persisted for retry.
         if (left == 0) {
             [self p_receiveNCMessageAndUpdateReadStatus:ncMessage isPersisted:isPersisted];
         }
 
         __weak typeof(self) __blockSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(__blockSelf) strongSelf = __blockSelf;
+          __strong typeof(__blockSelf) strongSelf = __blockSelf;
 
-            if (!strongSelf.chatVC.isViewLoaded && isCounted) {
-                strongSelf.chatVC.unReadMessage++;
-            }
-            // Bound the number of displayed messages when a large batch arrives.
-            // Users can pull down to load additional history.
-            [strongSelf clearOldestMessagesWhenMemoryWarning];
-            NCMessage *checkedMessage = [strongSelf.chatVC willAppendAndDisplayMessage:ncMessage];
-            if (checkedMessage) {
-                if (checkedMessage.direction == NCMessageDirectionSend) {
-                    strongSelf.showUnreadViewMessageId = (long long)checkedMessage.clientId;
-                }
-                if (!strongSelf.isLoadingHistoryMessage) {
-                    [strongSelf appendAndDisplayMessage:checkedMessage];
-                }
-                if (checkedMessage.direction == NCMessageDirectionSend) {
-                    [strongSelf.appendMessageQueue addOperationWithBlock:^{
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [strongSelf.chatVC updateForMessageSendSuccess:checkedMessage];
-                        });
-                    }];
-                }
-                UIMenuController *menu = [UIMenuController sharedMenuController];
-                menu.menuVisible = NO;
-                [[NCMenuController sharedMenuController] hideMenuAnimated:NO];
-                NSString *currentUserId = [NCEngine getCurrentUserId];
-                BOOL isCurrentUserSender = [checkedMessage.senderUserId isEqualToString:currentUserId];
-                // Determine whether to show the lower-right unread count.
-                if (strongSelf.chatVC.enableNewComingMessageIcon == YES
-                    && isCounted
-                    && ![strongSelf isAtTheBottomOfTableView]
-                    && !isCurrentUserSender) {
-                    if (checkedMessage) {
-                        [strongSelf.unreadNewMsgArr addObject:checkedMessage];
-                    }
-                    [strongSelf.chatVC updateUnreadMsgCountLabel];
-                }
-                if(![strongSelf isAtTheBottomOfTableView] && !isCurrentUserSender){
-                    NCMentionedInfo *mentionedInfo = checkedMessage.content.mentionedInfo;
-                    if (mentionedInfo.isMentionedMe) {
-                        [strongSelf.unreadMentionedMessages addObject:checkedMessage];
-                        [strongSelf setupUnReadMentionedButton];
-                    }
-                }
-
-            }
+          if (!strongSelf.chatVC.isViewLoaded && isCounted) {
+              strongSelf.chatVC.unReadMessage++;
+          }
+          // Bound the number of displayed messages when a large batch arrives.
+          // Users can pull down to load additional history.
+          [strongSelf clearOldestMessagesWhenMemoryWarning];
+          NCMessage *checkedMessage = [strongSelf.chatVC willAppendAndDisplayMessage:ncMessage];
+          if (checkedMessage) {
+              if (checkedMessage.direction == NCMessageDirectionSend) {
+                  strongSelf.showUnreadViewMessageId = (long long)checkedMessage.clientId;
+              }
+              if (!strongSelf.isLoadingHistoryMessage) {
+                  [strongSelf appendAndDisplayMessage:checkedMessage];
+              }
+              if (checkedMessage.direction == NCMessageDirectionSend) {
+                  [strongSelf.appendMessageQueue addOperationWithBlock:^{
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      [strongSelf.chatVC updateForMessageSendSuccess:checkedMessage];
+                    });
+                  }];
+              }
+              UIMenuController *menu = [UIMenuController sharedMenuController];
+              menu.menuVisible = NO;
+              [[NCMenuController sharedMenuController] hideMenuAnimated:NO];
+              NSString *currentUserId = [NCEngine getCurrentUserId];
+              BOOL isCurrentUserSender =
+                  [checkedMessage.senderUserId isEqualToString:currentUserId];
+              // Determine whether to show the lower-right unread count.
+              if (strongSelf.chatVC.enableNewComingMessageIcon == YES && isCounted &&
+                  ![strongSelf isAtTheBottomOfTableView] && !isCurrentUserSender) {
+                  if (checkedMessage) {
+                      [strongSelf.unreadNewMsgArr addObject:checkedMessage];
+                  }
+                  [strongSelf.chatVC updateUnreadMsgCountLabel];
+              }
+              if (![strongSelf isAtTheBottomOfTableView] && !isCurrentUserSender) {
+                  NCMentionedInfo *mentionedInfo = checkedMessage.content.mentionedInfo;
+                  if (mentionedInfo.isMentionedMe) {
+                      [strongSelf.unreadMentionedMessages addObject:checkedMessage];
+                      [strongSelf setupUnReadMentionedButton];
+                  }
+              }
+          }
         });
     } else {
         if (left == 0) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self.chatVC notifyUpdateUnreadMessageCount];
+              [self.chatVC notifyUpdateUnreadMessageCount];
             });
         }
     }
@@ -1004,8 +1111,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
     [self edit_refreshUIMessagesEditedStatus:models];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.chatVC edit_refreshReferenceViewContentIfNeeded:models
-                                                       status:NCReferenceMessageStatusUpdated];
+      [self.chatVC edit_refreshReferenceViewContentIfNeeded:models
+                                                     status:NCReferenceMessageStatusUpdated];
     });
 }
 
@@ -1022,7 +1129,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     if (dedupKey.length == 0) {
         return YES;
     }
-    @synchronized (self.receivedMessageDedupKeys) {
+    @synchronized(self.receivedMessageDedupKeys) {
         if ([self.receivedMessageDedupKeys containsObject:dedupKey]) {
             return NO;
         }
@@ -1039,12 +1146,9 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         return [NSString stringWithFormat:@"uid:%@", message.messageId];
     }
     NCChannelIdentifier *identifier = message.channelIdentifier;
-    return [NSString stringWithFormat:@"fallback:%ld:%@:%ld:%lld:%ld",
-            (long)identifier.channelType,
-            identifier.channelId ?: @"",
-            (long)message.clientId,
-            message.sentTime,
-            (long)message.direction];
+    return [NSString stringWithFormat:@"fallback:%ld:%@:%ld:%lld:%ld", (long)identifier.channelType,
+                                      identifier.channelId ?: @"", (long)message.clientId,
+                                      message.sentTime, (long)message.direction];
 }
 
 - (BOOL)p_tryClaimModifiedMessages:(NSArray<NCMessage *> *)messages {
@@ -1052,7 +1156,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     if (dedupKey.length == 0) {
         return YES;
     }
-    @synchronized (self.modifiedMessageDedupKeys) {
+    @synchronized(self.modifiedMessageDedupKeys) {
         if ([self.modifiedMessageDedupKeys containsObject:dedupKey]) {
             return NO;
         }
@@ -1075,7 +1179,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     if (components.count == 0) {
         return nil;
     }
-    NSArray<NSString *> *sortedComponents = [components sortedArrayUsingSelector:@selector(compare:)];
+    NSArray<NSString *> *sortedComponents =
+        [components sortedArrayUsingSelector:@selector(compare:)];
     return [sortedComponents componentsJoinedByString:@"|"];
 }
 
@@ -1084,19 +1189,14 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     long updateTimestamp = message.updateInfo.timestamp;
     NSInteger updateStatus = message.updateInfo.status;
     if (messageId.length > 0) {
-        return [NSString stringWithFormat:@"%@:%ld:%ld",
-                messageId,
-                updateTimestamp,
-                (long)updateStatus];
+        return [NSString
+            stringWithFormat:@"%@:%ld:%ld", messageId, updateTimestamp, (long)updateStatus];
     }
     NCChannelIdentifier *identifier = message.channelIdentifier;
-    return [NSString stringWithFormat:@"fallback:%ld:%@:%@:%ld:%ld:%ld",
-            (long)identifier.channelType,
-            identifier.channelId ?: @"",
-            @"",
-            (long)message.clientId,
-            updateTimestamp,
-            (long)updateStatus];
+    return
+        [NSString stringWithFormat:@"fallback:%ld:%@:%@:%ld:%ld:%ld", (long)identifier.channelType,
+                                   identifier.channelId ?: @"", @"", (long)message.clientId,
+                                   updateTimestamp, (long)updateStatus];
 }
 
 - (void)p_setNCMessageReadStats:(NCMessage *)message {
@@ -1117,7 +1217,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 
 - (void)setAllMessagesAreLoaded:(BOOL)allMessagesAreLoaded {
     _allMessagesAreLoaded = allMessagesAreLoaded;
-    if (allMessagesAreLoaded && [self.loadDelegate respondsToSelector:@selector(noMoreMessageToFetch)]) {
+    if (allMessagesAreLoaded &&
+        [self.loadDelegate respondsToSelector:@selector(noMoreMessageToFetch)]) {
         [self.loadDelegate noMoreMessageToFetch];
     }
 }
@@ -1143,7 +1244,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 
 - (void)didDeleteMessageForAll:(NCMessage *)deletedMessage {
     NCChannelIdentifier *identifier = deletedMessage.channelIdentifier;
-    // Update the lower-right unread count for the same channel when enabled, off the bottom, outside search, and nonzero.
+    // Update the lower-right unread count for the same channel when enabled, off the bottom,
+    // outside search, and nonzero.
     if (self.chatVC.enableNewComingMessageIcon &&
         identifier.channelType == (NCChannelType)self.chatVC.channelType &&
         [identifier.channelId isEqual:self.chatVC.channelId] && ![self isAtTheBottomOfTableView] &&
@@ -1154,8 +1256,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                 break;
             }
         }
-        
-        
+
         [self.chatVC updateUnreadMsgCountLabel];
     }
     if (self.firstUnreadMessage && self.firstUnreadMessage.clientId == deletedMessage.clientId) {
@@ -1165,7 +1266,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 }
 
 // Called when a cell becomes visible.
-- (void)removeMentionedMessage:(long )curMessageId {
+- (void)removeMentionedMessage:(long)curMessageId {
     if (self.unreadMentionedMessages.count <= 0 || !curMessageId) {
         return;
     }
@@ -1180,74 +1281,89 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
 }
 
 - (void)didReloadDeletedMessageForAllWithClientId:(long)deletedMessageClientId {
-    NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageClientId:deletedMessageClientId];
-    [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-        (void)error;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            int index = -1;
-            NCMessageModel *msgModel;
-            // Filter delayed refresh messages before updating the data source.
-            if(self.cachedReloadMessages.count > 0) {
-                for(int i=0 ; i < self.cachedReloadMessages.count ; i++) {
-                    msgModel = [self.cachedReloadMessages objectAtIndex:i];
-                    if(msgModel.clientId == deletedMessageClientId) {
-                        index = i;
-                        break;
-                    }
-                }
+    NCGetMessageByIdParams *params =
+        [[NCGetMessageByIdParams alloc] initWithMessageClientId:deletedMessageClientId];
+    [NCBaseChannel
+        getMessageByIdWithParams:params
+                      completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                        (void)error;
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                          int index = -1;
+                          NCMessageModel *msgModel;
+                          // Filter delayed refresh messages before updating the data source.
+                          if (self.cachedReloadMessages.count > 0) {
+                              for (int i = 0; i < self.cachedReloadMessages.count; i++) {
+                                  msgModel = [self.cachedReloadMessages objectAtIndex:i];
+                                  if (msgModel.clientId == deletedMessageClientId) {
+                                      index = i;
+                                      break;
+                                  }
+                              }
 
-                if(index >= 0) {
-                    if(message) {
-                        NCMessageModel *newModel = [NCMessageModel modelWithNCMessage:message];
-                        newModel.isDisplayMessageTime = msgModel.isDisplayMessageTime;
-                        newModel.isDisplayNickname = msgModel.isDisplayNickname;
-                        self.cachedReloadMessages[index] = newModel;
-                    }
-                    return;
-                }
-            }
+                              if (index >= 0) {
+                                  if (message) {
+                                      NCMessageModel *newModel =
+                                          [NCMessageModel modelWithNCMessage:message];
+                                      newModel.isDisplayMessageTime = msgModel.isDisplayMessageTime;
+                                      newModel.isDisplayNickname = msgModel.isDisplayNickname;
+                                      self.cachedReloadMessages[index] = newModel;
+                                  }
+                                  return;
+                              }
+                          }
 
-            for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
-                msgModel = [self.chatVC.channelDataRepository objectAtIndex:i];
-                if (msgModel.clientId == deletedMessageClientId &&
-                    ![msgModel.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index >= 0) {
-                NSIndexPath *indexPath =  [NSIndexPath indexPathForRow:index inSection:0];
-                [self.chatVC.channelDataRepository removeObject:msgModel];
-                if (message) {
-                    NCMessageModel *newModel = [NCMessageModel modelWithNCMessage:message];
-                    newModel.isDisplayMessageTime = msgModel.isDisplayMessageTime;
-                    newModel.isDisplayNickname = msgModel.isDisplayNickname;
-                    [self.chatVC.channelDataRepository insertObject:newModel atIndex:index];
-                    NSInteger collectionItemCount = [self.chatVC.messageCollectionView numberOfItemsInSection:0];
-                    if (indexPath.row < collectionItemCount &&
-                        indexPath.row < self.chatVC.channelDataRepository.count) {
-                        [self.chatVC.messageCollectionView reloadItemsAtIndexPaths:@[ indexPath ]];
-                    } else {
-                        [self.chatVC.messageCollectionView reloadData];
-                    }
-                } else {
-                    NSInteger collectionItemCount = [self.chatVC.messageCollectionView numberOfItemsInSection:0];
-                    BOOL canDelete = (indexPath.row < collectionItemCount) &&
-                                     (self.chatVC.channelDataRepository.count + 1 == collectionItemCount);
-                    if (canDelete) {
-                        [self.chatVC.messageCollectionView deleteItemsAtIndexPaths:@[ indexPath ]];
-                    } else {
-                        [self.chatVC.messageCollectionView reloadData];
-                    }
-                }
-            }
-        });
-    }];
+                          for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
+                              msgModel = [self.chatVC.channelDataRepository objectAtIndex:i];
+                              if (msgModel.clientId == deletedMessageClientId &&
+                                  ![msgModel.objectName
+                                      isEqualToString:
+                                          NCOldMessageNotificationMessageTypeIdentifier]) {
+                                  index = i;
+                                  break;
+                              }
+                          }
+                          if (index >= 0) {
+                              NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index
+                                                                          inSection:0];
+                              [self.chatVC.channelDataRepository removeObject:msgModel];
+                              if (message) {
+                                  NCMessageModel *newModel =
+                                      [NCMessageModel modelWithNCMessage:message];
+                                  newModel.isDisplayMessageTime = msgModel.isDisplayMessageTime;
+                                  newModel.isDisplayNickname = msgModel.isDisplayNickname;
+                                  [self.chatVC.channelDataRepository insertObject:newModel
+                                                                          atIndex:index];
+                                  NSInteger collectionItemCount =
+                                      [self.chatVC.messageCollectionView numberOfItemsInSection:0];
+                                  if (indexPath.row < collectionItemCount &&
+                                      indexPath.row < self.chatVC.channelDataRepository.count) {
+                                      [self.chatVC.messageCollectionView
+                                          reloadItemsAtIndexPaths:@[ indexPath ]];
+                                  } else {
+                                      [self.chatVC.messageCollectionView reloadData];
+                                  }
+                              } else {
+                                  NSInteger collectionItemCount =
+                                      [self.chatVC.messageCollectionView numberOfItemsInSection:0];
+                                  BOOL canDelete = (indexPath.row < collectionItemCount) &&
+                                                   (self.chatVC.channelDataRepository.count + 1 ==
+                                                    collectionItemCount);
+                                  if (canDelete) {
+                                      [self.chatVC.messageCollectionView
+                                          deleteItemsAtIndexPaths:@[ indexPath ]];
+                                  } else {
+                                      [self.chatVC.messageCollectionView reloadData];
+                                  }
+                              }
+                          }
+                        });
+                      }];
 }
 
 - (void)p_updateDeletedReferenceMessagesWithMessage:(nullable NCMessage *)message {
     if (message.messageId.length > 0) {
-        [self edit_setUIReferenceMessagesEditStatus:NCReferenceMessageStatusDeleted forMessageIds:@[message.messageId]];
+        [self edit_setUIReferenceMessagesEditStatus:NCReferenceMessageStatusDeleted
+                                      forMessageIds:@[ message.messageId ]];
     }
 }
 
@@ -1275,17 +1391,19 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     if (gesture.state == UIGestureRecognizerStateEnded) {
         if (self.isLoadingHistoryMessage) {
             /// Wait approximately 0.35 seconds for the scroll animation to finish.
-            dispatch_after(
-                dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.35 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self appendLastestMessageToDataSourceWithCompletion:^(NSInteger count) {
-                        NSInteger totalcount = self.chatVC.channelDataRepository.count;
-                        NSInteger removableCount = totalcount - count;
-                        if (removableCount > 0 && removableCount <= totalcount) {
-                            [self.chatVC.channelDataRepository removeObjectsInRange:NSMakeRange(0, removableCount)];
-                        }
-                        [self.chatVC.messageCollectionView reloadData];
-                    }];
-                });
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.35 * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{
+                             [self
+                                 appendLastestMessageToDataSourceWithCompletion:^(NSInteger count) {
+                                   NSInteger totalcount = self.chatVC.channelDataRepository.count;
+                                   NSInteger removableCount = totalcount - count;
+                                   if (removableCount > 0 && removableCount <= totalcount) {
+                                       [self.chatVC.channelDataRepository
+                                           removeObjectsInRange:NSMakeRange(0, removableCount)];
+                                   }
+                                   [self.chatVC.messageCollectionView reloadData];
+                                 }];
+                           });
         }
         [self.chatVC scrollToBottomAnimated:YES];
     }
@@ -1310,98 +1428,139 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     return oldMessageModel;
 }
 
-- (void)loadUnReadMentionedMessages{
+- (void)loadUnReadMentionedMessages {
     NCMessage *firstUnReadMentionedMessagge = [self.unreadMentionedMessages firstObject];
     long long localTime = firstUnReadMentionedMessagge.sentTime;
     __weak typeof(self) weakSelf = self;
-    [self getHistoryMessageV2:localTime+1 order:NCChannelHistoryMessageOrderDesc loadType:self.chatVC.loadMessageType complete:^(NSArray<NCMessage *> *oldMsgs, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
+    [self
+        getHistoryMessageV2:localTime + 1
+                      order:NCChannelHistoryMessageOrderDesc
+                   loadType:self.chatVC.loadMessageType
+                   complete:^(NSArray<NCMessage *> *oldMsgs, BOOL isRemaining,
+                              NCChannelLoadMessageType type, BOOL isDoubleCallback) {
+                     __strong typeof(weakSelf) strongSelf = weakSelf;
 
-        long long time = localTime-1;
-        if (oldMsgs.count > 0) {
-            NCMessage *msg = oldMsgs.firstObject;
-            time = msg.sentTime;
-        }
-        __weak typeof(strongSelf) weakSelf2 = strongSelf;
+                     long long time = localTime - 1;
+                     if (oldMsgs.count > 0) {
+                         NCMessage *msg = oldMsgs.firstObject;
+                         time = msg.sentTime;
+                     }
+                     __weak typeof(strongSelf) weakSelf2 = strongSelf;
 
-        [strongSelf getHistoryMessageV2:time order:NCChannelHistoryMessageOrderAsc loadType:type complete:^(NSArray<NCMessage *> *newMsgs, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-            __strong typeof(weakSelf2) strongSelf2 = weakSelf2;
+                     [strongSelf
+                         getHistoryMessageV2:time
+                                       order:NCChannelHistoryMessageOrderAsc
+                                    loadType:type
+                                    complete:^(NSArray<NCMessage *> *newMsgs, BOOL isRemaining,
+                                               NCChannelLoadMessageType type,
+                                               BOOL isDoubleCallback) {
+                                      __strong typeof(weakSelf2) strongSelf2 = weakSelf2;
 
-            NSMutableArray<NCMessage *> *msgArr = [NSMutableArray array];
-            if (oldMsgs != nil) {
-                msgArr = [[oldMsgs reverseObjectEnumerator] allObjects].mutableCopy;
-            }
-            [msgArr addObjectsFromArray:newMsgs];
-            NSInteger oldMessageInsertIndex = NSNotFound;
-            if (strongSelf2.firstUnreadMessage) {
-                for (int i = 0; i < msgArr.count; i ++) {
-                    NCMessage *message = msgArr[i];
-                    if(message.clientId == strongSelf2.firstUnreadMessage.clientId){
-                        oldMessageInsertIndex = i;
-                        break;
-                    }
-                }
-            }
-            // Remove all currently loaded messages.
-            [strongSelf2.chatVC.channelDataRepository removeAllObjects];
-            [strongSelf2.chatVC.messageCollectionView reloadData];
-            /*
-             bugID=50466:
-             After reloadData, the collection view has not completed layout. Mark it for layout and force a layout pass
-             before accessing rendered collection view content.
-             */
-            [strongSelf2.chatVC.messageCollectionView setNeedsLayout];
-            [strongSelf2.chatVC.messageCollectionView layoutIfNeeded];
+                                      NSMutableArray<NCMessage *> *msgArr = [NSMutableArray array];
+                                      if (oldMsgs != nil) {
+                                          msgArr = [[oldMsgs reverseObjectEnumerator] allObjects]
+                                                       .mutableCopy;
+                                      }
+                                      [msgArr addObjectsFromArray:newMsgs];
+                                      NSInteger oldMessageInsertIndex = NSNotFound;
+                                      if (strongSelf2.firstUnreadMessage) {
+                                          for (int i = 0; i < msgArr.count; i++) {
+                                              NCMessage *message = msgArr[i];
+                                              if (message.clientId ==
+                                                  strongSelf2.firstUnreadMessage.clientId) {
+                                                  oldMessageInsertIndex = i;
+                                                  break;
+                                              }
+                                          }
+                                      }
+                                      // Remove all currently loaded messages.
+                                      [strongSelf2.chatVC.channelDataRepository removeAllObjects];
+                                      [strongSelf2.chatVC.messageCollectionView reloadData];
+                                      /*
+                                       bugID=50466:
+                                       After reloadData, the collection view has not completed
+                                       layout. Mark it for layout and force a layout pass before
+                                       accessing rendered collection view content.
+                                       */
+                                      [strongSelf2.chatVC.messageCollectionView setNeedsLayout];
+                                      [strongSelf2.chatVC.messageCollectionView layoutIfNeeded];
 
-            [strongSelf2 loadMoreNewerMessageV2:msgArr];
-            if (oldMessageInsertIndex != NSNotFound && oldMessageInsertIndex <= strongSelf2.chatVC.channelDataRepository.count) {
-                NCMessageModel *oldMessageModel = [strongSelf2 generateOldMessageModel];
-                [strongSelf2.chatVC.channelDataRepository insertObject:oldMessageModel atIndex:oldMessageInsertIndex];
-                [strongSelf2 rrs_fetchReadReceiptInfo:@[oldMessageModel]];
-                [strongSelf2.chatVC.messageCollectionView reloadData];
-            }
-           
-            [strongSelf2 scrollToSpecifiedPosition:YES baseMessageClientId:firstUnReadMentionedMessagge.clientId];
-            // After loading, the next scroll must reevaluate whether to remove the unread button.
-            if (NC_IOS_SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"18.0")) {
-                if (firstUnReadMentionedMessagge.clientId == self.firstUnreadMessage.clientId) {
-                    self.hideUnreadBtnForMentioned = NO;
-                    [self.chatVC.unReadButton removeFromSuperview];
-                    self.chatVC.unReadButton = nil;
-                    self.chatVC.unReadMessage = 0;
-                } else {
-                    strongSelf2.hideUnreadBtnForMentioned = YES;
-                }
-            } else {
-                strongSelf2.hideUnreadBtnForMentioned = YES;
-            }
+                                      [strongSelf2 loadMoreNewerMessageV2:msgArr];
+                                      if (oldMessageInsertIndex != NSNotFound &&
+                                          oldMessageInsertIndex <=
+                                              strongSelf2.chatVC.channelDataRepository.count) {
+                                          NCMessageModel *oldMessageModel =
+                                              [strongSelf2 generateOldMessageModel];
+                                          [strongSelf2.chatVC.channelDataRepository
+                                              insertObject:oldMessageModel
+                                                   atIndex:oldMessageInsertIndex];
+                                          [strongSelf2
+                                              rrs_fetchReadReceiptInfo:@[ oldMessageModel ]];
+                                          [strongSelf2.chatVC.messageCollectionView reloadData];
+                                      }
 
-            // Hide the bottom new-message button when this is the last message.
-            [strongSelf2 loadNCMessagesWithPageSize:1
-                                               time:0
-                                              order:NCChannelHistoryMessageOrderDesc
-                                         completion:^(NSArray<NCMessage *> *latestMessages, BOOL isRemaining, NCChatUIErrorCode code) {
-                (void)isRemaining;
-                if (code != NCChatUIErrorCodeSuccess || latestMessages.count == 0) {
-                    return;
-                }
-                NCMessage *curLastMessage = [msgArr lastObject];
-                NCMessage *latestMessage = [latestMessages firstObject];
-                if (latestMessage.clientId == curLastMessage.clientId) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        strongSelf2.chatVC.unreadRightBottomIcon.hidden = YES;
-                        [strongSelf2.unreadNewMsgArr removeAllObjects];
-                    });
-                }
-            } fallback:nil];
-            [strongSelf2.unreadMentionedMessages removeObject:firstUnReadMentionedMessagge];
-            [strongSelf2 setupUnReadMentionedButton];
-        }];
-    }];
+                                      [strongSelf2
+                                          scrollToSpecifiedPosition:YES
+                                                baseMessageClientId:firstUnReadMentionedMessagge
+                                                                        .clientId];
+                                      // After loading, the next scroll must reevaluate whether to
+                                      // remove the unread button.
+                                      if (NC_IOS_SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"18.0")) {
+                                          if (firstUnReadMentionedMessagge.clientId ==
+                                              self.firstUnreadMessage.clientId) {
+                                              self.hideUnreadBtnForMentioned = NO;
+                                              [self.chatVC.unReadButton removeFromSuperview];
+                                              self.chatVC.unReadButton = nil;
+                                              self.chatVC.unReadMessage = 0;
+                                          } else {
+                                              strongSelf2.hideUnreadBtnForMentioned = YES;
+                                          }
+                                      } else {
+                                          strongSelf2.hideUnreadBtnForMentioned = YES;
+                                      }
+
+                                      // Hide the bottom new-message button when this is the last
+                                      // message.
+                                      [strongSelf2
+                                          loadNCMessagesWithPageSize:1
+                                                                time:0
+                                                               order:
+                                                                   NCChannelHistoryMessageOrderDesc
+                                                          completion:^(
+                                                              NSArray<NCMessage *> *latestMessages,
+                                                              BOOL isRemaining,
+                                                              NCChatUIErrorCode code) {
+                                                            (void)isRemaining;
+                                                            if (code != NCChatUIErrorCodeSuccess ||
+                                                                latestMessages.count == 0) {
+                                                                return;
+                                                            }
+                                                            NCMessage *curLastMessage =
+                                                                [msgArr lastObject];
+                                                            NCMessage *latestMessage =
+                                                                [latestMessages firstObject];
+                                                            if (latestMessage.clientId ==
+                                                                curLastMessage.clientId) {
+                                                                dispatch_async(
+                                                                    dispatch_get_main_queue(), ^{
+                                                                      strongSelf2.chatVC
+                                                                          .unreadRightBottomIcon
+                                                                          .hidden = YES;
+                                                                      [strongSelf2.unreadNewMsgArr
+                                                                              removeAllObjects];
+                                                                    });
+                                                            }
+                                                          }
+                                                            fallback:nil];
+                                      [strongSelf2.unreadMentionedMessages
+                                          removeObject:firstUnReadMentionedMessagge];
+                                      [strongSelf2 setupUnReadMentionedButton];
+                                    }];
+                   }];
 }
 
 - (void)hideUnreadButtonAfterLoadMetionedMessageWith:(NCMessageModel *)message {
-// bugfix: 50540
+    // bugfix: 50540
     if (!self.hideUnreadBtnForMentioned) {
         return;
     }
@@ -1409,7 +1568,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         self.hideUnreadBtnForMentioned = NO;
         return;
     }
-    if(message.clientId == self.firstUnreadMessage.clientId) {
+    if (message.clientId == self.firstUnreadMessage.clientId) {
         self.hideUnreadBtnForMentioned = NO;
         [self.chatVC.unReadButton removeFromSuperview];
         self.chatVC.unReadButton = nil;
@@ -1417,31 +1576,39 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
 }
 
-- (void)loadRightTopUnreadMessages{
+- (void)loadRightTopUnreadMessages {
     __weak typeof(self) weakSelf = self;
-    [self getHistoryMessageV2:self.firstUnreadMessage.sentTime order:NCChannelHistoryMessageOrderAsc loadType:self.chatVC.loadMessageType complete:^(NSArray<NCMessage *> *messages, BOOL isRemaining, NCChannelLoadMessageType type, BOOL isDoubleCallback) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        // Remove loaded messages so the page starts at the first unread message.
-        [strongSelf.chatVC.channelDataRepository removeAllObjects];
-        NSMutableArray<NCMessage *> *oldMessageArray = [NSMutableArray array];
-        if (strongSelf.firstUnreadMessage) {
-            [oldMessageArray addObject:strongSelf.firstUnreadMessage];
-        }
-        [oldMessageArray addObjectsFromArray:messages];
-        [strongSelf loadMoreNewerMessageV2:oldMessageArray];
-        if (oldMessageArray.count > 0) {
-            NCMessageModel *oldMessageModel = [strongSelf generateOldMessageModel];
-            [strongSelf.chatVC.channelDataRepository insertObject:oldMessageModel atIndex:0];
-            [strongSelf rrs_fetchReadReceiptInfo:@[oldMessageModel]];
-        }
-        [strongSelf scrollToSpecifiedPosition:NO baseMessageClientId:strongSelf.firstUnreadMessage.clientId];
-        [strongSelf.chatVC.unReadButton removeFromSuperview];
-        strongSelf.chatVC.unReadButton = nil;
-        strongSelf.chatVC.unReadMessage = 0;
-    }];
+    [self getHistoryMessageV2:self.firstUnreadMessage.sentTime
+                        order:NCChannelHistoryMessageOrderAsc
+                     loadType:self.chatVC.loadMessageType
+                     complete:^(NSArray<NCMessage *> *messages, BOOL isRemaining,
+                                NCChannelLoadMessageType type, BOOL isDoubleCallback) {
+                       __strong typeof(weakSelf) strongSelf = weakSelf;
+                       // Remove loaded messages so the page starts at the first unread message.
+                       [strongSelf.chatVC.channelDataRepository removeAllObjects];
+                       NSMutableArray<NCMessage *> *oldMessageArray = [NSMutableArray array];
+                       if (strongSelf.firstUnreadMessage) {
+                           [oldMessageArray addObject:strongSelf.firstUnreadMessage];
+                       }
+                       [oldMessageArray addObjectsFromArray:messages];
+                       [strongSelf loadMoreNewerMessageV2:oldMessageArray];
+                       if (oldMessageArray.count > 0) {
+                           NCMessageModel *oldMessageModel = [strongSelf generateOldMessageModel];
+                           [strongSelf.chatVC.channelDataRepository insertObject:oldMessageModel
+                                                                         atIndex:0];
+                           [strongSelf rrs_fetchReadReceiptInfo:@[ oldMessageModel ]];
+                       }
+                       [strongSelf
+                           scrollToSpecifiedPosition:NO
+                                 baseMessageClientId:strongSelf.firstUnreadMessage.clientId];
+                       [strongSelf.chatVC.unReadButton removeFromSuperview];
+                       strongSelf.chatVC.unReadButton = nil;
+                       strongSelf.chatVC.unReadMessage = 0;
+                     }];
 }
 
-- (void)scrollToSpecifiedPosition:(BOOL)ifUnReadMentioned baseMessageClientId:(long)baseMessageClientId{
+- (void)scrollToSpecifiedPosition:(BOOL)ifUnReadMentioned
+              baseMessageClientId:(long)baseMessageClientId {
     [self.chatVC.messageCollectionView reloadData];
     [self.chatVC.messageCollectionView setNeedsLayout];
     [self.chatVC.messageCollectionView layoutIfNeeded];
@@ -1451,18 +1618,19 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                 NCMessageModel *model = self.chatVC.channelDataRepository[i];
                 if (baseMessageClientId == model.clientId) {
                     NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
-                    [self.chatVC.messageCollectionView scrollToItemAtIndexPath:indexPath
-                                                                   atScrollPosition:UICollectionViewScrollPositionTop
-                                                                           animated:NO];
+                    [self.chatVC.messageCollectionView
+                        scrollToItemAtIndexPath:indexPath
+                               atScrollPosition:UICollectionViewScrollPositionTop
+                                       animated:NO];
                     break;
                 }
             }
-        }else {
-            [self.chatVC.messageCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]
-                                                           atScrollPosition:UICollectionViewScrollPositionTop
-                                                                   animated:YES];
+        } else {
+            [self.chatVC.messageCollectionView
+                scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]
+                       atScrollPosition:UICollectionViewScrollPositionTop
+                               animated:YES];
         }
-        
     }
 }
 
@@ -1471,19 +1639,24 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         if (self.unreadMentionedMessages && self.chatVC.enableUnreadMentionedIcon == YES) {
             if (self.unreadMentionedMessages.count == 0) {
                 self.chatVC.unReadMentionedButton.hidden = YES;
-            }else{
+            } else {
                 // TODO(qixinbing): Temporarily ignore the logic for @-mentions.
-//                self.chatVC.unReadMentionedButton.hidden = NO;
-//                NSString *unReadMentionedMessagesCount = [NSString stringWithFormat:@"%ld", (long)self.unreadMentionedMessages.count];
-//                NSString *stringUnReadMentioned = [NSString stringWithFormat:NCUILocalizedString(@"have_mentioned_me_count"), unReadMentionedMessagesCount];
-//                
-//                self.chatVC.unReadMentionedLabel.text = stringUnReadMentioned;
-//                [self.chatVC.util adaptUnreadButtonSize:self.chatVC.unReadMentionedLabel];
+                //                self.chatVC.unReadMentionedButton.hidden = NO;
+                //                NSString *unReadMentionedMessagesCount = [NSString
+                //                stringWithFormat:@"%ld",
+                //                (long)self.unreadMentionedMessages.count]; NSString
+                //                *stringUnReadMentioned = [NSString
+                //                stringWithFormat:NCUILocalizedString(@"have_mentioned_me_count"),
+                //                unReadMentionedMessagesCount];
+                //
+                //                self.chatVC.unReadMentionedLabel.text = stringUnReadMentioned;
+                //                [self.chatVC.util
+                //                adaptUnreadButtonSize:self.chatVC.unReadMentionedLabel];
             }
-        }else {
+        } else {
             self.chatVC.unReadMentionedButton.hidden = YES;
         }
-    }else {
+    } else {
         [self.unreadMentionedMessages removeAllObjects];
         self.chatVC.unReadMentionedButton.hidden = YES;
     }
@@ -1507,15 +1680,15 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     UICollectionViewLayout *layout = self.chatVC.messageCollectionView.collectionViewLayout;
     [self.chatVC.messageCollectionView.collectionViewLayout invalidateLayout];
     [self.chatVC.messageCollectionView setCollectionViewLayout:layout];
-    [self.chatVC.messageCollectionView performBatchUpdates:^{
-        self.chatVC.messageCollectionView.contentOffset = offset;
-    }
+    [self.chatVC.messageCollectionView
+        performBatchUpdates:^{
+          self.chatVC.messageCollectionView.contentOffset = offset;
+        }
         completion:^(BOOL finished) {
-            self.isIndicatorLoading = NO;
-            [UIView setAnimationsEnabled:YES];
+          self.isIndicatorLoading = NO;
+          [UIView setAnimationsEnabled:YES];
         }];
 }
-
 
 // Bound the number of displayed messages when a large batch arrives.
 // Users can pull down to load additional history.
@@ -1524,8 +1697,9 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         NSArray *array = [self.chatVC.messageCollectionView indexPathsForVisibleItems];
         if (array.count > 0) {
             NSIndexPath *indexPath = array.firstObject;
-            // If a visible cell is among the 200 entries to be removed, the user may be loading or reading history.
-            // Keep the data until it exceeds 300 entries, leaving a 100-message buffer to avoid an abrupt jump.
+            // If a visible cell is among the 200 entries to be removed, the user may be loading or
+            // reading history. Keep the data until it exceeds 300 entries, leaving a 100-message
+            // buffer to avoid an abrupt jump.
             if (indexPath.row > 300) {
                 NSRange range = NSMakeRange(0, COLLECTION_VIEW_CELL_REMOVE_COUNT);
                 [self.chatVC.channelDataRepository removeObjectsInRange:range];
@@ -1546,9 +1720,10 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
             NCMessageModel *model = self.chatVC.channelDataRepository[i];
             if (model.sentTime == self.chatVC.locatedMessageSentTime) {
                 NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
-                [self.chatVC.messageCollectionView scrollToItemAtIndexPath:indexPath
-                                                               atScrollPosition:UICollectionViewScrollPositionTop
-                                                                       animated:NO];
+                [self.chatVC.messageCollectionView
+                    scrollToItemAtIndexPath:indexPath
+                           atScrollPosition:UICollectionViewScrollPositionTop
+                                   animated:NO];
                 self.chatVC.locatedMessageSentTime = 0;
                 break;
             }
@@ -1556,29 +1731,32 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
 }
 
-- (void)scrollDidEnd{
+- (void)scrollDidEnd {
     if (!self.isLoadingHistoryMessage) {
         CGFloat height = self.chatVC.messageCollectionView.frame.size.height;
         CGFloat contentOffsetY = self.chatVC.messageCollectionView.contentOffset.y;
-        CGFloat bottomOffset = self.chatVC.messageCollectionView.contentSize.height - contentOffsetY;
-        // Allow a 10-point tolerance because bottomOffset can exceed height by roughly 0.2 points at the bottom.
-        if (bottomOffset <= height+10){
+        CGFloat bottomOffset =
+            self.chatVC.messageCollectionView.contentSize.height - contentOffsetY;
+        // Allow a 10-point tolerance because bottomOffset can exceed height by roughly 0.2 points
+        // at the bottom.
+        if (bottomOffset <= height + 10) {
             // The collection view is at the bottom.
             self.isShowingLastestMessage = YES;
-        }else{
+        } else {
             self.isShowingLastestMessage = NO;
         }
     }
 }
 
 - (BOOL)isAtTheBottomOfTableView {
-    if (self.isLoadingHistoryMessage){
+    if (self.isLoadingHistoryMessage) {
         return NO;
     }
     if (!self.isShowingLastestMessage) {
-        NSIndexPath *lastIndexPath = [NSIndexPath indexPathForItem:self.chatVC.channelDataRepository.count - 1
-                                                         inSection:0];
-        BOOL isLastMessageVisible = [[self.chatVC.messageCollectionView indexPathsForVisibleItems] containsObject:lastIndexPath];
+        NSIndexPath *lastIndexPath =
+            [NSIndexPath indexPathForItem:self.chatVC.channelDataRepository.count - 1 inSection:0];
+        BOOL isLastMessageVisible = [[self.chatVC.messageCollectionView indexPathsForVisibleItems]
+            containsObject:lastIndexPath];
         self.isShowingLastestMessage = isLastMessageVisible;
     }
     return self.isShowingLastestMessage;

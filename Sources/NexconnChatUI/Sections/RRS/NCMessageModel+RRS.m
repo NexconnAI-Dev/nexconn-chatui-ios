@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCMessageModel+RRS.h"
 #import "NCChatUIConfig.h"
+#import "NCMessageModel+RRS.h"
 #import "NCRRSUtil.h"
 
 @implementation NCMessageModel (RRS)
@@ -15,17 +15,16 @@
     if (self.messageId.length == 0) {
         return NO;
     }
-    if (!(self.channelType == NCChannelTypeGroup
-        || self.channelType == NCChannelTypeDirect)) {
+    if (!(self.channelType == NCChannelTypeGroup || self.channelType == NCChannelTypeDirect)) {
         return NO;
     }
-    if (![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(self.channelType)]) {
+    if (![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+            containsObject:@(self.channelType)]) {
         return NO;
     }
-    
-    if (self.needReceipt
-        && !self.sentReceipt
-        && self.messageDirection == NCMessageDirectionReceive) {
+
+    if (self.needReceipt && !self.sentReceipt &&
+        self.messageDirection == NCMessageDirectionReceive) {
         return YES;
     }
     return NO;
@@ -35,17 +34,17 @@
     if (self.messageId.length == 0) {
         return NO;
     }
-    if (!(self.channelType == NCChannelTypeGroup
-        || self.channelType == NCChannelTypeDirect)) {
+    if (!(self.channelType == NCChannelTypeGroup || self.channelType == NCChannelTypeDirect)) {
         return NO;
     }
-    if (![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(self.channelType)]) {
+    if (![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+            containsObject:@(self.channelType)]) {
         return NO;
     }
     if (self.needReceipt && self.messageDirection == NCMessageDirectionSend) {
         return YES;
     }
-    
+
     return NO;
 }
 

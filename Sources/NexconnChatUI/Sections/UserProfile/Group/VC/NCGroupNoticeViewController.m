@@ -7,11 +7,11 @@
 //
 
 #import "NCGroupNoticeViewController.h"
-#import "NCGroupNoticeView.h"
-#import "NCChatUICommonDefine.h"
 #import "NCAlertView.h"
 #import "NCBaseButton.h"
-@interface NCGroupNoticeViewController ()<UITextViewDelegate>
+#import "NCChatUICommonDefine.h"
+#import "NCGroupNoticeView.h"
+@interface NCGroupNoticeViewController () <UITextViewDelegate>
 
 @property (nonatomic, strong) NCGroupNoticeViewModel *viewModel;
 
@@ -42,9 +42,11 @@
     [self setupView];
 }
 
-#pragma mark -- UITextViewDelegate
+#pragma mark-- UITextViewDelegate
 
-- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+- (BOOL)textView:(UITextView *)textView
+    shouldChangeTextInRange:(NSRange)range
+            replacementText:(NSString *)text {
     NSString *newText = [textView.text stringByReplacingCharactersInRange:range withString:text];
     if (newText.length > self.viewModel.limit) {
         return NO;
@@ -56,7 +58,7 @@
     self.confirmButton.enabled = [self.viewModel canSaveNotice:textView.text];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setupView {
     self.noticeView.textView.text = self.viewModel.group.notice;
@@ -68,15 +70,20 @@
 
 - (void)setNavigationBarItems {
     if (self.viewModel.canEdit) {
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
+        self.navigationItem.rightBarButtonItem =
+            [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
         self.confirmButton.enabled = NO;
     }
-    
+
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
@@ -87,7 +94,7 @@
     [self.viewModel updateNotice:self.noticeView.textView.text inViewController:self];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCGroupNoticeView *)noticeView {
     if (!_noticeView) {
@@ -101,9 +108,13 @@
     if (!_confirmButton) {
         _confirmButton = [NCBaseButton buttonWithType:UIButtonTypeCustom];
         [_confirmButton setTitle:NCUILocalizedString(@"save") forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color") forState:(UIControlStateNormal)];
-        [_confirmButton setTitleColor:NCDynamicColor(@"disabled_color") forState:(UIControlStateDisabled)];
-        [_confirmButton addTarget:self action:@selector(confirmButtonDidClick) forControlEvents:UIControlEventTouchUpInside];
+        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color")
+                             forState:(UIControlStateNormal)];
+        [_confirmButton setTitleColor:NCDynamicColor(@"disabled_color")
+                             forState:(UIControlStateDisabled)];
+        [_confirmButton addTarget:self
+                           action:@selector(confirmButtonDidClick)
+                 forControlEvents:UIControlEventTouchUpInside];
         [_confirmButton.titleLabel setFont:[UIFont systemFontOfSize:15]];
         _confirmButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
         _confirmButton.enabled = NO;

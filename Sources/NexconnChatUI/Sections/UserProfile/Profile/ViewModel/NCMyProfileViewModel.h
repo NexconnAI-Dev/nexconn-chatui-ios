@@ -12,7 +12,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Current user profile view model
 @interface NCMyProfileViewModel : NCProfileViewModel
 
-
 @end
 
 NS_ASSUME_NONNULL_END

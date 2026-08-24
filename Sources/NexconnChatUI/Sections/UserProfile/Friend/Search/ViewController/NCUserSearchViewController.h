@@ -12,7 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// User search view controller
-/// 
+///
 @interface NCUserSearchViewController : NCBaseViewController
 
 /// Initializes an `NCUserSearchViewController` instance

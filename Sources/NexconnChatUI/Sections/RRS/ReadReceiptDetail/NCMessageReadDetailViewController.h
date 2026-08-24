@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseViewController.h"
 #import "NCMessageReadDetailViewModel.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param viewController The current view controller
 /// @param messageModel The message model
 /// @return The header view, or `nil` to hide it
-- (UIView *)viewController:(NCMessageReadDetailViewController *)viewController 
+- (UIView *)viewController:(NCMessageReadDetailViewController *)viewController
      headerViewWithMessage:(NCMessageModel *)messageModel;
 
 @end

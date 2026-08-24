@@ -9,7 +9,7 @@
 #import "NCChatUIFontConf.h"
 
 @implementation NCChatUIFontConf
-- (instancetype)init{
+- (instancetype)init {
     self = [super init];
     if (self) {
         self.firstLevel = 18;

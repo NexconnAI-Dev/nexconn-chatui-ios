@@ -13,9 +13,8 @@
 @end
 
 @implementation NCBaseTableViewController
-- (instancetype)initWithStyle:(UITableViewStyle)style{
+- (instancetype)initWithStyle:(UITableViewStyle)style {
     if (self = [super initWithStyle:UITableViewStyleGrouped]) {
-        
     }
     return self;
 }
@@ -38,8 +37,9 @@
 
 - (void)saveCurrentUserInterfaceStyle {
     if (@available(iOS 13.0, *)) {
-        [[NSUserDefaults standardUserDefaults] setObject:@(UITraitCollection.currentTraitCollection.userInterfaceStyle)
-                                                  forKey:@"NCCurrentUserInterfaceStyle"];
+        [[NSUserDefaults standardUserDefaults]
+            setObject:@(UITraitCollection.currentTraitCollection.userInterfaceStyle)
+               forKey:@"NCCurrentUserInterfaceStyle"];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
 }
@@ -54,10 +54,10 @@
     return CGFLOAT_MIN;
 }
 
-- (void)updateRTLUI{
+- (void)updateRTLUI {
     if ([NCSemanticContext isRTL]) {
         self.tableView.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-    }else{
+    } else {
         self.tableView.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
     }
 }

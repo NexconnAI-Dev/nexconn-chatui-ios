@@ -12,8 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NCLoadingTipView : UIView
 
-+ (NCLoadingTipView *)loadingWithTip:(NSString *)tip
-                          parentView:(UIView *)parentView;
++ (NCLoadingTipView *)loadingWithTip:(NSString *)tip parentView:(UIView *)parentView;
 + (NCLoadingTipView *)loadingWithTip:(NSString *)tip;
 - (void)startLoading;
 - (void)stopLoading;

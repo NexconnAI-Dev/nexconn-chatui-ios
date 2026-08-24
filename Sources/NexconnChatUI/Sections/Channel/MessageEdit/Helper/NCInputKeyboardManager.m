@@ -7,15 +7,16 @@
 //
 
 #import "NCInputKeyboardManager.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIUtility.h"
 
 // Standard system status bar height.
 #define SYS_STATUSBAR_HEIGHT 20
 // Additional status bar height while Personal Hotspot is active.
 #define HOTSPOT_STATUSBAR_HEIGHT 20
 #define APP_STATUSBAR_HEIGHT ([NCChatUIUtility getStatusBarHeightForView:nil])
-#define IS_HOTSPOT_CONNECTED (APP_STATUSBAR_HEIGHT == (SYS_STATUSBAR_HEIGHT + HOTSPOT_STATUSBAR_HEIGHT) ? YES : NO)
+#define IS_HOTSPOT_CONNECTED                                                                       \
+    (APP_STATUSBAR_HEIGHT == (SYS_STATUSBAR_HEIGHT + HOTSPOT_STATUSBAR_HEIGHT) ? YES : NO)
 
 @interface NCInputKeyboardManager ()
 
@@ -55,18 +56,18 @@
     if (self.isMonitoring) {
         return;
     }
-    
+
     // Observe keyboard presentation changes.
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillShowNotification:)
                                                  name:UIKeyboardWillShowNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillHideNotification:)
                                                  name:UIKeyboardWillHideNotification
                                                object:nil];
-    
+
     self.isMonitoring = YES;
 }
 
@@ -74,11 +75,15 @@
     if (!self.isMonitoring) {
         return;
     }
-    
+
     // Stop observing keyboard presentation changes.
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
-    
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIKeyboardWillShowNotification
+                                                  object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIKeyboardWillHideNotification
+                                                  object:nil];
+
     self.isMonitoring = NO;
     [self resetKeyboardState];
 }
@@ -100,26 +105,29 @@
             return;
         }
     }
-    
+
     // Read the final keyboard frame.
     NSDictionary *userInfo = notification.userInfo;
     CGRect keyboardEndFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    
+
     // Read the system keyboard animation parameters.
-    UIViewAnimationCurve animationCurve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue];
-    NSTimeInterval animationDuration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-    
+    UIViewAnimationCurve animationCurve =
+        [userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue];
+    NSTimeInterval animationDuration =
+        [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+
     // Store the visible keyboard state.
     self.currentKeyboardFrame = keyboardEndFrame;
     self.currentKeyboardHeight = keyboardEndFrame.size.height;
     self.isKeyboardVisible = YES;
-    
+
     // Notify the delegate before the keyboard appears.
-    if ([self.delegate respondsToSelector:@selector(keyboardManager:willShowWithHeight:frame:animationDuration:animationCurve:)]) {
-        [self.delegate keyboardManager:self 
-                    willShowWithHeight:self.currentKeyboardHeight 
+    if ([self.delegate respondsToSelector:@selector(keyboardManager:willShowWithHeight:frame:
+                                                    animationDuration:animationCurve:)]) {
+        [self.delegate keyboardManager:self
+                    willShowWithHeight:self.currentKeyboardHeight
                                  frame:self.currentKeyboardFrame
-                     animationDuration:animationDuration 
+                     animationDuration:animationDuration
                         animationCurve:animationCurve];
     }
 }
@@ -131,11 +139,11 @@
             return;
         }
     }
-    
+
     // Mark the keyboard as hidden.
     self.isKeyboardVisible = NO;
     // Preserve the last frame and height because the hide animation may still use them.
-    
+
     // Notify the delegate before the keyboard hides.
     if ([self.delegate respondsToSelector:@selector(keyboardManagerWillHide:)]) {
         [self.delegate keyboardManagerWillHide:self];
@@ -148,7 +156,7 @@
     CGFloat gap = (NC_IOS_SYSTEM_VERSION_LESS_THAN(@"7.0")) ? 64 : 0;
     CGFloat safeAreaBottom = [NCChatUIUtility getWindowSafeAreaInsets].bottom;
     gap += safeAreaBottom;
-    
+
     if (safeAreaBottom > 0) {
         // On safe-area devices, Personal Hotspot does not change the usable status bar height.
         return [UIScreen mainScreen].bounds.size.height - gap;
@@ -166,7 +174,7 @@
     CGRect screenBounds = [UIScreen mainScreen].bounds;
     UIEdgeInsets safeAreaInsets = [NCChatUIUtility getWindowSafeAreaInsets];
     CGFloat screenBottomY = CGRectGetMaxY(screenBounds);
-    
+
     CGFloat result;
     if (self.isKeyboardVisible && !CGRectIsEmpty(self.currentKeyboardFrame)) {
         // Use the tracked frame so positioning matches the notification state.
@@ -178,4 +186,4 @@
     return result;
 }
 
-@end 
+@end

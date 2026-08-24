@@ -9,8 +9,8 @@
 //  Modified by Nexconn in 2026.
 //
 
-#import "UIScrollView+NCMJRefresh.h"
 #import "NCMJRefreshFooter.h"
+#import "UIScrollView+NCMJRefresh.h"
 #import <objc/runtime.h>
 
 static const char NCMJRefreshFooterKey = '\0';

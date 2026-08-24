@@ -8,8 +8,7 @@
 
 #import "NCApplyFriendSectionItem.h"
 
-
-@interface NCApplyFriendSectionItem()
+@interface NCApplyFriendSectionItem ()
 @property (nonatomic, strong) NSMutableArray *items;
 @property (nonatomic, copy) NCFriendApplyItemFilterBlock filterBlock;
 @property (nonatomic, copy) NCFriedApplyItemCompareBlock compareBlock;
@@ -18,8 +17,7 @@
 @implementation NCApplyFriendSectionItem
 
 - (instancetype)initWithFilterBlock:(NCFriendApplyItemFilterBlock)filterBlock
-                       compareBlock:(NCFriedApplyItemCompareBlock)compareBlock
-{
+                       compareBlock:(NCFriedApplyItemCompareBlock)compareBlock {
     self = [super init];
     if (self) {
         self.filterBlock = filterBlock;
@@ -35,7 +33,7 @@
         [array addObjectsFromArray:items];
     } else {
         BOOL stop = NO;
-        for (int i = 0; i< [items count]; i++) {
+        for (int i = 0; i < [items count]; i++) {
             id obj = items[i];
             if (self.filterBlock) {
                 BOOL savable = self.filterBlock(obj, self.timeStart, self.timeEnd, &stop);
@@ -50,7 +48,7 @@
     }
 
     if (array.count > 0 && self.compareBlock) {
-       NSArray *sorted =  [array sortedArrayUsingComparator:self.compareBlock];
+        NSArray *sorted = [array sortedArrayUsingComparator:self.compareBlock];
         return sorted;
     } else {
         return array;
@@ -62,13 +60,13 @@
 }
 
 - (id)itemAtIndex:(NSInteger)index {
-    if (index>=0 && index<self.items.count) {
+    if (index >= 0 && index < self.items.count) {
         return [self.items objectAtIndex:index];
     }
     return nil;
 }
 - (void)removeItemAtIndex:(NSInteger)index {
-    if (index>=0 && index<self.items.count) {
+    if (index >= 0 && index < self.items.count) {
         [self.items removeObjectAtIndex:index];
     }
 }
@@ -83,6 +81,5 @@
 
 - (void)appendItems:(NSArray *)items {
     [self.items addObjectsFromArray:items];
-
 }
 @end

@@ -46,11 +46,11 @@
 - (UIActivityIndicatorView *)indicatorView {
     if (!_indicatorView) {
         if (@available(iOS 13.0, *)) {
-            _indicatorView =
-                [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+            _indicatorView = [[UIActivityIndicatorView alloc]
+                initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
         } else {
-            _indicatorView =
-                [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+            _indicatorView = [[UIActivityIndicatorView alloc]
+                initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
         }
     }
     return _indicatorView;

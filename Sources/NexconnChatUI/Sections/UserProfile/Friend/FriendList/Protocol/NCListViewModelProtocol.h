@@ -66,7 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param viewController viewController
 /// @param tableView tableView
 /// @param indexPath indexPath
-- (void)viewController:(UIViewController*)viewController
+- (void)viewController:(UIViewController *)viewController
              tableView:(UITableView *)tableView
           didSelectRow:(NSIndexPath *)indexPath;
 
@@ -102,7 +102,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)heightForHeaderInSection:(NSInteger)section;
 
 /// Header view
-/// 
+///
 /// @param tableView tableView
 /// @param section section
 /// @return The number of sections

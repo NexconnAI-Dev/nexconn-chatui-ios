@@ -21,22 +21,24 @@
 
 @implementation NCProfileFooterView
 
-- (instancetype)initWithTopSpace:(CGFloat)topSpace buttonSpace:(CGFloat)buttonSpace items:(nonnull NSArray<NCButtonItem *> *)items {
+- (instancetype)initWithTopSpace:(CGFloat)topSpace
+                     buttonSpace:(CGFloat)buttonSpace
+                           items:(nonnull NSArray<NCButtonItem *> *)items {
     self = [super init];
     if (self) {
         self.items = items;
-        self.frame = CGRectMake(0, 0, SCREEN_WIDTH, (topSpace + NCProfileFooterViewButtonHeight + buttonSpace) * items.count);
+        self.frame =
+            CGRectMake(0, 0, SCREEN_WIDTH,
+                       (topSpace + NCProfileFooterViewButtonHeight + buttonSpace) * items.count);
         [self setupButtonItems:topSpace buttonSpace:buttonSpace items:items];
     }
     return self;
 }
 
-- (void)setupView
-{
+- (void)setupView {
     [super setupView];
     [self addSubview:self.buttonsStackView];
 }
-
 
 - (void)buttonDidClick:(UIButton *)sender {
     NCButtonItem *item = self.items[sender.tag];
@@ -55,25 +57,11 @@
         [button setImage:item.buttonIcon forState:UIControlStateHighlighted];
         NSInteger spacing = 3;
         if ([NCChatUIUtility isRTL]) {
-            button.titleEdgeInsets = UIEdgeInsetsMake(0.0,
-                                                      -spacing,
-                                                      0,
-                                                      0);
-            button.imageEdgeInsets = UIEdgeInsetsMake(0,
-                                                      0,
-                                                      0.0,
-                                                      -spacing);
-        }
-        else
-        {
-            button.titleEdgeInsets = UIEdgeInsetsMake(0.0,
-                                                      0,
-                                                      0,
-                                                      -spacing);
-            button.imageEdgeInsets = UIEdgeInsetsMake(0,
-                                                      -spacing,
-                                                      0.0,
-                                                      0);
+            button.titleEdgeInsets = UIEdgeInsetsMake(0.0, -spacing, 0, 0);
+            button.imageEdgeInsets = UIEdgeInsetsMake(0, 0, 0.0, -spacing);
+        } else {
+            button.titleEdgeInsets = UIEdgeInsetsMake(0.0, 0, 0, -spacing);
+            button.imageEdgeInsets = UIEdgeInsetsMake(0, -spacing, 0.0, 0);
         }
     }
     if (item.borderColor) {
@@ -92,20 +80,24 @@
     self.buttonsStackView.spacing = buttonSpace;
     for (int i = 0; i < items.count; i++) {
         UIButton *button = [self buttonWithItem:items[i]];
-        [button addTarget:self action:@selector(buttonDidClick:) forControlEvents:(UIControlEventTouchUpInside)];
+        [button addTarget:self
+                      action:@selector(buttonDidClick:)
+            forControlEvents:(UIControlEventTouchUpInside)];
         button.tag = i;
         [self addSubview:button];
         [self.buttonsStackView addArrangedSubview:button];
     }
-    
+
     NSInteger count = items.count;
-    CGFloat height = NCProfileFooterViewButtonHeight*count + buttonSpace*(count -1);
+    CGFloat height = NCProfileFooterViewButtonHeight * count + buttonSpace * (count - 1);
     [NSLayoutConstraint activateConstraints:@[
-          [self.buttonsStackView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:16],
-          [self.buttonsStackView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-16],
-          [self.buttonsStackView.heightAnchor constraintEqualToConstant:height],
-          [self.buttonsStackView.topAnchor constraintEqualToAnchor:self.topAnchor constant:topSpace]
-      ]];
+        [self.buttonsStackView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                            constant:16],
+        [self.buttonsStackView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                             constant:-16],
+        [self.buttonsStackView.heightAnchor constraintEqualToConstant:height],
+        [self.buttonsStackView.topAnchor constraintEqualToAnchor:self.topAnchor constant:topSpace]
+    ]];
 }
 
 - (UIStackView *)buttonsStackView {

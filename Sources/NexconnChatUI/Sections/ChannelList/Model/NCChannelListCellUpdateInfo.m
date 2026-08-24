@@ -8,7 +8,8 @@
 
 #import "NCChannelListCellUpdateInfo.h"
 
-NSString *const NCChatUIChannelListCellUpdateNotification = @"NCChatUIChannelListCellUpdateNotification";
+NSString *const NCChatUIChannelListCellUpdateNotification =
+    @"NCChatUIChannelListCellUpdateNotification";
 
 @implementation NCChannelListCellUpdateInfo
 

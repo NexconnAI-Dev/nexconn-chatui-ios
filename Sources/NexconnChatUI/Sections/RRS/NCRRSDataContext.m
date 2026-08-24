@@ -7,11 +7,12 @@
 //
 
 #import "NCRRSDataContext.h"
-#import "NCReadWriteLock.h"
 #import "NCChannelModel+RRS.h"
 #import "NCRRSUtil.h"
+#import "NCReadWriteLock.h"
 
-static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadReceiptResponse *response) {
+static NCMessageReadReceiptInfo *
+NCReadReceiptInfoFromResponse(NCMessageReadReceiptResponse *response) {
     if (!response || response.messageId.length == 0) {
         return nil;
     }
@@ -28,7 +29,7 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
     return info;
 }
 
-@interface NCRRSDataContext()
+@interface NCRRSDataContext ()
 @property (nonatomic, strong) NCReadWriteLock *lock;
 @property (nonatomic, strong) NSMutableDictionary *cacheInfo;
 @end
@@ -39,13 +40,12 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
     static id instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
+      instance = [[self alloc] init];
     });
     return instance;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         self.lock = [[NCReadWriteLock alloc] init];
@@ -65,7 +65,8 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
             subChannelId = channelId;
         }
     }
-    return [NSString stringWithFormat:@"%@-%lu-%@", identifier.channelId, (unsigned long)identifier.channelType, subChannelId];
+    return [NSString stringWithFormat:@"%@-%lu-%@", identifier.channelId,
+                                      (unsigned long)identifier.channelType, subChannelId];
 }
 
 + (void)refreshCacheWithReceiptInfo:(NSArray<NCMessageReadReceiptInfo *> *)infoList {
@@ -75,12 +76,12 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
 
 - (void)refreshCacheWithReceiptInfo:(NSArray<NCMessageReadReceiptInfo *> *)infoList {
     [self.lock performWriteLockBlock:^{
-        for (NCMessageReadReceiptInfo *info in infoList) {
-            NSString *key = [self keyByChannelIdentifier:info.channelIdentifier];
-            if (key) {
-                self.cacheInfo[key] = info;
-            }
-        }
+      for (NCMessageReadReceiptInfo *info in infoList) {
+          NSString *key = [self keyByChannelIdentifier:info.channelIdentifier];
+          if (key) {
+              self.cacheInfo[key] = info;
+          }
+      }
     }];
 }
 
@@ -92,39 +93,40 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
 - (void)refreshCacheWithResponse:(NSArray<NCMessageReadReceiptResponse *> *)infoList {
     NSMutableArray *array = [NSMutableArray array];
     for (NCMessageReadReceiptResponse *info in infoList) {
-        if (info.channelIdentifier.channelType == NCChannelTypeDirect) {// Only direct channels are supported.
+        if (info.channelIdentifier.channelType ==
+            NCChannelTypeDirect) { // Only direct channels are supported.
             [array addObject:info];
         }
     }
     [self.lock performWriteLockBlock:^{
-        for (NCMessageReadReceiptResponse *response in array) {
-            NSString *key = [self keyByChannelIdentifier:response.channelIdentifier];
-            if (key) {
-                NCMessageReadReceiptInfo *info = NCReadReceiptInfoFromResponse(response);
-                if (info) {
-                    self.cacheInfo[key] = info;
-                }
-            }
-        }
+      for (NCMessageReadReceiptResponse *response in array) {
+          NSString *key = [self keyByChannelIdentifier:response.channelIdentifier];
+          if (key) {
+              NCMessageReadReceiptInfo *info = NCReadReceiptInfoFromResponse(response);
+              if (info) {
+                  self.cacheInfo[key] = info;
+              }
+          }
+      }
     }];
 }
 
-+ (void)refreshConversationsCachedIfNeeded:(NSArray <NCChannelModel *>*)conversations {
++ (void)refreshConversationsCachedIfNeeded:(NSArray<NCChannelModel *> *)conversations {
     NCRRSDataContext *instance = [NCRRSDataContext sharedInstance];
     [instance refreshConversationsCachedIfNeeded:conversations];
 }
 
-- (void)refreshConversationsCachedIfNeeded:(NSArray <NCChannelModel *>*)conversations {
+- (void)refreshConversationsCachedIfNeeded:(NSArray<NCChannelModel *> *)conversations {
     if (conversations.count == 0) {
         return;
     }
-    
+
     // Copy a cache snapshot to avoid holding the read lock during iteration.
     __block NSDictionary *cacheSnapshot = nil;
     [self.lock performReadLockBlock:^{
-        cacheSnapshot = [self.cacheInfo copy];
+      cacheSnapshot = [self.cacheInfo copy];
     }];
-    
+
     // Iterate through channels and look up each cache entry by key.
     for (NCChannelModel *model in conversations) {
         if (![model rrs_couldFetchConversationReadReceipt]) {
@@ -133,8 +135,9 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
         // Build the cache key.
         NCChannelIdentifier *identifier = nil;
         if (model.channelType == NCChannelTypeCommunity && model.subChannelId.length > 0) {
-            identifier = [[NCCommunitySubChannelIdentifier alloc] initWithChannelId:model.channelId
-                                                                        subChannelId:model.subChannelId];
+            identifier =
+                [[NCCommunitySubChannelIdentifier alloc] initWithChannelId:model.channelId
+                                                              subChannelId:model.subChannelId];
         } else {
             identifier = [[NCChannelIdentifier alloc] initWithChannelType:model.channelType
                                                                 channelId:model.channelId];
@@ -145,7 +148,7 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
         if (!cachedValue) {
             continue;
         }
-        
+
         if ([cachedValue isKindOfClass:[NCMessageReadReceiptInfo class]]) {
             NCMessageReadReceiptInfo *info = (NCMessageReadReceiptInfo *)cachedValue;
             // Verify that the message ID still matches.

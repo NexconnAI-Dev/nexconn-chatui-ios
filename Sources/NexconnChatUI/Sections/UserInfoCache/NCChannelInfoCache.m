@@ -7,10 +7,10 @@
 //
 
 #import "NCChannelInfoCache.h"
-#import <NexconnChatUI/NCChatUILog.h>
-#import "NCThreadSafeMutableDictionary.h"
-#import "NCInfoProvider.h"
 #import "NCImageLoader.h"
+#import "NCInfoProvider.h"
+#import "NCThreadSafeMutableDictionary.h"
+#import <NexconnChatUI/NCChatUILog.h>
 
 @interface NCChannelInfoCache ()
 
@@ -25,16 +25,17 @@
     static NCChannelInfoCache *defaultCache = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (!defaultCache) {
-            defaultCache = [[NCChannelInfoCache alloc] init];
-            defaultCache.cache = [[NCThreadSafeMutableDictionary alloc] init];
-        }
+      if (!defaultCache) {
+          defaultCache = [[NCChannelInfoCache alloc] init];
+          defaultCache.cache = [[NCThreadSafeMutableDictionary alloc] init];
+      }
     });
     return defaultCache;
 }
 
 - (NCChannelInfo *)getConversationInfo:(NCChannelType)channelType channelId:(NSString *)channelId {
-    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType channelId:channelId];
+    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType
+                                                          channelId:channelId];
     if (!conversationGUID) {
         return nil;
     }
@@ -53,15 +54,21 @@
     if (!cacheConversationInfo) {
         return nil;
     }
-    NCChannelInfo *conInfo = [[NCChannelInfo alloc] initWithConversationId:cacheConversationInfo.channelId channelType:cacheConversationInfo.channelType name:cacheConversationInfo.name avatarUrl:cacheConversationInfo.avatarUrl extra:cacheConversationInfo.extra];
+    NCChannelInfo *conInfo =
+        [[NCChannelInfo alloc] initWithConversationId:cacheConversationInfo.channelId
+                                          channelType:cacheConversationInfo.channelType
+                                                 name:cacheConversationInfo.name
+                                            avatarUrl:cacheConversationInfo.avatarUrl
+                                                extra:cacheConversationInfo.extra];
     conInfo.groupInfo = cacheConversationInfo.groupInfo;
     return conInfo;
 }
 
 - (void)updateConversationInfo:(NCChannelInfo *)conversationInfo
-              channelType:(NCChannelType)channelType
-                      channelId:(NSString *)channelId {
-    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType channelId:channelId];
+                   channelType:(NCChannelType)channelType
+                     channelId:(NSString *)channelId {
+    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType
+                                                          channelId:channelId];
     if (!conversationGUID) {
         return;
     }
@@ -72,27 +79,32 @@
 
         __weak typeof(self) weakSelf = self;
         dispatch_async(ncUserInfoDBQueue, ^{
-            [ncUserInfoWriteDBHelper replaceConversationInfoFromDB:conversationInfo
-                                                  channelType:channelType
-                                                          channelId:channelId];
-            NCLogI(@"updateConversationInfo:channelType:channelId:;;;channelType=%lu,targerId=%@,name=%@,"
-                   @"portrait=%@",
-                   (unsigned long)channelType, channelId, conversationInfo.name, conversationInfo.avatarUrl);
-            [weakSelf.updateDelegate onConversationInfoUpdate:conversationInfo];
+          [ncUserInfoWriteDBHelper replaceConversationInfoFromDB:conversationInfo
+                                                     channelType:channelType
+                                                       channelId:channelId];
+          NCLogI(@"updateConversationInfo:channelType:channelId:;;;channelType=%lu,targerId=%@,"
+                 @"name=%@,"
+                 @"portrait=%@",
+                 (unsigned long)channelType, channelId, conversationInfo.name,
+                 conversationInfo.avatarUrl);
+          [weakSelf.updateDelegate onConversationInfoUpdate:conversationInfo];
         });
     }
 }
 
-- (void)clearConversationInfoNetworkCacheOnly:(NCChannelType)channelType channelId:(NSString *)channelId {
-    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType channelId:channelId];
+- (void)clearConversationInfoNetworkCacheOnly:(NCChannelType)channelType
+                                    channelId:(NSString *)channelId {
+    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType
+                                                          channelId:channelId];
     NCChannelInfo *cacheConversationInfo = self.cache[conversationGUID];
 
     if (!cacheConversationInfo) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(ncUserInfoDBQueue, ^{
-            NCChannelInfo *dbConversationInfo =
-                [ncUserInfoWriteDBHelper selectConversationInfoFromDB:channelType channelId:channelId];
-            [weakSelf removeImageCache:dbConversationInfo];
+          NCChannelInfo *dbConversationInfo =
+              [ncUserInfoWriteDBHelper selectConversationInfoFromDB:channelType
+                                                          channelId:channelId];
+          [weakSelf removeImageCache:dbConversationInfo];
         });
     } else {
         [self removeImageCache:cacheConversationInfo];
@@ -102,7 +114,8 @@
 - (void)clearConversationInfo:(NCChannelType)channelType channelId:(NSString *)channelId {
     NCLogI(@"clearConversationInfo:channelId:;;;channelType=%lu,targerId=%@",
            (unsigned long)channelType, channelId);
-    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType channelId:channelId];
+    NSString *conversationGUID = [NCChannelInfo getConversationGUID:channelType
+                                                          channelId:channelId];
     if (!conversationGUID) {
         return;
     }
@@ -112,19 +125,24 @@
         [self removeImageCache:cacheConversationInfo];
         [self.cache removeObjectForKey:conversationGUID];
     }
-//    else {
-//        __weak typeof(self) weakSelf = self;
-//        dispatch_async(ncUserInfoDBQueue, ^{
-//            NCChannelInfo *dbConversationInfo =
-//                [ncUserInfoWriteDBHelper selectConversationInfoFromDB:channelType channelId:channelId];
-//            [weakSelf removeImageCache:dbConversationInfo];
-//        });
-//    }
+    //    else {
+    //        __weak typeof(self) weakSelf = self;
+    //        dispatch_async(ncUserInfoDBQueue, ^{
+    //            NCChannelInfo *dbConversationInfo =
+    //                [ncUserInfoWriteDBHelper selectConversationInfoFromDB:channelType
+    //                channelId:channelId];
+    //            [weakSelf removeImageCache:dbConversationInfo];
+    //        });
+    //    }
     __weak typeof(self) weakSelf = self;
     dispatch_async(ncUserInfoDBQueue, ^{
-        [ncUserInfoWriteDBHelper deleteConversationInfoFromDB:channelType channelId:channelId];
-        NCChannelInfo *conversationInfo = [[NCChannelInfo alloc] initWithConversationId:channelId channelType:channelType name:nil avatarUrl:nil extra:nil];
-        [weakSelf.updateDelegate onConversationInfoUpdate:conversationInfo];
+      [ncUserInfoWriteDBHelper deleteConversationInfoFromDB:channelType channelId:channelId];
+      NCChannelInfo *conversationInfo = [[NCChannelInfo alloc] initWithConversationId:channelId
+                                                                          channelType:channelType
+                                                                                 name:nil
+                                                                            avatarUrl:nil
+                                                                                extra:nil];
+      [weakSelf.updateDelegate onConversationInfoUpdate:conversationInfo];
     });
 }
 
@@ -136,11 +154,12 @@
 
     //    __weak typeof(self) weakSelf = self;
     dispatch_async(ncUserInfoDBQueue, ^{
-        //        NSArray *dbConversationInfoList = [ncUserInfoWriteDBHelper selectAllConversationInfoFromDB];
-        //        for (NCChannelInfo *dbConversationInfo in dbConversationInfoList) {
-        //            [weakSelf removeImageCache:dbConversationInfo];
-        //        }
-        [ncUserInfoWriteDBHelper deleteAllConversationInfoFromDB];
+      //        NSArray *dbConversationInfoList = [ncUserInfoWriteDBHelper
+      //        selectAllConversationInfoFromDB]; for (NCChannelInfo *dbConversationInfo in
+      //        dbConversationInfoList) {
+      //            [weakSelf removeImageCache:dbConversationInfo];
+      //        }
+      [ncUserInfoWriteDBHelper deleteAllConversationInfoFromDB];
     });
 }
 

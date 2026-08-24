@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCChatUIUserInfo.h"
 #import "NCEditInputBarControl.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -22,7 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Edit confirmed
 /// @param fullScreenEditView The full-screen edit view
 /// @param text The text in the edit input bar
-- (void)fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView didConfirmWithText:(NSString *)text;
+- (void)fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView
+        didConfirmWithText:(NSString *)text;
 
 /// Edit cancelled
 - (void)fullScreenEditViewCancel:(NCFullScreenEditView *)fullScreenEditView;
@@ -56,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Hide the full-screen edit view
 /// @param animated Whether to animate
 /// @param completion Completion callback
-- (void)hideWithAnimation:(BOOL)animated completion:(void(^_Nullable)(void))completion;
+- (void)hideWithAnimation:(BOOL)animated completion:(void (^_Nullable)(void))completion;
 
 @end
 

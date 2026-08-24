@@ -10,7 +10,7 @@
 #import "NCTextView.h"
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void(^NCApplyFriendAlertBlock)(NSString *);
+typedef void (^NCApplyFriendAlertBlock)(NSString *);
 /// Friend request alert view
 @interface NCApplyFriendAlertView : NCBaseView
 

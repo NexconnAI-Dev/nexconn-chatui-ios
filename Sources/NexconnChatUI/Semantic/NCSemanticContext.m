@@ -7,8 +7,8 @@
 //
 
 #import "NCSemanticContext.h"
-#import <UIKit/UIKit.h>
 #import "NCChatUIUtility.h"
+#import <UIKit/UIKit.h>
 @implementation NCSemanticContext
 
 + (BOOL)isRTL {
@@ -18,10 +18,14 @@
 + (void)configureAttributeForNavigationController:(UINavigationController *)navi {
     if (@available(iOS 9.0, *)) {
         if ([self isRTL]) {
-            navi.navigationBar.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;;
+            navi.navigationBar.semanticContentAttribute =
+                UISemanticContentAttributeForceRightToLeft;
+            ;
             navi.view.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
         } else {
-            navi.navigationBar.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;;
+            navi.navigationBar.semanticContentAttribute =
+                UISemanticContentAttributeForceLeftToRight;
+            ;
             navi.view.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
         }
     }
@@ -31,7 +35,7 @@
     if (!image || ![self isRTL]) {
         return image;
     }
-    
+
     // Preserve dynamic image variants on iOS 13 and later when possible.
     if (@available(iOS 13.0, *)) {
         UIImage *dynamicFlippedImage = [self p_flippedDynamicImage:image];
@@ -39,7 +43,7 @@
             return dynamicFlippedImage;
         }
     }
-    
+
     // Default behavior: flip the image directly.
     return [self p_flippedImage:image];
 }
@@ -62,50 +66,56 @@
     if (!imageAsset) {
         return nil;
     }
-    
-    UITraitCollection *lightTrait = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleLight];
-    UITraitCollection *darkTrait = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
-    
+
+    UITraitCollection *lightTrait =
+        [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleLight];
+    UITraitCollection *darkTrait =
+        [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
+
     UIImage *lightImage = [imageAsset imageWithTraitCollection:lightTrait];
     UIImage *darkImage = [imageAsset imageWithTraitCollection:darkTrait];
-    
+
     // The image is not dynamic when both variants are identical.
     if (!lightImage || !darkImage || lightImage.CGImage == darkImage.CGImage) {
         return nil;
     }
-    
+
     // Flip each appearance variant separately.
     UIImage *flippedLight = [self p_flippedImage:lightImage];
     UIImage *flippedDark = [self p_flippedImage:darkImage];
-    
+
     // Recombine the flipped variants as a dynamic image.
     return [self p_combineDynamicImageWithLight:flippedLight dark:flippedDark];
 }
 
 /// Combines light and dark variants into a dynamic image.
-+ (UIImage *)p_combineDynamicImageWithLight:(UIImage *)lightImage 
++ (UIImage *)p_combineDynamicImageWithLight:(UIImage *)lightImage
                                        dark:(UIImage *)darkImage API_AVAILABLE(ios(13.0)) {
     CGFloat scale = [UIScreen mainScreen].scale;
     UITraitCollection *scaleTrait = [UITraitCollection traitCollectionWithDisplayScale:scale];
-    UITraitCollection *lightTrait = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleLight];
-    UITraitCollection *darkTrait = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
-    UITraitCollection *darkScaledTrait = [UITraitCollection traitCollectionWithTraitsFromCollections:@[scaleTrait, darkTrait]];
-    
-    UIImage *configuredLight = [lightImage imageWithConfiguration:[lightImage.configuration configurationWithTraitCollection:lightTrait]];
-    UIImage *configuredDark = [darkImage imageWithConfiguration:[darkImage.configuration configurationWithTraitCollection:darkScaledTrait]];
-    
+    UITraitCollection *lightTrait =
+        [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleLight];
+    UITraitCollection *darkTrait =
+        [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
+    UITraitCollection *darkScaledTrait =
+        [UITraitCollection traitCollectionWithTraitsFromCollections:@[ scaleTrait, darkTrait ]];
+
+    UIImage *configuredLight =
+        [lightImage imageWithConfiguration:[lightImage.configuration
+                                               configurationWithTraitCollection:lightTrait]];
+    UIImage *configuredDark =
+        [darkImage imageWithConfiguration:[darkImage.configuration
+                                              configurationWithTraitCollection:darkScaledTrait]];
+
     [configuredLight.imageAsset registerImage:configuredDark withTraitCollection:darkScaledTrait];
-    
+
     return configuredLight;
 }
 
 + (CGRect)modifyFrameForRTL:(CGRect)frame toX:(CGFloat)x {
     if (@available(iOS 9.0, *)) {
         if ([self isRTL]) {
-            CGRect rect = CGRectMake(x,
-                                     frame.origin.y,
-                                     frame.size.width,
-                                     frame.size.height);
+            CGRect rect = CGRectMake(x, frame.origin.y, frame.size.width, frame.size.height);
             return rect;
         }
     }
@@ -113,19 +123,16 @@
 }
 
 + (void)swapFrameForRTL:(UIView *)firstView withView:(UIView *)secondView {
-    
+
     if (@available(iOS 9.0, *)) {
         if ([self isRTL]) {
             CGRect rect = firstView.frame;
-            
-            firstView.frame =  CGRectMake(secondView.frame.origin.x,
-                                          firstView.frame.origin.y,
-                                          firstView.frame.size.width,
-                                          firstView.frame.size.height);
-            secondView.frame =  CGRectMake(rect.origin.x,
-                                          secondView.frame.origin.y,
-                                          secondView.frame.size.width,
-                                          secondView.frame.size.height);
+
+            firstView.frame = CGRectMake(secondView.frame.origin.x, firstView.frame.origin.y,
+                                         firstView.frame.size.width, firstView.frame.size.height);
+            secondView.frame =
+                CGRectMake(rect.origin.x, secondView.frame.origin.y, secondView.frame.size.width,
+                           secondView.frame.size.height);
         }
     }
 }

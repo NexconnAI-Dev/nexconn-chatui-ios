@@ -37,8 +37,8 @@
 - (void)drawInContext:(CGContextRef)ctx {
     CGContextSetFillColorWithColor(ctx, _tintColor.CGColor);
     CGContextSetStrokeColorWithColor(ctx, _tintColor.CGColor);
-    CGRect rect = CGRectMake((self.bounds.size.width - self.bounds.size.height) / 2, 0, self.bounds.size.height,
-                             self.bounds.size.height);
+    CGRect rect = CGRectMake((self.bounds.size.width - self.bounds.size.height) / 2, 0,
+                             self.bounds.size.height, self.bounds.size.height);
 
     CGContextStrokeEllipseInRect(ctx, CGRectInset(rect, 1, 1));
 }
@@ -97,7 +97,8 @@
     CAShapeLayer *shapeLayer = [[CAShapeLayer alloc] init];
     shapeLayer.frame = self.bounds;
     shapeLayer.fillColor = nil;
-    shapeLayer.strokeColor = NCDynamicColor(@"control_title_white_color").CGColor; // self.progressTintColor.CGColor;
+    shapeLayer.strokeColor =
+        NCDynamicColor(@"control_title_white_color").CGColor; // self.progressTintColor.CGColor;
     [self.layer addSublayer:shapeLayer];
     self.shapeLayer = shapeLayer;
 }
@@ -105,7 +106,7 @@
 #pragma mark - Accessors
 
 - (void)setProgress:(float)progress animated:(BOOL)animated {
-    if (progress>0 && _progress==0 && self.shapeLayer.strokeEnd == 1) {
+    if (progress > 0 && _progress == 0 && self.shapeLayer.strokeEnd == 1) {
         // Reset strokeEnd when progress is initialized for the first load.
         [CATransaction begin];
         [CATransaction setDisableActions:YES];
@@ -115,18 +116,20 @@
     _progress = progress;
 
     if (progress > 0) {
-        BOOL startingFromIndeterminateState = [self.shapeLayer animationForKey:@"indeterminateAnimation"] != nil;
+        BOOL startingFromIndeterminateState =
+            [self.shapeLayer animationForKey:@"indeterminateAnimation"] != nil;
         [self stopIndeterminateAnimation];
 
         self.shapeLayer.lineWidth = self.shapeLayer.bounds.size.height / 2 - 3;
 
-        self.shapeLayer.path = [UIBezierPath bezierPathWithArcCenter:CGPointMake(CGRectGetMidX(self.shapeLayer.bounds),
-                                                                                 CGRectGetMidY(self.shapeLayer.bounds))
-                                                              radius:self.shapeLayer.lineWidth / 2
-                                                          startAngle:3 * M_PI_2
-                                                            endAngle:3 * M_PI_2 + 2 * M_PI
-                                                           clockwise:YES]
-                                   .CGPath;
+        self.shapeLayer.path =
+            [UIBezierPath bezierPathWithArcCenter:CGPointMake(CGRectGetMidX(self.shapeLayer.bounds),
+                                                              CGRectGetMidY(self.shapeLayer.bounds))
+                                           radius:self.shapeLayer.lineWidth / 2
+                                       startAngle:3 * M_PI_2
+                                         endAngle:3 * M_PI_2 + 2 * M_PI
+                                        clockwise:YES]
+                .CGPath;
         self.shapeLayer.strokeColor = NCDynamicColor(@"control_title_white_color").CGColor;
         if (animated) {
             CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
@@ -206,18 +209,20 @@
     self.backgroundLayer.hidden = YES;
 
     self.shapeLayer.lineWidth = 1;
-    self.shapeLayer.path = [UIBezierPath bezierPathWithArcCenter:CGPointMake(CGRectGetMidX(self.shapeLayer.bounds),
-                                                                             CGRectGetMidY(self.shapeLayer.bounds))
-                                                          radius:self.shapeLayer.bounds.size.height / 2
-                                                      startAngle:DEGREES_TO_RADIANS(348)
-                                                        endAngle:DEGREES_TO_RADIANS(12)
-                                                       clockwise:NO]
-                               .CGPath;
+    self.shapeLayer.path =
+        [UIBezierPath bezierPathWithArcCenter:CGPointMake(CGRectGetMidX(self.shapeLayer.bounds),
+                                                          CGRectGetMidY(self.shapeLayer.bounds))
+                                       radius:self.shapeLayer.bounds.size.height / 2
+                                   startAngle:DEGREES_TO_RADIANS(348)
+                                     endAngle:DEGREES_TO_RADIANS(12)
+                                    clockwise:NO]
+            .CGPath;
     self.shapeLayer.strokeEnd = 1;
     self.shapeLayer.strokeColor = NCDynamicColor(@"control_title_white_color").CGColor;
     [CATransaction commit];
 
-    CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    CABasicAnimation *rotationAnimation =
+        [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
     rotationAnimation.fromValue = [NSNumber numberWithFloat:0.0f];
     rotationAnimation.toValue = [NSNumber numberWithFloat:2 * M_PI];
     rotationAnimation.duration = 1.0;

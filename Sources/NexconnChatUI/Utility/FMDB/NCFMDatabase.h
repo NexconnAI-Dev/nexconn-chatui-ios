@@ -7,9 +7,9 @@
 //  Modified by Nexconn in 2026.
 //
 
+#import "NCChatUILog.h"
 #import "NCFMDatabasePool.h"
 #import "NCFMResultSet.h"
-#import "NCChatUILog.h"
 #import <Foundation/Foundation.h>
 
 #if !__has_feature(objc_arc)
@@ -34,8 +34,8 @@
 
 // If OS_OBJECT_USE_OBJC=1, then the dispatch objects will be treated like ObjC objects
 // and will participate in ARC.
-// See the section on "Dispatch Queues and Automatic Reference Counting" in "Grand Central Dispatch (GCD) Reference" for
-// details.
+// See the section on "Dispatch Queues and Automatic Reference Counting" in "Grand Central Dispatch
+// (GCD) Reference" for details.
 #if OS_OBJECT_USE_OBJC
 #define NCFMDBDispatchQueueRelease(__v)
 #else
@@ -56,8 +56,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  - `NCFMDatabase` - Represents a single SQLite database.  Used for executing SQL statements.
  - `<NCFMResultSet>` - Represents the results of executing a query on an `NCFMDatabase`.
- - `<NCFMDatabaseQueue>` - If you want to perform queries and updates on multiple threads, you'll want to use this
- class.
+ - `<NCFMDatabaseQueue>` - If you want to perform queries and updates on multiple threads, you'll
+ want to use this class.
 
  ### See also
 
@@ -71,7 +71,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  - [FMDB mailing list](http://groups.google.com/group/fmdb)
  - [SQLite FAQ](http://www.sqlite.org/faq.html)
 
- @warning Do not instantiate a single `NCFMDatabase` object and use it across multiple threads. Instead, use
+ @warning Do not instantiate a single `NCFMDatabase` object and use it across multiple threads.
+ Instead, use
  `<NCFMDatabaseQueue>`.
 
  */
@@ -131,13 +132,15 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Create a `NCFMDatabase` object.
 
- An `NCFMDatabase` is created with a path to a SQLite database file.  This path can be one of these three:
+ An `NCFMDatabase` is created with a path to a SQLite database file.  This path can be one of these
+ three:
 
- 1. A file system path.  The file does not have to exist on disk.  If it does not exist, it is created for you.
- 2. An empty string (`@""`).  An empty database is created at a temporary location.  This database is deleted with the
+ 1. A file system path.  The file does not have to exist on disk.  If it does not exist, it is
+ created for you.
+ 2. An empty string (`@""`).  An empty database is created at a temporary location.  This database
+ is deleted with the `NCFMDatabase` connection is closed.
+ 3. `nil`.  An in-memory database is created.  This database will be destroyed with the
  `NCFMDatabase` connection is closed.
- 3. `nil`.  An in-memory database is created.  This database will be destroyed with the `NCFMDatabase` connection is
- closed.
 
  For example, to create/open a database in your Mac OS X `tmp` folder:
 
@@ -145,12 +148,12 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  Or, in iOS, you might open a database in the app's `Documents` directory:
 
-    NSString *docsPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0];
-    NSString *dbPath   = [docsPath stringByAppendingPathComponent:@"test.db"];
-    NCFMDatabase *db     = [NCFMDatabase databaseWithPath:dbPath];
+    NSString *docsPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask,
+ YES)[0]; NSString *dbPath   = [docsPath stringByAppendingPathComponent:@"test.db"]; NCFMDatabase
+ *db     = [NCFMDatabase databaseWithPath:dbPath];
 
- (For more information on temporary and in-memory databases, read the sqlite documentation on the subject:
- [http://www.sqlite.org/inmemorydb.html](http://www.sqlite.org/inmemorydb.html))
+ (For more information on temporary and in-memory databases, read the sqlite documentation on the
+ subject: [http://www.sqlite.org/inmemorydb.html](http://www.sqlite.org/inmemorydb.html))
 
  @param inPath Path of database file
 
@@ -162,13 +165,15 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Initialize a `NCFMDatabase` object.
 
- An `NCFMDatabase` is created with a path to a SQLite database file.  This path can be one of these three:
+ An `NCFMDatabase` is created with a path to a SQLite database file.  This path can be one of these
+ three:
 
- 1. A file system path.  The file does not have to exist on disk.  If it does not exist, it is created for you.
- 2. An empty string (`@""`).  An empty database is created at a temporary location.  This database is deleted with the
+ 1. A file system path.  The file does not have to exist on disk.  If it does not exist, it is
+ created for you.
+ 2. An empty string (`@""`).  An empty database is created at a temporary location.  This database
+ is deleted with the `NCFMDatabase` connection is closed.
+ 3. `nil`.  An in-memory database is created.  This database will be destroyed with the
  `NCFMDatabase` connection is closed.
- 3. `nil`.  An in-memory database is created.  This database will be destroyed with the `NCFMDatabase` connection is
- closed.
 
  For example, to create/open a database in your Mac OS X `tmp` folder:
 
@@ -176,12 +181,12 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  Or, in iOS, you might open a database in the app's `Documents` directory:
 
-    NSString *docsPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0];
-    NSString *dbPath   = [docsPath stringByAppendingPathComponent:@"test.db"];
-    NCFMDatabase *db     = [NCFMDatabase databaseWithPath:dbPath];
+    NSString *docsPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask,
+ YES)[0]; NSString *dbPath   = [docsPath stringByAppendingPathComponent:@"test.db"]; NCFMDatabase
+ *db     = [NCFMDatabase databaseWithPath:dbPath];
 
- (For more information on temporary and in-memory databases, read the sqlite documentation on the subject:
- [http://www.sqlite.org/inmemorydb.html](http://www.sqlite.org/inmemorydb.html))
+ (For more information on temporary and in-memory databases, read the sqlite documentation on the
+ subject: [http://www.sqlite.org/inmemorydb.html](http://www.sqlite.org/inmemorydb.html))
 
  @param inPath Path of database file
 
@@ -211,21 +216,24 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 /** Opening a new database connection with flags and an optional virtual file system (VFS)
 
  @param flags one of the following three values, optionally combined with the `SQLITE_OPEN_NOMUTEX`,
- `SQLITE_OPEN_FULLMUTEX`, `SQLITE_OPEN_SHAREDCACHE`, `SQLITE_OPEN_PRIVATECACHE`, and/or `SQLITE_OPEN_URI` flags:
+ `SQLITE_OPEN_FULLMUTEX`, `SQLITE_OPEN_SHAREDCACHE`, `SQLITE_OPEN_PRIVATECACHE`, and/or
+ `SQLITE_OPEN_URI` flags:
 
  `SQLITE_OPEN_READONLY`
 
- The database is opened in read-only mode. If the database does not already exist, an error is returned.
+ The database is opened in read-only mode. If the database does not already exist, an error is
+ returned.
 
  `SQLITE_OPEN_READWRITE`
 
- The database is opened for reading and writing if possible, or reading only if the file is write protected by the
- operating system. In either case the database must already exist, otherwise an error is returned.
+ The database is opened for reading and writing if possible, or reading only if the file is write
+ protected by the operating system. In either case the database must already exist, otherwise an
+ error is returned.
 
  `SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE`
 
- The database is opened for reading and writing, and is created if it does not already exist. This is the behavior that
- is always used for `open` method.
+ The database is opened for reading and writing, and is created if it does not already exist. This
+ is the behavior that is always used for `open` method.
 
  - Returns: `YES` if successful, `NO` on error.
 
@@ -239,21 +247,24 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 /** Opening a new database connection with flags and an optional virtual file system (VFS)
 
  @param flags one of the following three values, optionally combined with the `SQLITE_OPEN_NOMUTEX`,
- `SQLITE_OPEN_FULLMUTEX`, `SQLITE_OPEN_SHAREDCACHE`, `SQLITE_OPEN_PRIVATECACHE`, and/or `SQLITE_OPEN_URI` flags:
+ `SQLITE_OPEN_FULLMUTEX`, `SQLITE_OPEN_SHAREDCACHE`, `SQLITE_OPEN_PRIVATECACHE`, and/or
+ `SQLITE_OPEN_URI` flags:
 
  `SQLITE_OPEN_READONLY`
 
- The database is opened in read-only mode. If the database does not already exist, an error is returned.
+ The database is opened in read-only mode. If the database does not already exist, an error is
+ returned.
 
  `SQLITE_OPEN_READWRITE`
 
- The database is opened for reading and writing if possible, or reading only if the file is write protected by the
- operating system. In either case the database must already exist, otherwise an error is returned.
+ The database is opened for reading and writing if possible, or reading only if the file is write
+ protected by the operating system. In either case the database must already exist, otherwise an
+ error is returned.
 
  `SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE`
 
- The database is opened for reading and writing, and is created if it does not already exist. This is the behavior that
- is always used for `open` method.
+ The database is opened for reading and writing, and is created if it does not already exist. This
+ is the behavior that is always used for `open` method.
 
  @param vfsName   If vfs is given the value is passed to the vfs parameter of sqlite3_open_v2.
 
@@ -295,25 +306,29 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html),
- [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) to bind values to `?` placeholders in the SQL with the
- optional list of parameters, and [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html),
+ [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) to bind values to `?` placeholders in the
+ SQL with the optional list of parameters, and [`sqlite_step`](http://sqlite.org/c3ref/step.html) to
+ perform the update.
 
- The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`, `NSNull`, `NSDate`, and
- `NSData` objects), not fundamental data types (e.g. `int`, `long`, `NSInteger`, etc.). This method automatically
- handles the aforementioned object types, and all other object types will be interpreted as text values using the
- object's `description` method.
+ The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`,
+ `NSNull`, `NSDate`, and `NSData` objects), not fundamental data types (e.g. `int`, `long`,
+ `NSInteger`, etc.). This method automatically handles the aforementioned object types, and all
+ other object types will be interpreted as text values using the object's `description` method.
 
  @param sql The SQL to be performed, with optional `?` placeholders.
 
- @param outErr A reference to the `NSError` pointer to be updated with an auto released `NSError` object if an error if
- an error occurs. If `nil`, no `NSError` object will be returned.
+ @param outErr A reference to the `NSError` pointer to be updated with an auto released `NSError`
+ object if an error if an error occurs. If `nil`, no `NSError` object will be returned.
 
- @param ... Optional parameters to bind to `?` placeholders in the SQL statement. These should be Objective-C objects
- (e.g. `NSString`, `NSNumber`, etc.), not fundamental C data types (e.g. `int`, `char *`, etc.).
+ @param ... Optional parameters to bind to `?` placeholders in the SQL statement. These should be
+ Objective-C objects (e.g. `NSString`, `NSNumber`, etc.), not fundamental C data types (e.g. `int`,
+ `char *`, etc.).
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see lastError
@@ -331,26 +346,31 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  @warning **Deprecated**: Please use `<executeUpdate:withErrorAndBindings>` instead.
  */
 
-- (BOOL)update:(NSString *)sql withErrorAndBindings:(NSError **)outErr, ... __attribute__((deprecated));
+- (BOOL)update:(NSString *)sql
+    withErrorAndBindings:(NSError **)outErr, ... __attribute__((deprecated));
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html),
- [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) to bind values to `?` placeholders in the SQL with the
- optional list of parameters, and [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html),
+ [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) to bind values to `?` placeholders in the
+ SQL with the optional list of parameters, and [`sqlite_step`](http://sqlite.org/c3ref/step.html) to
+ perform the update.
 
- The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`, `NSNull`, `NSDate`, and
- `NSData` objects), not fundamental data types (e.g. `int`, `long`, `NSInteger`, etc.). This method automatically
- handles the aforementioned object types, and all other object types will be interpreted as text values using the
- object's `description` method.
+ The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`,
+ `NSNull`, `NSDate`, and `NSData` objects), not fundamental data types (e.g. `int`, `long`,
+ `NSInteger`, etc.). This method automatically handles the aforementioned object types, and all
+ other object types will be interpreted as text values using the object's `description` method.
 
  @param sql The SQL to be performed, with optional `?` placeholders.
 
- @param ... Optional parameters to bind to `?` placeholders in the SQL statement. These should be Objective-C objects
- (e.g. `NSString`, `NSNumber`, etc.), not fundamental C data types (e.g. `int`, `char *`, etc.).
+ @param ... Optional parameters to bind to `?` placeholders in the SQL statement. These should be
+ Objective-C objects (e.g. `NSString`, `NSNumber`, etc.), not fundamental C data types (e.g. `int`,
+ `char *`, etc.).
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see lastError
@@ -358,13 +378,14 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  @see lastErrorMessage
  @see [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html)
 
- @note This technique supports the use of `?` placeholders in the SQL, automatically binding any supplied value
- parameters to those placeholders. This approach is more robust than techniques that entail using `stringWithFormat` to
- manually build SQL statements, which can be problematic if the values happened to include any characters that needed to
- be quoted.
+ @note This technique supports the use of `?` placeholders in the SQL, automatically binding any
+ supplied value parameters to those placeholders. This approach is more robust than techniques that
+ entail using `stringWithFormat` to manually build SQL statements, which can be problematic if the
+ values happened to include any characters that needed to be quoted.
 
- @note If you want to use this from Swift, please note that you must include `FMDatabaseVariadic.swift` in your project.
- Without that, you cannot use this method directly, and instead have to use methods such as
+ @note If you want to use this from Swift, please note that you must include
+ `FMDatabaseVariadic.swift` in your project. Without that, you cannot use this method directly, and
+ instead have to use methods such as
  `<executeUpdate:withArgumentsInArray:>`.
  */
 
@@ -372,18 +393,20 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
- [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other `executeUpdate` methods,
- this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the SQL. Do not use `?` placeholders in the SQL if
- you use this method.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
+ [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other
+ `executeUpdate` methods, this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the
+ SQL. Do not use `?` placeholders in the SQL if you use this method.
 
  @param format The SQL to be performed, with `printf`-style escape sequences.
 
- @param ... Optional parameters to bind to use in conjunction with the `printf`-style escape sequences in the SQL
- statement.
+ @param ... Optional parameters to bind to use in conjunction with the `printf`-style escape
+ sequences in the SQL statement.
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see executeUpdate:
@@ -391,43 +414,48 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  @see lastErrorCode
  @see lastErrorMessage
 
- @note This method does not technically perform a traditional printf-style replacement. What this method actually does
- is replace the printf-style percent sequences with a SQLite `?` placeholder, and then bind values to that placeholder.
- Thus the following command
+ @note This method does not technically perform a traditional printf-style replacement. What this
+ method actually does is replace the printf-style percent sequences with a SQLite `?` placeholder,
+ and then bind values to that placeholder. Thus the following command
 
     [db executeUpdateWithFormat:@"INSERT INTO test (name) VALUES (%@)", @"Gus"];
 
- is actually replacing the `%@` with `?` placeholder, and then performing something equivalent to `<executeUpdate:>`
+ is actually replacing the `%@` with `?` placeholder, and then performing something equivalent to
+ `<executeUpdate:>`
 
     [db executeUpdate:@"INSERT INTO test (name) VALUES (?)", @"Gus"];
 
- There are two reasons why this distinction is important. First, the printf-style escape sequences can only be used
- where it is permissible to use a SQLite `?` placeholder. You can use it only for values in SQL statements, but not for
- table names or column names or any other non-value context. This method also cannot be used in conjunction with
- `pragma` statements and the like. Second, note the lack of quotation marks in the SQL. The `VALUES` clause was _not_
- `VALUES ('%@')` (like you might have to do if you built a SQL statement using `NSString` method `stringWithFormat`),
- but rather simply `VALUES (%@)`.
+ There are two reasons why this distinction is important. First, the printf-style escape sequences
+ can only be used where it is permissible to use a SQLite `?` placeholder. You can use it only for
+ values in SQL statements, but not for table names or column names or any other non-value context.
+ This method also cannot be used in conjunction with `pragma` statements and the like. Second, note
+ the lack of quotation marks in the SQL. The `VALUES` clause was _not_ `VALUES ('%@')` (like you
+ might have to do if you built a SQL statement using `NSString` method `stringWithFormat`), but
+ rather simply `VALUES (%@)`.
  */
 
 - (BOOL)executeUpdateWithFormat:(NSString *)format, ... NS_FORMAT_FUNCTION(1, 2);
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
- [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) binding any `?` placeholders in the SQL with the optional list
- of parameters.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
+ [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) binding any `?` placeholders in the SQL
+ with the optional list of parameters.
 
- The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`, `NSNull`, `NSDate`, and
- `NSData` objects), not fundamental data types (e.g. `int`, `long`, `NSInteger`, etc.). This method automatically
- handles the aforementioned object types, and all other object types will be interpreted as text values using the
- object's `description` method.
+ The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`,
+ `NSNull`, `NSDate`, and `NSData` objects), not fundamental data types (e.g. `int`, `long`,
+ `NSInteger`, etc.). This method automatically handles the aforementioned object types, and all
+ other object types will be interpreted as text values using the object's `description` method.
 
  @param sql The SQL to be performed, with optional `?` placeholders.
 
- @param arguments A `NSArray` of objects to be used when binding values to the `?` placeholders in the SQL statement.
+ @param arguments A `NSArray` of objects to be used when binding values to the `?` placeholders in
+ the SQL statement.
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see executeUpdate:values:error:
@@ -440,18 +468,19 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
- [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) binding any `?` placeholders in the SQL with the optional list
- of parameters.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
+ [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) binding any `?` placeholders in the SQL
+ with the optional list of parameters.
 
- The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`, `NSNull`, `NSDate`, and
- `NSData` objects), not fundamental data types (e.g. `int`, `long`, `NSInteger`, etc.). This method automatically
- handles the aforementioned object types, and all other object types will be interpreted as text values using the
- object's `description` method.
+ The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`,
+ `NSNull`, `NSDate`, and `NSData` objects), not fundamental data types (e.g. `int`, `long`,
+ `NSInteger`, etc.). This method automatically handles the aforementioned object types, and all
+ other object types will be interpreted as text values using the object's `description` method.
 
- This is similar to `<executeUpdate:withArgumentsInArray:>`, except that this also accepts a pointer to a `NSError`
- pointer, so that errors can be returned.
+ This is similar to `<executeUpdate:withArgumentsInArray:>`, except that this also accepts a pointer
+ to a `NSError` pointer, so that errors can be returned.
 
  In Swift 2, this throws errors, as if it were defined as follows:
 
@@ -459,11 +488,13 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  @param sql The SQL to be performed, with optional `?` placeholders.
 
- @param values A `NSArray` of objects to be used when binding values to the `?` placeholders in the SQL statement.
+ @param values A `NSArray` of objects to be used when binding values to the `?` placeholders in the
+ SQL statement.
 
  @param error A `NSError` object to receive any error object (if any).
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see lastError
@@ -472,26 +503,31 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  */
 
-- (BOOL)executeUpdate:(NSString *)sql values:(NSArray *)values error:(NSError *__autoreleasing *)error;
+- (BOOL)executeUpdate:(NSString *)sql
+               values:(NSArray *)values
+                error:(NSError *__autoreleasing *)error;
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
- [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other `executeUpdate` methods,
- this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the SQL.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
+ [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other
+ `executeUpdate` methods, this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the
+ SQL.
 
- The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`, `NSNull`, `NSDate`, and
- `NSData` objects), not fundamental data types (e.g. `int`, `long`, `NSInteger`, etc.). This method automatically
- handles the aforementioned object types, and all other object types will be interpreted as text values using the
- object's `description` method.
+ The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`,
+ `NSNull`, `NSDate`, and `NSData` objects), not fundamental data types (e.g. `int`, `long`,
+ `NSInteger`, etc.). This method automatically handles the aforementioned object types, and all
+ other object types will be interpreted as text values using the object's `description` method.
 
  @param sql The SQL to be performed, with optional `?` placeholders.
 
- @param arguments A `NSDictionary` of objects keyed by column names that will be used when binding values to the `?`
- placeholders in the SQL statement.
+ @param arguments A `NSDictionary` of objects keyed by column names that will be used when binding
+ values to the `?` placeholders in the SQL statement.
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see lastError
@@ -503,21 +539,24 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute single update statement
 
- This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`,
- `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
- [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other `executeUpdate` methods,
- this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the SQL.
+ This method executes a single SQL update statement (i.e. any SQL that does not return results, such
+ as `UPDATE`, `INSERT`, or `DELETE`. This method employs
+ [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and
+ [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other
+ `executeUpdate` methods, this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the
+ SQL.
 
- The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`, `NSNull`, `NSDate`, and
- `NSData` objects), not fundamental data types (e.g. `int`, `long`, `NSInteger`, etc.). This method automatically
- handles the aforementioned object types, and all other object types will be interpreted as text values using the
- object's `description` method.
+ The optional values provided to this method should be objects (e.g. `NSString`, `NSNumber`,
+ `NSNull`, `NSDate`, and `NSData` objects), not fundamental data types (e.g. `int`, `long`,
+ `NSInteger`, etc.). This method automatically handles the aforementioned object types, and all
+ other object types will be interpreted as text values using the object's `description` method.
 
  @param sql The SQL to be performed, with optional `?` placeholders.
 
  @param args A `va_list` of arguments.
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see lastError
@@ -529,13 +568,15 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute multiple SQL statements
 
- This executes a series of SQL statements that are combined in a single string (e.g. the SQL generated by the `sqlite3`
- command line `.dump` command). This accepts no value parameters, but rather simply expects a single string with
- multiple SQL statements, each terminated with a semicolon. This uses `sqlite3_exec`.
+ This executes a series of SQL statements that are combined in a single string (e.g. the SQL
+ generated by the `sqlite3` command line `.dump` command). This accepts no value parameters, but
+ rather simply expects a single string with multiple SQL statements, each terminated with a
+ semicolon. This uses `sqlite3_exec`.
 
  @param  sql  The SQL to be performed
 
- - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see executeStatements:withResultBlock:
@@ -547,37 +588,42 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute multiple SQL statements with callback handler
 
- This executes a series of SQL statements that are combined in a single string (e.g. the SQL generated by the `sqlite3`
- command line `.dump` command). This accepts no value parameters, but rather simply expects a single string with
- multiple SQL statements, each terminated with a semicolon. This uses `sqlite3_exec`.
+ This executes a series of SQL statements that are combined in a single string (e.g. the SQL
+ generated by the `sqlite3` command line `.dump` command). This accepts no value parameters, but
+ rather simply expects a single string with multiple SQL statements, each terminated with a
+ semicolon. This uses `sqlite3_exec`.
 
  @param sql       The SQL to be performed.
  @param block     A block that will be called for any result sets returned by any SQL statements.
-                  Note, if you supply this block, it must return integer value, zero upon success (this would be a good
- opportunity to use SQLITE_OK), non-zero value upon failure (which will stop the bulk execution of the SQL).  If a
- statement returns values, the block will be called with the results from the query in NSDictionary *resultsDictionary.
-                  This may be `nil` if you don't care to receive any results.
+                  Note, if you supply this block, it must return integer value, zero upon success
+ (this would be a good opportunity to use SQLITE_OK), non-zero value upon failure (which will stop
+ the bulk execution of the SQL).  If a statement returns values, the block will be called with the
+ results from the query in NSDictionary *resultsDictionary. This may be `nil` if you don't care to
+ receive any results.
 
  - Returns: `YES` upon success; `NO` upon failure. If failed, you can call `<lastError>`,
-                  `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the failure.
+                  `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding
+ the failure.
 
  @see executeStatements:
  @see [sqlite3_exec()](http://sqlite.org/c3ref/exec.html)
 
  */
 
-- (BOOL)executeStatements:(NSString *)sql withResultBlock:(NCFMDBExecuteStatementsCallbackBlock)block;
+- (BOOL)executeStatements:(NSString *)sql
+          withResultBlock:(NCFMDBExecuteStatementsCallbackBlock)block;
 
 /** Last insert rowid
 
- Each entry in an SQLite table has a unique 64-bit signed integer key called the "rowid". The rowid is always available
- as an undeclared column named `ROWID`, `OID`, or `_ROWID_` as long as those names are not also used by explicitly
- declared columns. If the table has a column of type `INTEGER PRIMARY KEY` then that column is another alias for the
- rowid.
+ Each entry in an SQLite table has a unique 64-bit signed integer key called the "rowid". The rowid
+ is always available as an undeclared column named `ROWID`, `OID`, or `_ROWID_` as long as those
+ names are not also used by explicitly declared columns. If the table has a column of type `INTEGER
+ PRIMARY KEY` then that column is another alias for the rowid.
 
- This routine returns the rowid of the most recent successful `INSERT` into the database from the database connection in
- the first argument. As of SQLite version 3.7.7, this routines records the last insert rowid of both ordinary tables and
- virtual tables. If no successful `INSERT`s have ever occurred on that database connection, zero is returned.
+ This routine returns the rowid of the most recent successful `INSERT` into the database from the
+ database connection in the first argument. As of SQLite version 3.7.7, this routines records the
+ last insert rowid of both ordinary tables and virtual tables. If no successful `INSERT`s have ever
+ occurred on that database connection, zero is returned.
 
  - Returns: The rowid of the last inserted row.
 
@@ -589,9 +635,9 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** The number of rows changed by prior SQL statement.
 
- This function returns the number of database rows that were changed or inserted or deleted by the most recently
- completed SQL statement on the database connection specified by the first parameter. Only changes that are directly
- specified by the INSERT, UPDATE, or DELETE statement are counted.
+ This function returns the number of database rows that were changed or inserted or deleted by the
+ most recently completed SQL statement on the database connection specified by the first parameter.
+ Only changes that are directly specified by the INSERT, UPDATE, or DELETE statement are counted.
 
  - Returns: The number of rows changed by prior SQL statement.
 
@@ -607,33 +653,38 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute select statement
 
- Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like executing
- updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should use the `<lastErrorMessage>`
- and `<lastErrorMessage>` methods to determine why a query failed.
+ Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like
+ executing updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should
+ use the `<lastErrorMessage>` and `<lastErrorMessage>` methods to determine why a query failed.
 
- In order to iterate through the results of your query, you use a `while()` loop.  You also need to "step" (via
+ In order to iterate through the results of your query, you use a `while()` loop.  You also need to
+ "step" (via
  `<[NCFMResultSet next]>`) from one record to the other.
 
- This method employs [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) for any optional value parameters. This
- properly escapes any characters that need escape sequences (e.g. quotation marks), which eliminates simple SQL errors
- as well as protects against SQL injection attacks. This method natively handles `NSString`, `NSNumber`, `NSNull`,
- `NSDate`, and `NSData` objects. All other object types will be interpreted as text values using the object's
- `description` method.
+ This method employs [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html) for any optional value
+ parameters. This properly escapes any characters that need escape sequences (e.g. quotation marks),
+ which eliminates simple SQL errors as well as protects against SQL injection attacks. This method
+ natively handles `NSString`, `NSNumber`, `NSNull`, `NSDate`, and `NSData` objects. All other object
+ types will be interpreted as text values using the object's `description` method.
 
  @param sql The SELECT statement to be performed, with optional `?` placeholders.
 
- @param ... Optional parameters to bind to `?` placeholders in the SQL statement. These should be Objective-C objects
- (e.g. `NSString`, `NSNumber`, etc.), not fundamental C data types (e.g. `int`, `char *`, etc.).
+ @param ... Optional parameters to bind to `?` placeholders in the SQL statement. These should be
+ Objective-C objects (e.g. `NSString`, `NSNumber`, etc.), not fundamental C data types (e.g. `int`,
+ `char *`, etc.).
 
- - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you can call
- `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the failure.
+ - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you
+ can call
+ `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the
+ failure.
 
  @see NCFMResultSet
  @see [`NCFMResultSet next`](<[NCFMResultSet next]>)
  @see [`sqlite3_bind`](http://sqlite.org/c3ref/bind_blob.html)
 
- @note If you want to use this from Swift, please note that you must include `FMDatabaseVariadic.swift` in your project.
- Without that, you cannot use this method directly, and instead have to use methods such as
+ @note If you want to use this from Swift, please note that you must include
+ `FMDatabaseVariadic.swift` in your project. Without that, you cannot use this method directly, and
+ instead have to use methods such as
  `<executeQuery:withArgumentsInArray:>`.
  */
 
@@ -641,41 +692,46 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute select statement
 
- Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like executing
- updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should use the `<lastErrorMessage>`
- and `<lastErrorMessage>` methods to determine why a query failed.
+ Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like
+ executing updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should
+ use the `<lastErrorMessage>` and `<lastErrorMessage>` methods to determine why a query failed.
 
- In order to iterate through the results of your query, you use a `while()` loop.  You also need to "step" (via
+ In order to iterate through the results of your query, you use a `while()` loop.  You also need to
+ "step" (via
  `<[NCFMResultSet next]>`) from one record to the other.
 
  @param format The SQL to be performed, with `printf`-style escape sequences.
 
- @param ... Optional parameters to bind to use in conjunction with the `printf`-style escape sequences in the SQL
- statement.
+ @param ... Optional parameters to bind to use in conjunction with the `printf`-style escape
+ sequences in the SQL statement.
 
- - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you can call
- `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the failure.
+ - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you
+ can call
+ `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the
+ failure.
 
  @see executeQuery:
  @see NCFMResultSet
  @see [`NCFMResultSet next`](<[NCFMResultSet next]>)
 
- @note This method does not technically perform a traditional printf-style replacement. What this method actually does
- is replace the printf-style percent sequences with a SQLite `?` placeholder, and then bind values to that placeholder.
- Thus the following command
+ @note This method does not technically perform a traditional printf-style replacement. What this
+ method actually does is replace the printf-style percent sequences with a SQLite `?` placeholder,
+ and then bind values to that placeholder. Thus the following command
 
     [db executeQueryWithFormat:@"SELECT * FROM test WHERE name=%@", @"Gus"];
 
- is actually replacing the `%@` with `?` placeholder, and then performing something equivalent to `<executeQuery:>`
+ is actually replacing the `%@` with `?` placeholder, and then performing something equivalent to
+ `<executeQuery:>`
 
     [db executeQuery:@"SELECT * FROM test WHERE name=?", @"Gus"];
 
- There are two reasons why this distinction is important. First, the printf-style escape sequences can only be used
- where it is permissible to use a SQLite `?` placeholder. You can use it only for values in SQL statements, but not for
- table names or column names or any other non-value context. This method also cannot be used in conjunction with
- `pragma` statements and the like. Second, note the lack of quotation marks in the SQL. The `WHERE` clause was _not_
- `WHERE name='%@'` (like you might have to do if you built a SQL statement using `NSString` method `stringWithFormat`),
- but rather simply `WHERE name=%@`.
+ There are two reasons why this distinction is important. First, the printf-style escape sequences
+ can only be used where it is permissible to use a SQLite `?` placeholder. You can use it only for
+ values in SQL statements, but not for table names or column names or any other non-value context.
+ This method also cannot be used in conjunction with `pragma` statements and the like. Second, note
+ the lack of quotation marks in the SQL. The `WHERE` clause was _not_ `WHERE name='%@'` (like you
+ might have to do if you built a SQL statement using `NSString` method `stringWithFormat`), but
+ rather simply `WHERE name=%@`.
 
  */
 
@@ -683,19 +739,23 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute select statement
 
- Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like executing
- updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should use the `<lastErrorMessage>`
- and `<lastErrorMessage>` methods to determine why a query failed.
+ Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like
+ executing updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should
+ use the `<lastErrorMessage>` and `<lastErrorMessage>` methods to determine why a query failed.
 
- In order to iterate through the results of your query, you use a `while()` loop.  You also need to "step" (via
+ In order to iterate through the results of your query, you use a `while()` loop.  You also need to
+ "step" (via
  `<[NCFMResultSet next]>`) from one record to the other.
 
  @param sql The SELECT statement to be performed, with optional `?` placeholders.
 
- @param arguments A `NSArray` of objects to be used when binding values to the `?` placeholders in the SQL statement.
+ @param arguments A `NSArray` of objects to be used when binding values to the `?` placeholders in
+ the SQL statement.
 
- - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you can call
- `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the failure.
+ - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you
+ can call
+ `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the
+ failure.
 
  @see -executeQuery:values:error:
  @see NCFMResultSet
@@ -706,15 +766,16 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Execute select statement
 
- Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like executing
- updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should use the `<lastErrorMessage>`
- and `<lastErrorMessage>` methods to determine why a query failed.
+ Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like
+ executing updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should
+ use the `<lastErrorMessage>` and `<lastErrorMessage>` methods to determine why a query failed.
 
- In order to iterate through the results of your query, you use a `while()` loop.  You also need to "step" (via
+ In order to iterate through the results of your query, you use a `while()` loop.  You also need to
+ "step" (via
  `<[NCFMResultSet next]>`) from one record to the other.
 
- This is similar to `<executeQuery:withArgumentsInArray:>`, except that this also accepts a pointer to a `NSError`
- pointer, so that errors can be returned.
+ This is similar to `<executeQuery:withArgumentsInArray:>`, except that this also accepts a pointer
+ to a `NSError` pointer, so that errors can be returned.
 
  In Swift 2, this throws errors, as if it were defined as follows:
 
@@ -722,38 +783,47 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  @param sql The SELECT statement to be performed, with optional `?` placeholders.
 
- @param values A `NSArray` of objects to be used when binding values to the `?` placeholders in the SQL statement.
+ @param values A `NSArray` of objects to be used when binding values to the `?` placeholders in the
+ SQL statement.
 
  @param error A `NSError` object to receive any error object (if any).
 
- - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you can call
- `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the failure.
+ - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you
+ can call
+ `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the
+ failure.
 
  @see NCFMResultSet
  @see [`NCFMResultSet next`](<[NCFMResultSet next]>)
 
- @note When called from Swift, only use the first two parameters, `sql` and `values`. This but throws the error.
+ @note When called from Swift, only use the first two parameters, `sql` and `values`. This but
+ throws the error.
 
  */
 
-- (NCFMResultSet *)executeQuery:(NSString *)sql values:(NSArray *)values error:(NSError *__autoreleasing *)error;
+- (NCFMResultSet *)executeQuery:(NSString *)sql
+                         values:(NSArray *)values
+                          error:(NSError *__autoreleasing *)error;
 
 /** Execute select statement
 
- Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like executing
- updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should use the `<lastErrorMessage>`
- and `<lastErrorMessage>` methods to determine why a query failed.
+ Executing queries returns an `<NCFMResultSet>` object if successful, and `nil` upon failure.  Like
+ executing updates, there is a variant that accepts an `NSError **` parameter.  Otherwise you should
+ use the `<lastErrorMessage>` and `<lastErrorMessage>` methods to determine why a query failed.
 
- In order to iterate through the results of your query, you use a `while()` loop.  You also need to "step" (via
+ In order to iterate through the results of your query, you use a `while()` loop.  You also need to
+ "step" (via
  `<[NCFMResultSet next]>`) from one record to the other.
 
  @param sql The SELECT statement to be performed, with optional `?` placeholders.
 
- @param arguments A `NSDictionary` of objects keyed by column names that will be used when binding values to the `?`
- placeholders in the SQL statement.
+ @param arguments A `NSDictionary` of objects keyed by column names that will be used when binding
+ values to the `?` placeholders in the SQL statement.
 
- - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you can call
- `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the failure.
+ - Returns: A `<NCFMResultSet>` for the result set upon success; `nil` upon failure. If failed, you
+ can call
+ `<lastError>`, `<lastErrorCode>`, or `<lastErrorMessage>` for diagnostic information regarding the
+ failure.
 
  @see NCFMResultSet
  @see [`NCFMResultSet next`](<[NCFMResultSet next]>)
@@ -770,7 +840,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Begin a transaction
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see commit
@@ -783,7 +854,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Begin a deferred transaction
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see commit
@@ -796,9 +868,11 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Commit a transaction
 
- Commit a transaction that was initiated with either `<beginTransaction>` or with `<beginDeferredTransaction>`.
+ Commit a transaction that was initiated with either `<beginTransaction>` or with
+ `<beginDeferredTransaction>`.
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see beginTransaction
@@ -811,9 +885,11 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Rollback a transaction
 
- Rollback a transaction that was initiated with either `<beginTransaction>` or with `<beginDeferredTransaction>`.
+ Rollback a transaction that was initiated with either `<beginTransaction>` or with
+ `<beginDeferredTransaction>`.
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see beginTransaction
@@ -951,8 +1027,9 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Last error message
 
- Returns the English-language text that describes the most recent failed SQLite API call associated with a database
- connection. If a prior API call failed but the most recent API call succeeded, this return value is undefined.
+ Returns the English-language text that describes the most recent failed SQLite API call associated
+ with a database connection. If a prior API call failed but the most recent API call succeeded, this
+ return value is undefined.
 
  - Returns: `NSString` of the last error message.
 
@@ -966,8 +1043,9 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Last error code
 
- Returns the numeric result code or extended result code for the most recent failed SQLite API call associated with a
- database connection. If a prior API call failed but the most recent API call succeeded, this return value is undefined.
+ Returns the numeric result code or extended result code for the most recent failed SQLite API call
+ associated with a database connection. If a prior API call failed but the most recent API call
+ succeeded, this return value is undefined.
 
  - Returns: Integer value of the last error code.
 
@@ -1016,7 +1094,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  @param outErr A `NSError` object to receive any error object (if any).
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see releaseSavePointWithName:error:
@@ -1031,7 +1110,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
  @param outErr A `NSError` object to receive any error object (if any).
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see startSavePointWithName:error:
@@ -1046,7 +1126,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  @param name Name of save point.
  @param outErr A `NSError` object to receive any error object (if any).
 
- - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`, `<lastErrorCode>`, or
+ - Returns: `YES` on success; `NO` on failure. If failed, you can call `<lastError>`,
+ `<lastErrorCode>`, or
  `<lastErrorMessage>` for diagnostic information regarding the failure.
 
  @see startSavePointWithName:error:
@@ -1076,8 +1157,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Test to see if the library is threadsafe
 
- - Returns: `NO` if and only if SQLite was compiled with mutexing code omitted due to the SQLITE_THREADSAFE compile-time
- option being set to 0.
+ - Returns: `NO` if and only if SQLite was compiled with mutexing code omitted due to the
+ SQLITE_THREADSAFE compile-time option being set to 0.
 
  @see [sqlite3_threadsafe()](http://sqlite.org/c3ref/threadsafe.html)
  */
@@ -1101,7 +1182,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 /// @name Make SQL function
 ///------------------------
 
-/** Adds SQL functions or aggregates or to redefine the behavior of existing SQL functions or aggregates.
+/** Adds SQL functions or aggregates or to redefine the behavior of existing SQL functions or
+ aggregates.
 
  For example:
 
@@ -1113,8 +1195,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
         [adb executeUpdate:@"insert into ftest values ('not h!')"];
         [adb executeUpdate:@"insert into ftest values ('definitely not h!')"];
 
-        [adb makeFunctionNamed:@"StringStartsWithH" maximumArguments:1 withBlock:^(sqlite3_context *context, int aargc,
- sqlite3_value **aargv) { if (sqlite3_value_type(aargv[0]) == SQLITE_TEXT) {
+        [adb makeFunctionNamed:@"StringStartsWithH" maximumArguments:1 withBlock:^(sqlite3_context
+ *context, int aargc, sqlite3_value **aargv) { if (sqlite3_value_type(aargv[0]) == SQLITE_TEXT) {
                 @autoreleasepool {
                     const char *c = (const char *)sqlite3_value_text(aargv[0]);
                     NSString *s = [NSString stringWithUTF8String:c];
@@ -1122,7 +1204,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
                 }
             }
             else {
-                NCLogD(@"Unknown formart for StringStartsWithH (%d) %s:%d", sqlite3_value_type(aargv[0]), __FUNCTION__,
+                NCLogD(@"Unknown formart for StringStartsWithH (%d) %s:%d",
+ sqlite3_value_type(aargv[0]), __FUNCTION__,
  __LINE__); sqlite3_result_null(context);
             }
         }];
@@ -1171,8 +1254,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  @see stringFromDate:
  @see storeableDateFormat:
 
- @warning Note that `NSDateFormatter` is not thread-safe, so the formatter generated by this method should be assigned
- to only one FMDB instance and should not be used for other purposes.
+ @warning Note that `NSDateFormatter` is not thread-safe, so the formatter generated by this method
+ should be assigned to only one FMDB instance and should not be used for other purposes.
 
  */
 
@@ -1193,8 +1276,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Set to a date formatter to use string dates with sqlite instead of the default UNIX timestamps.
 
- @param format Set to nil to use UNIX timestamps. Defaults to nil. Should be set using a formatter generated using
- NCFMDatabase::storeableDateFormat.
+ @param format Set to nil to use UNIX timestamps. Defaults to nil. Should be set using a formatter
+ generated using NCFMDatabase::storeableDateFormat.
 
  @see hasDateFormatter
  @see setDateFormat:
@@ -1202,8 +1285,8 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
  @see stringFromDate:
  @see storeableDateFormat:
 
- @warning Note there is no direct getter for the `NSDateFormatter`, and you should not use the formatter you pass to
- FMDB for other purposes, as `NSDateFormatter` is not thread-safe.
+ @warning Note there is no direct getter for the `NSDateFormatter`, and you should not use the
+ formatter you pass to FMDB for other purposes, as `NSDateFormatter` is not thread-safe.
  */
 
 - (void)setDateFormat:(NSDateFormatter *)format;
@@ -1242,8 +1325,9 @@ typedef int (^NCFMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDiction
 
 /** Objective-C wrapper for `sqlite3_stmt`
 
- This is a wrapper for a SQLite `sqlite3_stmt`. Generally when using FMDB you will not need to interact directly with
- `NCFMStatement`, but rather with `<NCFMDatabase>` and `<NCFMResultSet>` only.
+ This is a wrapper for a SQLite `sqlite3_stmt`. Generally when using FMDB you will not need to
+ interact directly with `NCFMStatement`, but rather with `<NCFMDatabase>` and `<NCFMResultSet>`
+ only.
 
  ### See also
 

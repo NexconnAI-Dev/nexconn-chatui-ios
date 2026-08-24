@@ -11,8 +11,8 @@
 
 #import <Foundation/Foundation.h>
 #import <NexconnChatSDK/NexconnChatSDK.h>
-#import <NexconnChatUI/NCChatUISendParams.h>
 #import <NexconnChatUI/NCChatUIProtocols.h>
+#import <NexconnChatUI/NCChatUISendParams.h>
 
 @class NCChatUIUserInfo;
 @class NCChatUIGroup;
@@ -33,7 +33,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIDispatchConnectionStatusChangedNotific
 
 /// Posted when channel status synchronization completes.
 ///
-/// The notification `object` is an `NSArray` of `NCConversationStatusInfo` objects; `userInfo` is nil.
+/// The notification `object` is an `NSArray` of `NCConversationStatusInfo` objects; `userInfo` is
+/// nil.
 ///
 /// @note Event handling
 FOUNDATION_EXPORT NSString *const NCChatUIDispatchConversationStatusChangeNotification;
@@ -48,7 +49,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIChannelDraftSaveResultNotification;
 
 /// Posted when user presence changes.
 ///
-/// The notification `userInfo` contains @{ `NCChatUIUserOnlineStatusChangedUserIdsKey` : changedUserIds }.
+/// The notification `userInfo` contains @{ `NCChatUIUserOnlineStatusChangedUserIdsKey` :
+/// changedUserIds }.
 ///
 /// @note Event handling
 FOUNDATION_EXPORT NSString *const NCChatUIUserOnlineStatusChangedNotification;
@@ -58,7 +60,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey;
 
 /// Posted when presence changes for users displayed in the channel list.
 ///
-/// The notification `userInfo` contains @{ `NCChatUIUserOnlineStatusChangedUserIdsKey` : changedUserIds }.
+/// The notification `userInfo` contains @{ `NCChatUIUserOnlineStatusChangedUserIdsKey` :
+/// changedUserIds }.
 ///
 /// @note Event handling
 FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNotification;
@@ -81,7 +84,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// Only one initialization is needed per app lifecycle.
 ///
 /// @param params The initialization parameters.
-/// @warning If using Chat UI, call this method. If using Chat SDK directly, use the corresponding method in `NCEngine`.
+/// @warning If using Chat UI, call this method. If using Chat SDK directly, use the corresponding
+/// method in `NCEngine`.
 - (void)initializeWithParams:(NCInitParams *)params;
 
 #pragma mark - Connection
@@ -92,9 +96,10 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// @param databaseOpenedHandler Called when the local message database is opened.
 /// @param completionHandler Called when the connection attempt finishes.
 - (void)connectWithParams:(NCConnectParams *)params
-    databaseOpenedHandler:(nullable void (^)(BOOL isRecreated, NCError * _Nullable error))databaseOpenedHandler
-        completionHandler:(nullable void (^)(NSString * _Nullable userId, NCError * _Nullable error))completionHandler;
-
+    databaseOpenedHandler:(nullable void (^)(BOOL isRecreated,
+                                             NCError *_Nullable error))databaseOpenedHandler
+        completionHandler:(nullable void (^)(NSString *_Nullable userId,
+                                             NCError *_Nullable error))completionHandler;
 
 /// Disconnects from the server.
 ///
@@ -102,7 +107,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// Manually disconnecting is only necessary when the app needs to log out.
 ///
 /// @param disablePush Whether to disable remote push notifications after disconnecting.
-/// @warning If using Chat UI, call this method. If using Chat SDK directly, use the corresponding method in `NCEngine`.
+/// @warning If using Chat UI, call this method. If using Chat SDK directly, use the corresponding
+/// method in `NCEngine`.
 - (void)disconnectWithDisablePush:(BOOL)disablePush;
 
 /// Disconnects from the server while keeping remote push notifications enabled.
@@ -119,8 +125,9 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 ///
 /// Call this after a successful `NCEngine` do-not-disturb setting change.
 ///
-/// @param completion Called after the refresh finishes. Returns an error when the current setting cannot be queried.
-- (void)refreshNoDisturbTimeWithCompletion:(nullable void (^)(NCError * _Nullable error))completion;
+/// @param completion Called after the refresh finishes. Returns an error when the current setting
+/// cannot be queried.
+- (void)refreshNoDisturbTimeWithCompletion:(nullable void (^)(NCError *_Nullable error))completion;
 
 #pragma mark Connection Status
 
@@ -183,25 +190,31 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// Sends a standard message and automatically updates the UI.
 ///
 /// @param params The standard message send parameters.
-/// @param completion Called when message sending finishes. Returns the sent message on success, or the message with `NCError` on failure.
+/// @param completion Called when message sending finishes. Returns the sent message on success, or
+/// the message with `NCError` on failure.
 - (void)sendMessageWithParams:(NCChatUISendMessageParams *)params
-                   completion:(nullable void (^)(NCMessage * _Nullable message, NCError * _Nullable error))completion;
+                   completion:(nullable void (^)(NCMessage *_Nullable message,
+                                                 NCError *_Nullable error))completion;
 
 /// Sends a media message and automatically updates the UI.
 ///
 /// @param params The media message send parameters.
 /// @param progressBlock Called with upload progress updates.
-/// @param completion Called when media message sending finishes. Returns the sent message on success, or the message with `NCError` on failure.
+/// @param completion Called when media message sending finishes. Returns the sent message on
+/// success, or the message with `NCError` on failure.
 /// @param cancelBlock Called when media message sending is cancelled.
 - (void)sendMediaMessageWithParams:(NCChatUISendMediaMessageParams *)params
-                          progress:(nullable void (^)(int progress, NCMessage *progressMessage))progressBlock
-                        completion:(nullable void (^)(NCMessage * _Nullable message, NCError * _Nullable error))completion
+                          progress:(nullable void (^)(int progress,
+                                                      NCMessage *progressMessage))progressBlock
+                        completion:(nullable void (^)(NCMessage *_Nullable message,
+                                                      NCError *_Nullable error))completion
                             cancel:(nullable void (^)(NCMessage *cancelMessage))cancelBlock;
 
 /// Cancels a media message that is currently being sent.
 ///
 /// @param clientId The message identifier.
-/// @return `YES` if the cancellation succeeded; `NO` if the message was already sent or does not exist.
+/// @return `YES` if the cancellation succeeded; `NO` if the message was already sent or does not
+/// exist.
 - (BOOL)cancelSendMediaMessage:(long)clientId;
 
 /// Downloads the media file attached to a message.
@@ -210,11 +223,13 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 ///
 /// @param clientId The message identifier.
 /// @param progressBlock Called periodically with download progress (0–100).
-/// @param completion Called when the download finishes. Returns the local file path on success, or `NCError` on failure.
+/// @param completion Called when the download finishes. Returns the local file path on success, or
+/// `NCError` on failure.
 /// @param cancelBlock Called if the download is cancelled.
 - (void)downloadMediaMessage:(long)clientId
                     progress:(nullable void (^)(int progress))progressBlock
-                  completion:(nullable void (^)(NSString * _Nullable mediaPath, NCError * _Nullable error))completion
+                  completion:(nullable void (^)(NSString *_Nullable mediaPath,
+                                                NCError *_Nullable error))completion
                       cancel:(nullable void (^)(void))cancelBlock;
 
 /// Downloads a file by URL.
@@ -224,7 +239,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// @param fileName The destination file name including extension (e.g., "video.mov").
 /// @param mediaUrl The remote URL of the file.
 /// @param progressBlock Called periodically with download progress (0–100).
-/// @param completion Called when the download finishes. Returns the local file path on success, or `NCError` on failure.
+/// @param completion Called when the download finishes. Returns the local file path on success, or
+/// `NCError` on failure.
 /// @param cancelBlock Called if the download is cancelled.
 /// @warning This is a file downloader only and does not modify the message object.
 ///
@@ -232,13 +248,15 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 - (void)downloadMediaFile:(NSString *_Nonnull)fileName
                  mediaUrl:(NSString *_Nonnull)mediaUrl
                  progress:(nullable void (^)(int progress))progressBlock
-               completion:(nullable void (^)(NSString * _Nullable mediaPath, NCError * _Nullable error))completion
+               completion:(nullable void (^)(NSString *_Nullable mediaPath,
+                                             NCError *_Nullable error))completion
                    cancel:(nullable void (^)(void))cancelBlock;
 
 /// Cancels an in-progress media download.
 ///
 /// @param clientId The message identifier.
-/// @return `YES` if the cancellation succeeded; `NO` if the download already completed or the message does not exist.
+/// @return `YES` if the cancellation succeeded; `NO` if the download already completed or the
+/// message does not exist.
 - (BOOL)cancelDownloadMediaMessage:(long)clientId;
 
 #pragma mark - User & Group Info
@@ -294,21 +312,24 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// Updates the current user's profile.
 ///
 /// @param profile The user profile to update.
-/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or `(errorKeys, error)` on failure.
+/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or
+/// `(errorKeys, error)` on failure.
 - (void)updateMyUserProfile:(NCUserProfile *)profile
-                 completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion;
+                 completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                               NCError *_Nullable error))completion;
 
 /// Sets friend info for the specified user.
 ///
 /// @param userId The user identifier.
 /// @param remark The friend remark (max 64 characters). Pass nil or empty string to clear.
 /// @param extProfile Extended profile information.
-/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or `(errorKeys, error)` on failure.
+/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or
+/// `(errorKeys, error)` on failure.
 - (void)setFriendInfo:(NSString *)userId
                remark:(nullable NSString *)remark
-           extProfile:(nullable NSDictionary<NSString *, NSString*> *)extProfile
-           completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion;
-
+           extProfile:(nullable NSDictionary<NSString *, NSString *> *)extProfile
+           completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                         NCError *_Nullable error))completion;
 
 #pragma mark Group Info
 
@@ -346,10 +367,12 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// Updates group info on the server.
 ///
 /// @param groupInfo The group info to update. `groupId` is required.
-/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or `(errorKeys, error)` on failure.
+/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or
+/// `(errorKeys, error)` on failure.
 - (void)updateGroupInfo:(NCGroupInfo *)groupInfo
-             completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion NS_SWIFT_NAME(updateGroupInfo(_:completion:));
-
+             completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                           NCError *_Nullable error))completion
+    NS_SWIFT_NAME(updateGroupInfo(_:completion:));
 
 /// Sets a group member's profile.
 ///
@@ -357,12 +380,14 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// @param userId The user identifier. The logged-in user's own ID is supported.
 /// @param nickname The member nickname (max 64 characters). Pass nil or empty string to clear.
 /// @param extra Additional information (max 128 characters).
-/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or `(errorKeys, error)` on failure.
+/// @param completion Called when the update finishes. Returns `(nil, nil)` on success, or
+/// `(errorKeys, error)` on failure.
 - (void)setGroupMemberInfo:(NSString *)groupId
                     userId:(NSString *)userId
                   nickname:(nullable NSString *)nickname
                      extra:(nullable NSString *)extra
-                completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion;
+                completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                              NCError *_Nullable error))completion;
 
 #pragma mark Group Member Profile (Optional)
 
@@ -374,7 +399,8 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// @param userId The user identifier.
 /// @param groupId The group identifier.
 /// @return The cached group member profile, or nil if not cached.
-- (nullable NCChatUIUserInfo *)getGroupUserInfoCache:(NSString *)userId withGroupId:(NSString *)groupId;
+- (nullable NCChatUIUserInfo *)getGroupUserInfoCache:(NSString *)userId
+                                         withGroupId:(NSString *)groupId;
 
 /// Updates the cached group member profile.
 ///
@@ -384,7 +410,9 @@ FOUNDATION_EXPORT NSString *const NCChatUIConversationCellOnlineStatusUpdateNoti
 /// @param userInfo The updated user info.
 /// @param userId The user identifier.
 /// @param groupId The group identifier.
-- (void)refreshGroupUserInfoCache:(NCChatUIUserInfo *)userInfo withUserId:(NSString *)userId withGroupId:(NSString *)groupId;
+- (void)refreshGroupUserInfoCache:(NCChatUIUserInfo *)userInfo
+                       withUserId:(NSString *)userId
+                      withGroupId:(NSString *)groupId;
 
 /// Clears all cached group member profiles.
 ///

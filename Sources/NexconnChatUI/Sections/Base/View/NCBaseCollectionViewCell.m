@@ -17,18 +17,18 @@
     return self;
 }
 
-- (instancetype)init{
+- (instancetype)init {
     self = [super init];
-    if(self){
+    if (self) {
         [self updateRTLUI];
     }
     return self;
 }
 
-- (void)updateRTLUI{
+- (void)updateRTLUI {
     if ([NCSemanticContext isRTL]) {
         self.contentView.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-    }else{
+    } else {
         self.contentView.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
     }
 }

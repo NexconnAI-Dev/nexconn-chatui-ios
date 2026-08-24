@@ -9,8 +9,8 @@
 #import "NCChannelListBaseCell.h"
 #import "NCChannelListDetailContentView.h"
 #import "NCChannelListStatusView.h"
-#import "NCMessageBubbleTipView.h"
 #import "NCChatUIThemeDefine.h"
+#import "NCMessageBubbleTipView.h"
 #import "NCOnlineStatusView.h"
 #import <UIKit/UIKit.h>
 
@@ -65,7 +65,8 @@
 /// Whether to show unread count number in the bubbleTipView when there are unread messages.
 ///
 /// Default is YES.
-/// You can configure this in the willDisplayConversationTableCell:atIndexPath: callback of NCChannelListViewController.
+/// You can configure this in the willDisplayConversationTableCell:atIndexPath: callback of
+/// NCChannelListViewController.
 @property (nonatomic, assign) BOOL isShowNotificationNumber;
 
 /// Whether to hide the sender name in group channel cells.

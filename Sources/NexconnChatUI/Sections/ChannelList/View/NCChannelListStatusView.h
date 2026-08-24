@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCChannelModel.h"
-#import <UIKit/UIKit.h>
 #import "NCBaseImageView.h"
 #import "NCBaseView.h"
+#import "NCChannelModel.h"
+#import <UIKit/UIKit.h>
 @interface NCChannelListStatusView : NCBaseView
 
 @property (nonatomic, strong) NCBaseImageView *conversationNotificationStatusView;

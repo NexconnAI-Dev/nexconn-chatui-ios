@@ -7,9 +7,9 @@
 //
 
 #import "NCStreamContentViewModel.h"
-#import "NCStreamContentView.h"
 #import "NCChatUICommonDefine.h"
 #import "NCMessageCellTool.h"
+#import "NCStreamContentView.h"
 extern CGFloat const ncTextLeadingX;
 @implementation NCStreamContentViewModel
 
@@ -19,7 +19,6 @@ extern CGFloat const ncTextLeadingX;
 
 - (instancetype)init {
     if (self = [super init]) {
-
     }
     return self;
 }
@@ -29,10 +28,10 @@ extern CGFloat const ncTextLeadingX;
 }
 
 - (CGFloat)contentMaxWidth {
-    return [NCMessageCellTool getMessageContentViewMaxWidth] - ncTextLeadingX*2;
+    return [NCMessageCellTool getMessageContentViewMaxWidth] - ncTextLeadingX * 2;
 }
 
-#pragma mark -- NCStreamViewModelProtocol
+#pragma mark-- NCStreamViewModelProtocol
 
 - (CGSize)calculateContentSize {
     return CGSizeMake(0, 0);

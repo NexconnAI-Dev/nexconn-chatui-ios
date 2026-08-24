@@ -68,7 +68,8 @@
  - Returns: A `NCFMResultSet` on success; `nil` on failure
  */
 
-+ (instancetype)resultSetWithStatement:(NCFMStatement *)statement usingParentDatabase:(NCFMDatabase *)aDB;
++ (instancetype)resultSetWithStatement:(NCFMStatement *)statement
+                   usingParentDatabase:(NCFMDatabase *)aDB;
 
 /** Close result set */
 
@@ -82,8 +83,8 @@
 
 /** Retrieve next row for result set.
 
- You must always invoke `next` or `nextWithError` before attempting to access the values returned in a query, even if
- you're only expecting one.
+ You must always invoke `next` or `nextWithError` before attempting to access the values returned in
+ a query, even if you're only expecting one.
 
  - Returns: `YES` if row successfully retrieved; `NO` if end of result set reached
 
@@ -94,8 +95,8 @@
 
 /** Retrieve next row for result set.
 
-  You must always invoke `next` or `nextWithError` before attempting to access the values returned in a query, even if
- you're only expecting one.
+  You must always invoke `next` or `nextWithError` before attempting to access the values returned
+ in a query, even if you're only expecting one.
 
  @param outErr A 'NSError' object to receive any error object (if any).
 
@@ -112,8 +113,9 @@
 
  @see next
 
- @warning The `hasAnotherRow` method must follow a call to `<next>`. If the previous database interaction was something
- other than a call to `next`, then this method may return `NO`, whether there is another row of data or not.
+ @warning The `hasAnotherRow` method must follow a call to `<next>`. If the previous database
+ interaction was something other than a call to `next`, then this method may return `NO`, whether
+ there is another row of data or not.
  */
 
 - (BOOL)hasAnotherRow;
@@ -338,8 +340,8 @@
 
  @param columnName `NSString` value of the name of the column.
 
- - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this returns `[NSNull null]`
- object.
+ - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this
+ returns `[NSNull null]` object.
 
  @see objectForKeyedSubscript:
  */
@@ -350,8 +352,8 @@
 
  @param columnIdx Zero-based index for column.
 
- - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this returns `[NSNull null]`
- object.
+ - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this
+ returns `[NSNull null]` object.
 
  @see objectAtIndexedSubscript:
  */
@@ -360,8 +362,8 @@
 
 /** Result set object for column.
 
- This method allows the use of the "boxed" syntax supported in Modern Objective-C. For example, by defining this method,
- the following syntax is now supported:
+ This method allows the use of the "boxed" syntax supported in Modern Objective-C. For example, by
+ defining this method, the following syntax is now supported:
 
     id result = rs[@"employee_name"];
 
@@ -375,16 +377,16 @@
 
  @param columnName `NSString` value of the name of the column.
 
- - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this returns `[NSNull null]`
- object.
+ - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this
+ returns `[NSNull null]` object.
  */
 
 - (id)objectForKeyedSubscript:(NSString *)columnName;
 
 /** Result set object for column.
 
- This method allows the use of the "boxed" syntax supported in Modern Objective-C. For example, by defining this method,
- the following syntax is now supported:
+ This method allows the use of the "boxed" syntax supported in Modern Objective-C. For example, by
+ defining this method, the following syntax is now supported:
 
     id result = rs[0];
 
@@ -398,8 +400,8 @@
 
  @param columnIdx Zero-based index for column.
 
- - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this returns `[NSNull null]`
- object.
+ - Returns: Either `NSNumber`, `NSString`, `NSData`, or `NSNull`. If the column was `NULL`, this
+ returns `[NSNull null]` object.
  */
 
 - (id)objectAtIndexedSubscript:(int)columnIdx;
@@ -410,9 +412,10 @@
 
  - Returns: `NSData` value of the result set's column.
 
- @warning If you are going to use this data after you iterate over the next row, or after you close the
-result set, make sure to make a copy of the data first (or just use `<dataForColumn:>`/`<dataForColumnIndex:>`)
-If you don't, you're going to be in a world of hurt when you try and use the data.
+ @warning If you are going to use this data after you iterate over the next row, or after you close
+the result set, make sure to make a copy of the data first (or just use
+`<dataForColumn:>`/`<dataForColumnIndex:>`) If you don't, you're going to be in a world of hurt when
+you try and use the data.
 
  */
 
@@ -424,9 +427,10 @@ If you don't, you're going to be in a world of hurt when you try and use the dat
 
  - Returns: `NSData` value of the result set's column.
 
- @warning If you are going to use this data after you iterate over the next row, or after you close the
- result set, make sure to make a copy of the data first (or just use `<dataForColumn:>`/`<dataForColumnIndex:>`)
- If you don't, you're going to be in a world of hurt when you try and use the data.
+ @warning If you are going to use this data after you iterate over the next row, or after you close
+ the result set, make sure to make a copy of the data first (or just use
+ `<dataForColumn:>`/`<dataForColumnIndex:>`) If you don't, you're going to be in a world of hurt
+ when you try and use the data.
 
  */
 
@@ -463,8 +467,8 @@ If you don't, you're going to be in a world of hurt when you try and use the dat
 
  @see resultDictionary
 
- @warning **Deprecated**: Please use `<resultDictionary>` instead.  Also, beware that `<resultDictionary>` is case
- sensitive!
+ @warning **Deprecated**: Please use `<resultDictionary>` instead.  Also, beware that
+ `<resultDictionary>` is case sensitive!
  */
 
 - (NSDictionary *)resultDict __attribute__((deprecated));
@@ -475,8 +479,8 @@ If you don't, you're going to be in a world of hurt when you try and use the dat
 
 /** Performs `setValue` to yield support for key value observing.
 
- @param object The object for which the values will be set. This is the key-value-coding compliant object that you
- might, for example, observe.
+ @param object The object for which the values will be set. This is the key-value-coding compliant
+ object that you might, for example, observe.
 
  */
 

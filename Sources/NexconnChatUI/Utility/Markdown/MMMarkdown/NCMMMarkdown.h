@@ -12,10 +12,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,37 +25,41 @@
 // THE SOFTWARE.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCMMDocument.h"
+#import <Foundation/Foundation.h>
 //! Project version number for MMMarkdown.
 FOUNDATION_EXPORT double MMMarkdownVersionNumber;
 
 //! Project version string for MMMarkdown.
 FOUNDATION_EXPORT const unsigned char MMMarkdownVersionString[];
 
-typedef NS_OPTIONS(NSUInteger, MMMarkdownExtensions)
-{
+typedef NS_OPTIONS(NSUInteger, MMMarkdownExtensions) {
     MMMarkdownExtensionsNone = 0,
-    
-    MMMarkdownExtensionsAutolinkedURLs      = 1 << 0,
-//    MMMarkdownExtensionsCrossReferences     = 1 << 1,
-//    MMMarkdownExtensionsCustomAttributes    = 1 << 2,
-    MMMarkdownExtensionsFencedCodeBlocks    = 1 << 3,
-//    MMMarkdownExtensionsFootnotes           = 1 << 4,
-    MMMarkdownExtensionsHardNewlines        = 1 << 5,
-    MMMarkdownExtensionsStrikethroughs      = 1 << 6,
-//    MMMarkdownExtensionsTableCaptions       = 1 << 7,
-    MMMarkdownExtensionsTables              = 1 << 8,
-    MMMarkdownExtensionsUnderscoresInWords  = 1 << 9,
-    
-    MMMarkdownExtensionsGitHubFlavored = MMMarkdownExtensionsAutolinkedURLs|MMMarkdownExtensionsFencedCodeBlocks|MMMarkdownExtensionsHardNewlines|MMMarkdownExtensionsStrikethroughs|MMMarkdownExtensionsTables|MMMarkdownExtensionsUnderscoresInWords,
+
+    MMMarkdownExtensionsAutolinkedURLs = 1 << 0,
+    //    MMMarkdownExtensionsCrossReferences     = 1 << 1,
+    //    MMMarkdownExtensionsCustomAttributes    = 1 << 2,
+    MMMarkdownExtensionsFencedCodeBlocks = 1 << 3,
+    //    MMMarkdownExtensionsFootnotes           = 1 << 4,
+    MMMarkdownExtensionsHardNewlines = 1 << 5,
+    MMMarkdownExtensionsStrikethroughs = 1 << 6,
+    //    MMMarkdownExtensionsTableCaptions       = 1 << 7,
+    MMMarkdownExtensionsTables = 1 << 8,
+    MMMarkdownExtensionsUnderscoresInWords = 1 << 9,
+
+    MMMarkdownExtensionsGitHubFlavored = MMMarkdownExtensionsAutolinkedURLs |
+                                         MMMarkdownExtensionsFencedCodeBlocks |
+                                         MMMarkdownExtensionsHardNewlines |
+                                         MMMarkdownExtensionsStrikethroughs |
+                                         MMMarkdownExtensionsTables |
+                                         MMMarkdownExtensionsUnderscoresInWords,
 };
 
 @interface NCMMMarkdown : NSObject
 
 /*!
  Convert a Markdown string to HTML.
- 
+
  @param string
     A Markdown string. Must not be nil.
  @param error
@@ -63,11 +67,12 @@ typedef NS_OPTIONS(NSUInteger, MMMarkdownExtensions)
  @result
     Returns an HTML string.
  */
-+ (NSString *)HTMLStringWithMarkdown:(NSString *)string error:(__autoreleasing NSError **)error __attribute__((nonnull(1)));
++ (NSString *)HTMLStringWithMarkdown:(NSString *)string
+                               error:(__autoreleasing NSError **)error __attribute__((nonnull(1)));
 
 /*!
  Convert a Markdown string to HTML.
- 
+
  @param string
     A Markdown string. Must not be nil.
  @param extensions
@@ -77,9 +82,11 @@ typedef NS_OPTIONS(NSUInteger, MMMarkdownExtensions)
  @result
     Returns an HTML string.
  */
-+ (NSString *)HTMLStringWithMarkdown:(NSString *)string extensions:(MMMarkdownExtensions)extensions error:(__autoreleasing NSError **)error __attribute__((nonnull(1)));
++ (NSString *)HTMLStringWithMarkdown:(NSString *)string
+                          extensions:(MMMarkdownExtensions)extensions
+                               error:(__autoreleasing NSError **)error __attribute__((nonnull(1)));
 
 + (NCMMDocument *)HTMLDocumentWithMarkdown:(NSString *)string
-                              extensions:(MMMarkdownExtensions)extensions;
+                                extensions:(MMMarkdownExtensions)extensions;
 
 @end

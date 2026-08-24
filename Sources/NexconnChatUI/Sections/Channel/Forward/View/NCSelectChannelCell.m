@@ -7,16 +7,16 @@
 //
 
 #import "NCSelectChannelCell.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCUserInfoCacheManager.h"
-#import "NCImageView.h"
-#import "NCChannelModel.h"
 #import "NCBaseImageView.h"
 #import "NCBaseLabel.h"
+#import "NCChannelModel.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIGroup.h"
 #import "NCChatUIUserInfo.h"
+#import "NCChatUIUtility.h"
+#import "NCImageView.h"
 #import "NCInfoUpdateCenter.h"
+#import "NCUserInfoCacheManager.h"
 @interface NCSelectChannelCell () <NCInfoUpdateDelegate>
 /*!
  The cell's data model.
@@ -33,7 +33,8 @@
 
 @implementation NCSelectChannelCell
 #pragma mark - Life Cycle
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -41,7 +42,7 @@
         [self.contentView addSubview:self.selectedImageView];
         [self.contentView addSubview:self.headerImageView];
         [self.contentView addSubview:self.nameLabel];
-        
+
         [self registerObserver];
     }
     return self;
@@ -65,28 +66,32 @@
     NCChannelModel *channelModel = [[NCChannelModel alloc] initWithChannel:conversation extend:nil];
     UIImage *defaultHeaderImg = [NCChatUIUtility defaultConversationHeaderImage:channelModel];
     [self.headerImageView setPlaceholderImage:defaultHeaderImg];
-    
+
     if (ifSelected) {
         [self.selectedImageView setImage:NCDynamicImage(@"channel_msg_cell_select_img")];
     } else {
         [self.selectedImageView setImage:NCDynamicImage(@"channel_msg_cell_unselect_img")];
     }
     if (conversation.channelType == NCChannelTypeGroup) {
-        NCChatUIGroup *group = [[NCUserInfoCacheManager sharedManager] getGroupInfo:conversation.channelId];
+        NCChatUIGroup *group =
+            [[NCUserInfoCacheManager sharedManager] getGroupInfo:conversation.channelId];
         if (group) {
             [self.headerImageView setImageURL:[NSURL URLWithString:group.avatarUrl]];
             [self.nameLabel setText:group.groupName];
         } else {
-            [self.headerImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_group_portrait_img")];
+            [self.headerImageView
+                setPlaceholderImage:NCDynamicImage(@"channel-list_cell_group_portrait_img")];
             [self.nameLabel setText:conversation.channelId];
         }
     } else {
-        NCChatUIUserInfo *userInfo = [[NCUserInfoCacheManager sharedManager] getUserInfo:conversation.channelId];
+        NCChatUIUserInfo *userInfo =
+            [[NCUserInfoCacheManager sharedManager] getUserInfo:conversation.channelId];
         if (userInfo) {
             [self.headerImageView setImageURL:[NSURL URLWithString:userInfo.avatarUrl]];
             [self.nameLabel setText:[NCChatUIUtility getDisplayName:userInfo]];
         } else {
-            [self.headerImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+            [self.headerImageView
+                setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
             [self.nameLabel setText:conversation.channelId];
         }
     }
@@ -96,7 +101,8 @@
 
 - (void)resetSubviews {
     [self.selectedImageView setImage:NCDynamicImage(@"channel_msg_cell_unselect_img")];
-    [self.headerImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+    [self.headerImageView
+        setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
     self.nameLabel.text = nil;
 }
 
@@ -121,11 +127,11 @@
     if (![self.model.channelId isEqualToString:groupInfo.groupId]) {
         return;
     }
-    
+
     if (self.model.channelType != NCChannelTypeGroup) {
         return;
     }
-    
+
     if (groupInfo) {
         [self.headerImageView setImageURL:[NSURL URLWithString:groupInfo.avatarUrl]];
         [self.nameLabel setText:groupInfo.groupName];
@@ -138,7 +144,8 @@
     if (!_headerImageView) {
         _selectedImageView = [[NCBaseImageView alloc] init];
         if ([NCChatUIUtility isRTL]) {
-            // At this point, self.bounds is (origin = (x = 0, y = 0), size = (width = 320, height = 44)).
+            // At this point, self.bounds is (origin = (x = 0, y = 0), size = (width = 320, height =
+            // 44)).
             _selectedImageView.frame = CGRectMake(self.bounds.size.width + 20 + 5, 25, 20, 20);
         } else {
             _selectedImageView.frame = CGRectMake(10, 25, 20, 20);
@@ -152,7 +159,8 @@
     if (!_headerImageView) {
         _headerImageView = [[NCImageView alloc] init];
         _headerImageView.contentMode = UIViewContentModeScaleAspectFill;
-        [_headerImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+        [_headerImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
         if ([NCChatUIUtility isRTL]) {
             _headerImageView.frame = CGRectMake(self.bounds.size.width - 45, 5, 60, 60);
         } else {

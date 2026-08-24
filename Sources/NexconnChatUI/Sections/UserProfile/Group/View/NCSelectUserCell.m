@@ -7,10 +7,10 @@
 //
 
 #import "NCSelectUserCell.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
-NSString  * const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
+#import "NCChatUIUtility.h"
+NSString *const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
 
 #define NCSelectUserCellSelectLeading 12
 #define NCSelectUserCellSelectSize 20
@@ -30,7 +30,6 @@ NSString  * const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
     [self.contentStackView addArrangedSubview:self.selectImageView];
     [self.contentStackView addArrangedSubview:self.portraitImageView];
     [self.contentStackView addArrangedSubview:self.nameLabel];
-
 }
 
 - (void)appendViewAtEnd:(UIView *)view {
@@ -44,8 +43,9 @@ NSString  * const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
     [self updateLineViewConstraints:80 trailing:-10];
     [NSLayoutConstraint activateConstraints:@[
         [self.portraitImageView.widthAnchor constraintEqualToConstant:NCSelectUserCellPortraitSize],
-        [self.portraitImageView.heightAnchor constraintEqualToConstant:NCSelectUserCellPortraitSize],
-        
+        [self.portraitImageView.heightAnchor
+            constraintEqualToConstant:NCSelectUserCellPortraitSize],
+
         [self.selectImageView.widthAnchor constraintEqualToConstant:NCSelectUserCellSelectSize],
         [self.selectImageView.heightAnchor constraintEqualToConstant:NCSelectUserCellSelectSize]
     ]];
@@ -53,17 +53,17 @@ NSString  * const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
 
 - (void)updateSelectState:(NCSelectState)state {
     switch (state) {
-        case NCSelectStateUnselect:
-            self.selectImageView.image = NCDynamicImage(@"channel_msg_cell_unselect_img");
-            break;
-        case NCSelectStateSelect:
-            self.selectImageView.image = NCDynamicImage(@"channel_msg_cell_select_img");
-            break;
-        case NCSelectStateDisable:
-            self.selectImageView.image = NCDynamicImage(@"group_member_disable_select_img");
-            break;
-        default:
-            break;
+    case NCSelectStateUnselect:
+        self.selectImageView.image = NCDynamicImage(@"channel_msg_cell_unselect_img");
+        break;
+    case NCSelectStateSelect:
+        self.selectImageView.image = NCDynamicImage(@"channel_msg_cell_select_img");
+        break;
+    case NCSelectStateDisable:
+        self.selectImageView.image = NCDynamicImage(@"group_member_disable_select_img");
+        break;
+    default:
+        break;
     }
 }
 
@@ -74,12 +74,13 @@ NSString  * const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
         _portraitImageView = [[NCImageView alloc] init];
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-            _portraitImageView.layer.cornerRadius = NCSelectUserCellPortraitSize/2;
-        }else{
+            _portraitImageView.layer.cornerRadius = NCSelectUserCellPortraitSize / 2;
+        } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
         _portraitImageView.layer.masksToBounds = YES;
-        [_portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+        [_portraitImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
         _portraitImageView.translatesAutoresizingMaskIntoConstraints = NO;
     }
     return _portraitImageView;
@@ -91,19 +92,21 @@ NSString  * const NCSelectUserCellIdentifier = @"NCSelectUserCellIdentifier";
         _nameLabel.textColor = NCDynamicColor(@"text_primary_color");
         _nameLabel.font = [UIFont systemFontOfSize:NCSelectUserCellNameFont];
         _nameLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        [_nameLabel setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
-        [_nameLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+        [_nameLabel setContentHuggingPriority:UILayoutPriorityDefaultLow
+                                      forAxis:UILayoutConstraintAxisHorizontal];
+        [_nameLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
+                                                    forAxis:UILayoutConstraintAxisHorizontal];
         _nameLabel.textAlignment = NSTextAlignmentNatural;
     }
     return _nameLabel;
 }
 
 - (NCBaseImageView *)selectImageView {
-   if (!_selectImageView) {
-       _selectImageView = [[NCBaseImageView alloc] init];
-       _selectImageView.translatesAutoresizingMaskIntoConstraints = NO;
-   }
-   return _selectImageView;
+    if (!_selectImageView) {
+        _selectImageView = [[NCBaseImageView alloc] init];
+        _selectImageView.translatesAutoresizingMaskIntoConstraints = NO;
+    }
+    return _selectImageView;
 }
 
 @end

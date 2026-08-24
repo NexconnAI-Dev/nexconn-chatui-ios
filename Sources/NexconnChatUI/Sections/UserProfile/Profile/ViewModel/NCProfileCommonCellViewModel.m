@@ -7,20 +7,23 @@
 //
 
 #import "NCProfileCommonCellViewModel.h"
-#import "NCProfileCommonTextCell.h"
-#import "NCProfileCommonImageCell.h"
-#import "NCNameEditViewController.h"
 #import "NCChatUICommonDefine.h"
-
+#import "NCNameEditViewController.h"
+#import "NCProfileCommonImageCell.h"
+#import "NCProfileCommonTextCell.h"
 
 @implementation NCProfileCommonCellViewModel
 
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:NCProfileCommonTextCell.class forCellReuseIdentifier:NCProfileTextCellIdentifier];
-    [tableView registerClass:NCProfileCommonImageCell.class forCellReuseIdentifier:NCProfileImageCellIdentifier];
+    [tableView registerClass:NCProfileCommonTextCell.class
+        forCellReuseIdentifier:NCProfileTextCellIdentifier];
+    [tableView registerClass:NCProfileCommonImageCell.class
+        forCellReuseIdentifier:NCProfileImageCellIdentifier];
 }
 
-- (instancetype)initWithCellType:(NCUProfileCellType)type title:(NSString *)title detail:(NSString *)detail {
+- (instancetype)initWithCellType:(NCUProfileCellType)type
+                           title:(NSString *)title
+                          detail:(NSString *)detail {
     self = [super init];
     if (self) {
         self.title = title;
@@ -31,9 +34,12 @@
     return self;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.type == NCUProfileCellTypeText) {
-        NCProfileCommonTextCell *cell = [tableView dequeueReusableCellWithIdentifier:NCProfileTextCellIdentifier forIndexPath:indexPath];
+        NCProfileCommonTextCell *cell =
+            [tableView dequeueReusableCellWithIdentifier:NCProfileTextCellIdentifier
+                                            forIndexPath:indexPath];
         cell.titleLabel.text = self.title;
         cell.detailLabel.text = self.detail;
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -41,14 +47,18 @@
         cell.hideSeparatorLine = self.hideSeparatorLine;
         return cell;
     }
-    
+
     if (self.type == NCUProfileCellTypeImage) {
-        NCProfileCommonImageCell *cell = [tableView dequeueReusableCellWithIdentifier:NCProfileImageCellIdentifier forIndexPath:indexPath];
+        NCProfileCommonImageCell *cell =
+            [tableView dequeueReusableCellWithIdentifier:NCProfileImageCellIdentifier
+                                            forIndexPath:indexPath];
         cell.titleLabel.text = self.title;
         if (self.channelType == NCChannelTypeGroup) {
-            [cell.portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_group_portrait_img")];
+            [cell.portraitImageView
+                setPlaceholderImage:NCDynamicImage(@"channel-list_cell_group_portrait_img")];
         } else {
-            [cell.portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+            [cell.portraitImageView
+                setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
         }
         [cell.portraitImageView setImageURL:[NSURL URLWithString:self.detail]];
         [cell hiddenArrow:self.hiddenArrow];

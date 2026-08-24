@@ -12,8 +12,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NCProfileFooterView : NCBaseView
 
-- (instancetype)initWithTopSpace:(CGFloat)topSpace buttonSpace:(CGFloat)buttonSpace items:(NSArray <NCButtonItem *>*)items;
-
+- (instancetype)initWithTopSpace:(CGFloat)topSpace
+                     buttonSpace:(CGFloat)buttonSpace
+                           items:(NSArray<NCButtonItem *> *)items;
 
 @end
 

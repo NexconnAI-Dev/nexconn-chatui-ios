@@ -12,7 +12,7 @@
 + (NCAlbumModel *)modelWithAsset:(id)asset name:(NSString *)string count:(long)count {
     NCAlbumModel *model = [[NCAlbumModel alloc] init];
     model.asset = asset;
-    model.albumName = string?:@"";
+    model.albumName = string ?: @"";
     model.count = count;
     return model;
 }

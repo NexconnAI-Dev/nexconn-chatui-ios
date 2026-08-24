@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import "NCChatUIUserInfo.h"
 #import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,8 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)dispatchUserInfoUpdate:(NCChatUIUserInfo *)userInfo;
 
-+ (void)dispatchGroupMemberInfoUpdate:(NCChatUIUserInfo *)userInfo
-                               groupId:(NSString *)groupId;
++ (void)dispatchGroupMemberInfoUpdate:(NCChatUIUserInfo *)userInfo groupId:(NSString *)groupId;
 
 + (void)dispatchGroupInfoUpdate:(NCChatUIGroup *)groupInfo;
 @end

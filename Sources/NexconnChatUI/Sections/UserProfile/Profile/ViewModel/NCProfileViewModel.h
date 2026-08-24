@@ -7,8 +7,8 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCProfileCellViewModel.h"
 #import "NCListViewModelProtocol.h"
+#import "NCProfileCellViewModel.h"
 #import "NCProfileFooterViewModel.h"
 
 @class NCProfileViewModel;
@@ -23,15 +23,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param footerViewModel footerViewModel
 /// @return The footer view model processed by the app, or `nil` to use the default
 ///
-- (NCProfileFooterViewModel *)profileViewModel:(NCProfileViewModel *)viewModel willLoadProfileFooterViewModel:(NCProfileFooterViewModel *)footerViewModel ;
+- (NCProfileFooterViewModel *)profileViewModel:(NCProfileViewModel *)viewModel
+                willLoadProfileFooterViewModel:(NCProfileFooterViewModel *)footerViewModel;
 
 /// Called before loading the data source
 /// @param viewModel viewModel
 /// @param profileList The current data source
 /// @return The data source processed by the app, or `nil` to use the default
 ///
-- (NSArray <NSArray <NCProfileCellViewModel*> *> * )profileViewModel:(NCProfileViewModel *)viewModel
-                                        willLoadProfileCellViewModel:(NSArray <NSArray <NCProfileCellViewModel*> *> *)profileList;
+- (NSArray<NSArray<NCProfileCellViewModel *> *> *)
+                profileViewModel:(NCProfileViewModel *)viewModel
+    willLoadProfileCellViewModel:(NSArray<NSArray<NCProfileCellViewModel *> *> *)profileList;
 
 /// Called when the user taps a cell
 ///
@@ -43,17 +45,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)profileViewModel:(NCProfileViewModel *)viewModel
-          viewController:(UIViewController*)viewController
-             tableView:(UITableView *)tableView
-          didSelectRow:(NSIndexPath *)indexPath
+          viewController:(UIViewController *)viewController
+               tableView:(UITableView *)tableView
+            didSelectRow:(NSIndexPath *)indexPath
            cellViewModel:(NCProfileCellViewModel *)cellViewModel;
 @end
 
 /// Profile view model
-@interface NCProfileViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCProfileViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Data source
-@property (nonatomic, strong, readonly) NSArray <NSArray <NCProfileCellViewModel*> *> *profileList;
+@property (nonatomic, strong, readonly) NSArray<NSArray<NCProfileCellViewModel *> *> *profileList;
 
 /// Footer view model
 @property (nonatomic, strong, readonly, nullable) NCProfileFooterViewModel *footerViewModel;

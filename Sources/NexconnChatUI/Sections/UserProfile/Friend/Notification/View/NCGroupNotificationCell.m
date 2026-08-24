@@ -7,17 +7,17 @@
 //
 
 #import "NCGroupNotificationCell.h"
-#import "NCImageView.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
-NSString  * const NCGroupNotificationCellIdentifier = @"NCGroupNotificationCellIdentifier";
+#import "NCChatUIUtility.h"
+#import "NCImageView.h"
+NSString *const NCGroupNotificationCellIdentifier = @"NCGroupNotificationCellIdentifier";
 NSInteger const NCGroupNotificationCellHorizontalMargin = 20;
 
 NSInteger const NCGroupNotificationCellPortraitWidth = 32;
 NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
 
-@interface NCGroupNotificationCell()
+@interface NCGroupNotificationCell ()
 
 /// Right-side container: labTips and labName.
 @property (nonatomic, strong) UIStackView *rightStackView;
@@ -34,13 +34,12 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
 
 @implementation NCGroupNotificationCell
 
-
 - (void)setupView {
     [super setupView];
     self.selectionStyle = UITableViewCellSelectionStyleNone;
-    
+
     [self.paddingContainerView addSubview:self.contentStackView];
-    
+
     [self.topStackView addArrangedSubview:self.portraitImageView];
     [self.rightStackView addArrangedSubview:self.labTips];
     [self.rightStackView addArrangedSubview:self.labName];
@@ -49,7 +48,7 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
 
     [self.contentStackView addArrangedSubview:self.topStackView];
     [self.contentStackView addArrangedSubview:self.bottomStackView];
-    
+
     UIView *placeholder = [UIView new];
     placeholder.translatesAutoresizingMaskIntoConstraints = NO;
     [placeholder setContentHuggingPriority:UILayoutPriorityDefaultLow
@@ -60,7 +59,6 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
     [self.bottomStackView addArrangedSubview:self.labStatus];
 
     [self updateCGColorUI];
-    
 }
 
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
@@ -73,16 +71,25 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
     [self updateLineViewConstraints:NCUserManagementImageCellLineLeading
                            trailing:-NCUserManagementImageCellLineTrailing];
     [NSLayoutConstraint activateConstraints:@[
-           [self.contentStackView.leadingAnchor constraintEqualToAnchor:self.paddingContainerView.leadingAnchor constant:NCUserManagementPadding],
-           [self.contentStackView.trailingAnchor constraintEqualToAnchor:self.paddingContainerView.trailingAnchor constant:-NCUserManagementPadding],
-           [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor constant:NCUserManagementPadding],
-           [self.contentStackView.bottomAnchor constraintEqualToAnchor:self.paddingContainerView.bottomAnchor constant:-NCUserManagementPadding],
-           
-           [self.portraitImageView.widthAnchor constraintEqualToConstant:NCGroupNotificationCellPortraitWidth],
-           [self.portraitImageView.heightAnchor constraintEqualToConstant:NCGroupNotificationCellPortraitWidth],
-           [self.btnReject.heightAnchor constraintEqualToConstant:34],
-           [self.btnApprove.heightAnchor constraintEqualToConstant:34]
-       ]];
+        [self.contentStackView.leadingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.leadingAnchor
+                           constant:NCUserManagementPadding],
+        [self.contentStackView.trailingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.trailingAnchor
+                           constant:-NCUserManagementPadding],
+        [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor
+                                                        constant:NCUserManagementPadding],
+        [self.contentStackView.bottomAnchor
+            constraintEqualToAnchor:self.paddingContainerView.bottomAnchor
+                           constant:-NCUserManagementPadding],
+
+        [self.portraitImageView.widthAnchor
+            constraintEqualToConstant:NCGroupNotificationCellPortraitWidth],
+        [self.portraitImageView.heightAnchor
+            constraintEqualToConstant:NCGroupNotificationCellPortraitWidth],
+        [self.btnReject.heightAnchor constraintEqualToConstant:34],
+        [self.btnApprove.heightAnchor constraintEqualToConstant:34]
+    ]];
 }
 
 - (void)showPortrait:(NSString *)url {
@@ -101,7 +108,8 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         return NO;
     }
     // Received invitation.
-    BOOL invited = application.status == NCGroupApplicationStatusInviteeUnhandled && application.direction == NCGroupApplicationDirectionInvitationReceived;
+    BOOL invited = application.status == NCGroupApplicationStatusInviteeUnhandled &&
+                   application.direction == NCGroupApplicationDirectionInvitationReceived;
     if (invited) {
         return YES;
     }
@@ -112,10 +120,10 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
     }
     // Sent invitation.
     BOOL isInvite = application.direction == NCGroupApplicationDirectionInvitationSent;
-    if(isInvite) {
+    if (isInvite) {
         return NO;
     }
-    
+
     if (application.status == NCGroupApplicationStatusAdminUnhandled) {
         return YES;
     }
@@ -138,41 +146,41 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         } else { // Display the applicant.
             [self showPortrait:viewModel.application.joinMemberInfo.avatarUrl];
         }
-      
+
     } else if (viewModel.application.direction == NCGroupApplicationDirectionApplicationSent) {
-            // Display the applicant.
+        // Display the applicant.
         [self showPortrait:viewModel.application.joinMemberInfo.avatarUrl];
     } else if (viewModel.application.direction == NCGroupApplicationDirectionInvitationSent) {
         // Display the inviter.
         [self showPortrait:viewModel.application.inviterInfo.avatarUrl];
-}
+    }
     self.labStatus.text = [self statusString:viewModel.application];
 }
 
 - (NSString *)statusString:(NCGroupApplicationInfo *)application {
-    NSString *status= @"";
+    NSString *status = @"";
     switch (application.status) {
-        case NCGroupApplicationStatusAdminUnhandled:
-            status = NCUILocalizedString(@"group_application_status_manager_un_handled");
-            break;
-        case NCGroupApplicationStatusAdminRefused:
-            status = NCUILocalizedString(@"group_application_status_manager_refused");
-            break;
-        case NCGroupApplicationStatusInviteeUnhandled:
-            status = NCUILocalizedString(@"group_application_status_invitee_un_handled");
-            break;
-        case NCGroupApplicationStatusInviteeRefused:
-            status = NCUILocalizedString(@"group_application_status_invitee_refused");
-            break;
-        case NCGroupApplicationStatusJoined:
-            status = NCUILocalizedString(@"group_application_status_joined");
-            break;
-        case NCGroupApplicationStatusExpired:
-            status = NCUILocalizedString(@"group_application_status_expired");
-            break;
-        default:
-            self.labStatus.text = @"";
-            break;
+    case NCGroupApplicationStatusAdminUnhandled:
+        status = NCUILocalizedString(@"group_application_status_manager_un_handled");
+        break;
+    case NCGroupApplicationStatusAdminRefused:
+        status = NCUILocalizedString(@"group_application_status_manager_refused");
+        break;
+    case NCGroupApplicationStatusInviteeUnhandled:
+        status = NCUILocalizedString(@"group_application_status_invitee_un_handled");
+        break;
+    case NCGroupApplicationStatusInviteeRefused:
+        status = NCUILocalizedString(@"group_application_status_invitee_refused");
+        break;
+    case NCGroupApplicationStatusJoined:
+        status = NCUILocalizedString(@"group_application_status_joined");
+        break;
+    case NCGroupApplicationStatusExpired:
+        status = NCUILocalizedString(@"group_application_status_expired");
+        break;
+    default:
+        self.labStatus.text = @"";
+        break;
     }
     return status;
 }
@@ -194,7 +202,8 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
 - (UIButton *)btnReject {
     if (!_btnReject) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [btn setTitle:NCUILocalizedString(@"friend_application_refuse") forState:UIControlStateNormal];
+        [btn setTitle:NCUILocalizedString(@"friend_application_refuse")
+             forState:UIControlStateNormal];
         btn.backgroundColor = NCDynamicColor(@"common_background_color");
         [btn setTitleColor:NCDynamicColor(@"hint_color") forState:UIControlStateNormal];
         btn.layer.borderColor = NCDynamicColor(@"line_background_color").CGColor;
@@ -203,11 +212,12 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         btn.layer.borderWidth = 1;
         btn.layer.cornerRadius = 6;
         [btn addTarget:self
-                action:@selector(rejectApplication)
-      forControlEvents:UIControlEventTouchUpInside];
+                      action:@selector(rejectApplication)
+            forControlEvents:UIControlEventTouchUpInside];
         [btn sizeToFit];
         btn.translatesAutoresizingMaskIntoConstraints = NO;
-        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [btn setContentHuggingPriority:UILayoutPriorityRequired
                                forAxis:UILayoutConstraintAxisHorizontal];
         _btnReject = btn;
@@ -218,7 +228,8 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
 - (UIButton *)btnApprove {
     if (!_btnApprove) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [btn setTitle:NCUILocalizedString(@"friend_application_accept") forState:UIControlStateNormal];
+        [btn setTitle:NCUILocalizedString(@"friend_application_accept")
+             forState:UIControlStateNormal];
         [btn setBackgroundColor:NCDynamicColor(@"primary_color")];
         [btn setTitleColor:NCDynamicColor(@"control_title_white_color")
                   forState:UIControlStateNormal];
@@ -226,11 +237,12 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         btn.layer.cornerRadius = 6;
         btn.titleLabel.font = [UIFont systemFontOfSize:14];
         [btn addTarget:self
-                action:@selector(approveApplication)
-      forControlEvents:UIControlEventTouchUpInside];
+                      action:@selector(approveApplication)
+            forControlEvents:UIControlEventTouchUpInside];
         [btn sizeToFit];
         btn.translatesAutoresizingMaskIntoConstraints = NO;
-        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [btn setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [btn setContentHuggingPriority:UILayoutPriorityRequired
                                forAxis:UILayoutConstraintAxisHorizontal];
         _btnApprove = btn;
@@ -243,18 +255,19 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         _portraitImageView = [NCImageView new];
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-            _portraitImageView.layer.cornerRadius = NCGroupNotificationCellPortraitWidth/2;
+            _portraitImageView.layer.cornerRadius = NCGroupNotificationCellPortraitWidth / 2;
         } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
-        _portraitImageView.bounds = CGRectMake(0, 0, NCGroupNotificationCellPortraitWidth, NCGroupNotificationCellPortraitWidth);
+        _portraitImageView.bounds = CGRectMake(0, 0, NCGroupNotificationCellPortraitWidth,
+                                               NCGroupNotificationCellPortraitWidth);
         _portraitImageView.layer.masksToBounds = YES;
-        [_portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_group_portrait_img")];
-
+        [_portraitImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_group_portrait_img")];
     }
     return _portraitImageView;
 }
- 
+
 - (UILabel *)labName {
     if (!_labName) {
         UILabel *lab = [UILabel new];
@@ -279,7 +292,8 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         lab.accessibilityLabel = @"labTips";
         lab.numberOfLines = 2;
         lab.translatesAutoresizingMaskIntoConstraints = NO;
-        [lab setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [lab setContentHuggingPriority:UILayoutPriorityDefaultLow
                                forAxis:UILayoutConstraintAxisHorizontal];
         [lab setContentCompressionResistancePriority:UILayoutPriorityRequired
@@ -295,14 +309,14 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
         lab.textColor = NCDynamicColor(@"text_secondary_color");
         lab.font = [UIFont systemFontOfSize:12];
         lab.translatesAutoresizingMaskIntoConstraints = NO;
-        [lab setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                             forAxis:UILayoutConstraintAxisHorizontal];
         [lab setContentHuggingPriority:UILayoutPriorityRequired
                                forAxis:UILayoutConstraintAxisHorizontal];
         _labStatus = lab;
     }
     return _labStatus;
 }
-
 
 - (UIStackView *)rightStackView {
     if (!_rightStackView) {
@@ -342,7 +356,6 @@ NSInteger const NCGroupNotificationOperationCellBtnMinWidth = 45;
     }
     return _bottomStackView;
 }
-
 
 - (UIStackView *)topStackView {
     if (!_topStackView) {

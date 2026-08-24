@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NCProfileViewModel ()
 
-@property (nonatomic, strong) NSArray <NSArray <NCProfileCellViewModel*> *> *profileList;
+@property (nonatomic, strong) NSArray<NSArray<NCProfileCellViewModel *> *> *profileList;
 
 - (void)configFooterViewModel:(NCProfileFooterViewModel *)viewModel;
 

@@ -9,7 +9,7 @@
 #import "NCProfileGenderCell.h"
 #import "NCChatUICommonDefine.h"
 
-NSString  * const NCProfileGenderCellIdentifier = @"NCProfileGenderCellIdentifier";
+NSString *const NCProfileGenderCellIdentifier = @"NCProfileGenderCellIdentifier";
 
 #define NCProfileGenderCellTitleFontSize 17
 #define NCProfileGenderCellArrowWidth 20
@@ -25,9 +25,8 @@ NSString  * const NCProfileGenderCellIdentifier = @"NCProfileGenderCellIdentifie
 
 - (void)setupConstraints {
     [super setupConstraints];
-    [self updateLineViewConstraints:NCUserManagementPadding
-                           trailing:-NCUserManagementPadding];
-    
+    [self updateLineViewConstraints:NCUserManagementPadding trailing:-NCUserManagementPadding];
+
     [NSLayoutConstraint activateConstraints:@[
         [self.selectView.widthAnchor constraintEqualToConstant:NCProfileGenderCellArrowWidth],
         [self.selectView.heightAnchor constraintEqualToConstant:NCProfileGenderCellArrowHeight],
@@ -54,7 +53,8 @@ NSString  * const NCProfileGenderCellIdentifier = @"NCProfileGenderCellIdentifie
 
 - (NCBaseImageView *)selectView {
     if (!_selectView) {
-        _selectView = [[NCBaseImageView alloc] initWithImage:NCDynamicImage(@"group_manage_gender_cell_check_img")];
+        _selectView = [[NCBaseImageView alloc]
+            initWithImage:NCDynamicImage(@"group_manage_gender_cell_check_img")];
         _selectView.translatesAutoresizingMaskIntoConstraints = NO;
         [_selectView setContentHuggingPriority:UILayoutPriorityDefaultHigh
                                        forAxis:UILayoutConstraintAxisHorizontal];

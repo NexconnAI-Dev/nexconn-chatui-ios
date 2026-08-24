@@ -7,18 +7,19 @@
 //
 
 #import "NCGroupNotificationViewModel.h"
-#import "NCGroupNotificationNaviItemsViewModel.h"
-#import "NCGroupNotificationCellViewModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupNotificationCellViewModel.h"
+#import "NCGroupNotificationNaviItemsViewModel.h"
 
 NSInteger const NCGroupNotificationMaxCount = 50;
 
-static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotificationOperationQueueSpecificKey;
+static void *NCGroupNotificationOperationQueueSpecificKey =
+    &NCGroupNotificationOperationQueueSpecificKey;
 
-@interface NCGroupNotificationViewModel()<NCGroupNotificationNaviItemsViewModelDelegate>
+@interface NCGroupNotificationViewModel () <NCGroupNotificationNaviItemsViewModelDelegate>
 @property (nonatomic, strong) NCNavigationItemsViewModel *naviItemsVM;
 @property (nonatomic, strong) NSMutableArray *dataSource;
-@property (nonatomic, weak) UIViewController <NCListViewModelResponder> *responder;
+@property (nonatomic, weak) UIViewController<NCListViewModelResponder> *responder;
 
 @property (nonatomic, strong) dispatch_queue_t queue;
 @property (nonatomic, strong) NSArray<NSNumber *> *types;
@@ -33,8 +34,7 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
 
 - (instancetype)initWithOption:(nullable NCGroupApplicationsQueryParams *)option
                          types:(nullable NSArray<NSNumber *> *)types
-                        status:(nullable NSArray<NSNumber *> *)status
-{
+                        status:(nullable NSArray<NSNumber *> *)status {
     self = [super init];
     if (self) {
         [self ready];
@@ -44,8 +44,7 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
     }
     return self;
 }
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         [self ready];
@@ -55,16 +54,22 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
 
 - (void)ready {
     self.dataSource = [NSMutableArray array];
-    self.queue = dispatch_queue_create("ai.nexconn.groupNotification.operationQueue", DISPATCH_QUEUE_SERIAL);
-    dispatch_queue_set_specific(self.queue, NCGroupNotificationOperationQueueSpecificKey, NCGroupNotificationOperationQueueSpecificKey, NULL);
+    self.queue =
+        dispatch_queue_create("ai.nexconn.groupNotification.operationQueue", DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_set_specific(self.queue, NCGroupNotificationOperationQueueSpecificKey,
+                                NCGroupNotificationOperationQueueSpecificKey, NULL);
 }
 
 /// Configures navigation.
 - (NSArray *)configureRightNaviItemsForViewController:(UIViewController *)viewController {
-    if ([self.delegate respondsToSelector:@selector(willConfigureRightNavigationItemsForGroupNotificationViewModel:)]) {
-        self.naviItemsVM = [self.delegate willConfigureRightNavigationItemsForGroupNotificationViewModel:self];
-    } else if(!self.naviItemsVM) {
-        NCGroupNotificationNaviItemsViewModel *vm = [[NCGroupNotificationNaviItemsViewModel alloc] initWithResponder:viewController];
+    if ([self.delegate
+            respondsToSelector:
+                @selector(willConfigureRightNavigationItemsForGroupNotificationViewModel:)]) {
+        self.naviItemsVM =
+            [self.delegate willConfigureRightNavigationItemsForGroupNotificationViewModel:self];
+    } else if (!self.naviItemsVM) {
+        NCGroupNotificationNaviItemsViewModel *vm =
+            [[NCGroupNotificationNaviItemsViewModel alloc] initWithResponder:viewController];
         vm.delegate = self;
         self.naviItemsVM = vm;
     }
@@ -77,7 +82,7 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
         self.types = [self applicationDirectionByCategory:NCGroupNotificationCategoryAll];
     }
     if (self.status.count == 0) {
-        self.status =  [self applicationStatusByCategory:NCGroupNotificationCategoryAll];
+        self.status = [self applicationStatusByCategory:NCGroupNotificationCategoryAll];
     }
     if (!self.option) {
         NCGroupApplicationsQueryParams *opt = [[NCGroupApplicationsQueryParams alloc] init];
@@ -88,9 +93,7 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
     self.option.status = self.status ?: @[];
     self.query = [NCGroupChannel createGroupApplicationsQueryWithParams:self.option];
     [self.dataSource removeAllObjects];
-    [self fetchDataWithOption:self.option
-                        types:self.types
-                       status:self.status];
+    [self fetchDataWithOption:self.option types:self.types status:self.status];
 }
 
 - (void)fetchDataWithOption:(NCGroupApplicationsQueryParams *)option
@@ -99,41 +102,44 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
     self.types = types;
     self.status = status;
     self.option = option;
-    
+
     [self performOperationQueueBlock:^{
-        self.option.directions = types ?: @[];
-        self.option.status = status ?: @[];
-        if (!self.query) {
-            self.query = [NCGroupChannel createGroupApplicationsQueryWithParams:self.option];
+      self.option.directions = types ?: @[];
+      self.option.status = status ?: @[];
+      if (!self.query) {
+          self.query = [NCGroupChannel createGroupApplicationsQueryWithParams:self.option];
+      }
+      [self.query loadNextPageWithCompletion:^(NCGroupApplicationsPageResult *_Nullable page,
+                                               NCError *_Nullable error) {
+        if (error) {
+            [self refreshingFinished:NO withTips:NCUILocalizedString(@"group_notification_failed")];
+            return;
         }
-        [self.query loadNextPageWithCompletion:^(NCGroupApplicationsPageResult * _Nullable page, NCError * _Nullable error) {
-            if (error) {
-                [self refreshingFinished:NO withTips:NCUILocalizedString(@"group_notification_failed")];
-                return;
+        NSArray *infos = page.data;
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *items = @[];
+        if (infos.count) {
+            for (NCGroupApplicationInfo *info in infos) {
+                NCGroupNotificationCellViewModel *vm =
+                    [[NCGroupNotificationCellViewModel alloc] initWithApplicationInfo:info];
+                [vm bindResponder:self.responder];
+                [array addObject:vm];
             }
-            NSArray *infos = page.data;
-            NSMutableArray *array = [NSMutableArray array];
-            NSArray *items = @[];
-            if (infos.count) {
-                for (NCGroupApplicationInfo *info in infos) {
-                    NCGroupNotificationCellViewModel *vm = [[NCGroupNotificationCellViewModel alloc] initWithApplicationInfo:info];
-                    [vm bindResponder:self.responder];
-                    [array addObject:vm];
-                }
-                items = array;
-                if ([self.delegate respondsToSelector:@selector(groupNotificationViewModel:willLoadItemsInDataSource:)]) {
-                    items = [self.delegate groupNotificationViewModel:self willLoadItemsInDataSource:array];
-                }
+            items = array;
+            if ([self.delegate respondsToSelector:@selector(groupNotificationViewModel:
+                                                            willLoadItemsInDataSource:)]) {
+                items = [self.delegate groupNotificationViewModel:self
+                                        willLoadItemsInDataSource:array];
             }
-            if (items) {
-                [self removeSeparatorLineIfNeed:@[items]];
-            }
-            [self.dataSource addObjectsFromArray:items];
-            [self reloadData:self.dataSource.count == 0];
-            [self refreshingFinished:YES withTips:nil];
-        }];
+        }
+        if (items) {
+            [self removeSeparatorLineIfNeed:@[ items ]];
+        }
+        [self.dataSource addObjectsFromArray:items];
+        [self reloadData:self.dataSource.count == 0];
+        [self refreshingFinished:YES withTips:nil];
+      }];
     }];
-  
 }
 
 - (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder {
@@ -151,11 +157,8 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
 
 /// Loads the next page.
 - (void)loadMoreData {
-    [self fetchDataWithOption:self.option
-                        types:self.types
-                       status:self.status];
+    [self fetchDataWithOption:self.option types:self.types status:self.status];
 }
-
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -167,7 +170,8 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
              tableView:(UITableView *)tableView
           didSelectRow:(NSIndexPath *)indexPath {
     NCGroupNotificationCellViewModel *vm = [self.dataSource objectAtIndex:indexPath.row];
-    if ([self.delegate respondsToSelector:@selector(groupNotificationViewModel:viewController:tableView:didSelectRow:cellViewModel:)]) {
+    if ([self.delegate respondsToSelector:@selector(groupNotificationViewModel:viewController:
+                                                    tableView:didSelectRow:cellViewModel:)]) {
         BOOL ret = [self.delegate groupNotificationViewModel:self
                                               viewController:viewController
                                                    tableView:tableView
@@ -190,38 +194,40 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
 - (NSInteger)numberOfRowsInSection:(NSInteger)section {
     return self.dataSource.count;
 }
-#pragma  mark - Private
+#pragma mark - Private
 - (NSArray *)applicationDirectionByCategory:(NCGroupNotificationCategory)category {
-    NSArray *array = @[@(NCGroupApplicationDirectionInvitationReceived),
-                       @(NCGroupApplicationDirectionApplicationReceived),
-                       @(NCGroupApplicationDirectionApplicationSent),
-                       @(NCGroupApplicationDirectionInvitationSent)];
+    NSArray *array = @[
+        @(NCGroupApplicationDirectionInvitationReceived),
+        @(NCGroupApplicationDirectionApplicationReceived),
+        @(NCGroupApplicationDirectionApplicationSent), @(NCGroupApplicationDirectionInvitationSent)
+    ];
     return array;
 }
 
 - (NSArray *)applicationStatusByCategory:(NCGroupNotificationCategory)category {
     NSArray *array = @[];
     switch (category) {
-        case NCGroupNotificationCategoryToBeConfirmed:
-            array = @[@(NCGroupApplicationStatusInviteeUnhandled),
-            @(NCGroupApplicationStatusAdminUnhandled)];
-            break;
-        case NCGroupNotificationCategoryDealt:
-            array = @[@(NCGroupApplicationStatusJoined),
-                      @(NCGroupApplicationStatusInviteeRefused),
-                      @(NCGroupApplicationStatusAdminRefused)];
-            break;
-        case NCGroupNotificationCategoryExpired:
-            array = @[@(NCGroupApplicationStatusExpired)];
-            break;
-        default:
-            array = @[@(NCGroupApplicationStatusAdminUnhandled),
-                      @(NCGroupApplicationStatusAdminRefused),
-                      @(NCGroupApplicationStatusInviteeUnhandled),
-                      @(NCGroupApplicationStatusInviteeRefused),
-                      @(NCGroupApplicationStatusJoined),
-                      @(NCGroupApplicationStatusExpired)];
-            break;
+    case NCGroupNotificationCategoryToBeConfirmed:
+        array = @[
+            @(NCGroupApplicationStatusInviteeUnhandled), @(NCGroupApplicationStatusAdminUnhandled)
+        ];
+        break;
+    case NCGroupNotificationCategoryDealt:
+        array = @[
+            @(NCGroupApplicationStatusJoined), @(NCGroupApplicationStatusInviteeRefused),
+            @(NCGroupApplicationStatusAdminRefused)
+        ];
+        break;
+    case NCGroupNotificationCategoryExpired:
+        array = @[ @(NCGroupApplicationStatusExpired) ];
+        break;
+    default:
+        array = @[
+            @(NCGroupApplicationStatusAdminUnhandled), @(NCGroupApplicationStatusAdminRefused),
+            @(NCGroupApplicationStatusInviteeUnhandled), @(NCGroupApplicationStatusInviteeRefused),
+            @(NCGroupApplicationStatusJoined), @(NCGroupApplicationStatusExpired)
+        ];
+        break;
     }
     return array;
 }
@@ -242,17 +248,15 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
 - (void)performOperationQueueBlock:(dispatch_block_t)block {
     if (dispatch_get_specific(NCGroupNotificationOperationQueueSpecificKey)) {
         block();
-    }
-    else {
+    } else {
         dispatch_async(self.queue, block);
     }
 }
 
-
 - (void)reloadData:(BOOL)showEmpty {
     if ([self.responder respondsToSelector:@selector(reloadData:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder reloadData:showEmpty];
+          [self.responder reloadData:showEmpty];
         });
     }
 }
@@ -260,14 +264,14 @@ static void *NCGroupNotificationOperationQueueSpecificKey = &NCGroupNotification
 - (void)showTips:(NSString *)tips {
     if ([self.responder respondsToSelector:@selector(showTips:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder showTips:tips];
+          [self.responder showTips:tips];
         });
     }
 }
 - (void)refreshingFinished:(BOOL)success withTips:(NSString *)tips {
     if ([self.responder respondsToSelector:@selector(refreshingFinished:withTips:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder refreshingFinished:success withTips:tips];
+          [self.responder refreshingFinished:success withTips:tips];
         });
     }
 }

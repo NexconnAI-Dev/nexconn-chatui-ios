@@ -7,9 +7,9 @@
 //
 
 #import "NCVoiceRecorder.h"
-#import <AVFoundation/AVFoundation.h>
-#import "NCChatUIConfig.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import <AVFoundation/AVFoundation.h>
 
 static NCVoiceRecorder *ncVoiceRecorderHandler = nil;
 static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
@@ -39,8 +39,10 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
             };
 
             ncVoiceRecorderHandler.recordTempFileURL =
-                [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"tempAC.wav"]];
-            NCLogD(@"[NCChatUIExtension]: Using File called: %@", ncVoiceRecorderHandler.recordTempFileURL);
+                [NSURL fileURLWithPath:[NSTemporaryDirectory()
+                                           stringByAppendingPathComponent:@"tempAC.wav"]];
+            NCLogD(@"[NCChatUIExtension]: Using File called: %@",
+                   ncVoiceRecorderHandler.recordTempFileURL);
         }
         return ncVoiceRecorderHandler;
     }
@@ -57,8 +59,10 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
                 AVSampleRateKey : @(16000)
             };
             ncHQVoiceRecorderHandler.recordTempFileURL =
-                [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"HQTempAC.aac"]];
-            NCLogD(@"[NCChatUIExtension]: Using File called: %@", ncHQVoiceRecorderHandler.recordTempFileURL);
+                [NSURL fileURLWithPath:[NSTemporaryDirectory()
+                                           stringByAppendingPathComponent:@"HQTempAC.aac"]];
+            NCLogD(@"[NCChatUIExtension]: Using File called: %@",
+                   ncHQVoiceRecorderHandler.recordTempFileURL);
         }
         return ncHQVoiceRecorderHandler;
     }
@@ -69,14 +73,17 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
 
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     [audioSession setActive:NO error:nil];
-    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
+    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
+                  withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker
+                        error:nil];
     [audioSession setActive:YES error:nil];
 
     NSError *error = nil;
 
     if (nil == self.recorder) {
-        self.recorder =
-            [[AVAudioRecorder alloc] initWithURL:self.recordTempFileURL settings:self.recordSettings error:&error];
+        self.recorder = [[AVAudioRecorder alloc] initWithURL:self.recordTempFileURL
+                                                    settings:self.recordSettings
+                                                       error:&error];
         self.recorder.delegate = self;
         self.recorder.meteringEnabled = YES;
     }
@@ -101,9 +108,10 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
         self.isRecording = self.recorder.isRecording;
         if (!NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
             [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-            [[AVAudioSession sharedInstance] setActive:NO
-                                           withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                                 error:nil];
+            [[AVAudioSession sharedInstance]
+                  setActive:NO
+                withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                      error:nil];
         } else {
             AVAudioSession *audioSession = [AVAudioSession sharedInstance];
             [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
@@ -113,9 +121,10 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
     }
     if (!NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-        [[AVAudioSession sharedInstance] setActive:NO
-                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                             error:nil];
+        [[AVAudioSession sharedInstance]
+              setActive:NO
+            withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                  error:nil];
     } else {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
@@ -144,9 +153,10 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
     self.recorder = nil;
     // Release AVAudioSession so other audio can play non-exclusively.
     if (!NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
-        [[AVAudioSession sharedInstance] setActive:NO
-                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                             error:nil];
+        [[AVAudioSession sharedInstance]
+              setActive:NO
+            withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                  error:nil];
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
 
     } else {
@@ -169,7 +179,8 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
 }
 #pragma mark - AVAudioRecorderDelegate
 - (void)audioRecorderDidFinishRecording:(AVAudioRecorder *)recorder successfully:(BOOL)flag {
-    if ([self.voiceRecorderDelegate respondsToSelector:@selector(NCVoiceAudioRecorderDidFinishRecording:)]) {
+    if ([self.voiceRecorderDelegate
+            respondsToSelector:@selector(NCVoiceAudioRecorderDidFinishRecording:)]) {
         [self.voiceRecorderDelegate NCVoiceAudioRecorderDidFinishRecording:flag];
     }
     self.voiceRecorderDelegate = nil;
@@ -177,7 +188,8 @@ static NCVoiceRecorder *ncHQVoiceRecorderHandler = nil;
 }
 
 - (void)audioRecorderEncodeErrorDidOccur:(AVAudioRecorder *)recorder error:(NSError *)error {
-    if ([self.voiceRecorderDelegate respondsToSelector:@selector(NCVoiceAudioRecorderEncodeErrorDidOccur:)]) {
+    if ([self.voiceRecorderDelegate
+            respondsToSelector:@selector(NCVoiceAudioRecorderEncodeErrorDidOccur:)]) {
         [self.voiceRecorderDelegate NCVoiceAudioRecorderEncodeErrorDidOccur:error];
     }
 

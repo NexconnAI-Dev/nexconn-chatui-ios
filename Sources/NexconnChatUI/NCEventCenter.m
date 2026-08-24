@@ -10,8 +10,10 @@
 
 @interface NCEventCenter ()
 
-@property (nonatomic, strong) NSHashTable<id<NCChatUIConnectionStatusDelegate>> *connectionStatusDelegates;
-@property (nonatomic, strong) NSHashTable<id<NCChatUINetworkStatusDelegate>> *networkStatusDelegates;
+@property (nonatomic, strong)
+    NSHashTable<id<NCChatUIConnectionStatusDelegate>> *connectionStatusDelegates;
+@property (nonatomic, strong)
+    NSHashTable<id<NCChatUINetworkStatusDelegate>> *networkStatusDelegates;
 
 @end
 @implementation NCEventCenter
@@ -19,15 +21,15 @@
     static NCEventCenter *shareManager;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        shareManager = [[NCEventCenter alloc] init];
-        shareManager.connectionStatusDelegates = [NSHashTable weakObjectsHashTable];
-        shareManager.networkStatusDelegates = [NSHashTable weakObjectsHashTable];
+      shareManager = [[NCEventCenter alloc] init];
+      shareManager.connectionStatusDelegates = [NSHashTable weakObjectsHashTable];
+      shareManager.networkStatusDelegates = [NSHashTable weakObjectsHashTable];
     });
     return shareManager;
 }
 
 - (void)addConnectionStatusChangeDelegate:(id<NCChatUIConnectionStatusDelegate>)delegate {
-    @synchronized (self) {
+    @synchronized(self) {
         if (delegate) {
             [self.connectionStatusDelegates addObject:delegate];
         }
@@ -35,7 +37,7 @@
 }
 
 - (void)removeConnectionStatusChangeDelegate:(id<NCChatUIConnectionStatusDelegate>)delegate {
-    @synchronized (self) {
+    @synchronized(self) {
         if (delegate) {
             [self.connectionStatusDelegates removeObject:delegate];
         }
@@ -43,7 +45,7 @@
 }
 
 - (NSArray<id<NCChatUIConnectionStatusDelegate>> *)allConnectionStatusChangeDelegates {
-    @synchronized (self) {
+    @synchronized(self) {
         return self.connectionStatusDelegates.allObjects;
     }
 }
@@ -51,7 +53,7 @@
 #pragma mark - Network Status Observers
 
 - (void)addNetworkStatusChangeDelegate:(id<NCChatUINetworkStatusDelegate>)delegate {
-    @synchronized (self) {
+    @synchronized(self) {
         if (delegate) {
             [self.networkStatusDelegates addObject:delegate];
         }
@@ -59,7 +61,7 @@
 }
 
 - (void)removeNetworkStatusChangeDelegate:(id<NCChatUINetworkStatusDelegate>)delegate {
-    @synchronized (self) {
+    @synchronized(self) {
         if (delegate) {
             [self.networkStatusDelegates removeObject:delegate];
         }
@@ -67,7 +69,7 @@
 }
 
 - (NSArray<id<NCChatUINetworkStatusDelegate>> *)allNetworkStatusChangeDelegates {
-    @synchronized (self) {
+    @synchronized(self) {
         return self.networkStatusDelegates.allObjects;
     }
 }

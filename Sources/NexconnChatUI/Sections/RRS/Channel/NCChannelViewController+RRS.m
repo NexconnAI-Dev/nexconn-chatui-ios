@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCChannelViewController+RRS.h"
 #import "NCChannelVCUtil.h"
+#import "NCChannelViewController+RRS.h"
 #import "NCMessageModel+RRS.h"
 
 @interface NCChannelViewController ()
@@ -22,7 +22,8 @@
     [NCEngine addMessageHandlerWithIdentifier:identifier handler:self];
 }
 
-- (void)rrs_didReceiveMessageReadReceiptResponses:(NSArray<NCMessageReadReceiptResponse *> *)responses {
+- (void)rrs_didReceiveMessageReadReceiptResponses:
+    (NSArray<NCMessageReadReceiptResponse *> *)responses {
     for (NCMessageReadReceiptResponse *response in responses) {
         if ([response.channelIdentifier.channelId isEqualToString:self.channelId] &&
             self.channelType == response.channelIdentifier.channelType) {
@@ -36,10 +37,12 @@
                     info.unreadCount = response.unreadCount;
                     info.totalCount = response.totalCount;
                     model.readReceiptInfo = info;
-                    // Match the detail page's asynchronous refresh notification to preserve event ordering.
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        [self.util sendMessageReadReceiptNotification:model];
-                    });
+                    // Match the detail page's asynchronous refresh notification to preserve event
+                    // ordering.
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
+                                   dispatch_get_main_queue(), ^{
+                                     [self.util sendMessageReadReceiptNotification:model];
+                                   });
                 }
             }
         }

@@ -17,25 +17,27 @@
 
 @interface NCFMDatabase (PrivateStuff)
 - (NCFMResultSet *)executeQuery:(NSString *)sql
-               withArgumentsInArray:(NSArray *)arrayArgs
-                       orDictionary:(NSDictionary *)dictionaryArgs
-                           orVAList:(va_list)args;
+           withArgumentsInArray:(NSArray *)arrayArgs
+                   orDictionary:(NSDictionary *)dictionaryArgs
+                       orVAList:(va_list)args;
 @end
 
 @implementation NCFMDatabase (NCFMDatabaseAdditions)
 
-#define NCFMDB_RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(type, sel)                                                        \
-    va_list args;                                                                                                      \
-    va_start(args, query);                                                                                             \
-    NCFMResultSet *resultSet =                                                                                     \
-        [self executeQuery:query withArgumentsInArray:0x00 orDictionary:0x00 orVAList:args];                           \
-    va_end(args);                                                                                                      \
-    if (![resultSet next]) {                                                                                           \
-        return (type)0;                                                                                                \
-    }                                                                                                                  \
-    type ret = [resultSet sel:0];                                                                                      \
-    [resultSet close];                                                                                                 \
-    [resultSet setParentDB:nil];                                                                                       \
+#define NCFMDB_RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(type, sel)                                    \
+    va_list args;                                                                                  \
+    va_start(args, query);                                                                         \
+    NCFMResultSet *resultSet = [self executeQuery:query                                            \
+                             withArgumentsInArray:0x00                                             \
+                                     orDictionary:0x00                                             \
+                                         orVAList:args];                                           \
+    va_end(args);                                                                                  \
+    if (![resultSet next]) {                                                                       \
+        return (type)0;                                                                            \
+    }                                                                                              \
+    type ret = [resultSet sel:0];                                                                  \
+    [resultSet close];                                                                             \
+    [resultSet setParentDB:nil];                                                                   \
     return ret;
 
 - (NSString *)stringForQuery:(NSString *)query, ... {
@@ -70,8 +72,9 @@
 
     tableName = [tableName lowercaseString];
 
-    NCFMResultSet *rs =
-        [self executeQuery:@"select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", tableName];
+    NCFMResultSet *rs = [self
+        executeQuery:@"select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?",
+                     tableName];
 
     // if at least one next exists, table exists
     BOOL returnBool = [rs next];
@@ -83,27 +86,31 @@
 }
 
 /*
- get table with list of tables: result colums: type[STRING], name[STRING],tbl_name[STRING],rootpage[INTEGER],sql[STRING]
- check if table exist in database  (patch from OZLB)
+ get table with list of tables: result colums: type[STRING],
+ name[STRING],tbl_name[STRING],rootpage[INTEGER],sql[STRING] check if table exist in database (patch
+ from OZLB)
 */
 - (NCFMResultSet *)getSchema {
 
     // result colums: type[STRING], name[STRING],tbl_name[STRING],rootpage[INTEGER],sql[STRING]
-    NCFMResultSet *rs =
-        [self executeQuery:@"SELECT type, name, tbl_name, rootpage, sql FROM (SELECT * FROM sqlite_master UNION ALL "
-                           @"SELECT * FROM sqlite_temp_master) WHERE type != 'meta' AND name NOT LIKE 'sqlite_%' ORDER "
-                           @"BY tbl_name, type DESC, name"];
+    NCFMResultSet *rs = [self executeQuery:@"SELECT type, name, tbl_name, rootpage, sql FROM "
+                                           @"(SELECT * FROM sqlite_master UNION ALL "
+                                           @"SELECT * FROM sqlite_temp_master) WHERE type != "
+                                           @"'meta' AND name NOT LIKE 'sqlite_%' ORDER "
+                                           @"BY tbl_name, type DESC, name"];
 
     return rs;
 }
 
 /*
- get table schema: result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER], dflt_value[],pk[INTEGER]
+ get table schema: result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER],
+ dflt_value[],pk[INTEGER]
 */
 - (NCFMResultSet *)getTableSchema:(NSString *)tableName {
 
     // result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER], dflt_value[],pk[INTEGER]
-    NCFMResultSet *rs = [self executeQuery:[NSString stringWithFormat:@"pragma table_info('%@')", tableName]];
+    NCFMResultSet *rs =
+        [self executeQuery:[NSString stringWithFormat:@"pragma table_info('%@')", tableName]];
 
     return rs;
 }
@@ -145,7 +152,8 @@
 
     return r;
 #else
-    NSString *errorMessage = NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
+    NSString *errorMessage =
+        NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
     return 0;
@@ -159,7 +167,8 @@
     [rs next];
     [rs close];
 #else
-    NSString *errorMessage = NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
+    NSString *errorMessage =
+        NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
 #endif
@@ -177,7 +186,8 @@
 
     return s;
 #else
-    NSString *errorMessage = NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
+    NSString *errorMessage =
+        NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
     return nil;
@@ -187,12 +197,14 @@
 - (void)setApplicationIDString:(NSString *)s {
 #if SQLITE_VERSION_NUMBER >= 3007017
     if ([s length] != 4) {
-        NCLogD(@"setApplicationIDString: string passed is not exactly 4 chars long. (was %ld)", [s length]);
+        NCLogD(@"setApplicationIDString: string passed is not exactly 4 chars long. (was %ld)",
+               [s length]);
     }
 
     [self setApplicationID:NSHFSTypeCodeFromFileType([NSString stringWithFormat:@"'%@'", s])];
 #else
-    NSString *errorMessage = NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
+    NSString *errorMessage =
+        NSLocalizedString(@"Application ID functions require SQLite 3.7.17", nil);
     if (self.logsErrors)
         NCLogD(@"%@", errorMessage);
 #endif
@@ -223,7 +235,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-implementations"
 
-- (BOOL)columnExists:(NSString *)tableName columnName:(NSString *)columnName __attribute__((deprecated)) {
+- (BOOL)columnExists:(NSString *)tableName
+          columnName:(NSString *)columnName __attribute__((deprecated)) {
     return [self columnExists:columnName inTableWithName:tableName];
 }
 
@@ -237,10 +250,11 @@
     if (rc != SQLITE_OK) {
         validationSucceeded = NO;
         if (error) {
-            *error = [NSError errorWithDomain:NSCocoaErrorDomain
-                                         code:[self lastErrorCode]
-                                     userInfo:[NSDictionary dictionaryWithObject:[self lastErrorMessage]
-                                                                          forKey:NSLocalizedDescriptionKey]];
+            *error = [NSError
+                errorWithDomain:NSCocoaErrorDomain
+                           code:[self lastErrorCode]
+                       userInfo:[NSDictionary dictionaryWithObject:[self lastErrorMessage]
+                                                            forKey:NSLocalizedDescriptionKey]];
         }
     }
 

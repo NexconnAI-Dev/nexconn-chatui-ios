@@ -28,8 +28,9 @@
 #import "NCChatUIErrorCode.h"
 #import "NCFileUtility.h"
 
-// 时间标签区块的实际高度：TIME_LABEL_TOP(8) + TIME_LABEL_HEIGHT(16) + TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE(12) = 36，
-// 需与 referenceExtraHeight / NCMessageBaseCell 的布局保持一致，否则加载更多时的滚动补偿高度会偏差。
+// 时间标签区块的实际高度：TIME_LABEL_TOP(8) + TIME_LABEL_HEIGHT(16) +
+// TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE(12) = 36， 需与 referenceExtraHeight / NCMessageBaseCell
+// 的布局保持一致，否则加载更多时的滚动补偿高度会偏差。
 NSInteger const NCMessageCellDisplayTimeHeightForCommon = 36;
 NSInteger const NCMessageCellDisplayTimeHeightForHQVoice = 36;
 static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
@@ -45,39 +46,39 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 @interface NCChannelVCUtil ()
 @property (nonatomic, weak) NCChannelViewController *chatVC;
 /*!
- Message object names eligible for read receipts. The list uses NCMessageType.text and falls back to @"RC:TxtMsg" when needed.
+ Message object names eligible for read receipts. The list uses NCMessageType.text and falls back to
+ @"RC:TxtMsg" when needed.
 
  @discussion enabledReadReceiptMessage: checks whether a model's objectName appears in this list.
  */
 @property (nonatomic, copy) NSArray<NSString *> *enabledReadReceiptMessageTypeList;
 @end
 
-static BOOL NCPopulateChannelContext(NCChannelViewController *chatVC,
-                                       NCChannelType *channelType,
-                                       NSString *__strong *channelId,
-                                       NSString *__strong *subChannelId) {
+static BOOL NCPopulateChannelContext(NCChannelViewController *chatVC, NCChannelType *channelType,
+                                     NSString *__strong *channelId,
+                                     NSString *__strong *subChannelId) {
     if (!chatVC) {
         return NO;
     }
     switch (chatVC.channelType) {
-        case NCChannelTypeDirect:
-            *channelType = NCChannelTypeDirect;
-            break;
-        case NCChannelTypeGroup:
-            *channelType = NCChannelTypeGroup;
-            break;
-        case NCChannelTypeSystem:
-            *channelType = NCChannelTypeSystem;
-            break;
-        default:
-            return NO;
+    case NCChannelTypeDirect:
+        *channelType = NCChannelTypeDirect;
+        break;
+    case NCChannelTypeGroup:
+        *channelType = NCChannelTypeGroup;
+        break;
+    case NCChannelTypeSystem:
+        *channelType = NCChannelTypeSystem;
+        break;
+    default:
+        return NO;
     }
     *channelId = chatVC.channelId ?: @"";
     *subChannelId = chatVC.subChannelId ?: @"";
     return (*channelId).length > 0;
 }
 
-static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullable pushContent) {
+static NCPushConfig *_Nullable RCNCPushConfigWithPushContent(NSString *_Nullable pushContent) {
     if (pushContent.length == 0) {
         return nil;
     }
@@ -89,22 +90,24 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 @implementation NCChannelVCUtil
 - (instancetype)init:(NCChannelViewController *)chatVC {
     self = [super init];
-    if(self) {
+    if (self) {
         self.chatVC = chatVC;
         self.enabledReadReceiptMessageTypeList = @[ NCMessageType.text ?: @"RC:TxtMsg" ];
     }
     return self;
 }
 
-- (void)sendMessageStatusNotification:(NSString *)actionNametatus clientId:(long)clientId progress:(NSInteger)progress {
+- (void)sendMessageStatusNotification:(NSString *)actionNametatus
+                             clientId:(long)clientId
+                             progress:(NSInteger)progress {
     NCMessageCellNotificationModel *notifyModel = [[NCMessageCellNotificationModel alloc] init];
     notifyModel.actionName = actionNametatus;
     notifyModel.clientId = clientId;
     notifyModel.progress = progress;
     dispatch_main_async_safe(^{
-       [[NSNotificationCenter defaultCenter]
-           postNotificationName:KNotificationMessageBaseCellUpdateSendingStatus
-                         object:notifyModel];
+      [[NSNotificationCenter defaultCenter]
+          postNotificationName:KNotificationMessageBaseCellUpdateSendingStatus
+                        object:notifyModel];
     });
 }
 
@@ -114,10 +117,13 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     notifyModel.clientId = model.clientId;
     notifyModel.readReceiptInfo = model.readReceiptInfo;
     dispatch_main_async_safe(^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:KNotificationMessageBaseCellUpdateSendingStatus object:notifyModel];
+      [[NSNotificationCenter defaultCenter]
+          postNotificationName:KNotificationMessageBaseCellUpdateSendingStatus
+                        object:notifyModel];
     });
 }
-- (NCInformationNotificationMessage *)getInfoNotificationMessageByErrorCode:(NCChatUIErrorCode)nErrorCode {
+- (NCInformationNotificationMessage *)getInfoNotificationMessageByErrorCode:
+    (NCChatUIErrorCode)nErrorCode {
     NCInformationNotificationMessage *informationNotifiMsg = nil;
     if (NCChatUIErrorCodeNotInGroup == nErrorCode) {
         informationNotifiMsg = [NCInformationNotificationMessage
@@ -171,7 +177,7 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
         return;
     }
     NSMutableArray *messageArr = [NSMutableArray new];
-    if(self.chatVC.channelDataRepository.count > 0) {
+    if (self.chatVC.channelDataRepository.count > 0) {
         [messageArr addObjectsFromArray:self.chatVC.channelDataRepository];
     }
     if (self.chatVC.dataSource.cachedReloadMessages.count > 0) {
@@ -188,8 +194,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 
         long long current_time = model.sentTime;
 
-        long long interval =
-            current_time - previous_time > 0 ? current_time - previous_time : previous_time - current_time;
+        long long interval = current_time - previous_time > 0 ? current_time - previous_time
+                                                              : previous_time - current_time;
         if (interval / 1000 <= 3 * 60) {
             model.isDisplayMessageTime = NO;
         } else {
@@ -229,76 +235,84 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 }
 
 - (void)saveDraftIfNeed {
-    NSString *channelId = self.chatVC.channelId?:@"";
-    NSString *subChannelId = self.chatVC.subChannelId?:@"";
-    NSString *draft = self.chatVC.chatSessionInputBarControl.draft?:@"";
+    NSString *channelId = self.chatVC.channelId ?: @"";
+    NSString *subChannelId = self.chatVC.subChannelId ?: @"";
+    NSString *draft = self.chatVC.chatSessionInputBarControl.draft ?: @"";
     NCBaseChannel *channel = self.chatVC.currentChannel;
     NCChannelType channelType = self.chatVC.channelType;
     if (!channel) {
         return;
     }
     NSDictionary *userInfo = @{
-        @"channelType": @(channelType),
-        @"channelId": channelId,
-        @"subChannelId": subChannelId,
-        @"draft": draft,
+        @"channelType" : @(channelType),
+        @"channelId" : channelId,
+        @"subChannelId" : subChannelId,
+        @"draft" : draft,
     };
-    [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIChannelDraftSaveWillBeginNotificationName
-                                                        object:nil
-                                                      userInfo:userInfo];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:NCChatUIChannelDraftSaveWillBeginNotificationName
+                      object:nil
+                    userInfo:userInfo];
     void (^postDraftSaveResult)(BOOL, NSError *) = ^(BOOL updated, NSError *error) {
-        NSMutableDictionary *resultUserInfo = [userInfo mutableCopy];
-        resultUserInfo[@"updated"] = @(updated);
-        if (error) {
-            resultUserInfo[@"error"] = error;
-        }
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIChannelDraftSaveResultNotification
-                                                            object:nil
-                                                          userInfo:resultUserInfo];
+      NSMutableDictionary *resultUserInfo = [userInfo mutableCopy];
+      resultUserInfo[@"updated"] = @(updated);
+      if (error) {
+          resultUserInfo[@"error"] = error;
+      }
+      [[NSNotificationCenter defaultCenter]
+          postNotificationName:NCChatUIChannelDraftSaveResultNotification
+                        object:nil
+                      userInfo:resultUserInfo];
     };
-    [channel reloadWithCompletion:^(NCBaseChannel * _Nullable latestChannel, NSError * _Nullable error) {
-        if (error) {
-            NCLogW(@"reload channel draft failed, channelType:%@ channelId:%@ subChannelId:%@ error:%@",
-                   @(channelType), channelId, subChannelId, @(error.code));
-        }
-        NSString *draftInDB = latestChannel.draft ?: @"";
-        NCBaseChannel *activeChannel = latestChannel ?: channel;
-        if ([draft length] > 0) {
-            if(![draft isEqualToString:draftInDB]) {
-                [activeChannel saveDraft:draft completion:^(BOOL isSaved, NCError * _Nullable saveError) {
-                    if (!isSaved || saveError) {
-                        NCLogW(@"save channel draft failed, channelType:%@ channelId:%@ subChannelId:%@ isSaved:%@ error:%@",
-                               @(channelType), channelId, subChannelId, @(isSaved), @(saveError.code));
-                        postDraftSaveResult(NO, saveError);
-                        return;
-                    }
-                    postDraftSaveResult(YES, nil);
-                }];
-            } else {
-                postDraftSaveResult(NO, nil);
+    [channel reloadWithCompletion:^(NCBaseChannel *_Nullable latestChannel,
+                                    NSError *_Nullable error) {
+      if (error) {
+          NCLogW(
+              @"reload channel draft failed, channelType:%@ channelId:%@ subChannelId:%@ error:%@",
+              @(channelType), channelId, subChannelId, @(error.code));
+      }
+      NSString *draftInDB = latestChannel.draft ?: @"";
+      NCBaseChannel *activeChannel = latestChannel ?: channel;
+      if ([draft length] > 0) {
+          if (![draft isEqualToString:draftInDB]) {
+              [activeChannel saveDraft:draft
+                            completion:^(BOOL isSaved, NCError *_Nullable saveError) {
+                              if (!isSaved || saveError) {
+                                  NCLogW(@"save channel draft failed, channelType:%@ channelId:%@ "
+                                         @"subChannelId:%@ isSaved:%@ error:%@",
+                                         @(channelType), channelId, subChannelId, @(isSaved),
+                                         @(saveError.code));
+                                  postDraftSaveResult(NO, saveError);
+                                  return;
+                              }
+                              postDraftSaveResult(YES, nil);
+                            }];
+          } else {
+              postDraftSaveResult(NO, nil);
+          }
+      } else if (draftInDB.length > 0) {
+          [activeChannel clearDraftWithCompletion:^(BOOL isCleared, NCError *_Nullable clearError) {
+            if (!isCleared || clearError) {
+                NCLogW(@"clear channel draft failed, channelType:%@ channelId:%@ subChannelId:%@ "
+                       @"isCleared:%@ error:%@",
+                       @(channelType), channelId, subChannelId, @(isCleared), @(clearError.code));
+                postDraftSaveResult(NO, clearError);
+                return;
             }
-        } else if (draftInDB.length > 0){
-            [activeChannel clearDraftWithCompletion:^(BOOL isCleared, NCError * _Nullable clearError) {
-                if (!isCleared || clearError) {
-                    NCLogW(@"clear channel draft failed, channelType:%@ channelId:%@ subChannelId:%@ isCleared:%@ error:%@",
-                           @(channelType), channelId, subChannelId, @(isCleared), @(clearError.code));
-                    postDraftSaveResult(NO, clearError);
-                    return;
-                }
-                postDraftSaveResult(YES, nil);
-            }];
-        } else {
-            postDraftSaveResult(NO, error);
-        }
+            postDraftSaveResult(YES, nil);
+          }];
+      } else {
+          postDraftSaveResult(NO, error);
+      }
     }];
 }
-
 
 - (CGFloat)referenceExtraHeight:(Class)cellClass messageModel:(NCMessageModel *)model {
     CGFloat extraHeight = BASE_CONTENT_VIEW_BOTTOM;
     if ([cellClass isSubclassOfClass:NCMessageBaseCell.class]) {
         if (model.isDisplayMessageTime) {
-            extraHeight += TIME_LABEL_TOP + TIME_LABEL_HEIGHT + TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE;
+            extraHeight +=
+                TIME_LABEL_TOP + TIME_LABEL_HEIGHT + TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE;
         }
     }
     if ([cellClass isSubclassOfClass:NCMessageCell.class]) {
@@ -314,7 +328,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     NSIndexPath *indexPath;
     for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
         NCMessageModel *msg = (self.chatVC.channelDataRepository)[i];
-        if (msg.clientId == model.clientId && ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        if (msg.clientId == model.clientId &&
+            ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
             indexPath = [NSIndexPath indexPathForItem:i inSection:0];
             break;
         }
@@ -325,7 +340,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 - (NCMessageModel *)modelByMessageID:(NSInteger)messageID {
     for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
         NCMessageModel *msg = (self.chatVC.channelDataRepository)[i];
-        if (msg.clientId == messageID && ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        if (msg.clientId == messageID &&
+            ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
             return msg;
         }
     }
@@ -335,7 +351,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 - (NCMessageModel *)modelByMessageUId:(NSString *)messageId {
     for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
         NCMessageModel *msg = (self.chatVC.channelDataRepository)[i];
-        if ([msg.messageId isEqualToString:messageId] && ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        if ([msg.messageId isEqualToString:messageId] &&
+            ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
             return msg;
         }
     }
@@ -345,34 +362,40 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 - (BOOL)canDeleteMessageForAllOfModel:(NCMessageModel *)model {
     long long cTime = [[NSDate date] timeIntervalSince1970] * 1000;
     long long ServerTime = cTime - [NCEngine getServerTimeDelta];
-    long long interval = ServerTime - model.sentTime > 0 ? ServerTime - model.sentTime : model.sentTime - ServerTime;
+    long long interval =
+        ServerTime - model.sentTime > 0 ? ServerTime - model.sentTime : model.sentTime - ServerTime;
     NCChannelType channelType = (NCChannelType)model.channelType;
-    return (interval <= NCChatUIConfigCenter.message.maxRecallDuration * 1000 && model.messageDirection == NCMessageDirectionSend &&
-            NCChatUIConfigCenter.message.enableMessageRecall && model.sentStatus != NCMessageSentStatusSending &&
-            model.sentStatus != NCMessageSentStatusFailed && model.sentStatus != NCMessageSentStatusCanceled &&
+    return (interval <= NCChatUIConfigCenter.message.maxRecallDuration * 1000 &&
+            model.messageDirection == NCMessageDirectionSend &&
+            NCChatUIConfigCenter.message.enableMessageRecall &&
+            model.sentStatus != NCMessageSentStatusSending &&
+            model.sentStatus != NCMessageSentStatusFailed &&
+            model.sentStatus != NCMessageSentStatusCanceled &&
             (channelType == NCChannelTypeDirect || channelType == NCChannelTypeGroup));
 }
-
 
 - (BOOL)canReferenceMessage:(NCMessageModel *)message {
     BOOL inputHidden = self.chatVC.chatSessionInputBarControl.hidden;
     if (self.chatVC.editInputBarControl.isVisible) {
         inputHidden = self.chatVC.editInputBarControl.hidden;
     }
-    
-    if (!NCChatUIConfigCenter.message.enableMessageReference || !self.chatVC.chatSessionInputBarControl || inputHidden) {
+
+    if (!NCChatUIConfigCenter.message.enableMessageReference ||
+        !self.chatVC.chatSessionInputBarControl || inputHidden) {
         return NO;
     }
-    
+
     // System channels do not support message references.
     if (self.chatVC.channelType == NCChannelTypeSystem) {
         return NO;
     }
 
     // Messages that have not been sent successfully cannot be referenced.
-    if ((message.sentStatus != NCMessageSentStatusSending && message.sentStatus != NCMessageSentStatusFailed &&
+    if ((message.sentStatus != NCMessageSentStatusSending &&
+         message.sentStatus != NCMessageSentStatusFailed &&
          message.sentStatus != NCMessageSentStatusCanceled) &&
-        ([message.content isKindOfClass:NCTextMessage.class] || [message.content isKindOfClass:NCFileMessage.class] ||
+        ([message.content isKindOfClass:NCTextMessage.class] ||
+         [message.content isKindOfClass:NCFileMessage.class] ||
          [message.content isKindOfClass:NCImageMessage.class] ||
          [message.content isKindOfClass:NCReferenceMessage.class])) {
         return YES;
@@ -393,7 +416,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     }
 
     if ([messageContent isKindOfClass:[NCMediaMessageContent class]]) {
-        NCChatUISendMediaMessageParams *params = [[NCChatUISendMediaMessageParams alloc] initWithContent:(NCMediaMessageContent *)messageContent];
+        NCChatUISendMediaMessageParams *params = [[NCChatUISendMediaMessageParams alloc]
+            initWithContent:(NCMediaMessageContent *)messageContent];
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
@@ -404,17 +428,19 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
                                            completion:nil
                                                cancel:nil];
     } else {
-        NCChatUISendMessageParams *params = [[NCChatUISendMessageParams alloc] initWithContent:messageContent];
+        NCChatUISendMessageParams *params =
+            [[NCChatUISendMessageParams alloc] initWithContent:messageContent];
         params.channelType = channelType;
         params.channelId = channelId;
         params.subChannelId = subChannelId;
         params.needReceipt = [NCChatUIUtility shouldNeedReadReceiptForChannelType:channelType];
         params.pushConfig = RCNCPushConfigWithPushContent(pushContent);
-        [[NCChatUI shared] sendMessageWithParams:params
-                                      completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-            (void)message;
-            NCLogD(@"error: %@", @(error.code));
-        }];
+        [[NCChatUI shared]
+            sendMessageWithParams:params
+                       completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                         (void)message;
+                         NCLogD(@"error: %@", @(error.code));
+                       }];
     }
 }
 
@@ -422,59 +448,62 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     // Process selected media off the main thread.
     NCChannelViewController *chatVC = self.chatVC;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (int i = 0; i < selectedImages.count; i++) {
-            @autoreleasepool {
-                id item = [selectedImages objectAtIndex:i];
-                if ([item isKindOfClass:NSData.class]) {
-                    NSData *imageData = (NSData *)item;
-                    UIImage *image = [UIImage imageWithData:imageData];
-                    image = [NCChatUIUtility fixOrientation:image];
-                    // Downsize large images before constructing the outgoing message.
-                    [[NCMediaManager sharedManager] downsizeImage:image
-                        completionBlock:^(UIImage *outimage, BOOL doNothing) {
-                            NCImageMessage *imagemsg;
-                            if (doNothing || !outimage) {
-                                imagemsg = [[NCImageMessage alloc] initWithImage:image];
-                                imagemsg.original = full;
-                            } else if (outimage) {
-                                NSData *newImageData = UIImageJPEGRepresentation(outimage, 1);
-                                imagemsg = [[NCImageMessage alloc] initWithImageData:newImageData];
-                                imagemsg.original = full;
-                            }
-                            [chatVC onlySendMessage:imagemsg pushContent:nil];
+      for (int i = 0; i < selectedImages.count; i++) {
+          @autoreleasepool {
+              id item = [selectedImages objectAtIndex:i];
+              if ([item isKindOfClass:NSData.class]) {
+                  NSData *imageData = (NSData *)item;
+                  UIImage *image = [UIImage imageWithData:imageData];
+                  image = [NCChatUIUtility fixOrientation:image];
+                  // Downsize large images before constructing the outgoing message.
+                  [[NCMediaManager sharedManager]
+                        downsizeImage:image
+                      completionBlock:^(UIImage *outimage, BOOL doNothing) {
+                        NCImageMessage *imagemsg;
+                        if (doNothing || !outimage) {
+                            imagemsg = [[NCImageMessage alloc] initWithImage:image];
+                            imagemsg.original = full;
+                        } else if (outimage) {
+                            NSData *newImageData = UIImageJPEGRepresentation(outimage, 1);
+                            imagemsg = [[NCImageMessage alloc] initWithImageData:newImageData];
+                            imagemsg.original = full;
                         }
+                        [chatVC onlySendMessage:imagemsg pushContent:nil];
+                      }
                         progressBlock:^(UIImage *outimage, BOOL doNothing){
 
                         }];
-                } else if ([item isKindOfClass:NSDictionary.class]) {
-                    NSDictionary *assertInfo = item;
-                    if ([assertInfo objectForKey:@"avAsset"]) {
-                        AVAsset *model = assertInfo[@"avAsset"];
-                        UIImage *image = assertInfo[@"thumbnail"];
-                        NSString *localPath = assertInfo[@"localPath"];
-                        // 这里不能同步切主线程，否则 updateEventQueue 会被主线程长时间占用时反向卡住。
-                        dispatch_main_async_safe(^{
-                            NSUInteger duration = round(CMTimeGetSeconds(model.duration));
-                            NCShortVideoMessage *sightMsg =
-                                [[NCShortVideoMessage alloc] initWithLocalPath:localPath
-                                                                      thumbnail:image
-                                                                       duration:(int)duration];
-                            [chatVC onlySendMessage:sightMsg pushContent:nil];
-                        });
-                    } else {
-                        NSData *gifImageData = (NSData *)[assertInfo objectForKey:@"imageData"];
-                        NCGIFImage *gifImage = [NCGIFImage animatedImageWithGIFData:gifImageData];
-                        if (gifImage) {
-                            NCGIFMessage *gifMsg = [[NCGIFMessage alloc] initWithGIFImageData:gifImageData
-                                                                                          width:(int)gifImage.size.width
-                                                                                         height:(int)gifImage.size.height];
-                            [chatVC onlySendMessage:gifMsg pushContent:nil];
-                        }
-                    }
-                }
-                [NSThread sleepForTimeInterval:0.5];
-            }
-        }
+              } else if ([item isKindOfClass:NSDictionary.class]) {
+                  NSDictionary *assertInfo = item;
+                  if ([assertInfo objectForKey:@"avAsset"]) {
+                      AVAsset *model = assertInfo[@"avAsset"];
+                      UIImage *image = assertInfo[@"thumbnail"];
+                      NSString *localPath = assertInfo[@"localPath"];
+                      // 这里不能同步切主线程，否则 updateEventQueue
+                      // 会被主线程长时间占用时反向卡住。
+                      dispatch_main_async_safe(^{
+                        NSUInteger duration = round(CMTimeGetSeconds(model.duration));
+                        NCShortVideoMessage *sightMsg =
+                            [[NCShortVideoMessage alloc] initWithLocalPath:localPath
+                                                                 thumbnail:image
+                                                                  duration:(int)duration];
+                        [chatVC onlySendMessage:sightMsg pushContent:nil];
+                      });
+                  } else {
+                      NSData *gifImageData = (NSData *)[assertInfo objectForKey:@"imageData"];
+                      NCGIFImage *gifImage = [NCGIFImage animatedImageWithGIFData:gifImageData];
+                      if (gifImage) {
+                          NCGIFMessage *gifMsg =
+                              [[NCGIFMessage alloc] initWithGIFImageData:gifImageData
+                                                                   width:(int)gifImage.size.width
+                                                                  height:(int)gifImage.size.height];
+                          [chatVC onlySendMessage:gifMsg pushContent:nil];
+                      }
+                  }
+              }
+              [NSThread sleepForTimeInterval:0.5];
+          }
+      }
     });
 }
 
@@ -482,8 +511,7 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     long long currentTime = [[NSDate date] timeIntervalSince1970] * 1000;
     NSString *path = [NCFileUtility imageCacheRootDirectory];
     NSString *currentUserId = [NCEngine getCurrentUserId] ?: @"";
-    path = [path
-        stringByAppendingFormat:@"/%@/NCHQVoiceCache", currentUserId];
+    path = [path stringByAppendingFormat:@"/%@/NCHQVoiceCache", currentUserId];
     if ([[NSFileManager defaultManager] fileExistsAtPath:path] == NO) {
         [[NSFileManager defaultManager] createDirectoryAtPath:path
                                   withIntermediateDirectories:YES
@@ -500,36 +528,38 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
         return;
     }
     // Only HD voice messages use this playback path.
-    if([model.content isMemberOfClass:[NCHDVoiceMessage class]]) {
-        NCHDVoiceMessageCell *cell = (NCHDVoiceMessageCell *)[self.chatVC.messageCollectionView cellForItemAtIndexPath:indexPath];
+    if ([model.content isMemberOfClass:[NCHDVoiceMessage class]]) {
+        NCHDVoiceMessageCell *cell = (NCHDVoiceMessageCell *)[self.chatVC.messageCollectionView
+            cellForItemAtIndexPath:indexPath];
         if ([cell respondsToSelector:@selector(stopPlayingVoice)]) {
             [cell stopPlayingVoice];
         }
     }
 }
 
-- (BOOL)isAutoResponseRobot{
+- (BOOL)isAutoResponseRobot {
     return NO;
 }
 
 - (void)adaptUnreadButtonSize:(UILabel *)sender {
-    UIButton * senderButton;
+    UIButton *senderButton;
     NSString *imageNameKey = nil;
     if (sender.tag == 1001) {
         imageNameKey = @"channel_unread_button_arrow_img";
         senderButton = self.chatVC.unReadButton;
-    }else {
+    } else {
         senderButton = self.chatVC.unReadMentionedButton;
         imageNameKey = @"channel_mention_button_arrow_img";
     }
     CGRect temBut = senderButton.frame;
 
-    CGRect rect = [sender.text boundingRectWithSize:CGSizeMake(2000, senderButton.frame.size.height)
-                                            options:(NSStringDrawingUsesLineFragmentOrigin)
-                                         attributes:@{
-                                             NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
-                                         }
-                                            context:nil];
+    CGRect rect =
+        [sender.text boundingRectWithSize:CGSizeMake(2000, senderButton.frame.size.height)
+                                  options:(NSStringDrawingUsesLineFragmentOrigin)attributes:@{
+                                      NSFontAttributeName :
+                                          [[NCChatUIConfig defaultConfig].font fontOfFourthLevel]
+                                  }
+                                  context:nil];
     CGFloat arrowLeft = 19;
     CGFloat arrowWidth = 10;
     CGFloat arrowAndTextSpace = 5;
@@ -537,8 +567,9 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     temBut.size.width = arrowLeft + arrowWidth + arrowAndTextSpace + rect.size.width + textRight;
     temBut.origin.x = self.chatVC.view.frame.size.width - temBut.size.width;
     senderButton.frame = temBut;
-    sender.frame = CGRectMake(temBut.size.width - textRight - rect.size.width, 0, rect.size.width, temBut.size.height);
-    UIImage *image = [senderButton currentBackgroundImage]; 
+    sender.frame = CGRectMake(temBut.size.width - textRight - rect.size.width, 0, rect.size.width,
+                              temBut.size.height);
+    UIImage *image = [senderButton currentBackgroundImage];
     if ([NCChatUIUtility isRTL]) {
         temBut.origin.x = 0;
         senderButton.frame = temBut;
@@ -547,22 +578,25 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     } else {
         temBut.origin.x = self.chatVC.view.frame.size.width - temBut.size.width;
         senderButton.frame = temBut;
-        sender.frame = CGRectMake(temBut.size.width - 4 - rect.size.width, 0, rect.size.width, temBut.size.height);
+        sender.frame = CGRectMake(temBut.size.width - 4 - rect.size.width, 0, rect.size.width,
+                                  temBut.size.height);
     }
     // Apply resizable cap insets to dynamic images.
     if (image.imageAsset) {
         // Resolve the image for the current traits before applying cap insets.
-        UIImage *currentTraitImage = [image.imageAsset imageWithTraitCollection:self.chatVC.traitCollection];
+        UIImage *currentTraitImage =
+            [image.imageAsset imageWithTraitCollection:self.chatVC.traitCollection];
         image = [self applyResizableCapInsets:currentTraitImage];
     } else {
         // Static images can use cap insets directly.
         image = [self applyResizableCapInsets:image];
     }
-    
+
     [senderButton setBackgroundImage:image forState:UIControlStateNormal];
-    CGRect imageViewFrame = CGRectMake(arrowLeft,(temBut.size.height- 9)/2, arrowWidth, 9);
+    CGRect imageViewFrame = CGRectMake(arrowLeft, (temBut.size.height - 9) / 2, arrowWidth, 9);
     if ([NCChatUIUtility isRTL]) {
-        imageViewFrame = CGRectMake(temBut.size.width - arrowLeft - arrowWidth, (temBut.size.height- 9)/2, arrowWidth, 9);
+        imageViewFrame = CGRectMake(temBut.size.width - arrowLeft - arrowWidth,
+                                    (temBut.size.height - 9) / 2, arrowWidth, 9);
     }
 
     UIView *view = [senderButton viewWithTag:1010];
@@ -571,7 +605,7 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
         CGPoint center = view.center;
         center.y = sender.center.y;
         view.center = center;
-    }else{
+    } else {
         NCBaseImageView *imageView = [[NCBaseImageView alloc] initWithFrame:imageViewFrame];
         CGPoint center = imageView.center;
         center.y = sender.center.y;
@@ -583,11 +617,12 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 }
 
 - (UIImage *)applyResizableCapInsets:(UIImage *)image {
-    if (!image) return nil;
+    if (!image)
+        return nil;
     CGFloat halfWidth = image.size.width * 0.5;
     CGFloat halfHeight = image.size.height * 0.5;
     UIEdgeInsets capInsets = UIEdgeInsetsMake(halfHeight, halfWidth, halfHeight, halfWidth);
-    
+
     return [image resizableImageWithCapInsets:capInsets];
 }
 
@@ -602,26 +637,27 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     if ([self isAutoResponseRobot]) {
         return;
     }
-    
+
     void (^syncBlock)(void) = ^{
-        [self startSyncConversationReadStatusWithDelay:delay];
+      [self startSyncConversationReadStatusWithDelay:delay];
     };
     if (![self.chatVC shouldMarkMessagesAsRead]) {
         return;
     }
-        
+
     NCChannelType channelType = self.chatVC.channelType;
     BOOL isDirectChannel = channelType == NCChannelTypeDirect;
     BOOL readReceiptEnabledForCurrentType =
-        [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(channelType)];
+        [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+            containsObject:@(channelType)];
     BOOL shouldSyncReadStatus = (isDirectChannel && !readReceiptEnabledForCurrentType) ||
-        channelType == NCChannelTypeGroup ||
-        channelType == NCChannelTypeSystem;
+                                channelType == NCChannelTypeGroup ||
+                                channelType == NCChannelTypeSystem;
     // Direct channels with receipts still clear unread state to emit multi-device unread sync.
     if (isDirectChannel && readReceiptEnabledForCurrentType) {
         syncBlock();
     }
-    
+
     // Other supported channel types clear unread state through the same sync path.
     if (shouldSyncReadStatus) {
         syncBlock();
@@ -630,19 +666,20 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 
 - (void)startSyncConversationReadStatusWithDelay:(BOOL)delay {
     void (^clearUnreadBlock)(void) = ^{
-        if (![self.chatVC shouldMarkMessagesAsRead]) {
-            return;
-        }
-        NCBaseChannel *channel = self.chatVC.currentChannel;
-        if (!channel) {
-            return;
-        }
-        [channel clearUnreadCountWithCompletion:nil];
+      if (![self.chatVC shouldMarkMessagesAsRead]) {
+          return;
+      }
+      NCBaseChannel *channel = self.chatVC.currentChannel;
+      if (!channel) {
+          return;
+      }
+      [channel clearUnreadCountWithCompletion:nil];
     };
     if (delay) {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            clearUnreadBlock();
-        });
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+                         clearUnreadBlock();
+                       });
     } else {
         clearUnreadBlock();
     }
@@ -658,7 +695,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 - (NCMessageModel *)messageModelByUId:(NSString *)messageId {
     for (int i = 0; i < self.chatVC.channelDataRepository.count; i++) {
         NCMessageModel *msg = (self.chatVC.channelDataRepository)[i];
-        if (msg.messageId == messageId && ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
+        if (msg.messageId == messageId &&
+            ![msg.objectName isEqualToString:NCOldMessageNotificationMessageTypeIdentifier]) {
             return msg;
         }
     }
@@ -671,7 +709,9 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *stateData = [userDefaults objectForKey:[self editingStateDataKey]];
     if (stateData && stateData.count > 0) {
-        NSData *data = [NSJSONSerialization dataWithJSONObject:stateData options:kNilOptions error:nil];
+        NSData *data = [NSJSONSerialization dataWithJSONObject:stateData
+                                                       options:kNilOptions
+                                                         error:nil];
         NSString *jsonStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         NCEditInputBarConfig *editConfig = [[NCEditInputBarConfig alloc] initWithData:jsonStr];
         return editConfig;
@@ -686,8 +726,8 @@ static NCPushConfig * _Nullable RCNCPushConfigWithPushContent(NSString * _Nullab
 }
 
 - (NSString *)editingStateDataKey {
-    return [NSString stringWithFormat:@"nc_editing_state_%@_%@_%@",
-            @(self.chatVC.channelType), self.chatVC.channelId, self.chatVC.subChannelId];
+    return [NSString stringWithFormat:@"nc_editing_state_%@_%@_%@", @(self.chatVC.channelType),
+                                      self.chatVC.channelId, self.chatVC.subChannelId];
 }
 
 @end

@@ -7,12 +7,12 @@
 //
 
 #import "NCPhotoPreviewCollectCell.h"
-#import "NCAssetModel.h"
 #import "NCAssetHelper.h"
-#import "NCGIFImageView.h"
-#import "NCGIFImage.h"
-#import <MobileCoreServices/UTCoreTypes.h>
+#import "NCAssetModel.h"
 #import "NCBaseScrollView.h"
+#import "NCGIFImage.h"
+#import "NCGIFImageView.h"
+#import <MobileCoreServices/UTCoreTypes.h>
 @interface NCPhotoPreviewCollectCell () <UIScrollViewDelegate>
 @property (nonatomic, strong) NCBaseScrollView *scrollView;
 @property (nonatomic, strong) NCGIFImageView *previewImageView;
@@ -34,7 +34,8 @@
 
 - (void)configPreviewCellWithItem:(NCAssetModel *)model {
     self.model = model;
-    self.representedAssetIdentifier = [[NCAssetHelper shareAssetHelper] getAssetIdentifier:model.asset];
+    self.representedAssetIdentifier =
+        [[NCAssetHelper shareAssetHelper] getAssetIdentifier:model.asset];
     if (self.imageRequestID) {
         [[PHImageManager defaultManager] cancelImageRequest:self.imageRequestID];
     }
@@ -46,18 +47,19 @@
     [[NCAssetHelper shareAssetHelper]
         getPreviewWithAsset:model.asset
                      result:^(UIImage *photo, NSDictionary *info) {
-         if (![self.representedAssetIdentifier
-               isEqualToString:[[NCAssetHelper shareAssetHelper] getAssetIdentifier:model.asset]]) {
-             return;
-         }
-         if (!photo) {
-             return;
-         }
-         dispatch_async(dispatch_get_main_queue(), ^{
-             self.previewImageView.image = photo;
-             [self resizeSubviews];
-         });
-     }];
+                       if (![self.representedAssetIdentifier
+                               isEqualToString:[[NCAssetHelper shareAssetHelper]
+                                                   getAssetIdentifier:model.asset]]) {
+                           return;
+                       }
+                       if (!photo) {
+                           return;
+                       }
+                       dispatch_async(dispatch_get_main_queue(), ^{
+                         self.previewImageView.image = photo;
+                         [self resizeSubviews];
+                       });
+                     }];
 }
 
 - (void)resetSubviews {
@@ -65,22 +67,27 @@
     [self resizeSubviews];
 }
 
-- (BOOL)showGifImageView{
-    if ([[self.model.asset valueForKey:@"uniformTypeIdentifier"] isEqualToString:(__bridge NSString *)kUTTypeGIF]) {
+- (BOOL)showGifImageView {
+    if ([[self.model.asset valueForKey:@"uniformTypeIdentifier"]
+            isEqualToString:(__bridge NSString *)kUTTypeGIF]) {
         [[NCAssetHelper shareAssetHelper]
-         getOriginImageDataWithAsset:self.model
-         result:^(NSData *imageData, NSDictionary *info, NCAssetModel *assetModel) {
-            if(!imageData) {
-                return;
-            }
-            NCGIFImage *gifImage = [NCGIFImage animatedImageWithGIFData:imageData];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.previewImageView.animatedImage = gifImage;
-                [self resetSubviews];
-            });
-        }progressHandler:^(double progress, NSError * _Nonnull error, BOOL * _Nonnull stop, NSDictionary * _Nonnull info) {
-            
-        }];
+            getOriginImageDataWithAsset:self.model
+                                 result:^(NSData *imageData, NSDictionary *info,
+                                          NCAssetModel *assetModel) {
+                                   if (!imageData) {
+                                       return;
+                                   }
+                                   NCGIFImage *gifImage =
+                                       [NCGIFImage animatedImageWithGIFData:imageData];
+                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                     self.previewImageView.animatedImage = gifImage;
+                                     [self resetSubviews];
+                                   });
+                                 }
+                        progressHandler:^(double progress, NSError *_Nonnull error,
+                                          BOOL *_Nonnull stop, NSDictionary *_Nonnull info){
+
+                        }];
         return YES;
     }
     return NO;
@@ -106,7 +113,8 @@
     _scrollView.scrollsToTop = NO;
     _scrollView.showsHorizontalScrollIndicator = NO;
     _scrollView.showsVerticalScrollIndicator = NO;
-    _scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    _scrollView.autoresizingMask =
+        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     _scrollView.delaysContentTouches = NO;
     [self.contentView addSubview:_scrollView];
 
@@ -142,8 +150,9 @@
         CGFloat newZoomScale = self.scrollView.maximumZoomScale;
         CGFloat xsize = self.frame.size.width / newZoomScale;
         CGFloat ysize = self.frame.size.height / newZoomScale;
-        [self.scrollView zoomToRect:CGRectMake(touchPoint.x - xsize / 2, touchPoint.y - ysize / 2, xsize, ysize)
-                           animated:YES];
+        [self.scrollView
+            zoomToRect:CGRectMake(touchPoint.x - xsize / 2, touchPoint.y - ysize / 2, xsize, ysize)
+              animated:YES];
     }
 }
 
@@ -171,13 +180,17 @@
         self.previewImageView.frame = frame;
         self.previewImageView.center = center;
         self.scrollView.contentSize =
-            CGSizeMake(self.frame.size.width, MAX(self.frame.size.height, self.previewImageView.frame.size.height));
+            CGSizeMake(self.frame.size.width,
+                       MAX(self.frame.size.height, self.previewImageView.frame.size.height));
         [self.scrollView scrollRectToVisible:self.bounds animated:NO];
-        self.scrollView.alwaysBounceVertical = self.previewImageView.frame.size.height > scrollViewHeight;
-        // If the default maximum zoom still cannot fill the screen vertically, raise it to the ratio required to fill the screen.
-        self.scrollView.maximumZoomScale = frame.size.height * ImageMaximumZoomScale < scrollViewHeight
-                                               ? (scrollViewHeight / frame.size.height)
-                                               : ImageMaximumZoomScale;
+        self.scrollView.alwaysBounceVertical =
+            self.previewImageView.frame.size.height > scrollViewHeight;
+        // If the default maximum zoom still cannot fill the screen vertically, raise it to the
+        // ratio required to fill the screen.
+        self.scrollView.maximumZoomScale =
+            frame.size.height * ImageMaximumZoomScale < scrollViewHeight
+                ? (scrollViewHeight / frame.size.height)
+                : ImageMaximumZoomScale;
     }
 }
 
@@ -188,7 +201,7 @@
     CGFloat offsetY = (scrollView.frame.size.height > scrollView.contentSize.height)
                           ? (scrollView.frame.size.height - scrollView.contentSize.height) * 0.5
                           : 0.0;
-    self.previewImageView.center =
-        CGPointMake(scrollView.contentSize.width * 0.5 + offsetX, scrollView.contentSize.height * 0.5 + offsetY);
+    self.previewImageView.center = CGPointMake(scrollView.contentSize.width * 0.5 + offsetX,
+                                               scrollView.contentSize.height * 0.5 + offsetY);
 }
 @end

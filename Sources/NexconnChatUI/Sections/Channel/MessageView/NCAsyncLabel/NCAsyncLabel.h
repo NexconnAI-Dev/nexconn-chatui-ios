@@ -24,10 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
  *  highlightedAttributeDictionary
  */
 @property (nonatomic, strong) NSDictionary *highlightedAttributeDictionary;
- 
+
 - (void)clean;
 @end
-
 
 /*!
  NCAttributedLabel tap callback.
@@ -35,9 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol NCAsyncLabelDelegate <NSObject>
 @optional
 
-
 - (NSDictionary *)textAttributesInfo;
-
 
 /// Whether to detect special text such as phone numbers and links.
 - (BOOL)shouldDetectText;

@@ -9,11 +9,9 @@
 #import "NCNameEditView.h"
 #import "NCChatUICommonDefine.h"
 
-
 #define NCNameEditViewPadding 16
 #define NCNameEditViewTipFont 13.5
 #define NCNameEditViewContentFont 17
-
 
 @interface NCNameEditView ()
 
@@ -23,7 +21,7 @@
 
 @implementation NCNameEditView
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setupView {
     [super setupView];
@@ -32,12 +30,13 @@
     [self addSubview:self.tipLabel];
     [self.editView addSubview:self.contentLabel];
     [self.editView addSubview:self.textField];
-    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
+    UITapGestureRecognizer *tapGesture =
+        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
     // Require a single tap.
     tapGesture.numberOfTapsRequired = 1;
     [self addGestureRecognizer:tapGesture];
     self.userInteractionEnabled = YES;
-    
+
     if ([NCChatUIUtility isRTL]) {
         self.textField.textAlignment = NSTextAlignmentRight;
     } else {
@@ -48,25 +47,30 @@
 - (void)setupConstraints {
     [super setupConstraints];
     [NSLayoutConstraint activateConstraints:@[
-          [self.contentLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:NCNameEditViewPadding],
-          [self.contentLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-NCNameEditViewPadding],
-          [self.contentLabel.topAnchor constraintEqualToAnchor:self.topAnchor],
-          [self.contentLabel.bottomAnchor constraintEqualToAnchor:self.editView.topAnchor constant:-10],
-          
-          [self.editView.leadingAnchor constraintEqualToAnchor:self.contentLabel.leadingAnchor ],
-          [self.editView.trailingAnchor constraintEqualToAnchor:self.contentLabel.trailingAnchor],
-          [self.editView.heightAnchor constraintEqualToConstant:42],
-          
-          [self.textField.leadingAnchor constraintEqualToAnchor:self.editView.leadingAnchor constant:12],
-          [self.textField.trailingAnchor constraintEqualToAnchor:self.editView.trailingAnchor constant:-12],
-          [self.textField.centerYAnchor constraintEqualToAnchor:self.editView.centerYAnchor],
-     
-          [self.tipLabel.leadingAnchor constraintEqualToAnchor:self.editView.leadingAnchor],
-          [self.tipLabel.trailingAnchor constraintEqualToAnchor:self.editView.trailingAnchor],
-          [self.tipLabel.topAnchor constraintEqualToAnchor:self.editView.bottomAnchor constant:NCNameEditViewPadding]
-      ]];
-}
+        [self.contentLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                        constant:NCNameEditViewPadding],
+        [self.contentLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                         constant:-NCNameEditViewPadding],
+        [self.contentLabel.topAnchor constraintEqualToAnchor:self.topAnchor],
+        [self.contentLabel.bottomAnchor constraintEqualToAnchor:self.editView.topAnchor
+                                                       constant:-10],
 
+        [self.editView.leadingAnchor constraintEqualToAnchor:self.contentLabel.leadingAnchor],
+        [self.editView.trailingAnchor constraintEqualToAnchor:self.contentLabel.trailingAnchor],
+        [self.editView.heightAnchor constraintEqualToConstant:42],
+
+        [self.textField.leadingAnchor constraintEqualToAnchor:self.editView.leadingAnchor
+                                                     constant:12],
+        [self.textField.trailingAnchor constraintEqualToAnchor:self.editView.trailingAnchor
+                                                      constant:-12],
+        [self.textField.centerYAnchor constraintEqualToAnchor:self.editView.centerYAnchor],
+
+        [self.tipLabel.leadingAnchor constraintEqualToAnchor:self.editView.leadingAnchor],
+        [self.tipLabel.trailingAnchor constraintEqualToAnchor:self.editView.trailingAnchor],
+        [self.tipLabel.topAnchor constraintEqualToAnchor:self.editView.bottomAnchor
+                                                constant:NCNameEditViewPadding]
+    ]];
+}
 
 - (void)handleTap {
     if ([self.textField isFirstResponder]) {
@@ -74,7 +78,7 @@
     }
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (UIView *)editView {
     if (!_editView) {

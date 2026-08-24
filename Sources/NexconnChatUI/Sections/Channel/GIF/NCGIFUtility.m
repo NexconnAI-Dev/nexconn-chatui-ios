@@ -59,7 +59,8 @@
     return CGSizeMake(MINHEIGHT, [self caculateHeight:0]);
 }
 
-+ (NSString *)downloadFileNameForMessageName:(NSString *)messageName mediaURLString:(NSString *)mediaUrl {
++ (NSString *)downloadFileNameForMessageName:(NSString *)messageName
+                              mediaURLString:(NSString *)mediaUrl {
     NSString *decodedName = [messageName stringByRemovingPercentEncoding] ?: messageName;
     NSString *fileName = [NCFileUtility recheckedFileName:decodedName];
     if ([fileName.pathExtension caseInsensitiveCompare:@"gif"] == NSOrderedSame) {
@@ -70,7 +71,8 @@
     return fileKey.length > 0 ? [NSString stringWithFormat:@"Image_%@.gif", fileKey] : nil;
 }
 
-+ (NSString *)downloadFileNameForMediaURLString:(NSString *)mediaUrl defaultExtension:(NSString *)defaultExtension {
++ (NSString *)downloadFileNameForMediaURLString:(NSString *)mediaUrl
+                               defaultExtension:(NSString *)defaultExtension {
     NSString *fileName = @"";
     NSURLComponents *components = [NSURLComponents componentsWithString:mediaUrl];
     if (components.URL.lastPathComponent.length > 0) {
@@ -78,7 +80,8 @@
     }
 
     if (fileName.length == 0) {
-        NSString *pathWithoutQuery = [[mediaUrl componentsSeparatedByString:@"?"] firstObject] ?: @"";
+        NSString *pathWithoutQuery =
+            [[mediaUrl componentsSeparatedByString:@"?"] firstObject] ?: @"";
         fileName = pathWithoutQuery.lastPathComponent ?: @"";
     }
 

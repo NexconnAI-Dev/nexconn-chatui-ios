@@ -12,11 +12,8 @@
 #import "NCChatUICommonDefine.h"
 #import "NCSelectUserView.h"
 
-@interface NCSelectGroupMemberViewController ()<
-UITableViewDelegate,
-UITableViewDataSource,
-NCListViewModelResponder
->
+@interface NCSelectGroupMemberViewController () <UITableViewDelegate, UITableViewDataSource,
+                                                 NCListViewModelResponder>
 
 @property (nonatomic, strong) NCBaseButton *confirmButton;
 
@@ -58,21 +55,26 @@ NCListViewModelResponder
     [self.viewModel endEditingState];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
+    self.navigationItem.rightBarButtonItem =
+        [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
     self.confirmButton.enabled = NO;
-    
+
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)setupView {
     [self.listView configureSearchBar:[self.viewModel configureSearchBar]];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
@@ -90,7 +92,7 @@ NCListViewModelResponder
     }
 }
 
-#pragma mark -- NCListViewModelResponder
+#pragma mark-- NCListViewModelResponder
 
 - (void)reloadData:(BOOL)isEmpty {
     [self.listView.tableView reloadData];
@@ -105,11 +107,9 @@ NCListViewModelResponder
     return self;
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self.viewModel viewController:self
-                         tableView:tableView
-                      didSelectRow:indexPath];
+    [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
 #pragma mark - UITableViewDataSource
@@ -118,19 +118,21 @@ NCListViewModelResponder
     return self.viewModel.memberList.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return  [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [self.viewModel.memberList[indexPath.row] tableView:tableView heightForRowAtIndexPath:indexPath];
+    return [self.viewModel.memberList[indexPath.row] tableView:tableView
+                                       heightForRowAtIndexPath:indexPath];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     [self.view endEditing:YES];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCSelectUserView *)listView {
     if (!_listView) {
@@ -146,9 +148,13 @@ NCListViewModelResponder
     if (!_confirmButton) {
         _confirmButton = [[NCBaseButton alloc] init];
         [_confirmButton setTitle:NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color") forState:(UIControlStateNormal)];
-        [_confirmButton setTitleColor:NCDynamicColor(@"disabled_color") forState:(UIControlStateDisabled)];
-        [_confirmButton addTarget:self action:@selector(confirmButtonDidClick) forControlEvents:UIControlEventTouchUpInside];
+        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color")
+                             forState:(UIControlStateNormal)];
+        [_confirmButton setTitleColor:NCDynamicColor(@"disabled_color")
+                             forState:(UIControlStateDisabled)];
+        [_confirmButton addTarget:self
+                           action:@selector(confirmButtonDidClick)
+                 forControlEvents:UIControlEventTouchUpInside];
         [_confirmButton.titleLabel setFont:[UIFont systemFontOfSize:17]];
         _confirmButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
     }

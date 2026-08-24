@@ -7,22 +7,21 @@
 //
 
 #import "NCGroupMentionViewModel.h"
-#import "NCGroupMemberCell.h"
-#import "NCGroupManager.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupManager.h"
+#import "NCGroupMemberCell.h"
 
-NSString  * const NCMentionAllUsersID = @"All";
+NSString *const NCMentionAllUsersID = @"All";
 
-@interface NCGroupMentionViewModel ()<NCSearchBarViewModelDelegate>
+@interface NCGroupMentionViewModel () <NCSearchBarViewModelDelegate>
 
+@property (nonatomic, strong) NSMutableArray<NCGroupMemberCellViewModel *> *mutableMemberList;
 
-@property (nonatomic, strong) NSMutableArray <NCGroupMemberCellViewModel *>*mutableMemberList;
+@property (nonatomic, strong) NSMutableArray<NCGroupMemberCellViewModel *> *matchMemberList;
 
-@property (nonatomic, strong) NSMutableArray <NCGroupMemberCellViewModel *>*matchMemberList;
-
-@property (nonatomic, strong) NSMutableArray <NSMutableArray *>*mutableMemberDataSource;
-@property (nonatomic, strong) NSMutableArray <NSMutableArray *>*matchMemberDataSource;
-@property (nonatomic, strong) NSMutableArray <NSMutableArray *>*dataSource;
+@property (nonatomic, strong) NSMutableArray<NSMutableArray *> *mutableMemberDataSource;
+@property (nonatomic, strong) NSMutableArray<NSMutableArray *> *matchMemberDataSource;
+@property (nonatomic, strong) NSMutableArray<NSMutableArray *> *dataSource;
 
 @property (nonatomic, strong) NCSearchBarViewModel *searchBarVM;
 
@@ -55,7 +54,7 @@ NSString  * const NCMentionAllUsersID = @"All";
 
 + (instancetype)viewModelWithGroupId:(NSString *)groupId
                        selectedBlock:(void (^)(NCChatUIUserInfo *selectedUserInfo))selectedBlock
-                              cancel:(void (^)(void))cancelBlock{
+                              cancel:(void (^)(void))cancelBlock {
     NCGroupMentionViewModel *viewModel = [[self.class alloc] init];
     viewModel.groupId = groupId;
     viewModel.selectedBlock = selectedBlock;
@@ -78,7 +77,7 @@ NSString  * const NCMentionAllUsersID = @"All";
 
 - (NCSearchBarViewModel *)searchBarVM {
     if (!_searchBarVM) {
-        _searchBarVM =  [[NCSearchBarViewModel alloc] init];
+        _searchBarVM = [[NCSearchBarViewModel alloc] init];
         _searchBarVM.delegate = self;
     }
     return _searchBarVM;
@@ -136,13 +135,12 @@ NSString  * const NCMentionAllUsersID = @"All";
     if ([self.responder respondsToSelector:@selector(reloadData:)]) {
         [self.responder reloadData:empty];
     }
-
 }
-#pragma mark -- NCListViewModelProtocol
+#pragma mark-- NCListViewModelProtocol
 
 - (void)registerCellForTableView:(UITableView *)tableView {
     [tableView registerClass:[NCGroupMemberCell class]
-      forCellReuseIdentifier:NCGroupMemberCellIdentifier];
+        forCellReuseIdentifier:NCGroupMemberCellIdentifier];
 }
 
 - (void)viewController:(UIViewController *)viewController
@@ -152,7 +150,8 @@ NSString  * const NCMentionAllUsersID = @"All";
     if (self.selectedBlock) {
         NCChatUIUserInfo *info = [NCChatUIUserInfo new];
         info.userId = cellViewModel.memberInfo.userId;
-        info.name = cellViewModel.memberInfo.nickname.length > 0 ? cellViewModel.memberInfo.nickname : cellViewModel.memberInfo.name;
+        info.name = cellViewModel.memberInfo.nickname.length > 0 ? cellViewModel.memberInfo.nickname
+                                                                 : cellViewModel.memberInfo.name;
         info.avatarUrl = cellViewModel.memberInfo.avatarUrl;
         self.selectedBlock(info);
     }
@@ -170,14 +169,16 @@ NSString  * const NCMentionAllUsersID = @"All";
     return 0;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NCGroupMemberCellViewModel *vm = [self memberAtIndexPath:indexPath];
     return [vm tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     NCGroupMemberCellViewModel *vm = [self memberAtIndexPath:indexPath];
-    return [vm tableView:tableView heightForRowAtIndexPath:indexPath];;
+    return [vm tableView:tableView heightForRowAtIndexPath:indexPath];
+    ;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
@@ -185,12 +186,12 @@ NSString  * const NCMentionAllUsersID = @"All";
 }
 
 - (CGFloat)heightForHeaderInSection:(NSInteger)section {
-    return section == 0 ? 0.01: 20;
+    return section == 0 ? 0.01 : 20;
 }
-#pragma mark -- private
+#pragma mark-- private
 - (NCGroupMemberCellViewModel *)memberAtIndexPath:(NSIndexPath *)indexPath {
     NSArray *array = self.dataSource[indexPath.section];
-    if (array.count> indexPath.row) {
+    if (array.count > indexPath.row) {
         NCGroupMemberCellViewModel *vm = array[indexPath.row];
         return vm;
     }
@@ -199,10 +200,11 @@ NSString  * const NCMentionAllUsersID = @"All";
 
 - (void)removeSeparatorWithArray:(NSArray *)array {
     if (array.count) {
-        if ([self.lastBottomCellVM isKindOfClass:[NCBaseCellViewModel class]]) { // Last cell from the previous page.
+        if ([self.lastBottomCellVM
+                isKindOfClass:[NCBaseCellViewModel class]]) { // Last cell from the previous page.
             self.lastBottomCellVM.hideSeparatorLine = NO;
         }
-        [self removeSeparatorLineIfNeed:@[array]];
+        [self removeSeparatorLineIfNeed:@[ array ]];
         self.lastBottomCellVM = array.lastObject;
     }
 }
@@ -227,14 +229,14 @@ NSString  * const NCMentionAllUsersID = @"All";
     if (self.isLoadingSearchMembers) {
         return;
     }
-    
+
     if (self.searchMembersQuery && !self.hasMoreSearchMembers) {
         return;
     }
-    
+
     // Mark search loading as active.
     self.isLoadingSearchMembers = YES;
-    
+
     if (!self.searchMembersQuery) {
         NCSearchGroupMembersQueryParams *params = [NCSearchGroupMembersQueryParams new];
         params.groupId = self.groupId;
@@ -242,25 +244,26 @@ NSString  * const NCMentionAllUsersID = @"All";
         params.pageSize = self.pageCount;
         self.searchMembersQuery = [NCGroupChannel createSearchGroupMembersQueryWithParams:params];
     }
-    [self.searchMembersQuery loadNextPageWithCompletion:^(NSArray<NCGroupMemberInfo *> * _Nullable members,
-                                                          NCError * _Nullable error) {
-        if (error) {
-            // Clear the search loading state.
-            self.isLoadingSearchMembers = NO;
-            return;
-        }
-        NSArray<NCGroupMemberInfo *> *memberList = members ?: @[];
-        self.loadedSearchMemberCount += memberList.count;
-        self.hasMoreSearchMembers = [self searchHasMoreWithCurrentPageCount:memberList.count];
-        NSArray *list = [self getViewModelsWithMembers:memberList];
-        dispatch_async(dispatch_get_main_queue(), ^{
+    [self.searchMembersQuery
+        loadNextPageWithCompletion:^(NSArray<NCGroupMemberInfo *> *_Nullable members,
+                                     NCError *_Nullable error) {
+          if (error) {
+              // Clear the search loading state.
+              self.isLoadingSearchMembers = NO;
+              return;
+          }
+          NSArray<NCGroupMemberInfo *> *memberList = members ?: @[];
+          self.loadedSearchMemberCount += memberList.count;
+          self.hasMoreSearchMembers = [self searchHasMoreWithCurrentPageCount:memberList.count];
+          NSArray *list = [self getViewModelsWithMembers:memberList];
+          dispatch_async(dispatch_get_main_queue(), ^{
             // Clear the search loading state and update the data.
             self.isLoadingSearchMembers = NO;
             [self.matchMemberList addObjectsFromArray:list];
             [self removeSeparatorWithArray:list];
             [self reloadData:self.matchMemberList.count == 0];
-        });
-    }];
+          });
+        }];
 }
 
 - (void)fetchGroupMembers {
@@ -268,49 +271,56 @@ NSString  * const NCMentionAllUsersID = @"All";
     if (self.isLoadingMembers) {
         return;
     }
-    
+
     if (self.queryResult && self.queryResult.pageToken.length == 0) {
         return;
     }
-    
+
     // Mark page loading as active.
     self.isLoadingMembers = YES;
-    
+
     NCUIPagingQueryOption *option = [NCUIPagingQueryOption new];
     option.pageToken = self.queryResult.pageToken;
     option.count = self.pageCount;
     NCGroupMemberRole role;
-    // The first page includes the owner and admins. Once queryResult exists, later pages load regular members only.
+    // The first page includes the owner and admins. Once queryResult exists, later pages load
+    // regular members only.
     if (self.queryResult) {
         role = NCGroupMemberRoleNormal;
     } else {
         role = NCGroupMemberRoleUndef;
     }
     option.order = YES;
-    [NCGroupManager getGroupMemberInfos:self.groupId option:option role:role complete:^(NCUIPagingQueryResult<NCGroupMemberInfo *> * _Nonnull result) {
-        if (result.data.count == 0) {
-            // Clear the loading state.
-            self.isLoadingMembers = NO;
-            return;
-        }
-        
-        NSArray *list = [self getViewModelsWithMembers:result.data];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            // Clear the loading state and update the data.
-            self.isLoadingMembers = NO;
-            self.queryResult = result;
-            [self.mutableMemberList addObjectsFromArray:list];
-            [self removeSeparatorWithArray:list];
-            [self.responder reloadData:NO];
-        });
-    }];
+    [NCGroupManager
+        getGroupMemberInfos:self.groupId
+                     option:option
+                       role:role
+                   complete:^(NCUIPagingQueryResult<NCGroupMemberInfo *> *_Nonnull result) {
+                     if (result.data.count == 0) {
+                         // Clear the loading state.
+                         self.isLoadingMembers = NO;
+                         return;
+                     }
+
+                     NSArray *list = [self getViewModelsWithMembers:result.data];
+                     dispatch_async(dispatch_get_main_queue(), ^{
+                       // Clear the loading state and update the data.
+                       self.isLoadingMembers = NO;
+                       self.queryResult = result;
+                       [self.mutableMemberList addObjectsFromArray:list];
+                       [self removeSeparatorWithArray:list];
+                       [self.responder reloadData:NO];
+                     });
+                   }];
 }
 
-- (NSArray<NCGroupMemberCellViewModel *> *)getViewModelsWithMembers:(NSArray<NCGroupMemberInfo *> *)members {
+- (NSArray<NCGroupMemberCellViewModel *> *)getViewModelsWithMembers:
+    (NSArray<NCGroupMemberInfo *> *)members {
     NSMutableArray *list = [NSMutableArray array];
     for (NCGroupMemberInfo *member in members) {
         member.role = NCGroupMemberRoleUndef;
-        NCGroupMemberCellViewModel *cellVM = [[NCGroupMemberCellViewModel alloc] initWithMember:member];
+        NCGroupMemberCellViewModel *cellVM =
+            [[NCGroupMemberCellViewModel alloc] initWithMember:member];
         cellVM.hiddenArrow = YES;
         [list addObject:cellVM];
     }
@@ -318,7 +328,7 @@ NSString  * const NCMentionAllUsersID = @"All";
     return list;
 }
 
-#pragma mark -- setter
+#pragma mark-- setter
 
 - (void)setPageCount:(NSInteger)pageCount {
     if (pageCount <= 0) {
@@ -329,7 +339,7 @@ NSString  * const NCMentionAllUsersID = @"All";
     _pageCount = pageCount;
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NSArray<NCGroupMemberCellViewModel *> *)memberList {
     if (self.searchBarVM.searchBar.text.length > 0) {
@@ -370,7 +380,7 @@ NSString  * const NCMentionAllUsersID = @"All";
 - (NSMutableArray<NSMutableArray *> *)matchMemberDataSource {
     if (!_matchMemberDataSource) {
         _matchMemberDataSource = [NSMutableArray array];
-       
+
         if (self.matchMemberList) {
             [_matchMemberDataSource addObject:self.matchMemberList];
         }

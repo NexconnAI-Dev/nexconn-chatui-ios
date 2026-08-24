@@ -10,11 +10,11 @@
 #define NCExtensionKit_h
 
 #import "NCChatSessionInputBarControl.h"
-#import "NCEmojiBoardView.h"
-#import "NCEmoticonTabSource.h"
 #import "NCChatUIExtensionModule.h"
 #import "NCChatUIExtensionPluginItemInfo.h"
 #import "NCChatUIExtensionService.h"
+#import "NCEmojiBoardView.h"
+#import "NCEmoticonTabSource.h"
 #import "NCPluginBoardView.h"
 #import "NCTextView.h"
 #import "NCVoiceRecorder.h"

@@ -7,8 +7,8 @@
 //
 
 #import "NCChannelInfoCache.h"
-#import "NCConversationUserInfoCache.h"
 #import "NCChatUI.h"
+#import "NCConversationUserInfoCache.h"
 #import "NCUserInfoCache.h"
 #import "NCUserInfoCacheDBHelper.h"
 #import <Foundation/Foundation.h>
@@ -67,7 +67,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NCChatUIUserInfo *)getUserInfoFromCacheOnly:(NSString *)userId inGroupId:(NSString *)groupId;
 
-- (void)updateUserInfo:(NCChatUIUserInfo *)userInfo forUserId:(NSString *)userId inGroup:(NSString *)groupId;
+- (void)updateUserInfo:(NCChatUIUserInfo *)userInfo
+             forUserId:(NSString *)userId
+               inGroup:(NSString *)groupId;
 
 - (void)clearGroupUserInfoNetworkCacheOnly:(NSString *)userId inGroup:(NSString *)groupId;
 

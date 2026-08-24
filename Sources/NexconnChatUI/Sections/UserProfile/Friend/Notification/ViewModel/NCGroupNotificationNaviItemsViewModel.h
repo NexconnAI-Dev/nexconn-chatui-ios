@@ -11,10 +11,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, NCGroupNotificationCategory) {
-    NCGroupNotificationCategoryAll, // All
+    NCGroupNotificationCategoryAll,           // All
     NCGroupNotificationCategoryToBeConfirmed, // Pending
-    NCGroupNotificationCategoryDealt, // Completed
-    NCGroupNotificationCategoryExpired // Expired
+    NCGroupNotificationCategoryDealt,         // Completed
+    NCGroupNotificationCategoryExpired        // Expired
 };
 
 @protocol NCGroupNotificationNaviItemsViewModelDelegate <NSObject>

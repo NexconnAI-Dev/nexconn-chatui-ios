@@ -7,8 +7,8 @@
 //
 
 #import "NCSightPlayerView.h"
-#import "NCSightPlayerOverlayView.h"
 #import "NCSightAdaptiveHeader.h"
+#import "NCSightPlayerOverlayView.h"
 
 @interface NCSightPlayerView ()
 @property (strong, nonatomic) NCSightPlayerOverlayView *overlayView;

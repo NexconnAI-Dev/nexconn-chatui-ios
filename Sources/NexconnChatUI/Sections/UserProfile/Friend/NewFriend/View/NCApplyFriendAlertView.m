@@ -7,12 +7,12 @@
 //
 
 #import "NCApplyFriendAlertView.h"
-#import "NCChatUICommonDefine.h"
 #import "NCBaseButton.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIUtility.h"
 #import "NCPlaceholderTextView.h"
 
-@interface NCApplyFriendAlertView()<UITextViewDelegate>
+@interface NCApplyFriendAlertView () <UITextViewDelegate>
 @property (nonatomic, strong) UIView *containerView;
 @property (nonatomic, strong) UIButton *confirmButton;
 @property (nonatomic, strong) UIButton *cancelButton;
@@ -25,11 +25,8 @@
 @implementation NCApplyFriendAlertView
 + (void)showAlert:(NSString *)title
       placeholder:(NSString *)placeholder
-       completion:(void(^)(NSString *))completion {
-    [self showAlert:title
-        placeholder:placeholder
-        lengthLimit:INT32_MAX
-         completion:completion];
+       completion:(void (^)(NSString *))completion {
+    [self showAlert:title placeholder:placeholder lengthLimit:INT32_MAX completion:completion];
 }
 
 + (void)showAlert:(NSString *)title
@@ -37,27 +34,27 @@
       lengthLimit:(NSInteger)limit
        completion:(NCApplyFriendAlertBlock)completion {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NCApplyFriendAlertView *alert = [NCApplyFriendAlertView new];
-        alert.labTitle.text = title;
-        alert.txtView.placeholder = placeholder;
-        alert.block = completion;
-        alert.limit = limit;
-        UIWindow *window = [NCChatUIUtility getKeyWindow];
-        alert.frame = [window bounds];
-        [window addSubview:alert];
+      NCApplyFriendAlertView *alert = [NCApplyFriendAlertView new];
+      alert.labTitle.text = title;
+      alert.txtView.placeholder = placeholder;
+      alert.block = completion;
+      alert.limit = limit;
+      UIWindow *window = [NCChatUIUtility getKeyWindow];
+      alert.frame = [window bounds];
+      [window addSubview:alert];
     });
 }
 
 - (void)setupView {
     [super setupView];
-    self.backgroundColor =NCDynamicColor(@"mask_color");
+    self.backgroundColor = NCDynamicColor(@"mask_color");
     self.containerView = [self configureContainerView];
     [self addSubview:self.containerView];
 }
 
 - (void)setupConstraints {
     [super setupConstraints];
-    
+
     [NSLayoutConstraint activateConstraints:@[
         [self.containerView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
         [self.containerView.centerYAnchor constraintEqualToAnchor:self.centerYAnchor constant:-100],
@@ -70,53 +67,53 @@
 - (UIView *)configureContainerView {
     UIView *view = [UIView new];
     view.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     view.accessibilityLabel = @"container";
     view.layer.cornerRadius = 10;
     view.backgroundColor = NCDynamicColor(@"common_background_color");
     view.layer.masksToBounds = YES;
-    
+
     UIStackView *contentStackView = [[UIStackView alloc] init];
     contentStackView.axis = UILayoutConstraintAxisVertical;
     contentStackView.alignment = UIStackViewAlignmentFill;
     contentStackView.distribution = UIStackViewDistributionFill;
     contentStackView.translatesAutoresizingMaskIntoConstraints = NO;
     [view addSubview:contentStackView];
-    
+
     UIView *titleContainer = [UIView new];
     titleContainer.translatesAutoresizingMaskIntoConstraints = NO;
     [titleContainer addSubview:self.labTitle];
     [NSLayoutConstraint activateConstraints:@[
         [self.labTitle.centerXAnchor constraintEqualToAnchor:titleContainer.centerXAnchor],
         [self.labTitle.topAnchor constraintEqualToAnchor:titleContainer.topAnchor constant:24],
-        [self.labTitle.bottomAnchor constraintEqualToAnchor:titleContainer.bottomAnchor constant:-20]
+        [self.labTitle.bottomAnchor constraintEqualToAnchor:titleContainer.bottomAnchor
+                                                   constant:-20]
     ]];
     [contentStackView addArrangedSubview:titleContainer];
-    
+
     UIView *txtContainer = [UIView new];
     txtContainer.translatesAutoresizingMaskIntoConstraints = NO;
     [txtContainer addSubview:self.txtView];
     [NSLayoutConstraint activateConstraints:@[
         [self.txtView.leadingAnchor constraintEqualToAnchor:txtContainer.leadingAnchor constant:16],
-        [self.txtView.trailingAnchor constraintEqualToAnchor:txtContainer.trailingAnchor constant:-16],
+        [self.txtView.trailingAnchor constraintEqualToAnchor:txtContainer.trailingAnchor
+                                                    constant:-16],
         [self.txtView.topAnchor constraintEqualToAnchor:txtContainer.topAnchor],
         [self.txtView.bottomAnchor constraintEqualToAnchor:txtContainer.bottomAnchor constant:-28],
         [self.txtView.heightAnchor constraintEqualToConstant:110]
     ]];
     [contentStackView addArrangedSubview:txtContainer];
-    
+
     UIView *line1 = [[UIView alloc] init];
     line1.backgroundColor = NCDynamicColor(@"line_background_color");
     line1.translatesAutoresizingMaskIntoConstraints = NO;
     [contentStackView addArrangedSubview:line1];
-    [NSLayoutConstraint activateConstraints:@[
-        [line1.heightAnchor constraintEqualToConstant:1]
-    ]];
-    
+    [NSLayoutConstraint activateConstraints:@[ [line1.heightAnchor constraintEqualToConstant:1] ]];
+
     UIView *line2 = [[UIView alloc] init];
     line2.translatesAutoresizingMaskIntoConstraints = NO;
-    line2.backgroundColor =  NCDynamicColor(@"line_background_color");
-    
+    line2.backgroundColor = NCDynamicColor(@"line_background_color");
+
     UIStackView *bottomStackView = [[UIStackView alloc] init];
     [contentStackView addArrangedSubview:bottomStackView];
 
@@ -139,7 +136,7 @@
         [contentStackView.topAnchor constraintEqualToAnchor:view.topAnchor],
         [contentStackView.bottomAnchor constraintEqualToAnchor:view.bottomAnchor],
     ]];
-    
+
     return view;
 }
 
@@ -157,7 +154,9 @@
 
 #pragma mark - UITextViewDelegate
 
-- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+- (BOOL)textView:(UITextView *)textView
+    shouldChangeTextInRange:(NSRange)range
+            replacementText:(NSString *)text {
     NSString *newText = [textView.text stringByReplacingCharactersInRange:range withString:text];
     if (newText.length > self.limit) {
         return NO;
@@ -189,7 +188,8 @@
         txt.contentInset = UIEdgeInsetsMake(6, 6, 6, 6);
         txt.delegate = self;
         txt.translatesAutoresizingMaskIntoConstraints = NO;
-        [txt setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+        [txt setContentHuggingPriority:UILayoutPriorityDefaultLow
+                               forAxis:UILayoutConstraintAxisHorizontal];
         _txtView = txt;
     }
     return _txtView;
@@ -199,7 +199,8 @@
     if (!_confirmButton) {
         _confirmButton = [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, 99, 40)];
         [_confirmButton setTitle:NCUILocalizedString(@"confirm") forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color") forState:(UIControlStateNormal)];
+        [_confirmButton setTitleColor:NCDynamicColor(@"primary_color")
+                             forState:(UIControlStateNormal)];
         [_confirmButton.titleLabel setFont:[UIFont systemFontOfSize:17]];
         [_confirmButton addTarget:self
                            action:@selector(confirmButtonClick)
@@ -217,12 +218,11 @@
                             forState:(UIControlStateNormal)];
         [_cancelButton.titleLabel setFont:[UIFont systemFontOfSize:17]];
         [_cancelButton addTarget:self
-                           action:@selector(cancelButtonClick)
-                 forControlEvents:UIControlEventTouchUpInside];
+                          action:@selector(cancelButtonClick)
+                forControlEvents:UIControlEventTouchUpInside];
         _cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
     }
     return _cancelButton;
 }
-
 
 @end

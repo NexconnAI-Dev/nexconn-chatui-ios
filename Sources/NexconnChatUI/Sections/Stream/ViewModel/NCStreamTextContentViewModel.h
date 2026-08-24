@@ -10,9 +10,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NCStreamTextContentViewModel : NCStreamContentViewModel<NCStreamViewModelProtocol>
+@interface NCStreamTextContentViewModel : NCStreamContentViewModel <NCStreamViewModelProtocol>
 
-@property (nonatomic, copy, readonly)  NSAttributedString *attributedContent;
+@property (nonatomic, copy, readonly) NSAttributedString *attributedContent;
 
 @end
 

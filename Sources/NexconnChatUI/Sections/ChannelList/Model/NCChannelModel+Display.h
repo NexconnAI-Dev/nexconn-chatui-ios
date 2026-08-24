@@ -21,7 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Cached channel portrait URL.
 - (nullable NSString *)conversationCachedPortraitUri;
 
-/// Display name of the last message sender in a group chat, preferring alias, then group member remark, then name.
+/// Display name of the last message sender in a group chat, preferring alias, then group member
+/// remark, then name.
 - (nullable NSString *)senderDisplayNameInGroup;
 
 /// Formatted display content for the last message.

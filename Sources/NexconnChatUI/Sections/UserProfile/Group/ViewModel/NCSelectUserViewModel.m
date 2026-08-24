@@ -7,19 +7,19 @@
 //
 
 #import "NCSelectUserViewModel.h"
-#import "NCUPinYinTools.h"
-#import "NCChatUICommonDefine.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCChatUI.h"
-#import "NCNavigationItemsViewModel.h"
 #import "NCAlertView.h"
+#import "NCChatUI.h"
+#import "NCChatUICommonDefine.h"
 #import "NCGroupCreateViewController.h"
-#import "NSMutableArray+NCOperation.h"
 #import "NCGroupManager.h"
+#import "NCNavigationItemsViewModel.h"
+#import "NCUPinYinTools.h"
+#import "NSMutableArray+NCOperation.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueueSpecificKey;
 
-@interface NCSelectUserViewModel ()<NCSearchBarViewModelDelegate>
+@interface NCSelectUserViewModel () <NCSearchBarViewModelDelegate>
 @property (nonatomic, strong) NCNavigationItemsViewModel *naviItemsVM;
 @property (nonatomic, strong) NCSearchBarViewModel *searchBarVM;
 
@@ -36,13 +36,13 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 
 @property (nonatomic, strong) dispatch_queue_t queue;
 
-@property (nonatomic, strong) NSMutableArray <NSString *>*selectUserIds;
+@property (nonatomic, strong) NSMutableArray<NSString *> *selectUserIds;
 
 @property (nonatomic, copy) NSString *groupId;
 
 @property (nonatomic, assign) NCSelectUserType type;
 
-@property (nonatomic, strong) NSArray <NCGroupMemberInfo *> *members;
+@property (nonatomic, strong) NSArray<NCGroupMemberInfo *> *members;
 
 @end
 
@@ -56,13 +56,14 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
     return viewModel;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         self.maxSelectCount = 30;
-        self.queue = dispatch_queue_create("ai.nexconn.selectUser.operationQueue", DISPATCH_QUEUE_SERIAL);
-        dispatch_queue_set_specific(self.queue, NCSelectUserOperationQueueSpecificKey, NCSelectUserOperationQueueSpecificKey, NULL);
+        self.queue =
+            dispatch_queue_create("ai.nexconn.selectUser.operationQueue", DISPATCH_QUEUE_SERIAL);
+        dispatch_queue_set_specific(self.queue, NCSelectUserOperationQueueSpecificKey,
+                                    NCSelectUserOperationQueueSpecificKey, NULL);
     }
     return self;
 }
@@ -71,13 +72,14 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
     [NCSelectUserCellViewModel registerCellForTableView:tableView];
 }
 
-#pragma mark -- NCListViewModelProtocol
+#pragma mark-- NCListViewModelProtocol
 
-- (void)viewController:(UIViewController*)viewController
+- (void)viewController:(UIViewController *)viewController
              tableView:(UITableView *)tableView
           didSelectRow:(NSIndexPath *)indexPath {
     NCSelectUserCellViewModel *vm;
-    if ([self.searchBarVM isCurrentFirstResponder]) { // Search mode or a section other than the first.
+    if ([self.searchBarVM
+                isCurrentFirstResponder]) { // Search mode or a section other than the first.
         NSString *key = [self.indexTitles objectAtIndex:indexPath.section];
         NSArray *array = [self.dicInfo objectForKey:key];
         vm = [array objectAtIndex:indexPath.row];
@@ -86,22 +88,35 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
         NSArray *array = [self.dicInfo objectForKey:key];
         vm = [array objectAtIndex:indexPath.row];
     }
-    
-    if ([self.delegate respondsToSelector:@selector(selectUserViewModel:viewController:tableView:didSelectRow:cellViewModel:)]) {
-        BOOL intercept = [self.delegate selectUserViewModel:self viewController:[self.responder currentViewController] tableView:tableView didSelectRow:indexPath cellViewModel:vm];
+
+    if ([self.delegate respondsToSelector:@selector(selectUserViewModel:viewController:tableView:
+                                                    didSelectRow:cellViewModel:)]) {
+        BOOL intercept = [self.delegate selectUserViewModel:self
+                                             viewController:[self.responder currentViewController]
+                                                  tableView:tableView
+                                               didSelectRow:indexPath
+                                              cellViewModel:vm];
         if (intercept) {
             return;
         }
     }
-    
-    if (vm.selectState != NCSelectStateDisable){
-        if (vm.selectState == NCSelectStateUnselect && self.selectUserIds.count >= self.maxSelectCount) {
-            [NCAlertView showAlertController:nil message:[NSString stringWithFormat:NCUILocalizedString(@"group_member_select_max_tip"), @(self.maxSelectCount)] hiddenAfterDelay:2];
+
+    if (vm.selectState != NCSelectStateDisable) {
+        if (vm.selectState == NCSelectStateUnselect &&
+            self.selectUserIds.count >= self.maxSelectCount) {
+            [NCAlertView
+                showAlertController:nil
+                            message:[NSString stringWithFormat:NCUILocalizedString(
+                                                                   @"group_member_select_max_tip"),
+                                                               @(self.maxSelectCount)]
+                   hiddenAfterDelay:2];
             return;
         }
-        
+
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-        [vm updateCell:cell state:(vm.selectState == NCSelectStateSelect) ? NCSelectStateUnselect : NCSelectStateSelect];
+        [vm updateCell:cell
+                 state:(vm.selectState == NCSelectStateSelect) ? NCSelectStateUnselect
+                                                               : NCSelectStateSelect];
         if (vm.selectState == NCSelectStateSelect) {
             [self.selectUserIds addObject:vm.friendInfo.userId];
         } else {
@@ -124,7 +139,7 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
         NSArray *array = [self.dicInfo objectForKey:key];
         return array.count;
     }
-    
+
     NSString *key = [self.indexTitles objectAtIndex:section];
     NSArray *array = [self.dicInfo objectForKey:key];
     return array.count;
@@ -133,7 +148,7 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = nil;
-    
+
     NSString *key = [self.indexTitles objectAtIndex:indexPath.section];
     NSArray *array = [self.dicInfo objectForKey:key];
     NCSelectUserCellViewModel *vm = [array objectAtIndex:indexPath.row];
@@ -155,7 +170,7 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
     title.textColor = NCDynamicColor(@"text_primary_color");
     title.translatesAutoresizingMaskIntoConstraints = NO;
     [view addSubview:title];
-   
+
     title.text = self.indexTitles[section];
     [title sizeToFit];
     [NSLayoutConstraint activateConstraints:@[
@@ -191,7 +206,8 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 - (UISearchBar *)configureSearchBarForViewController:(UIViewController *)viewController {
     NCSearchBarViewModel *vm = [[NCSearchBarViewModel alloc] init];
     vm.delegate = self;
-    if ([self.delegate respondsToSelector:@selector(selectUserViewModel:willLoadSearchBarViewModel:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(selectUserViewModel:willLoadSearchBarViewModel:)]) {
         self.searchBarVM = [self.delegate selectUserViewModel:self willLoadSearchBarViewModel:vm];
     } else {
         self.searchBarVM = vm;
@@ -205,33 +221,43 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 }
 
 - (void)fetchData {
-    [[NCEngine userModule] getFriendsWithCompletion:^(NSArray<NCFriendInfo *> * _Nullable friendInfos, NCError * _Nullable error) {
-        if (error) {
-            [self reloadData];
-            return;
-        }
-        [self configureDataSourceWithArray:friendInfos];
-    }];
+    [[NCEngine userModule]
+        getFriendsWithCompletion:^(NSArray<NCFriendInfo *> *_Nullable friendInfos,
+                                   NCError *_Nullable error) {
+          if (error) {
+              [self reloadData];
+              return;
+          }
+          [self configureDataSourceWithArray:friendInfos];
+        }];
 }
 
 - (void)configureDataSourceWithArray:(NSArray<NCFriendInfo *> *)friendInfos {
-    [self fetchGroupMember:friendInfos groupId:self.groupId complete:^(NSArray<NCGroupMemberInfo *> * _Nullable members) {
-        self.members = members;
-        NSArray *array = nil;
-        NSMutableArray *tmp = [NSMutableArray array];
-        for (NCFriendInfo *friend in friendInfos) {
-            NCSelectUserCellViewModel *vm = [[NCSelectUserCellViewModel alloc] initWithFriend:friend groupId:self.groupId];
-            vm.selectState = [self cellSelectState:friend.userId members:members];
-            [tmp addObject:vm];
-        }
-        array = tmp;
-        // Notify the consumer that the data source changed.
-        if ([self.delegate respondsToSelector:@selector(selectUserViewModel:willLoadItemsInDataSource:)]) {
-            array = [self.delegate selectUserViewModel:self willLoadItemsInDataSource:tmp];
-        }
-        self.dataSource = array;
-        [self groupAndReloadItemsInArray:self.dataSource];
-    }];
+    [self
+        fetchGroupMember:friendInfos
+                 groupId:self.groupId
+                complete:^(NSArray<NCGroupMemberInfo *> *_Nullable members) {
+                  self.members = members;
+                  NSArray *array = nil;
+                  NSMutableArray *tmp = [NSMutableArray array];
+                  for (NCFriendInfo *friend in friendInfos) {
+                      NCSelectUserCellViewModel *vm =
+                          [[NCSelectUserCellViewModel alloc] initWithFriend:friend
+                                                                    groupId:self.groupId];
+                      vm.selectState = [self cellSelectState:friend.userId members:members];
+                      [tmp addObject:vm];
+                  }
+                  array = tmp;
+                  // Notify the consumer that the data source changed.
+                  if ([self.delegate
+                          respondsToSelector:@selector(
+                                                 selectUserViewModel:willLoadItemsInDataSource:)]) {
+                      array = [self.delegate selectUserViewModel:self
+                                       willLoadItemsInDataSource:tmp];
+                  }
+                  self.dataSource = array;
+                  [self groupAndReloadItemsInArray:self.dataSource];
+                }];
 }
 
 - (NCSelectState)cellSelectState:(NSString *)userId
@@ -239,34 +265,39 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
     if ([userId isEqualToString:[NCEngine getCurrentUserId]]) {
         return NCSelectStateDisable;
     }
-    
+
     if ([self.selectUserIds containsObject:userId]) {
         return NCSelectStateSelect;
     }
-    
+
     if (self.type == NCSelectUserTypeCreateGroup) {
         return NCSelectStateUnselect;
     }
-    
+
     if ([self inGroupWithUser:userId members:members]) {
         return NCSelectStateDisable;
     }
-    
+
     return NCSelectStateUnselect;
 }
 
 - (void)selectionDidDone {
-    if ([self.delegate respondsToSelector:@selector(selectUserDidSelectComplete:selectUserIds:viewController:)]) {
-        BOOL intercept = [self.delegate selectUserDidSelectComplete:self selectUserIds:self.selectUserIds viewController:[self.responder currentViewController]];
+    if ([self.delegate
+            respondsToSelector:@selector(
+                                   selectUserDidSelectComplete:selectUserIds:viewController:)]) {
+        BOOL intercept =
+            [self.delegate selectUserDidSelectComplete:self
+                                         selectUserIds:self.selectUserIds
+                                        viewController:[self.responder currentViewController]];
         if (intercept) {
             return;
         }
     }
-    
+
     if (self.selectionDidCompelteBlock) {
         self.selectionDidCompelteBlock(self.selectUserIds, [self.responder currentViewController]);
     }
-    if (self.type == NCSelectUserTypeCreateGroup){
+    if (self.type == NCSelectUserTypeCreateGroup) {
         [self showCreateGroupVC];
     }
 }
@@ -286,22 +317,29 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 #pragma mark - Private
 
 - (void)showCreateGroupVC {
-    NCGroupCreateViewModel *viewModel = [NCGroupCreateViewModel viewModelWithInviteeUserIds:self.selectUserIds];
-    NCGroupCreateViewController *vc = [[NCGroupCreateViewController alloc] initWithViewModel:viewModel];
-    [[self.responder currentViewController].navigationController pushViewController:vc animated:YES];
+    NCGroupCreateViewModel *viewModel =
+        [NCGroupCreateViewModel viewModelWithInviteeUserIds:self.selectUserIds];
+    NCGroupCreateViewController *vc =
+        [[NCGroupCreateViewController alloc] initWithViewModel:viewModel];
+    [[self.responder currentViewController].navigationController pushViewController:vc
+                                                                           animated:YES];
 }
 
 - (void)groupAndReloadItemsInArray:(NSArray *)array {
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Group the data source.
-        self.dicInfo = [NCUPinYinTools sortedWithPinYinArray:array
-                                                  usingBlock:^NSString * _Nonnull(NCSelectUserCellViewModel * obj, NSUInteger idx) {
-            return obj.friendInfo.remark.length > 0 ? obj.friendInfo.remark : obj.friendInfo.name;
-        }];
-        // Sort section index titles.
-        self.indexTitles = [[self.dicInfo allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            if ([obj1 isKindOfClass:[NSString class]]&&[obj2 isKindOfClass:[NSString class]]) {
+      // Group the data source.
+      self.dicInfo = [NCUPinYinTools
+          sortedWithPinYinArray:array
+                     usingBlock:^NSString *_Nonnull(NCSelectUserCellViewModel *obj,
+                                                    NSUInteger idx) {
+                       return obj.friendInfo.remark.length > 0 ? obj.friendInfo.remark
+                                                               : obj.friendInfo.name;
+                     }];
+      // Sort section index titles.
+      self.indexTitles =
+          [[self.dicInfo allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 isKindOfClass:[NSString class]] && [obj2 isKindOfClass:[NSString class]]) {
                 NSString *key1 = (NSString *)obj1;
                 NSString *key2 = (NSString *)obj2;
                 if ([key1 isEqualToString:@"#"]) {
@@ -314,30 +352,39 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
                 }
             }
             return [obj1 compare:obj2 options:NSNumericSearch];
-        }];
-        NSArray *allFriends = [self.dicInfo allValues];
-        [self removeSeparatorLineIfNeed:allFriends];
-        // Ask the view controller to reload the list.
-        [self reloadData];
+          }];
+      NSArray *allFriends = [self.dicInfo allValues];
+      [self removeSeparatorLineIfNeed:allFriends];
+      // Ask the view controller to reload the list.
+      [self reloadData];
     });
 }
 
 - (void)filterDataSourceWithKeyword:(NSString *)keyword {
-    [[NCEngine userModule] searchFriendsInfoWithName:keyword completion:^(NSArray<NCFriendInfo *> * _Nullable friendInfos, NCError * _Nullable error) {
-        if (error) {
-            return;
-        }
-        NSMutableArray *tmp = [NSMutableArray array];
-        [self fetchGroupMember:friendInfos groupId:self.groupId complete:^(NSArray<NCGroupMemberInfo *> * _Nullable members) {
-            for (NCFriendInfo *friend in friendInfos) {
-                NCSelectUserCellViewModel *vm = [[NCSelectUserCellViewModel alloc] initWithFriend:friend groupId:self.groupId];
-                vm.selectState = [self cellSelectState:friend.userId members:members];
-                [tmp addObject:vm];
-            }
-            self.matchFriendList = tmp.copy;
-            [self groupAndReloadItemsInArray:self.matchFriendList];
-        }];
-    }];
+    [[NCEngine userModule]
+        searchFriendsInfoWithName:keyword
+                       completion:^(NSArray<NCFriendInfo *> *_Nullable friendInfos,
+                                    NCError *_Nullable error) {
+                         if (error) {
+                             return;
+                         }
+                         NSMutableArray *tmp = [NSMutableArray array];
+                         [self fetchGroupMember:friendInfos
+                                        groupId:self.groupId
+                                       complete:^(NSArray<NCGroupMemberInfo *> *_Nullable members) {
+                                         for (NCFriendInfo *friend in friendInfos) {
+                                             NCSelectUserCellViewModel *vm =
+                                                 [[NCSelectUserCellViewModel alloc]
+                                                     initWithFriend:friend
+                                                            groupId:self.groupId];
+                                             vm.selectState = [self cellSelectState:friend.userId
+                                                                            members:members];
+                                             [tmp addObject:vm];
+                                         }
+                                         self.matchFriendList = tmp.copy;
+                                         [self groupAndReloadItemsInArray:self.matchFriendList];
+                                       }];
+                       }];
 }
 
 - (void)restoreData {
@@ -348,7 +395,7 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 - (void)reloadData {
     if ([self.responder respondsToSelector:@selector(reloadData:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder reloadData:self.indexTitles.count == 0];
+          [self.responder reloadData:self.indexTitles.count == 0];
         });
     }
 }
@@ -356,15 +403,14 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
 - (void)performOperationQueueBlock:(dispatch_block_t)block {
     if (dispatch_get_specific(NCSelectUserOperationQueueSpecificKey)) {
         block();
-    }
-    else {
+    } else {
         dispatch_async(self.queue, block);
     }
 }
 
-- (void)fetchGroupMember:(NSArray <NCFriendInfo *> *)friendInfos
+- (void)fetchGroupMember:(NSArray<NCFriendInfo *> *)friendInfos
                  groupId:(NSString *)groupId
-                complete:(void (^)(NSArray<NCGroupMemberInfo *> * _Nullable members))complete {
+                complete:(void (^)(NSArray<NCGroupMemberInfo *> *_Nullable members))complete {
     if (groupId.length <= 0) {
         return complete(nil);
     }
@@ -375,15 +421,16 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
     if (userIdList.count == 0) {
         return complete(nil);
     }
-    [NCGroupManager getGroupMemberInfos:groupId userIds:userIdList complete:^(NSArray<NCGroupMemberInfo *> * _Nullable groupMembers) {
-        [self performOperationQueueBlock:^{
-            complete(groupMembers);
-        }];
-    }];
+    [NCGroupManager getGroupMemberInfos:groupId
+                                userIds:userIdList
+                               complete:^(NSArray<NCGroupMemberInfo *> *_Nullable groupMembers) {
+                                 [self performOperationQueueBlock:^{
+                                   complete(groupMembers);
+                                 }];
+                               }];
 }
 
-- (BOOL)inGroupWithUser:(NSString *)userId
-                members:(NSArray<NCGroupMemberInfo *> *)members {
+- (BOOL)inGroupWithUser:(NSString *)userId members:(NSArray<NCGroupMemberInfo *> *)members {
     for (NCGroupMemberInfo *info in members) {
         if ([info.userId isEqualToString:userId]) {
             return YES;
@@ -392,7 +439,7 @@ static void *NCSelectUserOperationQueueSpecificKey = &NCSelectUserOperationQueue
     return NO;
 }
 
-#pragma mark -- setter & getter
+#pragma mark-- setter & getter
 
 - (void)setMaxSelectCount:(NSInteger)maxSelectCount {
     if (maxSelectCount <= 0) {

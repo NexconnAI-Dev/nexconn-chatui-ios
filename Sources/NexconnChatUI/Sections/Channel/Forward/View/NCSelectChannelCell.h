@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCBaseTableViewCell.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 @interface NCSelectChannelCell : NCBaseTableViewCell
 

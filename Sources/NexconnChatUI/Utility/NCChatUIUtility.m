@@ -7,29 +7,30 @@
 //
 
 #import "NCChatUIUtility.h"
-#import "NCChatUILog.h"
+#import "NCButton.h"
 #import "NCChannelModel.h"
 #import "NCChatUI.h"
 #import "NCChatUICommonDefine.h"
-#import "NCUserInfoCacheManager.h"
-#import <SafariServices/SafariServices.h>
-#import "NCImageLoader.h"
 #import "NCChatUIConfig.h"
-#import "UIImage+NCDynamicImage.h"
-#import "NCPinYin.h"
-#import "NCMBProgressHUD.h"
-#import "NCChatUIUserInfo.h"
-#import "NCButton.h"
 #import "NCChatUIExtensionService.h"
-#import <UIKit/UIKit.h>
-#import "NCSemanticContext.h"
-#import "NSDictionary+NCAccessor.h"
-#import "NCStreamUtilities.h"
-#import "NCRRSUtil.h"
-#import "NCOldMessageNotificationMessage.h"
-#import "NCChatUIConfig.h"
 #import "NCChatUILanguageManager.h"
+#import "NCChatUILog.h"
+#import "NCChatUIUserInfo.h"
+#import "NCImageLoader.h"
+#import "NCMBProgressHUD.h"
+#import "NCOldMessageNotificationMessage.h"
+#import "NCPinYin.h"
+#import "NCRRSUtil.h"
+#import "NCSemanticContext.h"
 #import "NCSightActivityState.h"
+#import "NCStreamUtilities.h"
+#import "NCUserInfoCacheManager.h"
+#import "NSDictionary+NCAccessor.h"
+#import "UIImage+NCDynamicImage.h"
+#import <SafariServices/SafariServices.h>
+#import <UIKit/UIKit.h>
+
+static NSUInteger const NCMessageTextMaxVisibleCharacterCount = 5000;
 
 static NCBaseChannel *NCSyncReadStatusChannel(NCChannelModel *conversation) {
     if (!conversation) {
@@ -37,14 +38,14 @@ static NCBaseChannel *NCSyncReadStatusChannel(NCChannelModel *conversation) {
     }
     NSString *channelId = conversation.channelId ?: @"";
     switch (conversation.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCDirectChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCGroupChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCSystemChannel alloc] initWithChannelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCDirectChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCGroupChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCSystemChannel alloc] initWithChannelId:channelId];
+    default:
+        return nil;
     }
 }
 
@@ -78,12 +79,12 @@ static BOOL NCRTCBridgeCallBoolSelector(SEL selector) {
 static NSArray<NSString *> *NCPreferredScaleSuffixes(void) {
     CGFloat screenScale = [UIScreen mainScreen].scale;
     if (screenScale >= 3.0) {
-        return @[@"@3x", @"@2x", @""];
+        return @[ @"@3x", @"@2x", @"" ];
     }
     if (screenScale >= 2.0) {
-        return @[@"@2x", @"@3x", @""];
+        return @[ @"@2x", @"@3x", @"" ];
     }
-    return @[@"", @"@2x", @"@3x"];
+    return @[ @"", @"@2x", @"@3x" ];
 }
 
 static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
@@ -92,15 +93,15 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     }
 
     NSString *extension = [imageName pathExtension];
-    NSString *baseName = extension.length > 0 ? [imageName stringByDeletingPathExtension] : imageName;
-    NSString *normalizedExtension = extension.length > 0 ? [@"." stringByAppendingString:extension] : @".png";
+    NSString *baseName =
+        extension.length > 0 ? [imageName stringByDeletingPathExtension] : imageName;
+    NSString *normalizedExtension =
+        extension.length > 0 ? [@"." stringByAppendingString:extension] : @".png";
 
     NSFileManager *fileManager = [NSFileManager defaultManager];
     for (NSString *suffix in NCPreferredScaleSuffixes()) {
-        NSString *fileName = [NSString stringWithFormat:@"%@%@%@",
-                              baseName,
-                              suffix,
-                              normalizedExtension];
+        NSString *fileName =
+            [NSString stringWithFormat:@"%@%@%@", baseName, suffix, normalizedExtension];
         NSString *candidatePath = [bundlePath stringByAppendingPathComponent:fileName];
         if ([fileManager fileExistsAtPath:candidatePath]) {
             return candidatePath;
@@ -163,8 +164,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     NSString *timeText = nil;
     NSDate *messageDate = [NSDate dateWithTimeIntervalSince1970:secs];
     NSDateFormatter *formatter = [self getDateFormatter];
-    [formatter setLocale:[[NSLocale alloc]
-                             initWithLocaleIdentifier:NCUILocalizedString(@"locale")]];
+    [formatter
+        setLocale:[[NSLocale alloc] initWithLocaleIdentifier:NCUILocalizedString(@"locale")]];
     if ([self isSameYear:messageDate]) {
         if ([self isSameMonth:messageDate]) {
             NSInteger intervalDays = [self getIntervalDays:messageDate];
@@ -173,16 +174,25 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
             if (intervalDays == 0) {
                 return timeText = [formatter stringFromDate:messageDate];
             } else if (intervalDays == 1) {
-                return timeText = [NSString stringWithFormat:@"%@ %@", NCUILocalizedString(@"yesterday"), [formatter stringFromDate:messageDate]];
+                return timeText =
+                           [NSString stringWithFormat:@"%@ %@", NCUILocalizedString(@"yesterday"),
+                                                      [formatter stringFromDate:messageDate]];
             } else if (intervalDays < 7 && [self isCurrentWeek:messageDate]) {
                 [formatter setDateFormat:[NSString stringWithFormat:@"eeee %@", formatStr]];
                 return timeText = [formatter stringFromDate:messageDate];
             } else {
-                [formatter setDateFormat:[NSString stringWithFormat:@"%@ %@", NCUILocalizedString(@"same_year_date"), [self getDateFormatterString:messageDate]]];
+                [formatter
+                    setDateFormat:[NSString
+                                      stringWithFormat:@"%@ %@",
+                                                       NCUILocalizedString(@"same_year_date"),
+                                                       [self getDateFormatterString:messageDate]]];
                 return [formatter stringFromDate:messageDate];
             }
         }
-        [formatter setDateFormat:[NSString stringWithFormat:@"%@ %@", NCUILocalizedString(@"same_year_date"), [self getDateFormatterString:messageDate]]];
+        [formatter
+            setDateFormat:[NSString stringWithFormat:@"%@ %@",
+                                                     NCUILocalizedString(@"same_year_date"),
+                                                     [self getDateFormatterString:messageDate]]];
         return [formatter stringFromDate:messageDate];
     }
     return [self getMessageDate:messageDate dateFormat:formatter];
@@ -197,7 +207,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     if (@available(iOS 13.0, *)) {
         NSNumber *currentUserInterfaceStyle =
             [[NSUserDefaults standardUserDefaults] objectForKey:@"NCCurrentUserInterfaceStyle"];
-        keyString = [NSString stringWithFormat:@"%@%@%@", bundleName, name, currentUserInterfaceStyle];
+        keyString =
+            [NSString stringWithFormat:@"%@%@%@", bundleName, name, currentUserInterfaceStyle];
     }
     NCUIWeakRefObject *ref = loadedObjectDict[keyString];
     if (ref.weakRefObj) {
@@ -209,7 +220,7 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     if (![image_name hasSuffix:@".png"]) {
         image_name = [NSString stringWithFormat:@"%@.png", name];
     }
-    
+
     NSString *bundlePath = nil;
     NSMutableArray<NSString *> *candidateBundleNames = [NSMutableArray array];
     if (bundleName.length > 0) {
@@ -220,17 +231,20 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     NSBundle *innerBundle = [NSBundle bundleForClass:[self class]];
     for (NSString *candidateBundleName in candidateBundleNames) {
         NSString *bundleNameString = [candidateBundleName stringByDeletingPathExtension];
-        NSURL *rootBundleURL = [[NSBundle mainBundle] URLForResource:bundleNameString withExtension:@"bundle"];
+        NSURL *rootBundleURL = [[NSBundle mainBundle] URLForResource:bundleNameString
+                                                       withExtension:@"bundle"];
         if (rootBundleURL) {
             NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
-            NSString *candidatePath = [resourcePath stringByAppendingPathComponent:candidateBundleName];
+            NSString *candidatePath =
+                [resourcePath stringByAppendingPathComponent:candidateBundleName];
             if ([fileManager fileExistsAtPath:candidatePath]) {
                 bundlePath = candidatePath;
                 break;
             }
         }
 
-        NSString *innerBundlePath = [[innerBundle resourcePath] stringByAppendingPathComponent:candidateBundleName];
+        NSString *innerBundlePath =
+            [[innerBundle resourcePath] stringByAppendingPathComponent:candidateBundleName];
         if ([fileManager fileExistsAtPath:innerBundlePath]) {
             bundlePath = innerBundlePath;
             break;
@@ -248,7 +262,9 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     return image;
 }
 
-+ (CGSize)getTextDrawingSize:(NSString *)text font:(UIFont *)font constrainedSize:(CGSize)constrainedSize {
++ (CGSize)getTextDrawingSize:(NSString *)text
+                        font:(UIFont *)font
+             constrainedSize:(CGSize)constrainedSize {
     if (text.length <= 0) {
         return CGSizeZero;
     }
@@ -256,14 +272,72 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     if ([text respondsToSelector:@selector(boundingRectWithSize:options:attributes:context:)]) {
         NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
         paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
-        NSDictionary *attributes = @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle};
+        NSDictionary *attributes =
+            @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle};
 
         return [text boundingRectWithSize:constrainedSize
-                                  options:(NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
+                                  options:(NSStringDrawingTruncatesLastVisibleLine |
+                                           NSStringDrawingUsesLineFragmentOrigin |
+                                           NSStringDrawingUsesFontLeading)
                                attributes:attributes
-                                  context:nil].size;
+                                  context:nil]
+            .size;
     }
     return CGSizeZero;
+}
+
++ (NSUInteger)visibleCharacterCountForText:(NSString *)text {
+    if (text.length == 0) {
+        return 0;
+    }
+    __block NSUInteger count = 0;
+    [text enumerateSubstringsInRange:NSMakeRange(0, text.length)
+                             options:NSStringEnumerationByComposedCharacterSequences
+                          usingBlock:^(NSString *_Nullable substring, NSRange substringRange,
+                                       NSRange enclosingRange, BOOL *_Nonnull stop) {
+                            (void)substring;
+                            (void)substringRange;
+                            (void)enclosingRange;
+                            (void)stop;
+                            count += 1;
+                          }];
+    return count;
+}
+
++ (BOOL)text:(NSString *)text hasVisibleCharacterCountOverLimit:(NSUInteger)limit {
+    return [self visibleCharacterCountForText:text] > limit;
+}
+
++ (BOOL)text:(NSString *)text
+    wouldExceedVisibleCharacterLimit:(NSUInteger)limit
+                      replacingRange:(NSRange)range
+                            withText:(NSString *)replacementText {
+    NSString *currentText = text ?: @"";
+    if (range.location == NSNotFound || range.location > currentText.length ||
+        range.length > currentText.length - range.location) {
+        return YES;
+    }
+    NSString *updatedText = [currentText stringByReplacingCharactersInRange:range
+                                                                 withString:replacementText ?: @""];
+    return [self text:updatedText hasVisibleCharacterCountOverLimit:limit];
+}
+
++ (NSUInteger)messageTextMaxVisibleCharacterCount {
+    return NCMessageTextMaxVisibleCharacterCount;
+}
+
++ (BOOL)isMessageTextOverMaxVisibleCharacterLimit:(NSString *)text {
+    return [self text:text
+        hasVisibleCharacterCountOverLimit:[self messageTextMaxVisibleCharacterCount]];
+}
+
++ (BOOL)messageText:(NSString *)text
+    wouldExceedMaxVisibleCharacterLimitReplacingRange:(NSRange)range
+                                             withText:(NSString *)replacementText {
+    return [self text:text
+        wouldExceedVisibleCharacterLimit:[self messageTextMaxVisibleCharacterCount]
+                          replacingRange:range
+                                withText:replacementText];
 }
 
 + (NSString *)formatLocalNotification:(id)message {
@@ -285,7 +359,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     if (![ncMessage.content isKindOfClass:[NCStreamMessage class]]) {
         return @"";
     }
-    NCStreamSummaryModel *summary = [NCStreamUtilities parserStreamSummary:[NCMessageModel modelWithNCMessage:ncMessage]];
+    NCStreamSummaryModel *summary =
+        [NCStreamUtilities parserStreamSummary:[NCMessageModel modelWithNCMessage:ncMessage]];
     if (summary.summary.length > 0) {
         return summary.summary;
     }
@@ -301,13 +376,14 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
 }
 
 + (NSString *)formatMessage:(id)messageContent
-                   channelId:(NSString *)channelId
-           channelType:(NSInteger)channelType
+                  channelId:(NSString *)channelId
+                channelType:(NSInteger)channelType
                isAllMessage:(BOOL)isAllMessage {
     (void)channelId;
     (void)channelType;
     if ([messageContent isKindOfClass:[NCMessageContent class]]) {
-        return [self __formatNCMessage:(NCMessageContent *)messageContent isAllMessage:isAllMessage];
+        return [self __formatNCMessage:(NCMessageContent *)messageContent
+                          isAllMessage:isAllMessage];
     }
     return @"";
 }
@@ -339,7 +415,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     } else if ([messageContent isKindOfClass:[NCFileMessage class]]) {
         NSString *fileDigest = NCUILocalizedString(@"file_message");
         NSString *name = ((NCFileMessage *)messageContent).name ?: @"";
-        digest = name.length > 0 ? [NSString stringWithFormat:@"%@ %@", fileDigest, name] : fileDigest;
+        digest =
+            name.length > 0 ? [NSString stringWithFormat:@"%@ %@", fileDigest, name] : fileDigest;
     } else if ([messageContent isKindOfClass:[NCShortVideoMessage class]]) {
         digest = NCUILocalizedString(@"video_message");
     } else if ([messageContent isKindOfClass:[NCGIFMessage class]]) {
@@ -353,14 +430,16 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
         if (stream.sync) {
             digest = stream.content ?: @"";
         } else if (stream.content.length < NCStreamMessageCellLoadingLimit) {
-            digest = [[NCUILocalizedString(@"stream_message_typing") stringByAppendingString:@"..."] copy];
+            digest = [[NCUILocalizedString(@"stream_message_typing") stringByAppendingString:@"..."]
+                copy];
         } else {
             digest = stream.content ?: @"";
         }
     } else if ([messageContent isKindOfClass:[NCInformationNotificationMessage class]]) {
         digest = ((NCInformationNotificationMessage *)messageContent).message ?: @"";
     } else if ([messageContent isKindOfClass:[NCGroupNotificationMessage class]]) {
-        NCGroupNotificationMessage *groupNotification = (NCGroupNotificationMessage *)messageContent;
+        NCGroupNotificationMessage *groupNotification =
+            (NCGroupNotificationMessage *)messageContent;
         digest = [self __formatGroupNotificationMessageContent:groupNotification] ?: groupNotification.message ?: @"";
     } else if ([messageContent isKindOfClass:[NCRecallNotificationMessage class]]) {
         NCRecallNotificationMessage *recall = (NCRecallNotificationMessage *)messageContent;
@@ -374,7 +453,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
             NCChatUIUserInfo *userInfo =
                 [[NCUserInfoCacheManager sharedManager] getUserInfo:recall.operatorId];
             NSString *operatorName = userInfo.name.length > 0 ? userInfo.name : recall.operatorId;
-            digest = [operatorName stringByAppendingString:NCUILocalizedString(@"recalled_a_message")];
+            digest =
+                [operatorName stringByAppendingString:NCUILocalizedString(@"recalled_a_message")];
         }
     } else if ([messageContent isKindOfClass:[NCUnknownMessage class]]) {
         digest = NCUILocalizedString(@"unknown_message_cell_tip");
@@ -384,9 +464,12 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
 }
 
 + (NSString *)formatMessage:(id)messageContent
-                   channelId:(NSString *)channelId
-           channelType:(NSInteger)channelType {
-    return [self formatMessage:messageContent channelId:channelId channelType:channelType isAllMessage:NO];
+                  channelId:(NSString *)channelId
+                channelType:(NSInteger)channelType {
+    return [self formatMessage:messageContent
+                     channelId:channelId
+                   channelType:channelType
+                  isAllMessage:NO];
 }
 
 + (NSString *)formatMessage:(id)messageContent {
@@ -398,7 +481,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
         return NO;
     }
     NCMessage *ncMessage = (NCMessage *)message;
-    BOOL isUnkownMessage = [self isUnkownMessage:(long)ncMessage.clientId content:ncMessage.content];
+    BOOL isUnkownMessage = [self isUnkownMessage:(long)ncMessage.clientId
+                                         content:ncMessage.content];
     if (isUnkownMessage && NCChatUIConfigCenter.message.showUnkownMessage) {
         return YES;
     } else if (ncMessage.isPersisted) {
@@ -428,32 +512,32 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     NSInteger channelType = (NSInteger)message.channelIdentifier.channelType;
     NSString *channelId = message.channelIdentifier.channelId;
     return [NCChatUIUtility getNotificationUserInfoDictionary:channelType
-                                               fromUserId:message.senderUserId
-                                                 channelId:channelId
-                                               objectName:message.messageType
-                                                clientId:(long)message.clientId
-                                               messageId:message.messageId];
+                                                   fromUserId:message.senderUserId
+                                                    channelId:channelId
+                                                   objectName:message.messageType
+                                                     clientId:(long)message.clientId
+                                                    messageId:message.messageId];
 }
 
 + (NSDictionary *)getNotificationUserInfoDictionary:(NSInteger)channelType
                                          fromUserId:(NSString *)fromUserId
-                                           channelId:(NSString *)channelId
+                                          channelId:(NSString *)channelId
                                          objectName:(NSString *)objectName {
 
     return [NCChatUIUtility getNotificationUserInfoDictionary:channelType
-                                                fromUserId:fromUserId
-                                                  channelId:channelId
-                                                objectName:objectName
-                                                 clientId:0
-                                                messageId:@""];
+                                                   fromUserId:fromUserId
+                                                    channelId:channelId
+                                                   objectName:objectName
+                                                     clientId:0
+                                                    messageId:@""];
 }
 
 + (NSDictionary *)getNotificationUserInfoDictionary:(NSInteger)channelType
                                          fromUserId:(NSString *)fromUserId
-                                           channelId:(NSString *)channelId
+                                          channelId:(NSString *)channelId
                                          objectName:(NSString *)objectName
-                                          clientId:(long)clientId
-                                         messageId:(NSString *)messageId {
+                                           clientId:(long)clientId
+                                          messageId:(NSString *)messageId {
     NSString *type = NCLocalNotificationTypeForChannelType(channelType);
     if (type.length == 0) {
         return nil;
@@ -480,20 +564,26 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
         }
     }
     NSString *fileTypeIcon = [NCChatUIUtility getFileTypeIcon:type];
-    NSString *fileTypeKey = [NSString stringWithFormat:@"channel_msg_cell_file_%@_img", fileTypeIcon];
+    NSString *fileTypeKey =
+        [NSString stringWithFormat:@"channel_msg_cell_file_%@_img", fileTypeIcon];
     return NCDynamicImage(fileTypeKey);
 }
 
 + (NSString *)getFileTypeIcon:(NSString *)fileType {
     // Normalize the file extension to lowercase.
     fileType = [fileType lowercaseString];
-    if ([fileType isEqualToString:@"png"] || [fileType isEqualToString:@"jpg"] || [fileType isEqualToString:@"bmp"] ||
-        [fileType isEqualToString:@"cod"] || [fileType isEqualToString:@"gif"] || [fileType isEqualToString:@"jpe"] ||
-        [fileType isEqualToString:@"jpeg"] || [fileType isEqualToString:@"jfif"] || [fileType isEqualToString:@"svg"] ||
-        [fileType isEqualToString:@"tif"] || [fileType isEqualToString:@"tiff"] || [fileType isEqualToString:@"ras"] ||
-        [fileType isEqualToString:@"ico"] || ([fileType isEqualToString:@"pbm"] && NC_IOS_SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0")) ||
-        [fileType isEqualToString:@"pgm"] || [fileType isEqualToString:@"pnm"] || [fileType isEqualToString:@"ppm"] ||
-        [fileType isEqualToString:@"xbm"] || [fileType isEqualToString:@"xpm"] || [fileType isEqualToString:@"xwd"] ||
+    if ([fileType isEqualToString:@"png"] || [fileType isEqualToString:@"jpg"] ||
+        [fileType isEqualToString:@"bmp"] || [fileType isEqualToString:@"cod"] ||
+        [fileType isEqualToString:@"gif"] || [fileType isEqualToString:@"jpe"] ||
+        [fileType isEqualToString:@"jpeg"] || [fileType isEqualToString:@"jfif"] ||
+        [fileType isEqualToString:@"svg"] || [fileType isEqualToString:@"tif"] ||
+        [fileType isEqualToString:@"tiff"] || [fileType isEqualToString:@"ras"] ||
+        [fileType isEqualToString:@"ico"] ||
+        ([fileType isEqualToString:@"pbm"] &&
+         NC_IOS_SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0")) ||
+        [fileType isEqualToString:@"pgm"] || [fileType isEqualToString:@"pnm"] ||
+        [fileType isEqualToString:@"ppm"] || [fileType isEqualToString:@"xbm"] ||
+        [fileType isEqualToString:@"xpm"] || [fileType isEqualToString:@"xwd"] ||
         [fileType isEqualToString:@"rgb"]) {
         return @"PictureFile";
     } else if ([fileType isEqualToString:@"log"] || [fileType isEqualToString:@"txt"] ||
@@ -574,31 +664,36 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
     return NCDynamicImage(@"channel-list_cell_portrait_img");
 }
 
-+ (void)getConversationUnreadMentionedCount:(NCChannelModel *)model result:(void(^)(int num))result {
-    NCChannelIdentifier *identifier = [[NCChannelIdentifier alloc] initWithChannelType:model.channelType
-                                                                             channelId:model.channelId ?: @""];
-    [NCBaseChannel getChannels:@[identifier] completion:^(NSArray<NCBaseChannel *> * _Nullable channels, NCError * _Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (result) {
-                result((int)(channels.firstObject.mentionedCount));
-            }
-        });
-    }];
++ (void)getConversationUnreadMentionedCount:(NCChannelModel *)model
+                                     result:(void (^)(int num))result {
+    NCChannelIdentifier *identifier =
+        [[NCChannelIdentifier alloc] initWithChannelType:model.channelType
+                                               channelId:model.channelId ?: @""];
+    [NCBaseChannel
+        getChannels:@[ identifier ]
+         completion:^(NSArray<NCBaseChannel *> *_Nullable channels, NCError *_Nullable error) {
+           dispatch_async(dispatch_get_main_queue(), ^{
+             if (result) {
+                 result((int)(channels.firstObject.mentionedCount));
+             }
+           });
+         }];
 }
 
 + (void)syncConversationReadStatusIfEnabled:(NCChannelModel *)conversation {
-    if (!NCChatUIConfigCenter.message.enableSyncReadStatus){
+    if (!NCChatUIConfigCenter.message.enableSyncReadStatus) {
         return;
     }
     NCChannelType channelType = conversation.channelType;
     BOOL shouldSync = NO;
     if (channelType == NCChannelTypeDirect &&
-        [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(channelType)]) {
+        [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+            containsObject:@(channelType)]) {
         shouldSync = YES;
     } else if ((channelType == NCChannelTypeDirect &&
-                ![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(channelType)]) ||
-               channelType == NCChannelTypeGroup ||
-               channelType == NCChannelTypeSystem) {
+                ![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+                    containsObject:@(channelType)]) ||
+               channelType == NCChannelTypeGroup || channelType == NCChannelTypeSystem) {
         shouldSync = YES;
     }
     if (!shouldSync) {
@@ -612,7 +707,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
 }
 
 + (BOOL)shouldNeedReadReceiptForChannelType:(NCChannelType)channelType {
-    return [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(channelType)];
+    return [NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+        containsObject:@(channelType)];
 }
 
 + (NSString *)getPinYinUpperFirstLetters:(NSString *)hanZi {
@@ -650,7 +746,8 @@ static NSString *NCResolveImagePath(NSString *bundlePath, NSString *imageName) {
 }
 
 + (NSString *)checkOrAppendHttpForUrl:(NSString *)url {
-    if (![[url lowercaseString] hasPrefix:@"http://"] && ![[url lowercaseString] hasPrefix:@"https://"]) {
+    if (![[url lowercaseString] hasPrefix:@"http://"] &&
+        ![[url lowercaseString] hasPrefix:@"https://"]) {
         url = [NSString stringWithFormat:@"http://%@", url];
     }
     return url;
@@ -809,9 +906,9 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
 
     // Now we draw the underlying CGImage into a new context, applying the transform
     // calculated above.
-    CGContextRef ctx =
-        CGBitmapContextCreate(NULL, image.size.width, image.size.height, CGImageGetBitsPerComponent(image.CGImage), 0,
-                              CGImageGetColorSpace(image.CGImage), CGImageGetBitmapInfo(image.CGImage));
+    CGContextRef ctx = CGBitmapContextCreate(
+        NULL, image.size.width, image.size.height, CGImageGetBitsPerComponent(image.CGImage), 0,
+        CGImageGetColorSpace(image.CGImage), CGImageGetBitmapInfo(image.CGImage));
     CGContextConcatCTM(ctx, transform);
     switch (image.imageOrientation) {
     case UIImageOrientationLeft:
@@ -819,11 +916,13 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     case UIImageOrientationRight:
     case UIImageOrientationRightMirrored:
         // Grr...
-        CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.height, image.size.width), image.CGImage);
+        CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.height, image.size.width),
+                           image.CGImage);
         break;
 
     default:
-        CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.width, image.size.height), image.CGImage);
+        CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.width, image.size.height),
+                           image.CGImage);
         break;
     }
 
@@ -845,14 +944,14 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     }
 
     if (@available(iOS 13.0, *)) {
-        UIColor *dyColor =
-            [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull traitCollection) {
-                if (traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
-                    return darkColor;
-                } else {
-                    return lightColor;
-                }
-            }];
+        UIColor *dyColor = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(
+                                        UITraitCollection *_Nonnull traitCollection) {
+          if (traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+              return darkColor;
+          } else {
+              return lightColor;
+          }
+        }];
         return dyColor;
     } else {
         return lightColor;
@@ -907,7 +1006,10 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     }
 }
 
-+ (NSArray <UIBarButtonItem *> *)getLeftNavigationItems:(UIImage *)image title:(NSString *)title target:(id)target action:(SEL)action{
++ (NSArray<UIBarButtonItem *> *)getLeftNavigationItems:(UIImage *)image
+                                                 title:(NSString *)title
+                                                target:(id)target
+                                                action:(SEL)action {
     NCButton *backBtn = [NCButton buttonWithType:UIButtonTypeCustom];
     UIImage *resolvedImage = [NCSemanticContext imageflippedForRTL:image];
     if (!resolvedImage) {
@@ -920,7 +1022,8 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
         [backBtn setImage:resolvedImage forState:UIControlStateNormal];
     }
     [backBtn setTitle:title forState:UIControlStateNormal];
-    [backBtn setTitleColor:NCChatUIConfigCenter.ui.globalNavigationBarTintColor forState:UIControlStateNormal];
+    [backBtn setTitleColor:NCChatUIConfigCenter.ui.globalNavigationBarTintColor
+                  forState:UIControlStateNormal];
     backBtn.tintColor = NCChatUIConfigCenter.ui.globalNavigationBarTintColor;
     [backBtn addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
     [backBtn sizeToFit];
@@ -928,22 +1031,24 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     backBtnFrame.size.width = MAX(backBtnFrame.size.width, 24.0f);
     backBtnFrame.size.height = MAX(backBtnFrame.size.height, 24.0f);
     backBtn.frame = backBtnFrame;
-    if([NCChatUIUtility isRTL]){
+    if ([NCChatUIUtility isRTL]) {
         backBtn.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-    }else{
+    } else {
         backBtn.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
     }
     UIBarButtonItem *leftButton = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
-    return @[leftButton];
+    return @[ leftButton ];
 }
 
 + (BOOL)isRTL {
-    if (NCChatUIConfigCenter.ui.layoutDirection == NCChatUIInterfaceLayoutDirectionUnspecified){
+    if (NCChatUIConfigCenter.ui.layoutDirection == NCChatUIInterfaceLayoutDirectionUnspecified) {
         UIWindow *window = [self getKeyWindow];
         UISemanticContentAttribute attr = window.semanticContentAttribute;
-        UIUserInterfaceLayoutDirection _layoutDirection = [UIView userInterfaceLayoutDirectionForSemanticContentAttribute:attr];
+        UIUserInterfaceLayoutDirection _layoutDirection =
+            [UIView userInterfaceLayoutDirectionForSemanticContentAttribute:attr];
         return _layoutDirection == UIUserInterfaceLayoutDirectionRightToLeft;
-    } else if (NCChatUIConfigCenter.ui.layoutDirection == NCChatUIInterfaceLayoutDirectionRightToLeft){
+    } else if (NCChatUIConfigCenter.ui.layoutDirection ==
+               NCChatUIInterfaceLayoutDirectionRightToLeft) {
         return YES;
     }
     return NO;
@@ -951,8 +1056,8 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
 
 + (BOOL)isAudioHolding {
     if ([NCSightActivityState sharedState].playerHolding ||
-       NCRTCBridgeCallBoolSelector(@selector(isAudioHolding)) ||
-       [[NCChatUIExtensionService sharedService] isAudioHolding]) {
+        NCRTCBridgeCallBoolSelector(@selector(isAudioHolding)) ||
+        [[NCChatUIExtensionService sharedService] isAudioHolding]) {
         return YES;
     }
     return NO;
@@ -960,8 +1065,8 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
 
 + (BOOL)isCameraHolding {
     if ([NCSightActivityState sharedState].cameraHolding ||
-       NCRTCBridgeCallBoolSelector(@selector(isCameraHolding)) ||
-       [[NCChatUIExtensionService sharedService] isCameraHolding]) {
+        NCRTCBridgeCallBoolSelector(@selector(isCameraHolding)) ||
+        [[NCChatUIExtensionService sharedService] isCameraHolding]) {
         return YES;
     }
     return NO;
@@ -972,7 +1077,8 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     if (![messageContent isKindOfClass:[NCMessageContent class]]) {
         return @"";
     }
-    NSString *objectName = [NCMessageContent messageTypeForContent:(NCMessageContent *)messageContent];
+    NSString *objectName =
+        [NCMessageContent messageTypeForContent:(NCMessageContent *)messageContent];
     if (objectName.length == 0) {
         return @"";
     }
@@ -983,14 +1089,13 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     static NSDateFormatter *dateFormatter = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        dateFormatter = [[NSDateFormatter alloc] init];
+      dateFormatter = [[NSDateFormatter alloc] init];
     });
     return dateFormatter;
 }
 
 + (NSString *)getMessageDate:(NSDate *)messageDate dateFormat:(NSDateFormatter *)formatter {
-    [formatter setDateFormat:[NSString stringWithFormat:@"%@ %@",
-                                                        NCUILocalizedString(@"chat_date"),
+    [formatter setDateFormat:[NSString stringWithFormat:@"%@ %@", NCUILocalizedString(@"chat_date"),
                                                         [self getDateFormatterString:messageDate]]];
     return [formatter stringFromDate:messageDate];
 }
@@ -1009,7 +1114,7 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     return formatStr;
 }
 
-+ (BOOL)isSameYear:(NSDate *)messageDate{
++ (BOOL)isSameYear:(NSDate *)messageDate {
     NSDate *now = [NSDate date];
     NSDateFormatter *formatter = [self getDateFormatter];
     [formatter setDateFormat:@"yyyy"];
@@ -1021,7 +1126,7 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     return NO;
 }
 
-+ (BOOL)isSameMonth:(NSDate *)messageDate{
++ (BOOL)isSameMonth:(NSDate *)messageDate {
     NSDate *now = [NSDate date];
     NSDateFormatter *formatter = [self getDateFormatter];
     [formatter setDateFormat:@"MM"];
@@ -1038,12 +1143,13 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     int unit = NSCalendarUnitWeekOfMonth | NSCalendarUnitMonth | NSCalendarUnitYear;
     NSDateComponents *nowCmps = [calendar components:unit fromDate:[NSDate date]];
     NSDateComponents *messageCmps = [calendar components:unit fromDate:messageDate];
-    BOOL isCurrentWeek = (messageCmps.year == nowCmps.year) && (messageCmps.month == nowCmps.month) &&
+    BOOL isCurrentWeek = (messageCmps.year == nowCmps.year) &&
+                         (messageCmps.month == nowCmps.month) &&
                          (messageCmps.weekOfMonth == nowCmps.weekOfMonth);
     return isCurrentWeek;
 }
 
-+ (NSInteger)getIntervalDays:(NSDate *)messageDate{
++ (NSInteger)getIntervalDays:(NSDate *)messageDate {
     NSDate *now = [NSDate date];
     NSDateFormatter *formatter = [self getDateFormatter];
     [formatter setDateFormat:@"dd"];
@@ -1068,20 +1174,25 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     return formatStr;
 }
 
-+ (BOOL)isBetweenFromHour:(NSInteger)fromHour toHour:(NSInteger)toHour currentDate:(NSDate *)currentDate {
++ (BOOL)isBetweenFromHour:(NSInteger)fromHour
+                   toHour:(NSInteger)toHour
+              currentDate:(NSDate *)currentDate {
     NSDate *date1 = [self getCustomDateWithHour:fromHour currentDate:currentDate];
     NSDate *date2 = [self getCustomDateWithHour:toHour currentDate:currentDate];
-    if (([currentDate compare:date1] == NSOrderedDescending || [currentDate compare:date1] == NSOrderedSame) &&
+    if (([currentDate compare:date1] == NSOrderedDescending ||
+         [currentDate compare:date1] == NSOrderedSame) &&
         ([currentDate compare:date2] == NSOrderedAscending))
         return YES;
     return NO;
 }
 
 + (NSDate *)getCustomDateWithHour:(NSInteger)hour currentDate:(NSDate *)currentDate {
-    NSCalendar *currentCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSCalendar *currentCalendar =
+        [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDateComponents *currentComps;
-    NSInteger unitFlags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekday |
-                          NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
+    NSInteger unitFlags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay |
+                          NSCalendarUnitWeekday | NSCalendarUnitHour | NSCalendarUnitMinute |
+                          NSCalendarUnitSecond;
     currentComps = [currentCalendar components:unitFlags fromDate:currentDate];
     // Set a specific time on the current day.
     NSDateComponents *resultComps = [[NSDateComponents alloc] init];
@@ -1089,19 +1200,24 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     [resultComps setMonth:[currentComps month]];
     [resultComps setDay:[currentComps day]];
     [resultComps setHour:hour];
-    NSCalendar *resultCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSCalendar *resultCalendar =
+        [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     return [resultCalendar dateFromComponents:resultComps];
 }
 
-+ (NSString *)__formatGroupNotificationMessageContent:(NCGroupNotificationMessage *)groupNotification {
++ (NSString *)__formatGroupNotificationMessageContent:
+    (NCGroupNotificationMessage *)groupNotification {
     NSData *jsonData = [groupNotification.data dataUsingEncoding:NSUTF8StringEncoding];
     if (jsonData == nil) {
         return nil;
     }
     NSDictionary *dictionary =
-    [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:nil];
-    NSString *nickName =
-    [dictionary[@"operatorNickname"] isKindOfClass:[NSString class]] ? dictionary[@"operatorNickname"] : nil;
+        [NSJSONSerialization JSONObjectWithData:jsonData
+                                        options:NSJSONReadingMutableContainers
+                                          error:nil];
+    NSString *nickName = [dictionary[@"operatorNickname"] isKindOfClass:[NSString class]]
+                             ? dictionary[@"operatorNickname"]
+                             : nil;
     BOOL isMeOperate = NO;
     if ([groupNotification.operatorUserId isEqualToString:[NCEngine getCurrentUserId]]) {
         isMeOperate = YES;
@@ -1119,62 +1235,77 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
                                          isMeOperate:(BOOL)isMeOperate {
     NSString *message = nil;
     NSString *operatorUserId = groupNotification.operatorUserId;
-    NSArray *targetUserNickName = [dictionary[@"targetUserDisplayNames"] isKindOfClass:[NSArray class]]
-    ? dictionary[@"targetUserDisplayNames"]
-    : nil;
-    NSArray *targetUserIds =
-    [dictionary[@"targetUserIds"] isKindOfClass:[NSArray class]] ? dictionary[@"targetUserIds"] : nil;
+    NSArray *targetUserNickName =
+        [dictionary[@"targetUserDisplayNames"] isKindOfClass:[NSArray class]]
+            ? dictionary[@"targetUserDisplayNames"]
+            : nil;
+    NSArray *targetUserIds = [dictionary[@"targetUserIds"] isKindOfClass:[NSArray class]]
+                                 ? dictionary[@"targetUserIds"]
+                                 : nil;
     if ([groupNotification.operation isEqualToString:@"Create"]) {
-        message =
-            [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_created" : @"group_created"),
-                                       nickName];
-        return message;
-    }
-    if ([groupNotification.operation isEqualToString:@"Add"]) {
-        
-        message = [self __formatGroupNotificationOperationAdd:targetUserIds targetUserNickName:targetUserNickName operatorUserId:operatorUserId nickName:nickName isMeOperate:isMeOperate];
-        return message;
-    }
-    
-    if ([groupNotification.operation isEqualToString:@"Quit"]) {
-        message = [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_quit" : @"group_quit"),
+        message = [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_created"
+                                                                             : @"group_created"),
                                              nickName];
         return message;
     }
-    
-    if ([groupNotification.operation isEqualToString:@"Kicked"]) {
-        
-        message = [self __formatGroupNotificationOperationKicked:targetUserIds targetUserNickName:targetUserNickName operatorUserId:operatorUserId nickName:nickName isMeOperate:isMeOperate];
+    if ([groupNotification.operation isEqualToString:@"Add"]) {
+
+        message = [self __formatGroupNotificationOperationAdd:targetUserIds
+                                           targetUserNickName:targetUserNickName
+                                               operatorUserId:operatorUserId
+                                                     nickName:nickName
+                                                  isMeOperate:isMeOperate];
         return message;
     }
-    
-    if ([groupNotification.operation isEqualToString:@"Rename"]) {
-        NSString *groupName =
-            [dictionary[@"targetGroupName"] isKindOfClass:[NSString class]] ? dictionary[@"targetGroupName"] : nil;
+
+    if ([groupNotification.operation isEqualToString:@"Quit"]) {
         message = [NSString
-            stringWithFormat:NCUILocalizedString(@"group_changed"), nickName, groupName];
+            stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_quit" : @"group_quit"),
+                             nickName];
         return message;
     }
-    
-    if ([groupNotification.operation isEqualToString:@"Dismiss"]) {
+
+    if ([groupNotification.operation isEqualToString:@"Kicked"]) {
+
+        message = [self __formatGroupNotificationOperationKicked:targetUserIds
+                                              targetUserNickName:targetUserNickName
+                                                  operatorUserId:operatorUserId
+                                                        nickName:nickName
+                                                     isMeOperate:isMeOperate];
+        return message;
+    }
+
+    if ([groupNotification.operation isEqualToString:@"Rename"]) {
+        NSString *groupName = [dictionary[@"targetGroupName"] isKindOfClass:[NSString class]]
+                                  ? dictionary[@"targetGroupName"]
+                                  : nil;
         message =
-            [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_dismiss" : @"group_dismiss"),
-                                       nickName];
+            [NSString stringWithFormat:NCUILocalizedString(@"group_changed"), nickName, groupName];
         return message;
     }
-    
+
+    if ([groupNotification.operation isEqualToString:@"Dismiss"]) {
+        message = [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_dismiss"
+                                                                             : @"group_dismiss"),
+                                             nickName];
+        return message;
+    }
+
     message = groupNotification.message;
     return message;
 }
 
-+ (NSString *)__formatGroupNotificationOperationAdd:(NSArray *)targetUserIds targetUserNickName:(NSArray *)targetUserNickName operatorUserId:(NSString *)operatorUserId nickName:(NSString *)nickName isMeOperate:(BOOL)isMeOperate {
++ (NSString *)__formatGroupNotificationOperationAdd:(NSArray *)targetUserIds
+                                 targetUserNickName:(NSArray *)targetUserNickName
+                                     operatorUserId:(NSString *)operatorUserId
+                                           nickName:(NSString *)nickName
+                                        isMeOperate:(BOOL)isMeOperate {
     NSString *message = nil;
     if (targetUserNickName.count == 0) {
-        message =
-            [NSString stringWithFormat:NCUILocalizedString(@"group_join"), nickName];
+        message = [NSString stringWithFormat:NCUILocalizedString(@"group_join"), nickName];
         return message;
     }
-    
+
     NSMutableString *names = [[NSMutableString alloc] init];
     NSMutableString *userIdStr = [[NSMutableString alloc] init];
     for (NSUInteger index = 0; index < targetUserNickName.count; index++) {
@@ -1195,24 +1326,27 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
             [userIdStr appendString:NCUILocalizedString(@"punctuation")];
         }
     }
-    
+
     if ([operatorUserId isEqualToString:userIdStr]) {
-        message = [NSString
-            stringWithFormat:NCUILocalizedString(@"group_join"), nickName];
+        message = [NSString stringWithFormat:NCUILocalizedString(@"group_join"), nickName];
         return message;
     }
-    
+
     if (targetUserIds.count > targetUserNickName.count) {
-        names = [NSMutableString
-            stringWithFormat:@"%@%@", names, NCUILocalizedString(@"group_etc")];
+        names =
+            [NSMutableString stringWithFormat:@"%@%@", names, NCUILocalizedString(@"group_etc")];
     }
-    message = [NSString
-        stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_invited" : @"group_invited"),
-                         nickName, names];
+    message = [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_invited"
+                                                                         : @"group_invited"),
+                                         nickName, names];
     return message;
 }
 
-+ (NSString *)__formatGroupNotificationOperationKicked:(NSArray *)targetUserIds targetUserNickName:(NSArray *)targetUserNickName operatorUserId:(NSString *)operatorUserId nickName:(NSString *)nickName isMeOperate:(BOOL)isMeOperate {
++ (NSString *)__formatGroupNotificationOperationKicked:(NSArray *)targetUserIds
+                                    targetUserNickName:(NSArray *)targetUserNickName
+                                        operatorUserId:(NSString *)operatorUserId
+                                              nickName:(NSString *)nickName
+                                           isMeOperate:(BOOL)isMeOperate {
     NSString *message = nil;
     NSMutableString *names = [[NSMutableString alloc] init];
     for (NSUInteger index = 0; index < targetUserNickName.count; index++) {
@@ -1224,20 +1358,21 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
             [names appendString:NCUILocalizedString(@"punctuation")];
         }
     }
-    
+
     if (targetUserIds.count > targetUserNickName.count) {
-        names = [NSMutableString
-            stringWithFormat:@"%@%@", names, NCUILocalizedString(@"group_etc")];
+        names =
+            [NSMutableString stringWithFormat:@"%@%@", names, NCUILocalizedString(@"group_etc")];
     }
-    message =
-        [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_removed" : @"group_removed"), nickName, names];
+    message = [NSString stringWithFormat:NCUILocalizedString(isMeOperate ? @"group_have_removed"
+                                                                         : @"group_removed"),
+                                         nickName, names];
     return message;
 }
 
 + (UIColor *)transformColor:(NSString *)colorString {
 
-    NSArray *colorStrings =
-        [[colorString stringByReplacingOccurrencesOfString:@" " withString:@""] componentsSeparatedByString:@"#"];
+    NSArray *colorStrings = [[colorString stringByReplacingOccurrencesOfString:@" " withString:@""]
+        componentsSeparatedByString:@"#"];
 
     NSString *rgbString = nil;
     NSString *alphaString = nil;
@@ -1304,12 +1439,13 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
     } else if ([key isEqualToString:@"RCJrmf:RpMsg"]) {
         normalizedKey = @"red_packet_message";
     }
-    return [[NCChatUILanguageManager sharedManager] localizedStringForKey:normalizedKey table:table];
+    return [[NCChatUILanguageManager sharedManager] localizedStringForKey:normalizedKey
+                                                                    table:table];
 }
 
-
 + (NSString *)filePathForName:(NSString *)name {
-    NSBundle *tmp = [NSBundle mainBundle];;
+    NSBundle *tmp = [NSBundle mainBundle];
+    ;
     NSString *resourcePath = [tmp resourcePath];
     NSString *bundlePath = [resourcePath stringByAppendingPathComponent:name];
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -1317,15 +1453,16 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
         return bundlePath;
     } else {
         NSBundle *innerBundle = [NSBundle bundleForClass:[self class]];
-        NSString *innerFilePath =  [[innerBundle resourcePath] stringByAppendingPathComponent:name];
+        NSString *innerFilePath = [[innerBundle resourcePath] stringByAppendingPathComponent:name];
         return innerFilePath;
     }
 }
 
 + (NSString *)bundlePathWithName:(NSString *)bundleName {
     NSString *bundlePath = nil;
-    NSString *fullName= [NSString stringWithFormat:@"%@.bundle",bundleName];
-    NSURL *rootBundleURL = [[NSBundle mainBundle] URLForResource:bundleName withExtension:@"bundle"];
+    NSString *fullName = [NSString stringWithFormat:@"%@.bundle", bundleName];
+    NSURL *rootBundleURL = [[NSBundle mainBundle] URLForResource:bundleName
+                                                   withExtension:@"bundle"];
     if (rootBundleURL) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         bundlePath = [resourcePath stringByAppendingPathComponent:fullName];
@@ -1341,9 +1478,10 @@ static UIWindow *NCChatUIFirstUsableWindow(NSArray<UIWindow *> *windows) {
 + (BOOL)isDarkMode {
     if (@available(iOS 13.0, *)) {
         NSNumber *currentUserInterfaceStyle =
-        [[NSUserDefaults standardUserDefaults] objectForKey:@"NCCurrentUserInterfaceStyle"];
+            [[NSUserDefaults standardUserDefaults] objectForKey:@"NCCurrentUserInterfaceStyle"];
         if (!currentUserInterfaceStyle) {
-            currentUserInterfaceStyle = @(UITraitCollection.currentTraitCollection.userInterfaceStyle);
+            currentUserInterfaceStyle =
+                @(UITraitCollection.currentTraitCollection.userInterfaceStyle);
         }
         if (currentUserInterfaceStyle.integerValue == UIUserInterfaceStyleDark) {
             return YES;

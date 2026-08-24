@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-
 @interface NCActionSheetView : UIView <UITableViewDelegate, UITableViewDataSource>
 
 + (void)showActionSheetView:(NSString *)title
@@ -17,4 +16,3 @@
               selectedBlock:(void (^)(NSInteger index))selectedBlock
                 cancelBlock:(void (^)(void))cancelBlock;
 @end
-

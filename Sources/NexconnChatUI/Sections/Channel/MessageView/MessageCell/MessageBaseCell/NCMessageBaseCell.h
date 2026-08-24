@@ -6,12 +6,12 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseCollectionViewCell.h"
 #import "NCMessageCellDelegate.h"
 #import "NCMessageCellNotificationModel.h"
 #import "NCMessageModel.h"
 #import "NCTipLabel.h"
 #import <UIKit/UIKit.h>
-#import "NCBaseCollectionViewCell.h"
 
 /*!
  Notification for message send status updates
@@ -21,7 +21,7 @@ UIKIT_EXTERN NSString *const KNotificationMessageBaseCellUpdateSendingStatus;
 #define TIME_LABEL_HEIGHT 16
 #define TIME_LABEL_AND_BASE_CONTENT_VIEW_SPACE 12
 #define TIME_LABEL_TOP 8
-#define BASE_CONTENT_VIEW_BOTTOM 20 //20pt padding at the bottom of each cell
+#define BASE_CONTENT_VIEW_BOTTOM 20 // 20pt padding at the bottom of each cell
 
 /*!
  Base class for message cells
@@ -45,8 +45,8 @@ UIKIT_EXTERN NSString *const KNotificationMessageBaseCellUpdateSendingStatus;
  @return Custom message cell size
 
   When using custom messages, this method must be implemented to return the cell size.
- Here extraHeight is the additional height the cell needs based on UI context (e.g. timestamp, username).
- Typically the cell height should be the content height plus extraHeight.
+ Here extraHeight is the additional height the cell needs based on UI context (e.g. timestamp,
+ username). Typically the cell height should be the content height plus extraHeight.
  */
 + (CGSize)sizeForMessageModel:(NCMessageModel *)model
       withCollectionViewWidth:(CGFloat)collectionViewWidth

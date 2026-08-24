@@ -24,8 +24,8 @@
 //  THE SOFTWARE.
 //
 
-#import "NCImageLoader.h"
 #import "NCBaseImageView.h"
+#import "NCImageLoader.h"
 
 @protocol NCImageViewDelegate;
 @interface NCImageView : NCBaseImageView <NCImageLoaderObserver> {
@@ -36,7 +36,8 @@
 }
 
 - (instancetype)initWithPlaceholderImage:(UIImage *)anImage; // delegate:nil
-- (instancetype)initWithPlaceholderImage:(UIImage *)anImage delegate:(id<NCImageViewDelegate>)aDelegate;
+- (instancetype)initWithPlaceholderImage:(UIImage *)anImage
+                                delegate:(id<NCImageViewDelegate>)aDelegate;
 
 - (void)cancelImageLoad;
 
@@ -45,7 +46,8 @@
 @property (nonatomic, retain) NSData *originalImageData;
 
 /**
- Whether to skip image scaling. If this is not set, the SDK scales images whose width or height exceeds 2000.
+ Whether to skip image scaling. If this is not set, the SDK scales images whose width or height
+ exceeds 2000.
  */
 @property (nonatomic, assign) BOOL noScale;
 @property (nonatomic, weak) id<NCImageViewDelegate> delegate;

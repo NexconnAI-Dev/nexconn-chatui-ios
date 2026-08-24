@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCMessageModel+Txt.h"
-#import <objc/runtime.h>
-#import "NCMessageCellTool.h"
 #import "NCChatUIConfig.h"
+#import "NCMessageCellTool.h"
+#import "NCMessageModel+Txt.h"
 #import <CoreText/CoreText.h>
+#import <objc/runtime.h>
 
 NSInteger const NCComplexTextSpaceLeft = 12;
 NSInteger const NCComplexTextSpaceRight = 12;
@@ -30,8 +30,9 @@ NSInteger const NCComplexTextSpaceRight = 12;
     if (value) {
         return [value CGSizeValue];
     } else {
-        CGFloat textMaxWidth = [NCMessageCellTool getMessageContentViewMaxWidth] - NCComplexTextSpaceLeft - NCComplexTextSpaceRight;
-        
+        CGFloat textMaxWidth = [NCMessageCellTool getMessageContentViewMaxWidth] -
+                               NCComplexTextSpaceLeft - NCComplexTextSpaceRight;
+
         UIFont *font = [[NCChatUIConfig defaultConfig].font fontOfSecondLevel];
         CGSize size = [self coreText:msg.text
                                 font:font
@@ -41,9 +42,9 @@ NSInteger const NCComplexTextSpaceRight = 12;
     }
 }
 
-
 - (CGSize)coreText:(NSString *)calcedString font:(UIFont *)font constrainedSize:(CGSize)limitSize {
-    NSMutableAttributedString *attibuteStr = [[NSMutableAttributedString alloc] initWithString:calcedString];
+    NSMutableAttributedString *attibuteStr =
+        [[NSMutableAttributedString alloc] initWithString:calcedString];
     [attibuteStr addAttribute:NSFontAttributeName
                         value:font
                         range:NSMakeRange(0, calcedString.length)];
@@ -51,7 +52,8 @@ NSInteger const NCComplexTextSpaceRight = 12;
     CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(attributedStringRef);
     CFRange range = CFRangeMake(0, calcedString.length);
     CFRange fitCFRange = CFRangeMake(0, 0);
-    CGSize newSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, range, NULL, limitSize, &fitCFRange);
+    CGSize newSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, range, NULL,
+                                                                  limitSize, &fitCFRange);
     if (nil != framesetter) {
         CFRelease(framesetter);
         framesetter = nil;

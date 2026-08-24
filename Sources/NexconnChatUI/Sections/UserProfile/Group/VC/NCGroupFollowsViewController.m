@@ -7,14 +7,11 @@
 //
 
 #import "NCGroupFollowsViewController.h"
-#import "NCSelectUserView.h"
 #import "NCChatUICommonDefine.h"
+#import "NCSelectUserView.h"
 
-@interface NCGroupFollowsViewController ()<
-UITableViewDelegate,
-UITableViewDataSource,
-NCListViewModelResponder
->
+@interface NCGroupFollowsViewController () <UITableViewDelegate, UITableViewDataSource,
+                                            NCListViewModelResponder>
 
 @property (nonatomic, strong) NCSelectUserView *selectUserView;
 
@@ -48,23 +45,27 @@ NCListViewModelResponder
     [self.viewModel fetchGroupFollows];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)setupView {
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-#pragma mark -- NCListViewModelResponder
+#pragma mark-- NCListViewModelResponder
 
 - (void)reloadData:(BOOL)isEmpty {
     [self.selectUserView.tableView reloadData];
@@ -75,17 +76,18 @@ NCListViewModelResponder
     return self;
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- UITableViewDelegate
+#pragma mark-- UITableViewDelegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
@@ -95,7 +97,7 @@ NCListViewModelResponder
     return [self.viewModel tableView:tableView heightForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCSelectUserView *)selectUserView {
     if (!_selectUserView) {

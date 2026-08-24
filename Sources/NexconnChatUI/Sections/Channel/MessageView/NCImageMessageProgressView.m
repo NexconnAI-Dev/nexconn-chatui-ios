@@ -7,8 +7,8 @@
 //
 
 #import "NCImageMessageProgressView.h"
-#import "NCChatUIConfig.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 
 @implementation NCImageMessageProgressView
 #pragma mark - Life Cycle
@@ -29,11 +29,12 @@
         [self setBackgroundColor:NCDynamicColor(@"mask_color")];
         [self setAlpha:0.7f];
 
-        self.indicatorView =
-            [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        self.indicatorView = [[UIActivityIndicatorView alloc]
+            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
         [self.indicatorView setFrame:CGRectMake(0, 0, 30, 30)];
         [self addSubview:self.indicatorView];
-        [self.indicatorView setCenter:CGPointMake(frame.size.width / 2 - 4, frame.size.height / 2 - 13)];
+        [self.indicatorView
+            setCenter:CGPointMake(frame.size.width / 2 - 4, frame.size.height / 2 - 13)];
     }
     return self;
 }
@@ -42,7 +43,8 @@
     [super setFrame:frame];
 
     [self.label setCenter:CGPointMake(frame.size.width / 2 - 4, frame.size.height / 2 + 13)];
-    [self.indicatorView setCenter:CGPointMake(frame.size.width / 2 - 4, frame.size.height / 2 - 13)];
+    [self.indicatorView
+        setCenter:CGPointMake(frame.size.width / 2 - 4, frame.size.height / 2 - 13)];
 }
 
 #pragma mark - Public Methods

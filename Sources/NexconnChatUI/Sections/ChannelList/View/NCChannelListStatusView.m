@@ -7,10 +7,10 @@
 //
 
 #import "NCChannelListStatusView.h"
+#import "NCChannelModel+Display.h"
+#import "NCChannelModel+RRS.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
-#import "NCChannelModel+RRS.h"
-#import "NCChannelModel+Display.h"
 #import "NCRRSUtil.h"
 
 @interface NCChannelListStatusView ()
@@ -58,20 +58,16 @@
 }
 
 - (void)updateReadStatus:(NCChannelModel *)model {
-    if (model.draft.length == 0
-        && model.editedMessageDraft.content.length == 0
-        && [model hasLatestMessage]
-        && [model lastMessageIsSend]
-        && ![model lastMessageIsSending]
-        && ![model lastMessageIsFailed]
-        && [model isChannelType:NCChannelTypeDirect]
-        && [model isReadReceiptEnabledForCurrentChannelType]) {
-        
+    if (model.draft.length == 0 && model.editedMessageDraft.content.length == 0 &&
+        [model hasLatestMessage] && [model lastMessageIsSend] && ![model lastMessageIsSending] &&
+        ![model lastMessageIsFailed] && [model isChannelType:NCChannelTypeDirect] &&
+        [model isReadReceiptEnabledForCurrentChannelType]) {
+
         NSString *uid = model.latestMessageId;
         if (uid && uid.length > 0) {
             // Default unread icon.
             UIImage *image = NCDynamicImage(@"channel_msg_rrs_unread_gray_img");
-            
+
             if ([model rrs_shouldFetchConversationReadReceipt]) {
                 if (model.readReceiptInfo.readCount > 0 && model.readReceiptInfo.unreadCount == 0) {
                     // Read.
@@ -90,8 +86,7 @@
 }
 
 - (void)updateLayout {
-    if (self.messageReadStatusView.hidden &&
-        self.conversationNotificationStatusView.hidden &&
+    if (self.messageReadStatusView.hidden && self.conversationNotificationStatusView.hidden &&
         self.conversationPinView.hidden) {
         return;
     }
@@ -99,11 +94,11 @@
     for (UIView *view in self.stackView.arrangedSubviews) {
         [self.stackView removeArrangedSubview:view];
     }
-    
+
     if (!self.conversationNotificationStatusView.hidden) {
         [self.stackView addArrangedSubview:self.conversationNotificationStatusView];
     }
-    
+
     if (!self.conversationPinView.hidden) {
         [self.stackView addArrangedSubview:self.conversationPinView];
     }
@@ -123,14 +118,14 @@
     ]];
 }
 
-
 #pragma mark - Getter & Setter
 - (NCBaseImageView *)conversationNotificationStatusView {
-    if(!_conversationNotificationStatusView) {
-        _conversationNotificationStatusView = [[NCBaseImageView alloc] initWithFrame:CGRectMake(0, 0, 16, 16)];
+    if (!_conversationNotificationStatusView) {
+        _conversationNotificationStatusView =
+            [[NCBaseImageView alloc] initWithFrame:CGRectMake(0, 0, 16, 16)];
         _conversationNotificationStatusView.backgroundColor = [UIColor clearColor];
         _conversationNotificationStatusView.image =
-        NCDynamicImage(@"channel-list_cell_block_notification_img");
+            NCDynamicImage(@"channel-list_cell_block_notification_img");
         _conversationNotificationStatusView.translatesAutoresizingMaskIntoConstraints = NO;
         [NSLayoutConstraint activateConstraints:@[
             [_conversationNotificationStatusView.widthAnchor constraintEqualToConstant:16],

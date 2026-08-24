@@ -21,7 +21,7 @@
     if (self.disableActionMenu) {
         return NO;
     }
-    
+
     return [super canPerformAction:action withSender:sender];
 }
 
@@ -32,7 +32,8 @@
 
 - (void)setText:(NSString *)text {
     [super setText:text];
-    if (self.textChangeDelegate && [self.textChangeDelegate respondsToSelector:@selector(nctextView:textDidChange:)]) {
+    if (self.textChangeDelegate &&
+        [self.textChangeDelegate respondsToSelector:@selector(nctextView:textDidChange:)]) {
         [self.textChangeDelegate nctextView:self textDidChange:text];
     }
 }

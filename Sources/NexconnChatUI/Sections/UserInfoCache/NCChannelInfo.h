@@ -21,9 +21,9 @@
 @property (nonatomic, strong, nullable) NCChatUIGroup *groupInfo;
 
 - (instancetype)initWithConversationId:(NSString *)channelId
-                      channelType:(NCChannelType)channelType
+                           channelType:(NCChannelType)channelType
                                   name:(NSString *)name
-                           avatarUrl:(NSString *)avatarUrl
+                             avatarUrl:(NSString *)avatarUrl
                                  extra:(NSString *)extra;
 
 - (instancetype)initWithGroupInfo:(NCChatUIGroup *)groupInfo;

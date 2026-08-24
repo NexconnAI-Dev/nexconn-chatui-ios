@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCChannelListDataSource+RRS.h"
-#import "NCChatUIConfig.h"
 #import "NCChannelListCellUpdateInfo.h"
-#import "NCMessageModel+RRS.h"
+#import "NCChannelListDataSource+RRS.h"
 #import "NCChannelModel+RRS.h"
+#import "NCChatUIConfig.h"
+#import "NCMessageModel+RRS.h"
 #import "NCRRSDataContext.h"
 #import "NCRRSUtil.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
@@ -24,7 +24,8 @@ static NSString *NCSubChannelIdFromChannelIdentifier(NCChannelIdentifier *channe
     return @"";
 }
 
-static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadReceiptResponse *response) {
+static NCMessageReadReceiptInfo *
+NCReadReceiptInfoFromResponse(NCMessageReadReceiptResponse *response) {
     if (!response || response.messageId.length == 0) {
         return nil;
     }
@@ -41,29 +42,21 @@ static NCMessageReadReceiptInfo *NCReadReceiptInfoFromResponse(NCMessageReadRece
     return info;
 }
 
-static NSString *NCReadReceiptKey(NCChannelType channelType,
-                                  NSString *channelId,
-                                  NSString *subChannelId,
-                                  NSString *messageId) {
+static NSString *NCReadReceiptKey(NCChannelType channelType, NSString *channelId,
+                                  NSString *subChannelId, NSString *messageId) {
     if (channelId.length == 0 || messageId.length == 0) {
         return nil;
     }
-    return [NSString stringWithFormat:@"%ld%@%@%@%@%@%@",
-                                      (long)channelType,
-                                      @"\x1F",
-                                      channelId ?: @"",
-                                      @"\x1F",
-                                      subChannelId ?: @"",
-                                      @"\x1F",
-                                      messageId ?: @""];
+    return
+        [NSString stringWithFormat:@"%ld%@%@%@%@%@%@", (long)channelType, @"\x1F", channelId ?: @"",
+                                   @"\x1F", subChannelId ?: @"", @"\x1F", messageId ?: @""];
 }
 
 static NSString *NCReadReceiptKeyForInfo(NCMessageReadReceiptInfo *info) {
     if (!info.channelIdentifier) {
         return nil;
     }
-    return NCReadReceiptKey(info.channelIdentifier.channelType,
-                            info.channelIdentifier.channelId,
+    return NCReadReceiptKey(info.channelIdentifier.channelType, info.channelIdentifier.channelId,
                             NCSubChannelIdFromChannelIdentifier(info.channelIdentifier),
                             info.messageId);
 }
@@ -72,9 +65,7 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
     if (!model) {
         return nil;
     }
-    return NCReadReceiptKey(model.channelType,
-                            model.channelId,
-                            model.subChannelId ?: @"",
+    return NCReadReceiptKey(model.channelType, model.channelId, model.subChannelId ?: @"",
                             model.latestMessageId);
 }
 
@@ -82,7 +73,7 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
 - (void)rrs_applyReadReceiptInfoList:(NSArray<NCMessageReadReceiptInfo *> *)infoList
                        conversations:(NSArray<NCChannelModel *> *)conversations
                   skipsZeroReadCount:(BOOL)skipsZeroReadCount
-                  requiresNeedReceipt:(BOOL)requiresNeedReceipt
+                 requiresNeedReceipt:(BOOL)requiresNeedReceipt
             updatesOnlyZeroReadCount:(BOOL)updatesOnlyZeroReadCount;
 - (void)rrs_reloadReadReceiptAffectedIndexPaths:(NSArray<NSIndexPath *> *)indexPaths
                                          models:(NSArray<NCChannelModel *> *)models;
@@ -90,7 +81,8 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
 
 @implementation NCChannelListDataSource (RRS)
 
-- (void)rrs_didReceiveMessageReadReceiptResponses:(NSArray<NCMessageReadReceiptResponse *> *)responses {
+- (void)rrs_didReceiveMessageReadReceiptResponses:
+    (NSArray<NCMessageReadReceiptResponse *> *)responses {
     [NCRRSDataContext refreshCacheWithResponse:responses];
     NSMutableArray<NCMessageReadReceiptInfo *> *infoList = [NSMutableArray array];
     for (NCMessageReadReceiptResponse *res in responses) {
@@ -100,7 +92,8 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
         if (![self.displayConversationTypeArray containsObject:@(NCChannelTypeDirect)]) {
             continue;
         }
-        if (![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList containsObject:@(res.channelIdentifier.channelType)]) {
+        if (![NCChatUIConfigCenter.message.enabledReadReceiptConversationTypeList
+                containsObject:@(res.channelIdentifier.channelType)]) {
             continue;
         }
         NCMessageReadReceiptInfo *info = NCReadReceiptInfoFromResponse(res);
@@ -111,11 +104,11 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
     [self rrs_applyReadReceiptInfoList:infoList
                          conversations:nil
                     skipsZeroReadCount:NO
-                    requiresNeedReceipt:YES
+                   requiresNeedReceipt:YES
               updatesOnlyZeroReadCount:YES];
 }
 
-- (void)rrs_refreshCachedAndFetchReceiptInfo:(NSArray <NCChannelModel *>*)conversations {
+- (void)rrs_refreshCachedAndFetchReceiptInfo:(NSArray<NCChannelModel *> *)conversations {
     if (conversations.count == 0) {
         return;
     }
@@ -123,26 +116,27 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
     [self rrs_fetchReadReceiptInfo:conversations];
 }
 
-- (void)rrs_fetchReadReceiptInfo:(NSArray<NCChannelModel *>* )conversations {
+- (void)rrs_fetchReadReceiptInfo:(NSArray<NCChannelModel *> *)conversations {
     if ([NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
         [self rrs_fetchReadReceiptInfoWithConversations:conversations];
     } else {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self rrs_fetchReadReceiptInfoWithConversations:conversations];
-        });
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+                         [self rrs_fetchReadReceiptInfoWithConversations:conversations];
+                       });
     }
 }
 
-- (void)rrs_fetchReadReceiptInfoWithConversations:(NSArray<NCChannelModel *>* )conversations {
+- (void)rrs_fetchReadReceiptInfoWithConversations:(NSArray<NCChannelModel *> *)conversations {
     NSMutableArray *array = [NSMutableArray array];
     for (NCChannelModel *model in conversations) {
-        if ([model rrs_shouldFetchConversationReadReceipt]) {// Fetch only eligible receipt data.
+        if ([model rrs_shouldFetchConversationReadReceipt]) { // Fetch only eligible receipt data.
             [array addObject:model];
         }
     }
-    if (array.count > NCReadReceiptParamsMaxCount) {// Split requests that exceed the batch limit.
+    if (array.count > NCReadReceiptParamsMaxCount) { // Split requests that exceed the batch limit.
         NSArray *result = [self rrs_splitArray:array withSize:NCReadReceiptParamsMaxCount];
-        for (int i = 0; i<result.count; i++) {
+        for (int i = 0; i < result.count; i++) {
             NSArray *tmp = result[i];
             [self rrs_fetchReadReceiptInfoInLimit:tmp];
         }
@@ -155,21 +149,21 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
 - (NSArray *)rrs_splitArray:(NSArray *)array withSize:(NSInteger)size {
     NSMutableArray *result = [NSMutableArray array];
     NSInteger count = array.count;
-    
+
     for (NSInteger i = 0; i < count; i += size) {
         NSInteger length = MIN(size, count - i);
         NSArray *subArray = [array subarrayWithRange:NSMakeRange(i, length)];
         [result addObject:subArray];
     }
-    
+
     return result;
 }
 
-- (void)rrs_fetchReadReceiptInfoInLimit:(NSArray<NCChannelModel *>* )conversations {
-    
+- (void)rrs_fetchReadReceiptInfoInLimit:(NSArray<NCChannelModel *> *)conversations {
+
     NSMutableArray<NCMessageIdentifier *> *array = [NSMutableArray array];
     for (NCChannelModel *model in conversations) {
-        if ([model rrs_shouldFetchConversationReadReceipt]) {// Fetch only eligible receipt data.
+        if ([model rrs_shouldFetchConversationReadReceipt]) { // Fetch only eligible receipt data.
             if (model.readReceiptInfo.readCount > 0 && model.readReceiptInfo.unreadCount == 0) {
                 continue;
             }
@@ -182,37 +176,41 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
     if (array.count == 0) {
         return;
     }
-    
-    [NCBaseChannel getMessageReadReceiptInfoByIdentifiers:array
-                                               completion:^(NSArray<NCMessageReadReceiptInfo *> * _Nullable infoList,
-                                                            NCError * _Nullable error) {
-        if (!error) {
-            [NCRRSDataContext refreshCacheWithReceiptInfo:infoList];
-            [self rrs_postReadReceiptNotification:infoList conversations:conversations];
-        }
-    }];
+
+    [NCBaseChannel
+        getMessageReadReceiptInfoByIdentifiers:array
+                                    completion:^(
+                                        NSArray<NCMessageReadReceiptInfo *> *_Nullable infoList,
+                                        NCError *_Nullable error) {
+                                      if (!error) {
+                                          [NCRRSDataContext refreshCacheWithReceiptInfo:infoList];
+                                          [self rrs_postReadReceiptNotification:infoList
+                                                                  conversations:conversations];
+                                      }
+                                    }];
 }
 
 - (void)rrs_postReadReceiptNotification:(NSArray<NCMessageReadReceiptInfo *> *)infoList
-                          conversations:(NSArray<NCChannelModel *>* )conversations {
+                          conversations:(NSArray<NCChannelModel *> *)conversations {
     [self rrs_applyReadReceiptInfoList:infoList
                          conversations:conversations
                     skipsZeroReadCount:YES
-                    requiresNeedReceipt:NO
+                   requiresNeedReceipt:NO
               updatesOnlyZeroReadCount:NO];
 }
 
 - (void)rrs_applyReadReceiptInfoList:(NSArray<NCMessageReadReceiptInfo *> *)infoList
                        conversations:(NSArray<NCChannelModel *> *)conversations
                   skipsZeroReadCount:(BOOL)skipsZeroReadCount
-                  requiresNeedReceipt:(BOOL)requiresNeedReceipt
+                 requiresNeedReceipt:(BOOL)requiresNeedReceipt
             updatesOnlyZeroReadCount:(BOOL)updatesOnlyZeroReadCount {
     if (infoList.count == 0) {
         return;
     }
-    NSMutableDictionary<NSString *, NCMessageReadReceiptInfo *> *receiptInfoByKey = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSString *, NCMessageReadReceiptInfo *> *receiptInfoByKey =
+        [NSMutableDictionary dictionary];
     for (NCMessageReadReceiptInfo *info in infoList) {
-        if (skipsZeroReadCount && info.readCount == 0) {// 已读为0 , 不处理
+        if (skipsZeroReadCount && info.readCount == 0) { // 已读为0 , 不处理
             continue;
         }
         NSString *key = NCReadReceiptKeyForInfo(info);
@@ -224,7 +222,7 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
         return;
     }
 
-    for (NCChannelModel *model in conversations) {// 先刷请求数据
+    for (NCChannelModel *model in conversations) { // 先刷请求数据
         NSString *key = NCReadReceiptKeyForModel(model);
         NCMessageReadReceiptInfo *info = key.length > 0 ? receiptInfoByKey[key] : nil;
         if (info && [model lastMessageIsSend]) {
@@ -236,26 +234,26 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
     NSMutableArray<NCChannelModel *> *affectedModels = [NSMutableArray array];
     NSMutableSet<NSString *> *affectedRows = [NSMutableSet set];
     [self.dataList enumerateObjectsUsingBlock:^(NCChannelModel *model, NSUInteger idx, BOOL *stop) {
-        (void)stop;
-        NSString *key = NCReadReceiptKeyForModel(model);
-        NCMessageReadReceiptInfo *info = key.length > 0 ? receiptInfoByKey[key] : nil;
-        if (!info || ![model lastMessageIsSend]) {
-            return;
-        }
-        if (requiresNeedReceipt && !model.needReceipt) {
-            return;
-        }
-        if (updatesOnlyZeroReadCount && model.readReceiptInfo.readCount != 0) {
-            return;
-        }
-        model.readReceiptInfo = info;
-        NSString *rowKey = [NSString stringWithFormat:@"%lu", (unsigned long)idx];
-        if ([affectedRows containsObject:rowKey]) {
-            return;
-        }
-        [affectedRows addObject:rowKey];
-        [affectedIndexPaths addObject:[NSIndexPath indexPathForRow:(NSInteger)idx inSection:0]];
-        [affectedModels addObject:model];
+      (void)stop;
+      NSString *key = NCReadReceiptKeyForModel(model);
+      NCMessageReadReceiptInfo *info = key.length > 0 ? receiptInfoByKey[key] : nil;
+      if (!info || ![model lastMessageIsSend]) {
+          return;
+      }
+      if (requiresNeedReceipt && !model.needReceipt) {
+          return;
+      }
+      if (updatesOnlyZeroReadCount && model.readReceiptInfo.readCount != 0) {
+          return;
+      }
+      model.readReceiptInfo = info;
+      NSString *rowKey = [NSString stringWithFormat:@"%lu", (unsigned long)idx];
+      if ([affectedRows containsObject:rowKey]) {
+          return;
+      }
+      [affectedRows addObject:rowKey];
+      [affectedIndexPaths addObject:[NSIndexPath indexPathForRow:(NSInteger)idx inSection:0]];
+      [affectedModels addObject:model];
     }];
 
     [self rrs_reloadReadReceiptAffectedIndexPaths:affectedIndexPaths models:affectedModels];
@@ -271,7 +269,7 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
     if (![NSThread isMainThread]) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf rrs_reloadReadReceiptAffectedIndexPaths:indexPaths models:models];
+          [weakSelf rrs_reloadReadReceiptAffectedIndexPaths:indexPaths models:models];
         });
         return;
     }
@@ -283,9 +281,10 @@ static NSString *NCReadReceiptKeyForModel(NCChannelModel *model) {
         NCChannelListCellUpdateInfo *updateInfo = [[NCChannelListCellUpdateInfo alloc] init];
         updateInfo.model = model;
         updateInfo.updateType = NCChannelListCellSentStatusUpdate;
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIChannelListCellUpdateNotification
-                                                            object:updateInfo
-                                                          userInfo:nil];
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:NCChatUIChannelListCellUpdateNotification
+                          object:updateInfo
+                        userInfo:nil];
     }
 }
 

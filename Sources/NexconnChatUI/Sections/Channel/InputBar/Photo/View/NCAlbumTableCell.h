@@ -8,9 +8,9 @@
 
 #import "NCAlbumModel.h"
 #import "NCAssetHelper.h"
+#import "NCBaseTableViewCell.h"
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "NCBaseTableViewCell.h"
 @interface NCAlbumTableCell : NCBaseTableViewCell
 
 - (void)configCellWithItem:(NCAlbumModel *)model;

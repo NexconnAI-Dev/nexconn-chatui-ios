@@ -13,11 +13,13 @@
 /** Whether refresh triggers automatically. Defaults to YES. */
 @property (assign, nonatomic, getter=isAutomaticallyRefresh) BOOL automaticallyRefresh;
 
-/** Visible footer fraction used to trigger automatic refresh when content exceeds one screen. Defaults to 1.0. */
-@property (assign, nonatomic)
-    CGFloat appearencePercentTriggerAutoRefresh NCMJRefreshDeprecated("Use triggerAutomaticallyRefreshPercent.");
+/** Visible footer fraction used to trigger automatic refresh when content exceeds one screen.
+ * Defaults to 1.0. */
+@property (assign, nonatomic) CGFloat appearencePercentTriggerAutoRefresh NCMJRefreshDeprecated(
+    "Use triggerAutomaticallyRefreshPercent.");
 
-/** Visible footer fraction used to trigger automatic refresh when content exceeds one screen. Defaults to 1.0. */
+/** Visible footer fraction used to trigger automatic refresh when content exceeds one screen.
+ * Defaults to 1.0. */
 @property (assign, nonatomic) CGFloat triggerAutomaticallyRefreshPercent;
 
 /** Whether each drag gesture may trigger at most one refresh. */

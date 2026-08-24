@@ -41,7 +41,7 @@ extern CGFloat const ncTextLeadingX;
 
 @interface NCStreamMessageCellViewModel : NSObject
 
-@property (nonatomic, copy, readonly)  NSString *content;
+@property (nonatomic, copy, readonly) NSString *content;
 
 @property (nonatomic, weak) id<NCStreamMessageCellViewModelDelegate> delegate;
 

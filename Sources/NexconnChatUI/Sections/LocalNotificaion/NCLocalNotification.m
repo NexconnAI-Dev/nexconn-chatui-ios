@@ -7,16 +7,16 @@
 //
 
 #import "NCLocalNotification.h"
-#import <UIKit/UIKit.h>
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUI.h"
-#import "NCUserInfoCacheManager.h"
-#import "NCChatUIUserInfo.h"
-#import "NCChatUIGroup.h"
-#import "NCChatUIExtensionManager.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIExtensionManager.h"
+#import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
+#import "NCChatUIUtility.h"
+#import "NCUserInfoCacheManager.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 #if __IPHONE_10_0
 #import <UserNotifications/UserNotifications.h>
 #endif
@@ -54,12 +54,14 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
 + (NSString *)preparedDefaultNotificationSoundName {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *bundlePath = [NCChatUIUtility bundlePathWithName:@"NCChatUI"];
-    NSString *sourcePath = [bundlePath stringByAppendingPathComponent:NCLocalNotificationBundledSoundFileName];
+    NSString *sourcePath =
+        [bundlePath stringByAppendingPathComponent:NCLocalNotificationBundledSoundFileName];
     if (![fileManager fileExistsAtPath:sourcePath]) {
         return nil;
     }
 
-    NSURL *libraryURL = [fileManager URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask].firstObject;
+    NSURL *libraryURL =
+        [fileManager URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask].firstObject;
     if (!libraryURL) {
         return nil;
     }
@@ -67,18 +69,22 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
     NSURL *soundsURL = [libraryURL URLByAppendingPathComponent:@"Sounds" isDirectory:YES];
     NSError *directoryError = nil;
     if (![fileManager createDirectoryAtURL:soundsURL
-                withIntermediateDirectories:YES
-                                 attributes:nil
-                                      error:&directoryError]) {
-        NCLogD(@"[NexconnChatUI]: Failed to create local notification Sounds directory: %@", directoryError);
+               withIntermediateDirectories:YES
+                                attributes:nil
+                                     error:&directoryError]) {
+        NCLogD(@"[NexconnChatUI]: Failed to create local notification Sounds directory: %@",
+               directoryError);
         return nil;
     }
 
-    NSURL *destinationURL = [soundsURL URLByAppendingPathComponent:NCLocalNotificationPreparedSoundFileName];
-    NSDictionary<NSFileAttributeKey, id> *sourceAttributes = [fileManager attributesOfItemAtPath:sourcePath error:nil];
+    NSURL *destinationURL =
+        [soundsURL URLByAppendingPathComponent:NCLocalNotificationPreparedSoundFileName];
+    NSDictionary<NSFileAttributeKey, id> *sourceAttributes =
+        [fileManager attributesOfItemAtPath:sourcePath error:nil];
     NSDictionary<NSFileAttributeKey, id> *destinationAttributes =
         [fileManager attributesOfItemAtPath:destinationURL.path error:nil];
-    if (destinationAttributes && [sourceAttributes[NSFileSize] isEqual:destinationAttributes[NSFileSize]]) {
+    if (destinationAttributes &&
+        [sourceAttributes[NSFileSize] isEqual:destinationAttributes[NSFileSize]]) {
         return NCLocalNotificationPreparedSoundFileName;
     }
 
@@ -95,22 +101,32 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
 }
 
 - (void)postLocalNotificationWithMessage:(NCMessage *)message userInfo:(NSDictionary *)userInfo {
-    [self getNotificationInfo:message result:^(NSString *senderName, NSString *pushContent) {
-        if ([[NCChatUIExtensionManager sharedManager] handleNotificationForMessageReceived:message from:senderName userInfo:userInfo]) {
-            return;
+    [self getNotificationInfo:message
+        result:^(NSString *senderName, NSString *pushContent) {
+          if ([[NCChatUIExtensionManager sharedManager]
+                  handleNotificationForMessageReceived:message
+                                                  from:senderName
+                                              userInfo:userInfo]) {
+              return;
+          }
+          if ([self shouldStopLocalNotificationWithMessage:message senderName:senderName]) {
+              return;
+          }
+          [self postLocalNotification:senderName
+                          pushContent:pushContent
+                              message:message
+                             userInfo:userInfo];
         }
-        if ([self shouldStopLocalNotificationWithMessage:message senderName:senderName]) {
-            return;
-        }
-        [self postLocalNotification:senderName pushContent:pushContent message:message userInfo:userInfo];
-    } errorBlock:^(NSString *errorDescription) {
-        NCLogE(@"%@", errorDescription);
-    }];
+        errorBlock:^(NSString *errorDescription) {
+          NCLogE(@"%@", errorDescription);
+        }];
 }
 
-- (BOOL)shouldStopLocalNotificationWithMessage:(NCMessage *)message senderName:(NSString *)senderName {
+- (BOOL)shouldStopLocalNotificationWithMessage:(NCMessage *)message
+                                    senderName:(NSString *)senderName {
     id<NCChatUIMessagePolicyDelegate> delegate = [NCChatUI shared].messagePolicyDelegate;
-    if ([delegate respondsToSelector:@selector(shouldSuppressLocalNotificationForMessage:senderName:)] &&
+    if ([delegate
+            respondsToSelector:@selector(shouldSuppressLocalNotificationForMessage:senderName:)] &&
         [delegate shouldSuppressLocalNotificationForMessage:message senderName:senderName]) {
         return YES;
     }
@@ -134,15 +150,19 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
     } else {
         [_localNotification setSoundName:UILocalNotificationDefaultSoundName];
     }
-    // NSDictionary *dict = @{@"key1": [NSString stringWithFormat:@"%d", NC_LOCAL_NOTIFICATION_TAG]};
+    // NSDictionary *dict = @{@"key1": [NSString stringWithFormat:@"%d",
+    // NC_LOCAL_NOTIFICATION_TAG]};
     //[localNotify setUserInfo:dict];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [[UIApplication sharedApplication] presentLocalNotificationNow:_localNotification];
+      [[UIApplication sharedApplication] presentLocalNotificationNow:_localNotification];
     });
 }
 
 #pragma mark - Private Method
-- (void)postLocalNotification:(NSString *)senderName pushContent:(NSString *)pushContent message:(NCMessage *)message userInfo:(NSDictionary *)userInfo {
+- (void)postLocalNotification:(NSString *)senderName
+                  pushContent:(NSString *)pushContent
+                      message:(NCMessage *)message
+                     userInfo:(NSDictionary *)userInfo {
     NCMessagePushConfig *pushConfig = message.pushConfig;
     NSString *title = @"";
     NSString *soundName = [[self class] preparedDefaultNotificationSoundName];
@@ -157,7 +177,7 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
     } else {
         pushContent = [pushContent stringByReplacingOccurrencesOfString:@"%" withString:@"%%"];
     }
-    
+
     if (@available(iOS 10.0, *)) {
         UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
         if (!message.pushConfig.disablePushTitle) {
@@ -176,9 +196,14 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
                 content.threadIdentifier = pushConfig.threadId;
             }
         }
-        UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:requestWithIdentifier content:content trigger:nil];
-        [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
-        }];
+        UNNotificationRequest *request =
+            [UNNotificationRequest requestWithIdentifier:requestWithIdentifier
+                                                 content:content
+                                                 trigger:nil];
+        [[UNUserNotificationCenter currentNotificationCenter]
+            addNotificationRequest:request
+             withCompletionHandler:^(NSError *_Nullable error){
+             }];
     } else {
         if (nil == _localNotification) {
             _localNotification = [[UILocalNotification alloc] init];
@@ -198,7 +223,7 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
             [_localNotification setSoundName:UILocalNotificationDefaultSoundName];
         }
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[UIApplication sharedApplication] presentLocalNotificationNow:_localNotification];
+          [[UIApplication sharedApplication] presentLocalNotificationNow:_localNotification];
         });
     }
 }
@@ -219,11 +244,8 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
     long long sentTime = message.sentTime;
     if (channelId.length > 0 || senderUserId.length > 0 || clientId > 0 || sentTime > 0) {
         return [NSString stringWithFormat:@"nc-local-%ld-%@-%@-%lld-%lld",
-                                          (long)channelIdentifier.channelType,
-                                          channelId,
-                                          senderUserId,
-                                          clientId,
-                                          sentTime];
+                                          (long)channelIdentifier.channelType, channelId,
+                                          senderUserId, clientId, sentTime];
     }
     return [[NSUUID UUID] UUIDString];
 }
@@ -233,7 +255,8 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
                  errorBlock:(void (^)(NSString *errorDescription))errorBlock {
     __block NSString *showMessage = nil;
     BOOL isUnknown = (!message.content || [message.content isKindOfClass:[NCUnknownMessage class]]);
-    if (NCChatUIConfigCenter.message.showUnkownMessageNotificaiton && message.messageType && isUnknown) {
+    if (NCChatUIConfigCenter.message.showUnkownMessageNotificaiton && message.messageType &&
+        isUnknown) {
         showMessage = NCUILocalizedString(@"unknown_message_notification_tip");
     } else if (message.content.mentionedInfo.isMentionedMe) {
         if (!message.content.mentionedInfo.mentionedContent) {
@@ -246,11 +269,20 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
     }
 
     if ((NCChannelTypeGroup == message.channelIdentifier.channelType)) {
-        [self p_getGroupNotificationInfo:message originalShowMessage:showMessage result:resultBlock errorBlock:errorBlock];
+        [self p_getGroupNotificationInfo:message
+                     originalShowMessage:showMessage
+                                  result:resultBlock
+                              errorBlock:errorBlock];
     } else if (NCChannelTypeSystem == message.channelIdentifier.channelType) {
-        [self p_getSystemNotificationInfo:message originalShowMessage:showMessage result:resultBlock errorBlock:errorBlock];
+        [self p_getSystemNotificationInfo:message
+                      originalShowMessage:showMessage
+                                   result:resultBlock
+                               errorBlock:errorBlock];
     } else {
-        [self p_getOthersNotificationInfo:message originalShowMessage:showMessage result:resultBlock errorBlock:errorBlock];
+        [self p_getOthersNotificationInfo:message
+                      originalShowMessage:showMessage
+                                   result:resultBlock
+                               errorBlock:errorBlock];
     }
 }
 
@@ -263,29 +295,35 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
             if (!message.content.mentionedInfo.mentionedContent) {
                 showMessage = [NSString
                     stringWithFormat:@"%@%@:%@",
-                               NCUILocalizedString(@"have_mentioned_for_notification"),
+                                     NCUILocalizedString(@"have_mentioned_for_notification"),
                                      [NCChatUIUtility getDisplayName:userInfo], showMessage];
             }
         } else {
-            showMessage = [NSString stringWithFormat:@"%@:%@", [NCChatUIUtility getDisplayName:userInfo], showMessage];
+            showMessage = [NSString
+                stringWithFormat:@"%@:%@", [NCChatUIUtility getDisplayName:userInfo], showMessage];
         }
     } else {
         if (message.content.mentionedInfo.isMentionedMe) {
             if (!message.content.mentionedInfo.mentionedContent) {
                 showMessage = [NSString
                     stringWithFormat:@"%@%@(%@):%@",
-                               NCUILocalizedString(@"have_mentioned_for_notification"),
-                               [NCChatUIUtility getDisplayName:userInfo], groupInfo.groupName, showMessage];
+                                     NCUILocalizedString(@"have_mentioned_for_notification"),
+                                     [NCChatUIUtility getDisplayName:userInfo], groupInfo.groupName,
+                                     showMessage];
             }
         } else {
-            showMessage = [NSString stringWithFormat:@"%@(%@):%@", [NCChatUIUtility getDisplayName:userInfo], groupInfo.groupName, showMessage];
+            showMessage =
+                [NSString stringWithFormat:@"%@(%@):%@", [NCChatUIUtility getDisplayName:userInfo],
+                                           groupInfo.groupName, showMessage];
         }
     }
-    
+
     return showMessage;
 }
 
-- (NSString *)formatOtherNotification:(NCMessage *)message name:(NSString *)name showMessage:(NSString *)showMessage {
+- (NSString *)formatOtherNotification:(NCMessage *)message
+                                 name:(NSString *)name
+                          showMessage:(NSString *)showMessage {
     if (@available(iOS 8.2, *)) {
         showMessage = [NSString stringWithFormat:@"%@", showMessage];
     } else {
@@ -296,7 +334,9 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
 
 - (BOOL)pushTitleEffectived:(NSString *)pushTitle {
     // Treat a whitespace-only pushTitle as unset.
-    if (pushTitle && pushTitle.length > 0 && [[pushTitle stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length] > 0) {
+    if (pushTitle && pushTitle.length > 0 &&
+        [[pushTitle stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]
+            length] > 0) {
         return YES;
     }
     return NO;
@@ -304,97 +344,121 @@ static NSString *const NCLocalNotificationPreparedSoundFileName = @"nc_sms_recei
 
 #pragma clang diagnostic pop
 
-#pragma -mark private method
+#pragma - mark private method
 - (void)p_getGroupNotificationInfo:(NCMessage *)message
                originalShowMessage:(NSString *)originalShowMessage
-                            result:(void (^)(NSString *senderName, NSString *pushContent))resultBlock
+                            result:(void (^)(NSString *senderName,
+                                             NSString *pushContent))resultBlock
                         errorBlock:(void (^)(NSString *errorDescription))errorBlock {
     __block NSString *showMessage = [originalShowMessage copy];
-    [[NCUserInfoCacheManager sharedManager] getGroupInfo:message.channelIdentifier.channelId
-                                                complete:^(NCChatUIGroup *groupInfo) {
-        if (nil == groupInfo) {
-            if (errorBlock) {
-                NSString *errorDes = @"...................postLocalNotification failed, groupInfo is NULL, please call [[NCChatUI shared] refreshGroupInfoCache:(NCChatUIGroup *)groupInfo] ...................";
-                errorBlock(errorDes);
-            }
-            // 群信息缓存缺失时兜底展示：仍使用原始消息内容生成通知，避免直接丢弃。
-            if (resultBlock) {
-                resultBlock(@"", showMessage);
-            }
-            return;
-        }
-        [[NCUserInfoCacheManager sharedManager]
-            getUserInfo:message.senderUserId
-               complete:^(NCChatUIUserInfo *userInfo) {
-
-                   if (userInfo) {
-                       showMessage =
-                           [self formatGroupNotification:message
-                                                   group:groupInfo
-                                                    user:userInfo
-                                             showMessage:showMessage];
-                       resultBlock(groupInfo.groupName, showMessage);
-                   }else {
-                       if (errorBlock) {
-                           NSString *errorDes = @"...................postLocalNotification failed, groupUserInfo is NULL, please call  [[NCChatUI shared] refreshGroupUserInfoCache:(NCChatUIUserInfo *)userInfo withUserId:(NSString *)userId withGroupId:(NSString *)groupId] ...................";
-                           errorBlock(errorDes);
+    [[NCUserInfoCacheManager sharedManager]
+        getGroupInfo:message.channelIdentifier.channelId
+            complete:^(NCChatUIGroup *groupInfo) {
+              if (nil == groupInfo) {
+                  if (errorBlock) {
+                      NSString *errorDes =
+                          @"...................postLocalNotification failed, groupInfo is NULL, "
+                          @"please call [[NCChatUI shared] refreshGroupInfoCache:(NCChatUIGroup "
+                          @"*)groupInfo] ...................";
+                      errorBlock(errorDes);
+                  }
+                  // 群信息缓存缺失时兜底展示：仍使用原始消息内容生成通知，避免直接丢弃。
+                  if (resultBlock) {
+                      resultBlock(@"", showMessage);
+                  }
+                  return;
+              }
+              [[NCUserInfoCacheManager sharedManager]
+                  getUserInfo:message.senderUserId
+                     complete:^(NCChatUIUserInfo *userInfo) {
+                       if (userInfo) {
+                           showMessage = [self formatGroupNotification:message
+                                                                 group:groupInfo
+                                                                  user:userInfo
+                                                           showMessage:showMessage];
+                           resultBlock(groupInfo.groupName, showMessage);
+                       } else {
+                           if (errorBlock) {
+                               NSString *errorDes =
+                                   @"...................postLocalNotification failed, "
+                                   @"groupUserInfo is NULL, please call  [[NCChatUI shared] "
+                                   @"refreshGroupUserInfoCache:(NCChatUIUserInfo *)userInfo "
+                                   @"withUserId:(NSString *)userId withGroupId:(NSString "
+                                   @"*)groupId] ...................";
+                               errorBlock(errorDes);
+                           }
+                           // 群成员信息缓存缺失时兜底展示：以群名称作为标题，展示原始消息内容。
+                           if (resultBlock) {
+                               resultBlock(groupInfo.groupName ?: @"", showMessage);
+                           }
                        }
-                       // 群成员信息缓存缺失时兜底展示：以群名称作为标题，展示原始消息内容。
-                       if (resultBlock) {
-                           resultBlock(groupInfo.groupName ?: @"", showMessage);
-                       }
-                   }
-               }];
-    }];
+                     }];
+            }];
 }
 
 - (void)p_getSystemNotificationInfo:(NCMessage *)message
                 originalShowMessage:(NSString *)originalShowMessage
-                             result:(void (^)(NSString *senderName, NSString *pushContent))resultBlock
+                             result:(void (^)(NSString *senderName,
+                                              NSString *pushContent))resultBlock
                          errorBlock:(void (^)(NSString *errorDescription))errorBlock {
     __block NSString *showMessage = [originalShowMessage copy];
-    [[NCUserInfoCacheManager sharedManager] getUserInfo:message.channelIdentifier.channelId complete:^(NCChatUIUserInfo *userInfo) {
-        if (nil == userInfo) {
-            if (errorBlock) {
-                NSString *errorDes = @"...................postLocalNotification failed, userInfo is NULL, please call  [[NCChatUI shared] refreshUserInfoCache:(NCChatUIUserInfo *)userInfo withUserId:(NSString *)userId] ...................";
-                errorBlock(errorDes);
-            }
-            // 用户信息缓存缺失时兜底展示：仍使用原始消息内容生成通知，避免直接丢弃。
-            if (resultBlock) {
-                resultBlock(@"", showMessage);
-            }
-            return;
-        }
-        NSString *dispalyName = [NCChatUIUtility getDisplayName:userInfo];
-        showMessage = [self formatOtherNotification:message name:dispalyName showMessage:showMessage];
-        if (resultBlock) {
-            resultBlock(dispalyName, showMessage);
-        }
-    }];
+    [[NCUserInfoCacheManager sharedManager]
+        getUserInfo:message.channelIdentifier.channelId
+           complete:^(NCChatUIUserInfo *userInfo) {
+             if (nil == userInfo) {
+                 if (errorBlock) {
+                     NSString *errorDes =
+                         @"...................postLocalNotification failed, userInfo is NULL, "
+                         @"please call  [[NCChatUI shared] refreshUserInfoCache:(NCChatUIUserInfo "
+                         @"*)userInfo withUserId:(NSString *)userId] ...................";
+                     errorBlock(errorDes);
+                 }
+                 // 用户信息缓存缺失时兜底展示：仍使用原始消息内容生成通知，避免直接丢弃。
+                 if (resultBlock) {
+                     resultBlock(@"", showMessage);
+                 }
+                 return;
+             }
+             NSString *dispalyName = [NCChatUIUtility getDisplayName:userInfo];
+             showMessage = [self formatOtherNotification:message
+                                                    name:dispalyName
+                                             showMessage:showMessage];
+             if (resultBlock) {
+                 resultBlock(dispalyName, showMessage);
+             }
+           }];
 }
 
 - (void)p_getOthersNotificationInfo:(NCMessage *)message
                 originalShowMessage:(NSString *)originalShowMessage
-                             result:(void (^)(NSString *senderName, NSString *pushContent))resultBlock
+                             result:(void (^)(NSString *senderName,
+                                              NSString *pushContent))resultBlock
                          errorBlock:(void (^)(NSString *errorDescription))errorBlock {
     __block NSString *showMessage = [originalShowMessage copy];
-    [[NCUserInfoCacheManager sharedManager] getUserInfo:message.channelIdentifier.channelId complete:^(NCChatUIUserInfo *userInfo) {
-        if (nil == userInfo) {
-            if (errorBlock) {
-                NSString *errorDes = @"...................postLocalNotification failed, userInfo is NULL, please call  [[NCChatUI shared] refreshUserInfoCache:(NCChatUIUserInfo *)userInfo withUserId:(NSString *)userId] ...................";
-                errorBlock(errorDes);
-            }
-            // 用户信息缓存缺失时兜底展示：仍使用原始消息内容生成通知，避免直接丢弃。
-            if (resultBlock) {
-                resultBlock(@"", showMessage);
-            }
-            return;
-        }
-        NSString *dispalyName = [NCChatUIUtility getDisplayName:userInfo];
-        showMessage = [self formatOtherNotification:message name:dispalyName showMessage:showMessage];
-        if (resultBlock) {
-            resultBlock(dispalyName, showMessage);
-        }
-    }];
+    [[NCUserInfoCacheManager sharedManager]
+        getUserInfo:message.channelIdentifier.channelId
+           complete:^(NCChatUIUserInfo *userInfo) {
+             if (nil == userInfo) {
+                 if (errorBlock) {
+                     NSString *errorDes =
+                         @"...................postLocalNotification failed, userInfo is NULL, "
+                         @"please call  [[NCChatUI shared] refreshUserInfoCache:(NCChatUIUserInfo "
+                         @"*)userInfo withUserId:(NSString *)userId] ...................";
+                     errorBlock(errorDes);
+                 }
+                 // 用户信息缓存缺失时兜底展示：仍使用原始消息内容生成通知，避免直接丢弃。
+                 if (resultBlock) {
+                     resultBlock(@"", showMessage);
+                 }
+                 return;
+             }
+             NSString *dispalyName = [NCChatUIUtility getDisplayName:userInfo];
+             showMessage = [self formatOtherNotification:message
+                                                    name:dispalyName
+                                             showMessage:showMessage];
+             if (resultBlock) {
+                 resultBlock(dispalyName, showMessage);
+             }
+           }];
 }
 @end

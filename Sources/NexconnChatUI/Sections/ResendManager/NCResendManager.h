@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Removes the message from the resend message pool.
- 
+
  - Parameter clientId: Message clientId.
  */
 - (void)removeResendMessage:(long)clientId;

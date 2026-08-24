@@ -7,10 +7,10 @@
 //
 
 #import "NCImageMessageCell.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
-#import "NCMessageCellTool.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
+#import "NCMessageCellTool.h"
 #import "NCResendManager.h"
 
 @interface NCMessageModel (NCImageMessageCell)
@@ -62,18 +62,19 @@
     [self updateProgressView];
 }
 
-- (void)updateStatusContentView:(NCMessageModel *)model{
+- (void)updateStatusContentView:(NCMessageModel *)model {
     [super updateStatusContentView:model];
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        weakSelf.messageActivityIndicatorView.hidden = YES;
+      weakSelf.messageActivityIndicatorView.hidden = YES;
     });
 }
 
 #pragma mark - Private Methods
 
-+ (CGFloat)getMessageContentHeight:(NCMessageModel *)model{
-    CGFloat messagecontentview_height = [NCMessageCellTool getThumbnailImageSize:[self getDisplayImage:model]].height;
++ (CGFloat)getMessageContentHeight:(NCMessageModel *)model {
+    CGFloat messagecontentview_height =
+        [NCMessageCellTool getThumbnailImageSize:[self getDisplayImage:model]].height;
     if (messagecontentview_height < NCChatUIConfigCenter.ui.globalMessagePortraitSize.height) {
         messagecontentview_height = NCChatUIConfigCenter.ui.globalMessagePortraitSize.height;
     }
@@ -110,8 +111,9 @@
     }
 }
 
-- (void)updateProgressView{
-    if (self.model.sentStatus == NCMessageSentStatusSending || [[NCResendManager sharedManager] needResend:self.model.clientId]) {
+- (void)updateProgressView {
+    if (self.model.sentStatus == NCMessageSentStatusSending ||
+        [[NCResendManager sharedManager] needResend:self.model.clientId]) {
         [self showProgressView];
     } else {
         [self hiddenProgressView];
@@ -123,7 +125,7 @@
 }
 
 - (void)messageCellUpdateSendingStatusEvent:(NSNotification *)notification {
-   [super messageCellUpdateSendingStatusEvent:notification];
+    [super messageCellUpdateSendingStatusEvent:notification];
     NCMessageCellNotificationModel *notifyModel = notification.object;
     NSInteger progress = notifyModel.progress;
     if (self.model.clientId == notifyModel.clientId) {
@@ -138,24 +140,25 @@
             }
         } else if ([notifyModel.actionName isEqualToString:CONVERSATION_CELL_STATUS_SEND_SUCCESS]) {
             [self hiddenProgressView];
-        } else if ([notifyModel.actionName isEqualToString:CONVERSATION_CELL_STATUS_SEND_PROGRESS]) {
+        } else if ([notifyModel.actionName
+                       isEqualToString:CONVERSATION_CELL_STATUS_SEND_PROGRESS]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self showProgressView];
-                self.model.uploadProgress = progress;
-                [self.progressView updateProgress:progress];
+              [self showProgressView];
+              self.model.uploadProgress = progress;
+              [self.progressView updateProgress:progress];
             });
         }
     }
 }
 
-- (void)showProgressView{
+- (void)showProgressView {
     if (self.progressView.hidden) {
         self.progressView.hidden = NO;
         [self.progressView startAnimating];
     }
 }
 
-- (void)hiddenProgressView{
+- (void)hiddenProgressView {
     if (!self.progressView.hidden) {
         self.progressView.hidden = YES;
         [self.progressView stopAnimating];
@@ -164,7 +167,7 @@
 
 #pragma mark - Getter
 
-- (NCBaseImageView *)pictureView{
+- (NCBaseImageView *)pictureView {
     if (!_pictureView) {
         _pictureView = [[NCBaseImageView alloc] initWithFrame:CGRectZero];
         _pictureView.layer.masksToBounds = YES;

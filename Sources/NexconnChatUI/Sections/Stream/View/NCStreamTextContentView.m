@@ -7,9 +7,9 @@
 //
 
 #import "NCStreamTextContentView.h"
+#import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
-#import "NCChatUICommonDefine.h"
 #import "NCMessageCellTool.h"
 #import "NCStreamTextContentViewModel.h"
 @interface NCStreamTextContentView ()
@@ -34,7 +34,8 @@
     }
     NCStreamTextContentViewModel *viewModel = (NCStreamTextContentViewModel *)contentViewModel;
     self.textView.attributedText = viewModel.attributedContent;
-    self.textView.frame = CGRectMake(0, 0, viewModel.contentSize.width, viewModel.contentSize.height);
+    self.textView.frame =
+        CGRectMake(0, 0, viewModel.contentSize.width, viewModel.contentSize.height);
 }
 
 - (void)cleanView {
@@ -43,7 +44,7 @@
     self.textView.attributedText = nil;
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (UITextView *)textView {
     if (!_textView) {

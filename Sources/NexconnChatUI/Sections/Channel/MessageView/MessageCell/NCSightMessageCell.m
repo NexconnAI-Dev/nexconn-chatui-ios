@@ -8,10 +8,10 @@
 
 #import "NCSightMessageCell.h"
 #import "NCChatUICommonDefine.h"
-#import "NCSightMessageProgressView.h"
-#import "NCMessageCellTool.h"
 #import "NCChatUIConfig.h"
+#import "NCMessageCellTool.h"
 #import "NCResendManager.h"
+#import "NCSightMessageProgressView.h"
 extern NSString *const NCUIDispatchDownloadMediaNotification;
 
 @interface NCMessageModel (NCSightMessageCell)
@@ -72,7 +72,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     UIImage *thumbnailImage = [self.model sightMessageThumbnailImage];
     if (thumbnailImage) {
         CGSize imageSize = [NCSightMessageCell getSightImageSize:self.model];
-        self.durationLabel.text = [self getSightDurationLabelText:[self.model sightMessageDuration]];
+        self.durationLabel.text =
+            [self getSightDurationLabelText:[self.model sightMessageDuration]];
         self.thumbnailView.image = thumbnailImage;
 
         self.messageContentView.contentSize = imageSize;
@@ -81,29 +82,31 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
         if (self.progressView.superview) {
             [self.progressView removeFromSuperview];
         }
-        self.progressView = [[NCSightMessageProgressView alloc] initWithFrame:CGRectMake(0, 0, 44, 44)];
+        self.progressView =
+            [[NCSightMessageProgressView alloc] initWithFrame:CGRectMake(0, 0, 44, 44)];
         [self.progressView setHidden:YES];
-        self.progressView.progressTintColor =  NCDynamicColor(@"control_title_white_color");
+        self.progressView.progressTintColor = NCDynamicColor(@"control_title_white_color");
         [self.thumbnailView addSubview:self.progressView];
         [self.playImage setCenter:CGPointMake(self.thumbnailView.bounds.size.width / 2,
                                               self.thumbnailView.bounds.size.height / 2)];
         self.progressView.center = self.playImage.center;
-        CGRect durationLabelBgFrame =
-            CGRectMake(0, self.thumbnailView.bounds.size.height - 21, self.thumbnailView.bounds.size.width, 21);
+        CGRect durationLabelBgFrame = CGRectMake(0, self.thumbnailView.bounds.size.height - 21,
+                                                 self.thumbnailView.bounds.size.width, 21);
         self.durationLabel.superview.frame = durationLabelBgFrame;
         self.durationLabel.frame =
-            CGRectMake(0, 0, durationLabelBgFrame.size.width-5, durationLabelBgFrame.size.height);
+            CGRectMake(0, 0, durationLabelBgFrame.size.width - 5, durationLabelBgFrame.size.height);
     } else {
         NCLogD(@"[NexconnChatUI]: NCMessageModel.content is NOT NCSightMessage object");
     }
 
     [self updateStatusContentView:self.model];
-    
+
     [self updateSightPlayStatus];
 }
 
-- (void)updateSightPlayStatus{
-    if (self.model.sentStatus == NCMessageSentStatusSending || [[NCResendManager sharedManager] needResend:self.model.clientId]) {
+- (void)updateSightPlayStatus {
+    if (self.model.sentStatus == NCMessageSentStatusSending ||
+        [[NCResendManager sharedManager] needResend:self.model.clientId]) {
         [self.playButtonView setHidden:YES];
         [self.progressView startIndeterminateAnimation];
         [self.progressView setHidden:NO];
@@ -114,16 +117,16 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     }
 }
 
-- (void)updateStatusContentView:(NCMessageModel *)model{
+- (void)updateStatusContentView:(NCMessageModel *)model {
     [super updateStatusContentView:model];
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        weakSelf.messageActivityIndicatorView.hidden = YES;
+      weakSelf.messageActivityIndicatorView.hidden = YES;
     });
 }
 
 #pragma mark - Private Methods
-+ (CGSize)getSightImageSize:(NCMessageModel *)model{
++ (CGSize)getSightImageSize:(NCMessageModel *)model {
     CGSize imageSize = [model sightMessageThumbnailImage].size;
     // Scale the longest edge to 160 points while preserving the aspect ratio.
     CGFloat rate = imageSize.width / imageSize.height;
@@ -155,7 +158,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
                                                object:nil];
 }
 
-- (NSString *)getSightDurationLabelText:(long)duration{
+- (NSString *)getSightDurationLabelText:(long)duration {
     NSInteger minutes = duration / 60;
     NSInteger seconds = round(duration - minutes * 60);
     if (seconds == 60) {
@@ -170,36 +173,36 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     if (self.model.clientId == [statusDic[@"clientId"] longValue]) {
         if ([statusDic[@"type"] isEqualToString:@"progress"]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                if ([self.progressView isHidden]) {
-                    [self.progressView setHidden:NO];
-                    [self.progressView startIndeterminateAnimation];
-                }
-                [self.progressView setProgress:[statusDic[@"progress"] intValue] animated:YES];
+              if ([self.progressView isHidden]) {
+                  [self.progressView setHidden:NO];
+                  [self.progressView startIndeterminateAnimation];
+              }
+              [self.progressView setProgress:[statusDic[@"progress"] intValue] animated:YES];
             });
         } else if ([statusDic[@"type"] isEqualToString:@"success"]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self.progressView stopIndeterminateAnimation];
-                [self.progressView setHidden:YES];
-                [self.model setSightMessageLocalPath:statusDic[@"mediaPath"]];
+              [self.progressView stopIndeterminateAnimation];
+              [self.progressView setHidden:YES];
+              [self.model setSightMessageLocalPath:statusDic[@"mediaPath"]];
             });
         } else if ([statusDic[@"type"] isEqualToString:@"error"]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                if (![self.progressView isHidden]) {
-                    [self.progressView stopIndeterminateAnimation];
-                    [self.progressView setHidden:YES];
-                }
+              if (![self.progressView isHidden]) {
+                  [self.progressView stopIndeterminateAnimation];
+                  [self.progressView setHidden:YES];
+              }
 
-                UIViewController *rootVC = [NCChatUIUtility getKeyWindow].rootViewController;
-                UIAlertController *alertController = [UIAlertController
-                    alertControllerWithTitle:nil
-                                     message:NCUILocalizedString(@"file_download_failed")
-                              preferredStyle:UIAlertControllerStyleAlert];
-                [alertController
-                    addAction:[UIAlertAction actionWithTitle:NCUILocalizedString(@"ok")
-                                                       style:UIAlertActionStyleDefault
-                                                     handler:^(UIAlertAction *_Nonnull action){
-                                                     }]];
-                [rootVC presentViewController:alertController animated:YES completion:nil];
+              UIViewController *rootVC = [NCChatUIUtility getKeyWindow].rootViewController;
+              UIAlertController *alertController = [UIAlertController
+                  alertControllerWithTitle:nil
+                                   message:NCUILocalizedString(@"file_download_failed")
+                            preferredStyle:UIAlertControllerStyleAlert];
+              [alertController
+                  addAction:[UIAlertAction actionWithTitle:NCUILocalizedString(@"ok")
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction *_Nonnull action){
+                                                   }]];
+              [rootVC presentViewController:alertController animated:YES completion:nil];
             });
         }
     }
@@ -220,7 +223,8 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
             [self.playButtonView setHidden:NO];
             [self.progressView stopIndeterminateAnimation];
             [self.progressView setHidden:YES];
-        } else if ([notifyModel.actionName isEqualToString:CONVERSATION_CELL_STATUS_SEND_PROGRESS]) {
+        } else if ([notifyModel.actionName
+                       isEqualToString:CONVERSATION_CELL_STATUS_SEND_PROGRESS]) {
             if (self.progressView.hidden) {
                 [self.playButtonView setHidden:YES];
                 [self.progressView startIndeterminateAnimation];
@@ -259,9 +263,9 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
         _playButtonView = [[UIView alloc] initWithFrame:self.thumbnailView.bounds];
         [_playButtonView addSubview:self.playImage];
         [self.thumbnailView addSubview:_playButtonView];
-        NCBaseImageView *backgroudView =
-            [[NCBaseImageView alloc] initWithFrame:CGRectMake(0, self.thumbnailView.bounds.size.height - 21,
-                                                          self.thumbnailView.bounds.size.width, 21)];
+        NCBaseImageView *backgroudView = [[NCBaseImageView alloc]
+            initWithFrame:CGRectMake(0, self.thumbnailView.bounds.size.height - 21,
+                                     self.thumbnailView.bounds.size.width, 21)];
         backgroudView.image = NCDynamicImage(@"channel_msg_cell_player_shadow_bottom_img");
         [_playButtonView addSubview:backgroudView];
         [backgroudView addSubview:self.durationLabel];
@@ -269,7 +273,7 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     return _playButtonView;
 }
 
-- (NCBaseImageView *)thumbnailView{
+- (NCBaseImageView *)thumbnailView {
     if (!_thumbnailView) {
         _thumbnailView = [[NCBaseImageView alloc] initWithFrame:CGRectZero];
         _thumbnailView.layer.masksToBounds = YES;

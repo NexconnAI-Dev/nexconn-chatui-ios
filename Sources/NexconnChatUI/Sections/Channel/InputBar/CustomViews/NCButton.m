@@ -7,8 +7,8 @@
 //
 
 #import "NCButton.h"
-#import "UIImage+NCDynamicImage.h"
 #import "NCChatUIConfig.h"
+#import "UIImage+NCDynamicImage.h"
 @implementation NCButton
 - (void)drawRect:(CGRect)rect {
     [super drawRect:rect];

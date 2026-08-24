@@ -27,7 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NCMessageSenderUserInfoResolver : NSObject
 
 + (nullable NSString *)resolvedSenderUserIdWithMessageSenderUserId:(nullable NSString *)senderUserId
-                                                    senderUserInfo:(nullable NCUserInfo *)senderUserInfo;
+                                                    senderUserInfo:
+                                                        (nullable NCUserInfo *)senderUserInfo;
 
 + (nullable NCChatUIUserInfo *)userInfoForChannelType:(NCChannelType)channelType
                                             channelId:(nullable NSString *)channelId

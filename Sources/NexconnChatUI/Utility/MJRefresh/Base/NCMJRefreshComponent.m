@@ -84,9 +84,16 @@
 
 #pragma mark - KVO
 - (void)addObservers {
-    NSKeyValueObservingOptions options = NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld;
-    [self.scrollView addObserver:self forKeyPath:NCMJRefreshKeyPathContentOffset options:options context:nil];
-    [self.scrollView addObserver:self forKeyPath:NCMJRefreshKeyPathContentSize options:options context:nil];
+    NSKeyValueObservingOptions options =
+        NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld;
+    [self.scrollView addObserver:self
+                      forKeyPath:NCMJRefreshKeyPathContentOffset
+                         options:options
+                         context:nil];
+    [self.scrollView addObserver:self
+                      forKeyPath:NCMJRefreshKeyPathContentSize
+                         options:options
+                         context:nil];
     self.pan = self.scrollView.panGestureRecognizer;
     [self.pan addObserver:self forKeyPath:NCMJRefreshKeyPathPanState options:options context:nil];
 }
@@ -146,7 +153,7 @@
 - (void)beginRefreshing {
     [UIView animateWithDuration:NCMJRefreshFastAnimationDuration
                      animations:^{
-                         self.alpha = 1.0;
+                       self.alpha = 1.0;
                      }];
     self.pullingPercent = 1.0;
     // Keep the control fully visible while refreshing.
@@ -225,7 +232,8 @@
             self.refreshingBlock();
         }
         if ([self.refreshingTarget respondsToSelector:self.refreshingAction]) {
-            NCMJRefreshMsgSend(NCMJRefreshMsgTarget(self.refreshingTarget), self.refreshingAction, self);
+            NCMJRefreshMsgSend(NCMJRefreshMsgTarget(self.refreshingTarget), self.refreshingAction,
+                               self);
         }
         if (self.beginRefreshingCompletionBlock) {
             self.beginRefreshingCompletionBlock();
@@ -251,9 +259,7 @@
     if (self.text.length > 0) {
         stringWidth = [self.text boundingRectWithSize:size
                                               options:NSStringDrawingUsesLineFragmentOrigin
-                                           attributes:@{
-                                               NSFontAttributeName : self.font
-                                           }
+                                           attributes:@{NSFontAttributeName : self.font}
                                               context:nil]
                           .size.width;
     }

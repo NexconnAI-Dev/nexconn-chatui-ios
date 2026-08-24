@@ -7,7 +7,7 @@
 //
 
 #import "NCFriendListPermanentCell.h"
-UIKIT_EXTERN NSString * _Nullable const NCFriendListCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCFriendListCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

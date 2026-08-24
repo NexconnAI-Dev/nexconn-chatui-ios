@@ -7,22 +7,21 @@
 //
 
 #import "NCSearchGroupsViewModel.h"
-#import "NCGroupInfoCellViewModel.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupInfoCellViewModel.h"
 #import "NCGroupManager.h"
 
 NSInteger const NCSearchGroupInfoMaxCount = 50;
 
 static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQueueSpecificKey;
 
-
-@interface NCSearchGroupsViewModel()<NCSearchBarViewModelDelegate>
+@interface NCSearchGroupsViewModel () <NCSearchBarViewModelDelegate>
 @property (nonatomic, strong) NCNavigationItemsViewModel *naviItemsVM;
 @property (nonatomic, strong) NCSearchBarViewModel *searchBarVM;
 // All cells.
 @property (nonatomic, strong) NSMutableArray *dataSource;
 
-@property (nonatomic, weak) UIViewController<NCListViewModelResponder>* responder;
+@property (nonatomic, weak) UIViewController<NCListViewModelResponder> *responder;
 
 @property (nonatomic, strong) dispatch_queue_t queue;
 
@@ -43,8 +42,7 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
     return self;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         [self ready];
@@ -52,10 +50,11 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
     return self;
 }
 
-
 - (void)ready {
-    self.queue = dispatch_queue_create("ai.nexconn.searchGroups.operationQueue", DISPATCH_QUEUE_SERIAL);
-    dispatch_queue_set_specific(self.queue, NCSearchGroupsOperationQueueSpecificKey, NCSearchGroupsOperationQueueSpecificKey, NULL);
+    self.queue =
+        dispatch_queue_create("ai.nexconn.searchGroups.operationQueue", DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_set_specific(self.queue, NCSearchGroupsOperationQueueSpecificKey,
+                                NCSearchGroupsOperationQueueSpecificKey, NULL);
     self.dataSource = [NSMutableArray array];
 }
 
@@ -63,7 +62,7 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
     [NCGroupInfoCellViewModel registerCellForTableView:tableView];
 }
 
-- (void)viewController:(UIViewController*)viewController
+- (void)viewController:(UIViewController *)viewController
              tableView:(UITableView *)tableView
           didSelectRow:(NSIndexPath *)indexPath {
     id<NCCellViewModelProtocol> vm = [self cellViewModelAtIndexPath:indexPath];
@@ -77,7 +76,8 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
             return;
         }
     }
-    if ([self.delegate respondsToSelector:@selector(searchGroupsViewModel:viewController:tableView:didSelectRow:cellViewModel:)]) {
+    if ([self.delegate respondsToSelector:@selector(searchGroupsViewModel:viewController:tableView:
+                                                    didSelectRow:cellViewModel:)]) {
         BOOL ret = [self.delegate searchGroupsViewModel:self
                                          viewController:viewController
                                               tableView:tableView
@@ -106,12 +106,12 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
     id<NCCellViewModelProtocol> vm = [self cellViewModelAtIndexPath:indexPath];
     if (!vm) {
         [self reloadData:NO];
-        return [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+        return [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                      reuseIdentifier:nil];
     }
     UITableViewCell *cell = [vm tableView:tableView cellForRowAtIndexPath:indexPath];
     return cell;
 }
-
 
 #pragma mark - SearchBar
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
@@ -146,11 +146,14 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 #pragma mark - Public
 
 - (UISearchBar *)configureSearchBarForViewController:(UIViewController *)viewController {
-    if ([self.delegate respondsToSelector:@selector(willConfigureSearchBarViewModelForSearchGroupsViewModel:)]) {
-        NCSearchBarViewModel *searchBarVM = [self.delegate willConfigureSearchBarViewModelForSearchGroupsViewModel:self];
+    if ([self.delegate
+            respondsToSelector:@selector(
+                                   willConfigureSearchBarViewModelForSearchGroupsViewModel:)]) {
+        NCSearchBarViewModel *searchBarVM =
+            [self.delegate willConfigureSearchBarViewModelForSearchGroupsViewModel:self];
         searchBarVM.delegate = self;
         self.searchBarVM = searchBarVM;
-    } else if(!self.searchBarVM) {
+    } else if (!self.searchBarVM) {
         NCSearchBarViewModel *vm = [[NCSearchBarViewModel alloc] initWithResponder:viewController];
         vm.delegate = self;
         self.searchBarVM = vm;
@@ -159,8 +162,11 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 }
 
 - (NSArray *)configureRightNaviItemsForViewController:(UIViewController *)viewController {
-    if ([self.delegate respondsToSelector:@selector(willConfigureRightNavigationItemsForSearchGroupsViewModel:)]) {
-        self.naviItemsVM = [self.delegate willConfigureRightNavigationItemsForSearchGroupsViewModel:self];
+    if ([self.delegate
+            respondsToSelector:@selector(
+                                   willConfigureRightNavigationItemsForSearchGroupsViewModel:)]) {
+        self.naviItemsVM =
+            [self.delegate willConfigureRightNavigationItemsForSearchGroupsViewModel:self];
     }
     return [self.naviItemsVM rightNavigationBarItems];
 }
@@ -181,44 +187,53 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
     }
     NSUInteger requestId = [self beginSearchWithKeyword:keyword];
     [self performOperationQueueBlock:^{
-        NCUIPagingQueryOption *requestOption = self.option;
-        [NCGroupManager searchJoinedGroupInfos:keyword option:requestOption complete:^(NCUIPagingQueryResult<NCGroupInfo *> * _Nullable result) {
-            if (![self isCurrentSearchWithKeyword:keyword requestId:requestId]) {
-                return;
-            }
-            if (!result) {
-                [self refreshingFinished:YES withTips:NCUILocalizedString(@"group_list_failed")];
-                return;
-            }
-            if (result.pageToken.length != 0) {
-                requestOption.pageToken = result.pageToken;
-            }
-            NSArray *infos = result.data;
-            NSMutableArray *array = [NSMutableArray array];
-            NSArray *items = @[];
-            if (infos.count) {
-                for (NCGroupInfo *info in infos) {
-                    NCGroupInfoCellViewModel *vm = [[NCGroupInfoCellViewModel alloc] initWithGroupInfo:info keyword:keyword];
-                    [array addObject:vm];
-                }
-                items = array;
-                if ([self.delegate respondsToSelector:@selector(searchGroupsViewModel:willLoadItemsInDataSource:)]) {
-                    items = [self.delegate searchGroupsViewModel:self willLoadItemsInDataSource:array];
-                }
-            }
-            if (items) {
-                [self removeSeparatorLineIfNeed:@[items]];
-            }
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (![self isCurrentSearchWithKeyword:keyword requestId:requestId]) {
-                    return;
-                }
-                [self.dataSource addObjectsFromArray:items];
-                [self reloadData:self.dataSource.count == 0];
-            });
-        
-            [self refreshingFinished:YES withTips:nil];
-        }];
+      NCUIPagingQueryOption *requestOption = self.option;
+      [NCGroupManager
+          searchJoinedGroupInfos:keyword
+                          option:requestOption
+                        complete:^(NCUIPagingQueryResult<NCGroupInfo *> *_Nullable result) {
+                          if (![self isCurrentSearchWithKeyword:keyword requestId:requestId]) {
+                              return;
+                          }
+                          if (!result) {
+                              [self refreshingFinished:YES
+                                              withTips:NCUILocalizedString(@"group_list_failed")];
+                              return;
+                          }
+                          if (result.pageToken.length != 0) {
+                              requestOption.pageToken = result.pageToken;
+                          }
+                          NSArray *infos = result.data;
+                          NSMutableArray *array = [NSMutableArray array];
+                          NSArray *items = @[];
+                          if (infos.count) {
+                              for (NCGroupInfo *info in infos) {
+                                  NCGroupInfoCellViewModel *vm =
+                                      [[NCGroupInfoCellViewModel alloc] initWithGroupInfo:info
+                                                                                  keyword:keyword];
+                                  [array addObject:vm];
+                              }
+                              items = array;
+                              if ([self.delegate
+                                      respondsToSelector:@selector(searchGroupsViewModel:
+                                                                   willLoadItemsInDataSource:)]) {
+                                  items = [self.delegate searchGroupsViewModel:self
+                                                     willLoadItemsInDataSource:array];
+                              }
+                          }
+                          if (items) {
+                              [self removeSeparatorLineIfNeed:@[ items ]];
+                          }
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                            if (![self isCurrentSearchWithKeyword:keyword requestId:requestId]) {
+                                return;
+                            }
+                            [self.dataSource addObjectsFromArray:items];
+                            [self reloadData:self.dataSource.count == 0];
+                          });
+
+                          [self refreshingFinished:YES withTips:nil];
+                        }];
     }];
 }
 
@@ -243,7 +258,7 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 }
 
 - (NSUInteger)beginSearchWithKeyword:(NSString *)keyword {
-    @synchronized (self) {
+    @synchronized(self) {
         self.keyword = [keyword copy];
         self.searchRequestId += 1;
         return self.searchRequestId;
@@ -251,14 +266,14 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 }
 
 - (void)invalidateSearch {
-    @synchronized (self) {
+    @synchronized(self) {
         self.keyword = nil;
         self.searchRequestId += 1;
     }
 }
 
 - (BOOL)isCurrentSearchWithKeyword:(NSString *)keyword requestId:(NSUInteger)requestId {
-    @synchronized (self) {
+    @synchronized(self) {
         return self.searchRequestId == requestId && [self.keyword isEqualToString:keyword];
     }
 }
@@ -266,19 +281,19 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 - (void)restoreData {
     [self invalidateSearch];
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.option) {
-            self.option.pageToken = nil;
-        }
-        [self.dataSource removeAllObjects];
-        // Ask the view controller to reload the list.
-        [self reloadData:NO];
-    });}
-
+      if (self.option) {
+          self.option.pageToken = nil;
+      }
+      [self.dataSource removeAllObjects];
+      // Ask the view controller to reload the list.
+      [self reloadData:NO];
+    });
+}
 
 - (void)reloadData:(BOOL)showEmpty {
     if ([self.responder respondsToSelector:@selector(reloadData:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder reloadData:showEmpty];
+          [self.responder reloadData:showEmpty];
         });
     }
 }
@@ -286,14 +301,14 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 - (void)showTips:(NSString *)tips {
     if ([self.responder respondsToSelector:@selector(showTips:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder showTips:tips];
+          [self.responder showTips:tips];
         });
     }
 }
 - (void)refreshingFinished:(BOOL)success withTips:(NSString *)tips {
     if ([self.responder respondsToSelector:@selector(refreshingFinished:withTips:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.responder refreshingFinished:success withTips:tips];
+          [self.responder refreshingFinished:success withTips:tips];
         });
     }
 }
@@ -301,8 +316,7 @@ static void *NCSearchGroupsOperationQueueSpecificKey = &NCSearchGroupsOperationQ
 - (void)performOperationQueueBlock:(dispatch_block_t)block {
     if (dispatch_get_specific(NCSearchGroupsOperationQueueSpecificKey)) {
         block();
-    }
-    else {
+    } else {
         dispatch_async(self.queue, block);
     }
 }

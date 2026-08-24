@@ -16,7 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol NCReadReceiptDetailTabViewDelegate <NSObject>
 
 /// Tab switching callback
-- (void)tabView:(NCMessageReadDetailTabView *)tabView didSelectTabAtIndex:(NCMessageReadDetailTabType)tabType;
+- (void)tabView:(NCMessageReadDetailTabView *)tabView
+    didSelectTabAtIndex:(NCMessageReadDetailTabType)tabType;
 
 @end
 
@@ -49,4 +50,3 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
-

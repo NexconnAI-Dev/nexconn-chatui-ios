@@ -7,19 +7,19 @@
 //
 
 #import "NCChatUIMessageConf.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCChatUICommonDefine.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 static const NSUInteger NCChatUIDefaultGIFLimitSize = 2048;
 static const NSTimeInterval NCChatUIDefaultUploadVideoDurationLimit = 300;
 
 @implementation NCChatUIMessageConf
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         self.disableMessageNotificaiton = NO;
-        self.disableMessageAlertSound = [[NSUserDefaults standardUserDefaults] boolForKey:@"ncMessageBeep"];
+        self.disableMessageAlertSound =
+            [[NSUserDefaults standardUserDefaults] boolForKey:@"ncMessageBeep"];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         self.maxVoiceDuration = 60;
@@ -46,7 +46,8 @@ static const NSTimeInterval NCChatUIDefaultUploadVideoDurationLimit = 300;
 }
 
 - (void)setDisableMessageAlertSound:(BOOL)disableMessageAlertSound {
-    [[NSUserDefaults standardUserDefaults] setBool:disableMessageAlertSound forKey:@"ncMessageBeep"];
+    [[NSUserDefaults standardUserDefaults] setBool:disableMessageAlertSound
+                                            forKey:@"ncMessageBeep"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     _disableMessageAlertSound = disableMessageAlertSound;
 }

@@ -31,8 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param dataSource The current data source
 /// @return The data source processed by the app, or `nil` to use the default
 ///
-- (NSArray <NCRemoveGroupMemberCellViewModel *> *)selectGroupMember:(NCSelectGroupMemberViewModel *)viewModel
-                                          willLoadItemsInDataSource:(NSArray <NCRemoveGroupMemberCellViewModel *>*)dataSource;
+- (NSArray<NCRemoveGroupMemberCellViewModel *> *)
+            selectGroupMember:(NCSelectGroupMemberViewModel *)viewModel
+    willLoadItemsInDataSource:(NSArray<NCRemoveGroupMemberCellViewModel *> *)dataSource;
 
 /// Called when the user taps a cell
 ///
@@ -44,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)selectGroupMember:(NCSelectGroupMemberViewModel *)viewModel
-           viewController:(UIViewController*)viewController
+           viewController:(UIViewController *)viewController
                 tableView:(UITableView *)tableView
              didSelectRow:(NSIndexPath *)indexPath
             cellViewModel:(NCRemoveGroupMemberCellViewModel *)cellViewModel;
@@ -57,24 +58,25 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)selectGroupMemberDidSelectComplete:(NCSelectGroupMemberViewModel *)viewModel
-                             selectUserIds:(NSMutableArray <NSString *>*)selectUserIds
-                            viewController:(UIViewController*)viewController;
+                             selectUserIds:(NSMutableArray<NSString *> *)selectUserIds
+                            viewController:(UIViewController *)viewController;
 
 @end
 
 /// Select group member view model
-@interface NCSelectGroupMemberViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCSelectGroupMemberViewModel : NCBaseViewModel <NCListViewModelProtocol>
 /// Delegate
 @property (nonatomic, weak) id<NCSelectGroupMemberViewModelDelegate> delegate;
 
 /// Selection completion block
-@property (nonatomic, copy) void (^selectionDidCompelteBlock)(NSArray <NSString *>*selectUserIds, UIViewController *selectVC);
+@property (nonatomic, copy) void (^selectionDidCompelteBlock)
+    (NSArray<NSString *> *selectUserIds, UIViewController *selectVC);
 
 /// List of selected users
-@property (nonatomic, strong, readonly) NSMutableArray <NSString *>*selectUserIds;
+@property (nonatomic, strong, readonly) NSMutableArray<NSString *> *selectUserIds;
 
 /// Current data source
-@property (nonatomic, strong, readonly) NSArray <NCRemoveGroupMemberCellViewModel *>*memberList;
+@property (nonatomic, strong, readonly) NSArray<NCRemoveGroupMemberCellViewModel *> *memberList;
 
 /// Group identifier
 @property (nonatomic, copy, readonly) NSString *groupId;
@@ -86,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *tip;
 
 /// Hidden user identifiers
-@property (nonatomic, strong) NSArray <NSString *> *hideUserIds;
+@property (nonatomic, strong) NSArray<NSString *> *hideUserIds;
 
 /// Creates an `NCRemoveGroupMembersViewModel` instance
 ///

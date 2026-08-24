@@ -7,18 +7,18 @@
 //
 
 #import "NCApplyFriendListViewController.h"
+#import "NCAlertView.h"
 #import "NCApplyFriendListView.h"
 #import "NCChatUICommonDefine.h"
-#import "NCAlertView.h"
-@interface NCApplyFriendListViewController ()<UITableViewDelegate, UITableViewDataSource,NCListViewModelResponder>
+@interface NCApplyFriendListViewController () <UITableViewDelegate, UITableViewDataSource,
+                                               NCListViewModelResponder>
 
 @property (nonatomic, strong) NCApplyFriendListViewModel *viewModel;
 @property (nonatomic, strong) NCApplyFriendListView *listView;
 @end
 
 @implementation NCApplyFriendListViewController
-- (instancetype)initWithViewModel:(NCApplyFriendListViewModel *)viewModel
-{
+- (instancetype)initWithViewModel:(NCApplyFriendListViewModel *)viewModel {
     self = [super init];
     if (self) {
         [viewModel bindResponder:self];
@@ -52,7 +52,11 @@
     }
     [self configureRightNaviItems];
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)leftBarButtonItemPressed {
@@ -86,9 +90,7 @@
     if (tips.length == 0) {
         return;
     }
-    [NCAlertView showAlertController:nil
-                             message:tips
-                    hiddenAfterDelay:2];
+    [NCAlertView showAlertController:nil message:tips hiddenAfterDelay:2];
 }
 
 - (void)showAlert:(UIAlertController *)alert {
@@ -96,9 +98,7 @@
 }
 #pragma mark - UITableViewDelegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self.viewModel viewController:self
-                         tableView:tableView
-                      didSelectRow:indexPath];
+    [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
 #pragma mark - UITableViewDataSource
@@ -111,17 +111,19 @@
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return  [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [self.viewModel tableView:tableView heightForRowAtIndexPath:indexPath];;
+    return [self.viewModel tableView:tableView heightForRowAtIndexPath:indexPath];
+    ;
 }
 
 - (nullable UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    return [self.viewModel tableView:tableView viewForHeaderInSection:section];;
+    return [self.viewModel tableView:tableView viewForHeaderInSection:section];
+    ;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
@@ -129,7 +131,8 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return [self.viewModel tableView:tableView heightForHeaderInSection:section];;
+    return [self.viewModel tableView:tableView heightForHeaderInSection:section];
+    ;
 }
 
 // Without this delegate method, the table view uses the header height for its footer.
@@ -142,7 +145,8 @@
     [self.view endEditing:YES];
 }
 
-- (NSArray<UITableViewRowAction *> *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (NSArray<UITableViewRowAction *> *)tableView:(UITableView *)tableView
+                  editActionsForRowAtIndexPath:(NSIndexPath *)indexPath {
     return [self.viewModel tableView:tableView editActionsForRowAtIndexPath:indexPath];
 }
 

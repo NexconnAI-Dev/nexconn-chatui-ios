@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseView.h"
+#import <UIKit/UIKit.h>
 /// View for message content
 @interface NCContentView : NCBaseView
 

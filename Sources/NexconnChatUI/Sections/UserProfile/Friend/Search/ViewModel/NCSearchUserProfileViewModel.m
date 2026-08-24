@@ -7,18 +7,17 @@
 //
 
 #import "NCSearchUserProfileViewModel.h"
-#import "NCSearchBar.h"
 #import "NCChatUICommonDefine.h"
+#import "NCSearchBar.h"
 
-@interface NCSearchUserProfileViewModel()<UISearchBarDelegate,UISearchControllerDelegate> {
+@interface NCSearchUserProfileViewModel () <UISearchBarDelegate, UISearchControllerDelegate> {
 }
 @end
 
 @implementation NCSearchUserProfileViewModel
 @dynamic delegate;
 
-- (instancetype)initWithPlaceholder:(NSString *)placeholder
-{
+- (instancetype)initWithPlaceholder:(NSString *)placeholder {
     self = [super init];
     if (self) {
         self.searchBar = [self createSearchBar:placeholder];
@@ -29,7 +28,8 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-        self.searchBar = [self createSearchBar:NCUILocalizedString(@"user_search_application_number")];
+        self.searchBar =
+            [self createSearchBar:NCUILocalizedString(@"user_search_application_number")];
     }
     return self;
 }
@@ -87,4 +87,3 @@
     return bar;
 }
 @end
-

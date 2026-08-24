@@ -12,7 +12,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NCTextPreviewView (Edit)
 
-+ (void)edit_showText:(NSString *)text clientId:(long)clientId edited:(BOOL)edited delegate:(id<NCTextPreviewViewDelegate>)delegate;
++ (void)edit_showText:(NSString *)text
+             clientId:(long)clientId
+               edited:(BOOL)edited
+             delegate:(id<NCTextPreviewViewDelegate>)delegate;
 
 - (NSString *)edit_copyText;
 

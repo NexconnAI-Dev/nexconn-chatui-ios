@@ -7,13 +7,13 @@
 //
 
 #import "NCSightPlayerController.h"
+#import "NCChatUICommonDefine.h"
+#import "NCFileUtility.h"
+#import "NCSightActivityState.h"
+#import "NCSightAdaptiveHeader.h"
 #import "NCSightPlayerView.h"
 #import "NCSightProgressView.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCChatUICommonDefine.h"
-#import "NCSightAdaptiveHeader.h"
-#import "NCSightActivityState.h"
-#import "NCFileUtility.h"
 
 // AVPlayerItem's status property
 #define STATUS_KEYPATH @"status"
@@ -63,7 +63,6 @@
         self.autoPlay = isauto;
         self.sightURL = assetURL;
         [self registerNotificationCenter];
-
     }
     return self;
 }
@@ -87,9 +86,10 @@
     [self.player removeObserver:self forKeyPath:RATE_KEYPATH];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     if (_itemEndObserver) {
-        [[NSNotificationCenter defaultCenter] removeObserver:_itemEndObserver
-                                                        name:AVPlayerItemDidPlayToEndTimeNotification
-                                                      object:_playerItem];
+        [[NSNotificationCenter defaultCenter]
+            removeObserver:_itemEndObserver
+                      name:AVPlayerItemDidPlayToEndTimeNotification
+                    object:_playerItem];
     }
     if (_timeObserver && _player) {
         [_player removeTimeObserver:_timeObserver];
@@ -132,9 +132,11 @@
         return [self fallbackSightThumbnailImage];
     }
 
-    NSString *imagePath = [[videoPath stringByDeletingPathExtension] stringByAppendingString:@".png"];
+    NSString *imagePath =
+        [[videoPath stringByDeletingPathExtension] stringByAppendingString:@".png"];
     NSRange range = [imagePath rangeOfString:NSTemporaryDirectory()];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:imagePath] && range.location == NSNotFound) {
+    if ([[NSFileManager defaultManager] fileExistsAtPath:imagePath] &&
+        range.location == NSNotFound) {
         return [UIImage imageWithContentsOfFile:imagePath] ?: [self fallbackSightThumbnailImage];
     }
 
@@ -159,10 +161,10 @@
     UIImage *shotImage = [[UIImage alloc] initWithCGImage:image];
     if (shotImage && range.location == NSNotFound) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSData *imageData = UIImagePNGRepresentation(shotImage);
-            if (imageData) {
-                [imageData writeToFile:imagePath atomically:YES];
-            }
+          NSData *imageData = UIImagePNGRepresentation(shotImage);
+          if (imageData) {
+              [imageData writeToFile:imagePath atomically:YES];
+          }
         });
     }
 
@@ -181,7 +183,8 @@
 
 - (void)resetSightPlayer:(BOOL)inactivateAudioSession {
     self.canceling = YES;
-    [self.transport.centerPlayBtn setImage:NCDynamicImage(@"video_preview_play_btn_normal_img") forState:UIControlStateNormal];
+    [self.transport.centerPlayBtn setImage:NCDynamicImage(@"video_preview_play_btn_normal_img")
+                                  forState:UIControlStateNormal];
     [self.errorTipsLabel removeFromSuperview];
     if (!self.isPlaying) {
         return;
@@ -196,7 +199,7 @@
     }
 }
 
-- (void)resetPlayer{
+- (void)resetPlayer {
     [_player removeObserver:self forKeyPath:RATE_KEYPATH];
     _player = nil;
 }
@@ -208,22 +211,24 @@
 
 - (void)showDowndLoadFailedControl {
     dispatch_async(dispatch_get_main_queue(), ^{
-        //[self.transport stopIndicatorViewAnimating];
-        [self.transport.centerPlayBtn setImage:NCDynamicImage(@"video_player_sight_download_failed_img")
-                                      forState:UIControlStateNormal];
-        self.transport.centerPlayBtn.hidden = NO;
-        self.transport.centerPlayBtn.selected = NO;
-        CGPoint playBtnCenter = self.transport.centerPlayBtn.center;
-        self.errorTipsLabel.center =
-            CGPointMake(playBtnCenter.x, CGRectGetMaxY(self.transport.centerPlayBtn.frame) + 16);
-        [self.view addSubview:self.errorTipsLabel];
+      //[self.transport stopIndicatorViewAnimating];
+      [self.transport.centerPlayBtn
+          setImage:NCDynamicImage(@"video_player_sight_download_failed_img")
+          forState:UIControlStateNormal];
+      self.transport.centerPlayBtn.hidden = NO;
+      self.transport.centerPlayBtn.selected = NO;
+      CGPoint playBtnCenter = self.transport.centerPlayBtn.center;
+      self.errorTipsLabel.center =
+          CGPointMake(playBtnCenter.x, CGRectGetMaxY(self.transport.centerPlayBtn.frame) + 16);
+      [self.view addSubview:self.errorTipsLabel];
     });
 }
 
 - (void)setAudioSessionUnActive {
-    [[AVAudioSession sharedInstance] setActive:NO
-                                   withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                         error:nil];
+    [[AVAudioSession sharedInstance]
+          setActive:NO
+        withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+              error:nil];
 }
 #pragma mark - Properties
 
@@ -264,9 +269,12 @@
 - (AVPlayerItem *)playerItem {
     if (!_playerItem) {
 
-        NSArray *keys =
-            @[ @"tracks", @"duration", @"commonMetadata", @"availableMediaCharacteristicsWithMediaSelectionOptions" ];
-        _playerItem = [[AVPlayerItem alloc] initWithAsset:self.asset automaticallyLoadedAssetKeys:keys];
+        NSArray *keys = @[
+            @"tracks", @"duration", @"commonMetadata",
+            @"availableMediaCharacteristicsWithMediaSelectionOptions"
+        ];
+        _playerItem = [[AVPlayerItem alloc] initWithAsset:self.asset
+                             automaticallyLoadedAssetKeys:keys];
     }
     return _playerItem;
 }
@@ -304,7 +312,6 @@
                              context:nil];
         self.isAddStatusObserver = YES;
     }
-    
 
     [self.playerView setPlayer:self.player];
 }
@@ -316,78 +323,79 @@
     if ([keyPath isEqualToString:RATE_KEYPATH] && [keyPath isEqualToString:STATUS_KEYPATH]) {
         return;
     }
-    
+
     long oldValue = [[change objectForKey:NSKeyValueChangeOldKey] longValue];
     long newValue = [[change objectForKey:NSKeyValueChangeNewKey] longValue];
     if (oldValue == newValue) {
         return;
     }
-    
-    if ([keyPath isEqualToString:RATE_KEYPATH]){
+
+    if ([keyPath isEqualToString:RATE_KEYPATH]) {
         [self playerDidChangeRate];
         return;
     }
-    
+
     if ([keyPath isEqualToString:STATUS_KEYPATH]) {
         [self playerItemDidChangeStatus];
         return;
     }
 }
 
-- (void)playerDidChangeRate{
+- (void)playerDidChangeRate {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (!self.isPlaying) {
-            return;
-        }
-        // A zero rate while playback is still marked active indicates an external interruption.
-        if (self.player.rate == 0) {
-            [self.player pause];
-            [self makePlayButtonAppear];
-            [self setAudioSessionUnActive];
-        } else {
-            self.transport.centerPlayBtn.hidden = YES;
-            self.transport.playBtn.selected = YES;
-        }
+      if (!self.isPlaying) {
+          return;
+      }
+      // A zero rate while playback is still marked active indicates an external interruption.
+      if (self.player.rate == 0) {
+          [self.player pause];
+          [self makePlayButtonAppear];
+          [self setAudioSessionUnActive];
+      } else {
+          self.transport.centerPlayBtn.hidden = YES;
+          self.transport.playBtn.selected = YES;
+      }
     });
 }
 
-- (void)playerItemDidChangeStatus{
+- (void)playerItemDidChangeStatus {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.isAddStatusObserver) {
-            [self.playerItem removeObserver:self forKeyPath:STATUS_KEYPATH];
-            self.isAddStatusObserver = NO;
-        }
-        if (self.playerItem.status == AVPlayerItemStatusReadyToPlay) {
+      if (self.isAddStatusObserver) {
+          [self.playerItem removeObserver:self forKeyPath:STATUS_KEYPATH];
+          self.isAddStatusObserver = NO;
+      }
+      if (self.playerItem.status == AVPlayerItemStatusReadyToPlay) {
 
-            // Set up time observers.
-            [self addPlayerItemTimeObserver];
-            [self addItemEndObserverForPlayerItem];
+          // Set up time observers.
+          [self addPlayerItemTimeObserver];
+          [self addItemEndObserverForPlayerItem];
 
-            CMTime duration = self.playerItem.duration;
+          CMTime duration = self.playerItem.duration;
 
-            // Synchronize the time display
-            [self.transport setCurrentTime:CMTimeGetSeconds(kCMTimeZero) duration:CMTimeGetSeconds(duration)];
+          // Synchronize the time display
+          [self.transport setCurrentTime:CMTimeGetSeconds(kCMTimeZero)
+                                duration:CMTimeGetSeconds(duration)];
 
-            __weak typeof(self) weakSelf = self;
-            [self.player seekToTime:kCMTimeZero
-                    toleranceBefore:kCMTimeZero
-                     toleranceAfter:kCMTimeZero
-                  completionHandler:^(BOOL finished) {
-                      [weakSelf.transport readyToPlay];
-                      [weakSelf.transport willPlay];
-                      if (weakSelf.completion) {
-                          weakSelf.completion();
-                      }
-                  }];
+          __weak typeof(self) weakSelf = self;
+          [self.player seekToTime:kCMTimeZero
+                  toleranceBefore:kCMTimeZero
+                   toleranceAfter:kCMTimeZero
+                completionHandler:^(BOOL finished) {
+                  [weakSelf.transport readyToPlay];
+                  [weakSelf.transport willPlay];
+                  if (weakSelf.completion) {
+                      weakSelf.completion();
+                  }
+                }];
 
-            [self loadMediaOptions];
+          [self loadMediaOptions];
 
-        } else {
-            NCLogE(@"Failed to load video %@", self.playerItem.error);
-            if (self.error) {
-                self.error(self.player.error);
-            }
-        }
+      } else {
+          NCLogE(@"Failed to load video %@", self.playerItem.error);
+          if (self.error) {
+              self.error(self.player.error);
+          }
+      }
     });
 }
 
@@ -435,12 +443,14 @@
     __weak NCSightPlayerController *weakSelf = self;
     NSTimeInterval duration = CMTimeGetSeconds(self.player.currentItem.duration);
     void (^callback)(CMTime time) = ^(CMTime time) {
-        NSTimeInterval currentTime = CMTimeGetSeconds(time);
-        [weakSelf.transport setCurrentTime:currentTime duration:duration];
+      NSTimeInterval currentTime = CMTimeGetSeconds(time);
+      [weakSelf.transport setCurrentTime:currentTime duration:duration];
     };
 
     // Add observer and store pointer for future use
-    self.timeObserver = [self.player addPeriodicTimeObserverForInterval:interval queue:queue usingBlock:callback];
+    self.timeObserver = [self.player addPeriodicTimeObserverForInterval:interval
+                                                                  queue:queue
+                                                             usingBlock:callback];
 }
 
 - (void)addItemEndObserverForPlayerItem {
@@ -451,24 +461,23 @@
 
     __weak NCSightPlayerController *weakSelf = self;
     void (^callback)(NSNotification *note) = ^(NSNotification *notification) {
-        if (weakSelf.player.currentItem.status == AVPlayerItemStatusReadyToPlay) {
-            [weakSelf.player seekToTime:kCMTimeZero
-                        toleranceBefore:kCMTimeZero
-                         toleranceAfter:kCMTimeZero
-                      completionHandler:^(BOOL finished) {
-                          if (weakSelf.isLoopPlayback) {
-                              weakSelf.isPlaying = YES;
-                              [weakSelf.player play];
-                          } else {
-                              [weakSelf.transport playbackComplete];
-                              if ([weakSelf.delegate respondsToSelector:@selector(playToEnd)]) {
-                                  [weakSelf.delegate playToEnd];
-                              }
-                              [weakSelf setAudioSessionUnActive];
+      if (weakSelf.player.currentItem.status == AVPlayerItemStatusReadyToPlay) {
+          [weakSelf.player seekToTime:kCMTimeZero
+                      toleranceBefore:kCMTimeZero
+                       toleranceAfter:kCMTimeZero
+                    completionHandler:^(BOOL finished) {
+                      if (weakSelf.isLoopPlayback) {
+                          weakSelf.isPlaying = YES;
+                          [weakSelf.player play];
+                      } else {
+                          [weakSelf.transport playbackComplete];
+                          if ([weakSelf.delegate respondsToSelector:@selector(playToEnd)]) {
+                              [weakSelf.delegate playToEnd];
                           }
-                      }];
-        }
-
+                          [weakSelf setAudioSessionUnActive];
+                      }
+                    }];
+      }
     };
 
     self.itemEndObserver = [[NSNotificationCenter defaultCenter] addObserverForName:name
@@ -490,7 +499,8 @@
         NSString *fileName = [NCFileUtility recheckedFileName:self.preferredDownloadFileName];
         if (fileName.pathExtension.length == 0) {
             NSString *fileKey = [NCFileUtility fileKeyForURL:remoteURL];
-            fileName = fileKey.length > 0 ? [NSString stringWithFormat:@"Sight_%@.mp4", fileKey] : nil;
+            fileName =
+                fileKey.length > 0 ? [NSString stringWithFormat:@"Sight_%@.mp4", fileKey] : nil;
         }
         if (remoteURL.length == 0 || fileName.length == 0) {
             [self showDowndLoadFailedControl];
@@ -502,31 +512,31 @@
         self.downloadSucceeded = NO;
         __weak typeof(self) weakSelf = self;
         [NCBaseChannel downloadMediaUrl:remoteURL
-                               fileName:fileName
-                        progressHandler:^(NSInteger progress) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf) {
-                return;
-            }
-            dispatch_async(dispatch_get_main_queue(), ^{
+            fileName:fileName
+            progressHandler:^(NSInteger progress) {
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              if (!strongSelf) {
+                  return;
+              }
+              dispatch_async(dispatch_get_main_queue(), ^{
                 [strongSelf.progressView setProgress:progress / 100.0f animated:YES];
-            });
-        }
-                      completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf) {
-                return;
+              });
             }
-            if (error || mediaPath.length == 0) {
-                [strongSelf p_handleSightDownloadError:error];
-                return;
+            completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              if (!strongSelf) {
+                  return;
+              }
+              if (error || mediaPath.length == 0) {
+                  [strongSelf p_handleSightDownloadError:error];
+                  return;
+              }
+              [strongSelf p_handleDownloadedSightAtPath:mediaPath];
             }
-            [strongSelf p_handleDownloadedSightAtPath:mediaPath];
-        }
-                          cancelHandler:^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            [strongSelf p_handleSightDownloadError:nil];
-        }];
+            cancelHandler:^{
+              __strong typeof(weakSelf) strongSelf = weakSelf;
+              [strongSelf p_handleSightDownloadError:nil];
+            }];
 
     } else {
         if (self.player.currentItem.status == AVPlayerItemStatusReadyToPlay) {
@@ -536,14 +546,15 @@
             [self.player play];
         } else {
             __weak typeof(self) weakSelf = self;
-            [self prepareWithBlock:^{
-                [weakSelf.transport willPlay];
-                weakSelf.isPlaying = YES;
-                [weakSelf.player play];
-            }
-                error:^(NSError *error){
+            [self
+                prepareWithBlock:^{
+                  [weakSelf.transport willPlay];
+                  weakSelf.isPlaying = YES;
+                  [weakSelf.player play];
+                }
+                           error:^(NSError *error){
 
-                }];
+                           }];
         }
     }
 }
@@ -556,42 +567,45 @@
 
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
-        }
-        [strongSelf.progressView performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:0.5];
-        strongSelf.sightURL = [[NSURL alloc] initFileURLWithPath:mediaPath];
-        if (!strongSelf.isAutoPlay || strongSelf.canceling) {
-            if (strongSelf.canceling) {
-                strongSelf.canceling = NO;
-            }
-            strongSelf.transport.centerPlayBtn.hidden = NO;
-            strongSelf.transport.centerPlayBtn.selected = NO;
-            [strongSelf.transport setControlBarHidden:YES];
-            return;
-        }
-        if ([NCChatUIUtility isApplicationInBackground]) {
-            [strongSelf makePlayButtonAppear];
-            return;
-        }
-        [strongSelf prepareWithBlock:^{
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+          return;
+      }
+      [strongSelf.progressView performSelector:@selector(removeFromSuperview)
+                                    withObject:nil
+                                    afterDelay:0.5];
+      strongSelf.sightURL = [[NSURL alloc] initFileURLWithPath:mediaPath];
+      if (!strongSelf.isAutoPlay || strongSelf.canceling) {
+          if (strongSelf.canceling) {
+              strongSelf.canceling = NO;
+          }
+          strongSelf.transport.centerPlayBtn.hidden = NO;
+          strongSelf.transport.centerPlayBtn.selected = NO;
+          [strongSelf.transport setControlBarHidden:YES];
+          return;
+      }
+      if ([NCChatUIUtility isApplicationInBackground]) {
+          [strongSelf makePlayButtonAppear];
+          return;
+      }
+      [strongSelf
+          prepareWithBlock:^{
             strongSelf.isPlaying = YES;
             [strongSelf.player play];
-        }
-            error:^(NSError *error) {
-            }];
+          }
+                     error:^(NSError *error){
+                     }];
     });
 }
 
 - (void)p_handleSightDownloadError:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.progressView stopIndeterminateAnimation];
-        [self.progressView removeFromSuperview];
-        [self showDowndLoadFailedControl];
-        if (error && self.error) {
-            self.error(error);
-        }
+      [self.progressView stopIndeterminateAnimation];
+      [self.progressView removeFromSuperview];
+      [self showDowndLoadFailedControl];
+      if (error && self.error) {
+          self.error(error);
+      }
     });
 }
 
@@ -675,7 +689,7 @@
                       selector:@selector(appWillEnterBackground)
                           name:UIApplicationDidEnterBackgroundNotification
                         object:nil];
-    
+
     [defaultCenter addObserver:self
                       selector:@selector(deviceOrientationDidChange:)
                           name:UIApplicationDidChangeStatusBarFrameNotification
@@ -684,7 +698,9 @@
 
 - (void)deviceOrientationDidChange:(NSNotification *)notification {
     UIDeviceOrientation interfaceOrientation = [UIDevice currentDevice].orientation;
-    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft || interfaceOrientation == UIDeviceOrientationLandscapeRight || interfaceOrientation == UIDeviceOrientationPortrait){
+    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft ||
+        interfaceOrientation == UIDeviceOrientationLandscapeRight ||
+        interfaceOrientation == UIDeviceOrientationPortrait) {
         CGRect bounds = [UIScreen mainScreen].bounds;
         self.progressView.center = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
         self.errorTipsLabel.center =

@@ -25,12 +25,13 @@
 //
 
 #import "NCImageLoadConnection.h"
-#import <NexconnChatUI/NCChatUILog.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCFileUtility.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <NexconnChatUI/NCChatUILog.h>
 
 @implementation NCImageLoadConnection
-@synthesize imageURL = _imageURL, response = _response, delegate = _delegate, timeoutInterval = _timeoutInterval;
+@synthesize imageURL = _imageURL, response = _response, delegate = _delegate,
+            timeoutInterval = _timeoutInterval;
 
 #if __EGOIL_USE_BLOCKS
 @synthesize handlers;
@@ -59,8 +60,8 @@
         fileExtension = @"img";
     }
     NSString *fileName = fileKey.length > 0
-        ? [NSString stringWithFormat:@"Image_%@.%@", fileKey, fileExtension]
-        : nil;
+                             ? [NSString stringWithFormat:@"Image_%@.%@", fileKey, fileExtension]
+                             : nil;
     if (remoteURL.length == 0 || fileName.length == 0) {
         [self p_finishWithError:[NSError errorWithDomain:NSURLErrorDomain
                                                     code:NSURLErrorBadURL
@@ -72,32 +73,33 @@
     _downloadStarted = YES;
     __weak typeof(self) weakSelf = self;
     [NCBaseChannel downloadMediaUrl:remoteURL
-                           fileName:fileName
-                    progressHandler:nil
-                  completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
+        fileName:fileName
+        progressHandler:nil
+        completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          if (!strongSelf) {
+              return;
+          }
+          strongSelf->_downloadStarted = NO;
+          if (strongSelf->_cancelled) {
+              return;
+          }
+          if (error || mediaPath.length == 0) {
+              [strongSelf p_finishWithError:error
+                                                ?: [NSError errorWithDomain:NSURLErrorDomain
+                                                                       code:NSURLErrorCannotOpenFile
+                                                                   userInfo:nil]];
+              return;
+          }
+          [strongSelf p_loadDownloadedDataAtPath:mediaPath];
         }
-        strongSelf->_downloadStarted = NO;
-        if (strongSelf->_cancelled) {
-            return;
-        }
-        if (error || mediaPath.length == 0) {
-            [strongSelf p_finishWithError:error ?: [NSError errorWithDomain:NSURLErrorDomain
-                                                                        code:NSURLErrorCannotOpenFile
-                                                                    userInfo:nil]];
-            return;
-        }
-        [strongSelf p_loadDownloadedDataAtPath:mediaPath];
-    }
-                      cancelHandler:^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) {
-            return;
-        }
-        strongSelf->_downloadStarted = NO;
-    }];
+        cancelHandler:^{
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          if (!strongSelf) {
+              return;
+          }
+          strongSelf->_downloadStarted = NO;
+        }];
 }
 
 - (void)cancel {
@@ -114,24 +116,25 @@
 - (void)p_loadDownloadedDataAtPath:(NSString *)mediaPath {
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-        NSError *readError = nil;
-        NSData *data = [NSData dataWithContentsOfFile:mediaPath
-                                             options:NSDataReadingMappedIfSafe
-                                               error:&readError];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (!strongSelf || strongSelf->_cancelled) {
-                return;
-            }
-            if (!data) {
-                [strongSelf p_finishWithError:readError ?: [NSError errorWithDomain:NSCocoaErrorDomain
-                                                                                code:NSFileReadUnknownError
-                                                                            userInfo:nil]];
-                return;
-            }
-            [strongSelf->_responseData setData:data];
-            [strongSelf p_finishWithError:nil];
-        });
+      NSError *readError = nil;
+      NSData *data = [NSData dataWithContentsOfFile:mediaPath
+                                            options:NSDataReadingMappedIfSafe
+                                              error:&readError];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf || strongSelf->_cancelled) {
+            return;
+        }
+        if (!data) {
+            [strongSelf p_finishWithError:readError
+                                              ?: [NSError errorWithDomain:NSCocoaErrorDomain
+                                                                     code:NSFileReadUnknownError
+                                                                 userInfo:nil]];
+            return;
+        }
+        [strongSelf->_responseData setData:data];
+        [strongSelf p_finishWithError:nil];
+      });
     });
 }
 
@@ -139,7 +142,7 @@
     if (![NSThread isMainThread]) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf p_finishWithError:error];
+          [weakSelf p_finishWithError:error];
         });
         return;
     }

@@ -6,13 +6,13 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCChannelModel.h"
+#import <Foundation/Foundation.h>
 
 @protocol NCChannelListDataSourceDelegate;
 
-
-/// Data source for the channel list page. It fetches and processes data, then notifies the channel list page to refresh.
+/// Data source for the channel list page. It fetches and processes data, then notifies the channel
+/// list page to refresh.
 
 /// Regular class owned by the channel list page.
 @interface NCChannelListDataSource : NSObject
@@ -26,19 +26,23 @@
 /// Pinned cell background color in normal and dark mode.
 @property (nonatomic, strong) UIColor *topCellBackgroundColor;
 
-/// Whether the channel list page is in the appeared state. When it is not visible, incoming messages do not refresh the page; channels are reloaded in viewWillAppear.
+/// Whether the channel list page is in the appeared state. When it is not visible, incoming
+/// messages do not refresh the page; channels are reloaded in viewWillAppear.
 @property (nonatomic, assign) BOOL isConverstaionListAppear;
 
-/// Data source for the channel list page. This is not thread-safe and must be handled on the main thread.
+/// Data source for the channel list page. This is not thread-safe and must be handled on the main
+/// thread.
 @property (nonatomic, strong) NSMutableArray *dataList;
 
-/// Data source delegate. It mainly callbacks the channel list page after partial data processing so the page can refresh.
+/// Data source delegate. It mainly callbacks the channel list page after partial data processing so
+/// the page can refresh.
 @property (nonatomic, weak) id<NCChannelListDataSourceDelegate> delegate;
 
 /// Forces loading channel list data, usually called in viewWillApper.
 /// - Parameter completion: Channel list data.
 ///  Callback is invoked on the UI thread.
-- (void)forceLoadConversationModelList:(void (^)(NSMutableArray<NCChannelModel *> *modelList))completion;
+- (void)forceLoadConversationModelList:
+    (void (^)(NSMutableArray<NCChannelModel *> *modelList))completion;
 
 /// Loads more channel list data, usually triggered by a pull-up action.
 /// - Parameter completion: Newly loaded channel list data.
@@ -63,11 +67,16 @@
 
 @protocol NCChannelListDataSourceDelegate <NSObject>
 
-- (NSMutableArray<NCChannelModel *> *)dataSource:(NCChannelListDataSource *)datasource willReloadTableData:(NSMutableArray<NCChannelModel *> *)modelList;
+- (NSMutableArray<NCChannelModel *> *)dataSource:(NCChannelListDataSource *)datasource
+                             willReloadTableData:(NSMutableArray<NCChannelModel *> *)modelList;
 
-- (void)dataSource:(NCChannelListDataSource *)dataSource willReloadAtIndexPaths:(NSArray <NSIndexPath *> *)indexPaths;
-- (void)dataSource:(NCChannelListDataSource *)dataSource willInsertAtIndexPaths:(NSArray <NSIndexPath *> *)indexPaths;
-- (void)dataSource:(NCChannelListDataSource *)dataSource willDeleteAtIndexPaths:(NSArray <NSIndexPath *> *)deleteIndexPaths willInsertAtIndexPaths:(NSArray <NSIndexPath *> *)insertIndexPaths;
+- (void)dataSource:(NCChannelListDataSource *)dataSource
+    willReloadAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths;
+- (void)dataSource:(NCChannelListDataSource *)dataSource
+    willInsertAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths;
+- (void)dataSource:(NCChannelListDataSource *)dataSource
+    willDeleteAtIndexPaths:(NSArray<NSIndexPath *> *)deleteIndexPaths
+    willInsertAtIndexPaths:(NSArray<NSIndexPath *> *)insertIndexPaths;
 
 - (void)refreshConversationTableViewIfNeededInDataSource:(NCChannelListDataSource *)datasource;
 

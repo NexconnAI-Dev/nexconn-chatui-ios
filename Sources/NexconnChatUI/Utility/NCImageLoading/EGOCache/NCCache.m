@@ -28,14 +28,14 @@
 #import "NCChatUICommonDefine.h"
 
 #if DEBUG
-#define CHECK_FOR_EGOCACHE_PLIST()                                                                                     \
-    if ([key isEqualToString:@"NCCache.plist"]) {                                                                  \
-        NCLogD(@"NCCache.plist is a reserved key and can not be modified.");                                     \
-        return;                                                                                                        \
+#define CHECK_FOR_EGOCACHE_PLIST()                                                                 \
+    if ([key isEqualToString:@"NCCache.plist"]) {                                                  \
+        NCLogD(@"NCCache.plist is a reserved key and can not be modified.");                       \
+        return;                                                                                    \
     }
 #else
-#define CHECK_FOR_EGOCACHE_PLIST()                                                                                     \
-    if ([key isEqualToString:@"NCCache.plist"])                                                                    \
+#define CHECK_FOR_EGOCACHE_PLIST()                                                                 \
+    if ([key isEqualToString:@"NCCache.plist"])                                                    \
         return;
 #endif
 
@@ -49,10 +49,11 @@ static NSString *_EGOCacheDirectory;
 
 static inline NSString *EGOCacheDirectory() {
     if (!_EGOCacheDirectory) {
-        NSString *cachesDirectory = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
-        _EGOCacheDirectory =
-            [[[cachesDirectory stringByAppendingPathComponent:[[NSProcessInfo processInfo] processName]]
-                stringByAppendingPathComponent:@"NCCache"] copy];
+        NSString *cachesDirectory =
+            NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+        _EGOCacheDirectory = [[[cachesDirectory
+            stringByAppendingPathComponent:[[NSProcessInfo processInfo] processName]]
+            stringByAppendingPathComponent:@"NCCache"] copy];
     }
 
     return _EGOCacheDirectory;
@@ -72,7 +73,6 @@ static NCCache *__instance;
 
 #pragma mark -
 
-
 @implementation NCCache
 @synthesize defaultTimeoutInterval;
 
@@ -89,7 +89,8 @@ static NCCache *__instance;
 
 - (instancetype)init {
     if ((self = [super init])) {
-        NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:cachePathForKey(@"NCCache.plist")];
+        NSDictionary *dict =
+            [NSDictionary dictionaryWithContentsOfFile:cachePathForKey(@"NCCache.plist")];
 
         if ([dict isKindOfClass:[NSDictionary class]]) {
             cacheDictionary = [dict mutableCopy];
@@ -146,8 +147,9 @@ static NCCache *__instance;
     }
     NSString *cachePath = cachePathForKey(key);
 
-    NSInvocation *deleteInvocation =
-        [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:@selector(deleteDataAtPath:)]];
+    NSInvocation *deleteInvocation = [NSInvocation
+        invocationWithMethodSignature:[self
+                                          methodSignatureForSelector:@selector(deleteDataAtPath:)]];
     [deleteInvocation setTarget:self];
     [deleteInvocation setSelector:@selector(deleteDataAtPath:)];
     [deleteInvocation setArgument:&cachePath atIndex:2];
@@ -172,11 +174,17 @@ static NCCache *__instance;
     [self copyFilePath:filePath asKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)copyFilePath:(NSString *)filePath asKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+- (void)copyFilePath:(NSString *)filePath
+                  asKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
     if (filePath && key) {
-        [[NSFileManager defaultManager] copyItemAtPath:filePath toPath:cachePathForKey(key) error:NULL];
+        [[NSFileManager defaultManager] copyItemAtPath:filePath
+                                                toPath:cachePathForKey(key)
+                                                 error:NULL];
         cacheDictionary[key] = [NSDate dateWithTimeIntervalSinceNow:timeoutInterval];
-        [self performSelectorOnMainThread:@selector(saveAfterDelay) withObject:nil waitUntilDone:YES];
+        [self performSelectorOnMainThread:@selector(saveAfterDelay)
+                               withObject:nil
+                            waitUntilDone:YES];
     }
 }
 
@@ -187,12 +195,15 @@ static NCCache *__instance;
     [self setData:data forKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)setData:(NSData *)data forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+- (void)setData:(NSData *)data
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
     CHECK_FOR_EGOCACHE_PLIST();
     if (data && key) {
         NSString *cachePath = cachePathForKey(key);
-        NSInvocation *writeInvocation =
-            [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:@selector(writeData:toPath:)]];
+        NSInvocation *writeInvocation = [NSInvocation
+            invocationWithMethodSignature:[self methodSignatureForSelector:@selector(
+                                                                               writeData:toPath:)]];
         [writeInvocation setTarget:self];
         [writeInvocation setSelector:@selector(writeData:toPath:)];
         [writeInvocation setArgument:&data atIndex:2];
@@ -203,14 +214,16 @@ static NCCache *__instance;
 
         [self performSelectorOnMainThread:@selector(saveAfterDelay)
                                withObject:nil
-                            waitUntilDone:YES]; // Need to make sure the save delay get scheduled in the main runloop, not
-                                                // the current threads
+                            waitUntilDone:YES]; // Need to make sure the save delay get scheduled in
+                                                // the main runloop, not the current threads
     }
-    
 }
 
-- (void)saveAfterDelay { // Prevents multiple-rapid saves from happening, which will slow down your app
-    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(saveCacheDictionary) object:nil];
+- (void)
+    saveAfterDelay { // Prevents multiple-rapid saves from happening, which will slow down your app
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(saveCacheDictionary)
+                                               object:nil];
     [self performSelector:@selector(saveCacheDictionary) withObject:nil afterDelay:0.3];
 }
 
@@ -246,7 +259,8 @@ static NCCache *__instance;
 #pragma mark String methods
 
 - (NSString *)stringForKey:(NSString *)key {
-    NSString *string = [[NSString alloc] initWithData:[self dataForKey:key] encoding:NSUTF8StringEncoding];
+    NSString *string = [[NSString alloc] initWithData:[self dataForKey:key]
+                                             encoding:NSUTF8StringEncoding];
 #if EGO_NO_ARC
     return [string autorelease];
 #endif
@@ -257,8 +271,12 @@ static NCCache *__instance;
     [self setString:aString forKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)setString:(NSString *)aString forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
-    [self setData:[aString dataUsingEncoding:NSUTF8StringEncoding] forKey:key withTimeoutInterval:timeoutInterval];
+- (void)setString:(NSString *)aString
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+    [self setData:[aString dataUsingEncoding:NSUTF8StringEncoding]
+                     forKey:key
+        withTimeoutInterval:timeoutInterval];
 }
 
 #pragma mark -
@@ -276,7 +294,9 @@ static NCCache *__instance;
     [self setImage:anImage forKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)setImage:(UIImage *)anImage forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+- (void)setImage:(UIImage *)anImage
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
     [self setData:UIImagePNGRepresentation(anImage) forKey:key withTimeoutInterval:timeoutInterval];
 }
 
@@ -290,8 +310,11 @@ static NCCache *__instance;
     [self setImage:anImage forKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)setImage:(NSImage *)anImage forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
-    [self setData:[[[anImage representations] objectAtIndex:0] representationUsingType:NSPNGFileType properties:nil]
+- (void)setImage:(NSImage *)anImage
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+    [self setData:[[[anImage representations] objectAtIndex:0] representationUsingType:NSPNGFileType
+                                                                            properties:nil]
                      forKey:key
         withTimeoutInterval:timeoutInterval];
 }
@@ -303,23 +326,29 @@ static NCCache *__instance;
 
 - (NSData *)plistForKey:(NSString *)key {
     NSData *plistData = [self dataForKey:key];
-    return [NSPropertyListSerialization propertyListWithData:plistData options:NSPropertyListImmutable format:nil error:nil];
+    return [NSPropertyListSerialization propertyListWithData:plistData
+                                                     options:NSPropertyListImmutable
+                                                      format:nil
+                                                       error:nil];
 }
 
 - (void)setPlist:(id)plistObject forKey:(NSString *)key {
     [self setPlist:plistObject forKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)setPlist:(id)plistObject forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
-    // Binary plists are used over XML for better performance
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:plistObject
-                                                                   format:NSPropertyListBinaryFormat_v1_0
-                                                         errorDescription:NULL];
+- (void)setPlist:(id)plistObject
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+// Binary plists are used over XML for better performance
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    NSData *plistData =
+        [NSPropertyListSerialization dataFromPropertyList:plistObject
+                                                   format:NSPropertyListBinaryFormat_v1_0
+                                         errorDescription:NULL];
 
     [self setData:plistData forKey:key withTimeoutInterval:timeoutInterval];
-    #pragma clang diagnostic pop
+#pragma clang diagnostic pop
 }
 
 #pragma mark -
@@ -337,8 +366,12 @@ static NCCache *__instance;
     [self setObject:anObject forKey:key withTimeoutInterval:self.defaultTimeoutInterval];
 }
 
-- (void)setObject:(id<NSCoding>)anObject forKey:(NSString *)key withTimeoutInterval:(NSTimeInterval)timeoutInterval {
-    [self setData:[NSKeyedArchiver archivedDataWithRootObject:anObject] forKey:key withTimeoutInterval:timeoutInterval];
+- (void)setObject:(id<NSCoding>)anObject
+                 forKey:(NSString *)key
+    withTimeoutInterval:(NSTimeInterval)timeoutInterval {
+    [self setData:[NSKeyedArchiver archivedDataWithRootObject:anObject]
+                     forKey:key
+        withTimeoutInterval:timeoutInterval];
 }
 
 #pragma mark -

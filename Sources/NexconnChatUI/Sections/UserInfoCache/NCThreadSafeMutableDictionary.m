@@ -20,8 +20,9 @@
     self = [super init];
     if (self) {
         _safeLock = [[NSRecursiveLock alloc] init];
-        _dictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
-                                                &kCFTypeDictionaryValueCallBacks);
+        _dictionary =
+            CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
+                                      &kCFTypeDictionaryValueCallBacks);
     }
     return self;
 }
@@ -30,19 +31,23 @@
     self = [super init];
     if (self) {
         _safeLock = [[NSRecursiveLock alloc] init];
-        _dictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, numItems, &kCFTypeDictionaryKeyCallBacks,
-                                                &kCFTypeDictionaryValueCallBacks);
+        _dictionary =
+            CFDictionaryCreateMutable(kCFAllocatorDefault, numItems, &kCFTypeDictionaryKeyCallBacks,
+                                      &kCFTypeDictionaryValueCallBacks);
     }
     return self;
 }
 
-- (id)initWithObjects:(const id[])objects forKeys:(const id<NSCopying>[])keys count:(NSUInteger)cnt {
+- (id)initWithObjects:(const id[])objects
+              forKeys:(const id<NSCopying>[])keys
+                count:(NSUInteger)cnt {
     self = [self init];
     if (self) {
         _safeLock = [[NSRecursiveLock alloc] init];
         if (!objects || !keys) {
-            _dictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
-                                                    &kCFTypeDictionaryValueCallBacks);
+            _dictionary =
+                CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
+                                          &kCFTypeDictionaryValueCallBacks);
             return self;
         }
         for (NSInteger idx = 0; idx < cnt; idx++) {
@@ -107,7 +112,7 @@
 
 - (id)copy {
     [_safeLock lock];
-    NSDictionary *dict = [((__bridge NSMutableDictionary*)_dictionary) copy];
+    NSDictionary *dict = [((__bridge NSMutableDictionary *)_dictionary) copy];
     [_safeLock unlock];
     return dict;
 }

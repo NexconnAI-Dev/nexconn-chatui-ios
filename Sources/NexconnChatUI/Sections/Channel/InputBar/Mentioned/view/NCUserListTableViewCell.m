@@ -11,7 +11,8 @@
 #import "NCChatUIConfig.h"
 @implementation NCUserListTableViewCell
 
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         self.contentView.backgroundColor = NCDynamicColor(@"common_background_color");
@@ -34,7 +35,7 @@
 - (void)setHeadImageView:(UIImageView *)headImageView {
     [_headImageView removeFromSuperview];
     _headImageView = headImageView;
-    if([NCChatUIUtility isRTL]){
+    if ([NCChatUIUtility isRTL]) {
         CGRect frame = self.nameLabel.frame;
         frame.origin.x = CGRectGetMinX(_headImageView.frame) - frame.size.width - 10;
         _nameLabel.frame = frame;
@@ -48,7 +49,8 @@
     if (!_nameLabel) {
         _nameLabel = [[NCBaseLabel alloc] init];
         [_nameLabel setFont:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
-        _nameLabel.textAlignment = [NCChatUIUtility isRTL] ? NSTextAlignmentRight : NSTextAlignmentLeft;
+        _nameLabel.textAlignment =
+            [NCChatUIUtility isRTL] ? NSTextAlignmentRight : NSTextAlignmentLeft;
         _nameLabel.textColor = NCDynamicColor(@"text_primary_color");
         CGRect frame = CGRectMake(60.0, 5.0, self.bounds.size.width - 60.0, 40.0);
         _nameLabel.frame = frame;

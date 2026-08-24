@@ -27,12 +27,13 @@
 
 - (CGFloat)imageSize {
     if (!_imageSize) {
-        [[NCAssetHelper shareAssetHelper] getAssetDataSizeWithAsset:self.asset
-                                                             result:^(CGFloat size) {
-                                                                 dispatch_async(dispatch_get_main_queue(), ^{
-                                                                     _imageSize = size;
-                                                                 });
-                                                             }];
+        [[NCAssetHelper shareAssetHelper]
+            getAssetDataSizeWithAsset:self.asset
+                               result:^(CGFloat size) {
+                                 dispatch_async(dispatch_get_main_queue(), ^{
+                                   _imageSize = size;
+                                 });
+                               }];
     }
     return _imageSize;
 }
@@ -41,7 +42,8 @@
 }
 
 - (PHImageRequestID)fetchOriginData {
-    // Cancel any existing full-size asset request before restarting it; PhotoKit can continue from previously fetched data.
+    // Cancel any existing full-size asset request before restarting it; PhotoKit can continue from
+    // previously fetched data.
     if (self.imageRequestID) {
         [[PHImageManager defaultManager] cancelImageRequest:self.imageRequestID];
         self.imageRequestID = 0;
@@ -49,39 +51,47 @@
     if (self.mediaType == PHAssetMediaTypeVideo && NSClassFromString(@"NCSightCapturer")) {
         return [[NCAssetHelper shareAssetHelper]
             getOriginVideoWithAsset:self.asset
-                             result:^(AVAsset *avAsset, NSDictionary *info, NSString *imageIdentifier) {
-                                 if (![[[NCAssetHelper shareAssetHelper] getAssetIdentifier:self.asset] isEqualToString:imageIdentifier]) {
-                                     return;
-                                 }
-                                 BOOL downloadFinined = (![[info objectForKey:PHImageCancelledKey] boolValue] &&
-                                                         ![info objectForKey:PHImageErrorKey] &&
-                                                         ![[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
-                                 if (downloadFinined) {
-                                     self.avAsset = avAsset;
-                                 }
+                             result:^(AVAsset *avAsset, NSDictionary *info,
+                                      NSString *imageIdentifier) {
+                               if (![[[NCAssetHelper shareAssetHelper]
+                                       getAssetIdentifier:self.asset]
+                                       isEqualToString:imageIdentifier]) {
+                                   return;
+                               }
+                               BOOL downloadFinined =
+                                   (![[info objectForKey:PHImageCancelledKey] boolValue] &&
+                                    ![info objectForKey:PHImageErrorKey] &&
+                                    ![[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
+                               if (downloadFinined) {
+                                   self.avAsset = avAsset;
+                               }
                              }
-                progressHandler:^(double progress, NSError * _Nonnull error, BOOL * _Nonnull stop, NSDictionary * _Nonnull info) {
-        }];
+                    progressHandler:^(double progress, NSError *_Nonnull error, BOOL *_Nonnull stop,
+                                      NSDictionary *_Nonnull info){
+                    }];
     } else {
         return [[NCAssetHelper shareAssetHelper]
             getOriginImageDataWithAsset:self
-                                 result:^(NSData *imageData, NSDictionary *info, NCAssetModel *assetModel) {
-                                    if(!imageData) {
-                                        return;
-                                    }
-                                     dispatch_async(dispatch_get_main_queue(), ^{
-                                         BOOL downloadFinined =
-                                             (![[info objectForKey:PHImageCancelledKey] boolValue] &&
-                                              ![info objectForKey:PHImageErrorKey] &&
-                                              ![[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
-                                         if (downloadFinined) {
-                                             self.asset = assetModel.asset;
-                                         }
-                                     });
+                                 result:^(NSData *imageData, NSDictionary *info,
+                                          NCAssetModel *assetModel) {
+                                   if (!imageData) {
+                                       return;
+                                   }
+                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                     BOOL downloadFinined =
+                                         (![[info objectForKey:PHImageCancelledKey] boolValue] &&
+                                          ![info objectForKey:PHImageErrorKey] &&
+                                          ![[info objectForKey:PHImageResultIsDegradedKey]
+                                              boolValue]);
+                                     if (downloadFinined) {
+                                         self.asset = assetModel.asset;
+                                     }
+                                   });
                                  }
-                progressHandler:^(double progress, NSError * _Nonnull error, BOOL * _Nonnull stop, NSDictionary * _Nonnull info) {
-            
-        }];
+                        progressHandler:^(double progress, NSError *_Nonnull error,
+                                          BOOL *_Nonnull stop, NSDictionary *_Nonnull info){
+
+                        }];
     }
 }
 
@@ -101,9 +111,9 @@
 
 - (BOOL)isVideoAssetInvalid {
     if (self.mediaType == PHAssetMediaTypeVideo && NSClassFromString(@"NCSightCapturer")) {
-        if(self.avAsset) {
+        if (self.avAsset) {
             return NO;
-        }else {
+        } else {
             return YES;
         }
     }
@@ -111,14 +121,14 @@
 }
 
 - (void)fetchThumbnailImage {
-    [[NCAssetHelper shareAssetHelper] getThumbnailWithAsset:self.asset
-                                                       size:CGSizeMake((WIDTH * SCREEN_SCALE), (WIDTH * SCREEN_SCALE))
-                                                     result:^(UIImage *thumbnailImage) {
-                                                         dispatch_async(dispatch_get_main_queue(), ^{
-                                                             _thumbnailImage = thumbnailImage;
-                                                         });
-                                                     }];
-
+    [[NCAssetHelper shareAssetHelper]
+        getThumbnailWithAsset:self.asset
+                         size:CGSizeMake((WIDTH * SCREEN_SCALE), (WIDTH * SCREEN_SCALE))
+                       result:^(UIImage *thumbnailImage) {
+                         dispatch_async(dispatch_get_main_queue(), ^{
+                           _thumbnailImage = thumbnailImage;
+                         });
+                       }];
 }
 
 - (PHAssetMediaType)mediaType {
@@ -146,7 +156,8 @@
             seconds = 0;
         }
         if (minutes != 0 || seconds != 0) {
-            _durationText = [NSString stringWithFormat:@"%02lu:%02lu", (unsigned long)minutes, (unsigned long)seconds];
+            _durationText = [NSString
+                stringWithFormat:@"%02lu:%02lu", (unsigned long)minutes, (unsigned long)seconds];
         }
     }
     return _durationText;

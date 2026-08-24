@@ -7,9 +7,9 @@
 //
 
 #import "NCEditInputContainerView.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 
 #define TextViewLineHeight 20.f              // Text height per input line.
 #define TextViewSpaceHeight_LessThanMax 17.f // Vertical padding below the maximum line count.
@@ -20,26 +20,27 @@
 @interface NCEditInputContainerView () <UITextViewDelegate, NCTextViewDelegate>
 
 // Private UI components.
-@property (nonatomic, strong) UIView *topBorderView;                    // Top separator.
-@property (nonatomic, strong) UIView *inputContainerBackgroundView;     // Input container background.
-@property (nonatomic, strong) UILabel *referencedLabel;                 // Referenced-message label.
-@property (nonatomic, strong) UIView *editStatusView;                   // Edit status container.
-@property (nonatomic, strong) UIImageView *editStatusImageView;         // Edit status image.
-@property (nonatomic, strong) UILabel *editStatusLabel;                 // Edit status label.
-@property (nonatomic, strong) NCTextView *inputTextView;                // Text input view.
-@property (nonatomic, strong) UIButton *editExpandButton;               // Expand/collapse button.
-@property (nonatomic, strong) UIButton *editConfirmButton;              // Confirm button.
-@property (nonatomic, strong) UIButton *editCancelButton;               // Cancel button.
-@property (nonatomic, strong) UIButton *editEmojiButton;                // Emoji button for edit mode.
+@property (nonatomic, strong) UIView *topBorderView;                // Top separator.
+@property (nonatomic, strong) UIView *inputContainerBackgroundView; // Input container background.
+@property (nonatomic, strong) UILabel *referencedLabel;             // Referenced-message label.
+@property (nonatomic, strong) UIView *editStatusView;               // Edit status container.
+@property (nonatomic, strong) UIImageView *editStatusImageView;     // Edit status image.
+@property (nonatomic, strong) UILabel *editStatusLabel;             // Edit status label.
+@property (nonatomic, strong) NCTextView *inputTextView;            // Text input view.
+@property (nonatomic, strong) UIButton *editExpandButton;           // Expand/collapse button.
+@property (nonatomic, strong) UIButton *editConfirmButton;          // Confirm button.
+@property (nonatomic, strong) UIButton *editCancelButton;           // Cancel button.
+@property (nonatomic, strong) UIButton *editEmojiButton;            // Emoji button for edit mode.
 
 @property (nonatomic, assign) NCEditHeightMode heightMode;
 
 // Constraint management.
-@property (nonatomic, strong) NSMutableArray *editConstraints;          // Active edit-mode constraints.
-@property (nonatomic, strong) NSLayoutConstraint *inputTextViewHeightConstraint; // Input height constraint.
+@property (nonatomic, strong) NSMutableArray *editConstraints; // Active edit-mode constraints.
+@property (nonatomic, strong)
+    NSLayoutConstraint *inputTextViewHeightConstraint; // Input height constraint.
 
 // Keyboard state management.
-@property (nonatomic, assign) BOOL textViewBeginEditing;                // Whether text editing has begun.
+@property (nonatomic, assign) BOOL textViewBeginEditing; // Whether text editing has begun.
 
 @end
 
@@ -70,34 +71,34 @@
     // Configure the initial state.
     self.maxInputLines = 4;
     self.hasReferenceMessage = NO;
-    
+
     // Create storage for active constraints.
     self.editConstraints = [NSMutableArray array];
-    
+
     // Apply the container background color.
     self.backgroundColor = NCDynamicColor(@"common_background_color");
-    
+
     // Create and attach subviews.
     [self setupSubviews];
 }
 
 - (void)setupSubviews {
     [self addSubview:self.topBorderView];
-    
+
     // Add the input container background.
     [self addSubview:self.inputContainerBackgroundView];
-    
+
     // Add the text view and expand button to the input container.
     [self.inputContainerBackgroundView addSubview:self.inputTextView];
-    
+
     if (self.heightMode == NCEditHeightModeNormal) {
         [self.inputContainerBackgroundView addSubview:self.editExpandButton];
     } else {
         [self addSubview:self.editExpandButton];
     }
-    
+
     [self addSubview:self.referencedLabel];
-    
+
     // Add the bottom action row.
     [self addSubview:self.editEmojiButton];
     [self addSubview:self.editCancelButton];
@@ -123,7 +124,7 @@
     self.editConfirmButton.translatesAutoresizingMaskIntoConstraints = NO;
     self.editCancelButton.translatesAutoresizingMaskIntoConstraints = NO;
     self.editEmojiButton.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     [self updateEditConstraints];
 }
 
@@ -131,9 +132,9 @@
     // Remove constraints from the previous height mode.
     [self removeConstraints:self.editConstraints];
     [self.editConstraints removeAllObjects];
-    
+
     NSMutableArray *constraints = [NSMutableArray array];
-    
+
     if (self.heightMode == NCEditHeightModeExpanded) {
         // Use the expanded layout.
         [self setupFullScreenConstraints:constraints];
@@ -141,26 +142,26 @@
         // Use the normal layout.
         [self setupNormalModeConstraints:constraints];
     }
-    
+
     // Add constraints for the bottom action row.
     [self setupBottomButtonRowConstraints:constraints];
-    
+
     // Retain all active constraints for the next mode change.
     [self.editConstraints addObjectsFromArray:constraints];
     [self addConstraints:self.editConstraints];
-    
+
     [self updateExpandButtonIcon];
-    
+
     // Recalculate the container height.
     if (self.heightMode == NCEditHeightModeNormal) {
         [self updateContainerHeight];
     }
-    
-//    // Apply layout changes immediately.
-//    [self setNeedsUpdateConstraints];
-//    [self updateConstraintsIfNeeded];
-//    [self setNeedsLayout];
-//    [self layoutIfNeeded];
+
+    //    // Apply layout changes immediately.
+    //    [self setNeedsUpdateConstraints];
+    //    [self updateConstraintsIfNeeded];
+    //    [self setNeedsLayout];
+    //    [self layoutIfNeeded];
 }
 
 #pragma mark - Layout Constraints
@@ -173,48 +174,68 @@
         [self.topBorderView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
         [self.topBorderView.heightAnchor constraintEqualToConstant:0.5]
     ]];
-    
+
     if (self.hasReferenceMessage) {
         self.referencedLabel.hidden = NO;
-        
+
         [constraints addObjectsFromArray:@[
-            [self.referencedLabel.topAnchor constraintEqualToAnchor:self.topBorderView.bottomAnchor constant:10],
-            [self.referencedLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
-            [self.referencedLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
+            [self.referencedLabel.topAnchor constraintEqualToAnchor:self.topBorderView.bottomAnchor
+                                                           constant:10],
+            [self.referencedLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                               constant:12],
+            [self.referencedLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                                constant:-12],
             [self.referencedLabel.heightAnchor constraintEqualToConstant:20],
-            
-            [self.inputContainerBackgroundView.topAnchor constraintEqualToAnchor:self.referencedLabel.bottomAnchor constant:10],
+
+            [self.inputContainerBackgroundView.topAnchor
+                constraintEqualToAnchor:self.referencedLabel.bottomAnchor
+                               constant:10],
         ]];
     } else {
         self.referencedLabel.hidden = YES;
-        
+
         [constraints addObjectsFromArray:@[
-            [self.inputContainerBackgroundView.topAnchor constraintEqualToAnchor:self.topBorderView.bottomAnchor constant:9],
+            [self.inputContainerBackgroundView.topAnchor
+                constraintEqualToAnchor:self.topBorderView.bottomAnchor
+                               constant:9],
         ]];
     }
-    
+
     [constraints addObjectsFromArray:@[
-        [self.inputContainerBackgroundView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
-        [self.inputContainerBackgroundView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12]
+        [self.inputContainerBackgroundView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                                        constant:12],
+        [self.inputContainerBackgroundView.trailingAnchor
+            constraintEqualToAnchor:self.trailingAnchor
+                           constant:-12]
     ]];
-    
+
     // Constrain the input container height.
     CGFloat inputHeight = [self calculateInputTextViewHeight];
-    self.inputTextViewHeightConstraint = [self.inputContainerBackgroundView.heightAnchor constraintEqualToConstant:inputHeight];
+    self.inputTextViewHeightConstraint =
+        [self.inputContainerBackgroundView.heightAnchor constraintEqualToConstant:inputHeight];
     [constraints addObject:self.inputTextViewHeightConstraint];
-    
+
     // Position the text view inside the input container.
     [constraints addObjectsFromArray:@[
-        [self.inputTextView.topAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.topAnchor],
-        [self.inputTextView.leadingAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.leadingAnchor],
-        [self.inputTextView.bottomAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.bottomAnchor],
-        [self.inputTextView.trailingAnchor constraintEqualToAnchor:self.editExpandButton.leadingAnchor constant:-5]
+        [self.inputTextView.topAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.topAnchor],
+        [self.inputTextView.leadingAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.leadingAnchor],
+        [self.inputTextView.bottomAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.bottomAnchor],
+        [self.inputTextView.trailingAnchor
+            constraintEqualToAnchor:self.editExpandButton.leadingAnchor
+                           constant:-5]
     ]];
-    
+
     // Position the expand button inside the input container.
     [constraints addObjectsFromArray:@[
-        [self.editExpandButton.topAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.topAnchor constant:5],
-        [self.editExpandButton.trailingAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.trailingAnchor constant:-8],
+        [self.editExpandButton.topAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.topAnchor
+                           constant:5],
+        [self.editExpandButton.trailingAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.trailingAnchor
+                           constant:-8],
         [self.editExpandButton.widthAnchor constraintEqualToConstant:28],
         [self.editExpandButton.heightAnchor constraintEqualToConstant:28]
     ]];
@@ -226,41 +247,61 @@
     if (@available(iOS 11.0, *)) {
         safeAreaInsets = [NCChatUIUtility getWindowSafeAreaInsetsForView:self];
     }
-    
+
     // The expanded layout does not display the top separator.
     self.topBorderView.hidden = YES;
-    
+
     // The expanded layout lets the text view fill available height.
     self.inputTextViewHeightConstraint = nil;
-    
+
     // Reserve the referenced-message row in expanded mode.
     [constraints addObjectsFromArray:@[
         // Place the collapse button at the trailing edge of the reference row.
         [self.editExpandButton.topAnchor constraintEqualToAnchor:self.topAnchor constant:6],
         [self.editExpandButton.widthAnchor constraintEqualToConstant:28],
         [self.editExpandButton.heightAnchor constraintEqualToConstant:28],
-        [self.editExpandButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
-        
+        [self.editExpandButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                             constant:-12],
+
         // Place the input container below the reference row.
-        [self.inputContainerBackgroundView.topAnchor constraintEqualToAnchor:self.editExpandButton.bottomAnchor constant:6],
-        [self.inputContainerBackgroundView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
-        [self.inputContainerBackgroundView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
-        [self.inputContainerBackgroundView.bottomAnchor constraintEqualToAnchor:self.editEmojiButton.topAnchor constant:-16],
+        [self.inputContainerBackgroundView.topAnchor
+            constraintEqualToAnchor:self.editExpandButton.bottomAnchor
+                           constant:6],
+        [self.inputContainerBackgroundView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor
+                                                                        constant:12],
+        [self.inputContainerBackgroundView.trailingAnchor
+            constraintEqualToAnchor:self.trailingAnchor
+                           constant:-12],
+        [self.inputContainerBackgroundView.bottomAnchor
+            constraintEqualToAnchor:self.editEmojiButton.topAnchor
+                           constant:-16],
     ]];
 
     [constraints addObjectsFromArray:@[
-        [self.referencedLabel.centerYAnchor constraintEqualToAnchor:self.editExpandButton.centerYAnchor],
+        [self.referencedLabel.centerYAnchor
+            constraintEqualToAnchor:self.editExpandButton.centerYAnchor],
         [self.referencedLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
-        [self.referencedLabel.heightAnchor constraintGreaterThanOrEqualToConstant:20], // Keep a minimum row height.
-        [self.referencedLabel.trailingAnchor constraintEqualToAnchor:self.editExpandButton.leadingAnchor constant:-10]
+        [self.referencedLabel.heightAnchor
+            constraintGreaterThanOrEqualToConstant:20], // Keep a minimum row height.
+        [self.referencedLabel.trailingAnchor
+            constraintEqualToAnchor:self.editExpandButton.leadingAnchor
+                           constant:-10]
     ]];
-    
+
     // Fill the expanded input container with the text view.
     [constraints addObjectsFromArray:@[
-        [self.inputTextView.topAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.topAnchor constant:12],
-        [self.inputTextView.leadingAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.leadingAnchor constant:12],
-        [self.inputTextView.trailingAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.trailingAnchor constant:-12],
-        [self.inputTextView.bottomAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.bottomAnchor constant:-12]
+        [self.inputTextView.topAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.topAnchor
+                           constant:12],
+        [self.inputTextView.leadingAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.leadingAnchor
+                           constant:12],
+        [self.inputTextView.trailingAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.trailingAnchor
+                           constant:-12],
+        [self.inputTextView.bottomAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.bottomAnchor
+                           constant:-12]
     ]];
 }
 
@@ -268,35 +309,51 @@
     [constraints addObjectsFromArray:@[
         // Configure the emoji button size; callers provide its horizontal position.
         [self.editEmojiButton.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
-        [self.editEmojiButton.topAnchor constraintEqualToAnchor:self.inputContainerBackgroundView.bottomAnchor constant:10],
+        [self.editEmojiButton.topAnchor
+            constraintEqualToAnchor:self.inputContainerBackgroundView.bottomAnchor
+                           constant:10],
         [self.editEmojiButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-10],
         [self.editEmojiButton.widthAnchor constraintEqualToConstant:26],
         [self.editEmojiButton.heightAnchor constraintEqualToConstant:26],
-        
+
         // Constrain the edit status view.
-        [self.editStatusView.trailingAnchor constraintEqualToAnchor:self.editCancelButton.leadingAnchor constant:-12],
-        [self.editStatusView.centerYAnchor constraintEqualToAnchor:self.editCancelButton.centerYAnchor],
+        [self.editStatusView.trailingAnchor
+            constraintEqualToAnchor:self.editCancelButton.leadingAnchor
+                           constant:-12],
+        [self.editStatusView.centerYAnchor
+            constraintEqualToAnchor:self.editCancelButton.centerYAnchor],
         [self.editStatusView.heightAnchor constraintEqualToConstant:20],
-        
+
         // Constrain the edit status label.
-        [self.editStatusLabel.trailingAnchor constraintEqualToAnchor:self.editStatusView.trailingAnchor constant:-12], 
-        [self.editStatusLabel.centerYAnchor constraintEqualToAnchor:self.editStatusView.centerYAnchor],
+        [self.editStatusLabel.trailingAnchor
+            constraintEqualToAnchor:self.editStatusView.trailingAnchor
+                           constant:-12],
+        [self.editStatusLabel.centerYAnchor
+            constraintEqualToAnchor:self.editStatusView.centerYAnchor],
 
         // Constrain the edit status image.
-        [self.editStatusImageView.trailingAnchor constraintEqualToAnchor:self.editStatusLabel.leadingAnchor constant:-2],
-        [self.editStatusImageView.centerYAnchor constraintEqualToAnchor:self.editStatusView.centerYAnchor],
+        [self.editStatusImageView.trailingAnchor
+            constraintEqualToAnchor:self.editStatusLabel.leadingAnchor
+                           constant:-2],
+        [self.editStatusImageView.centerYAnchor
+            constraintEqualToAnchor:self.editStatusView.centerYAnchor],
         [self.editStatusImageView.widthAnchor constraintEqualToConstant:16],
         [self.editStatusImageView.heightAnchor constraintEqualToConstant:16],
-        
+
         // Position the cancel button on the right.
-        [self.editCancelButton.trailingAnchor constraintEqualToAnchor:self.editConfirmButton.leadingAnchor constant:-12],
-        [self.editCancelButton.centerYAnchor constraintEqualToAnchor:self.editEmojiButton.centerYAnchor],
+        [self.editCancelButton.trailingAnchor
+            constraintEqualToAnchor:self.editConfirmButton.leadingAnchor
+                           constant:-12],
+        [self.editCancelButton.centerYAnchor
+            constraintEqualToAnchor:self.editEmojiButton.centerYAnchor],
         [self.editCancelButton.widthAnchor constraintEqualToConstant:50],
         [self.editCancelButton.heightAnchor constraintEqualToConstant:28],
-        
+
         // Position the confirm button at the trailing edge.
-        [self.editConfirmButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-16],
-        [self.editConfirmButton.centerYAnchor constraintEqualToAnchor:self.editEmojiButton.centerYAnchor],
+        [self.editConfirmButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor
+                                                              constant:-16],
+        [self.editConfirmButton.centerYAnchor
+            constraintEqualToAnchor:self.editEmojiButton.centerYAnchor],
         [self.editConfirmButton.widthAnchor constraintEqualToConstant:50],
         [self.editConfirmButton.heightAnchor constraintEqualToConstant:28]
     ]];
@@ -306,19 +363,19 @@
 
 - (CGFloat)calculateInputTextViewHeight {
     CGFloat minHeight = [self getTextViewHeightWithLines:1];
-    
+
     if (!self.inputTextView.text || self.inputTextView.text.length == 0) {
         return minHeight;
     }
-    
+
     CGSize targetSize = CGSizeMake(self.inputTextView.frame.size.width, CGFLOAT_MAX);
     CGSize fittingSize = [self.inputTextView sizeThatFits:targetSize];
     CGFloat calculatedHeight = fittingSize.height;
-    
+
     // Clamp the text view between its minimum and maximum heights.
     CGFloat maxHeight = [self getTextViewHeightWithLines:self.maxInputLines];
     CGFloat finalHeight = MAX(minHeight, MIN(calculatedHeight, maxHeight));
-    
+
     return finalHeight;
 }
 
@@ -337,23 +394,23 @@
     CGFloat rowSpacing = 8;
     CGFloat referenceHeight = self.hasReferenceMessage ? 27 : 0;
     CGFloat bottomPadding = self.hasReferenceMessage ? 4 : 12;
-    
+
     CGFloat totalHeight = padding; // Top padding.
-    
+
     if (self.hasReferenceMessage) {
         totalHeight += referenceHeight + rowSpacing; // Reference row and spacing.
     }
-    
+
     totalHeight += [self calculateInputTextViewHeight]; // Text input height.
-    totalHeight += rowSpacing; // Space above the action row.
-    totalHeight += buttonRowHeight; // Action row height.
-    totalHeight += bottomPadding; // Bottom padding.
-    
+    totalHeight += rowSpacing;                          // Space above the action row.
+    totalHeight += buttonRowHeight;                     // Action row height.
+    totalHeight += bottomPadding;                       // Bottom padding.
+
     // Update the container frame.
     CGRect newFrame = self.frame;
     newFrame.size.height = totalHeight;
     self.frame = newFrame;
-    
+
     // Notify the delegate of the new height.
     if ([self.delegate respondsToSelector:@selector(editInputContainerView:didChangeFrame:)]) {
         [self.delegate editInputContainerView:self didChangeFrame:self.frame];
@@ -369,7 +426,7 @@
         CGFloat maxHeight = [self getTextViewHeightWithLines:self.maxInputLines];
         CGFloat currentHeight = [self calculateInputTextViewHeight];
         BOOL shouldEnableScroll = currentHeight >= maxHeight;
-        
+
         self.inputTextView.scrollEnabled = shouldEnableScroll;
     }
 }
@@ -379,33 +436,40 @@
 - (void)handleTextChange {
     // Update text view scrolling for the current content height.
     [self updateTextViewScrollBehavior];
-    
+
     if (self.heightMode == NCEditHeightModeNormal) {
         // Update the compact text view height constraint.
         CGFloat newHeight = [self calculateInputTextViewHeight];
         if (self.inputTextViewHeightConstraint) {
             self.inputTextViewHeightConstraint.constant = newHeight;
         }
-        
+
         // Recalculate the compact container height.
         [self updateContainerHeight];
-        
+
         // Animate the resulting layout change.
-        [UIView animateWithDuration:0.2 animations:^{
-            [self layoutIfNeeded];
-        }];
+        [UIView animateWithDuration:0.2
+                         animations:^{
+                           [self layoutIfNeeded];
+                         }];
     }
     // Expanded mode uses a fixed container layout.
 }
 
 #pragma mark - UITextViewDelegate
 
-- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+- (BOOL)textView:(UITextView *)textView
+    shouldChangeTextInRange:(NSRange)range
+            replacementText:(NSString *)text {
     // Forward the text change to the delegate.
-    if ([self.delegate respondsToSelector:@selector(editInputContainerView:inputTextView:shouldChangeTextInRange:replacementText:)]) {
-        return [self.delegate editInputContainerView:self inputTextView:textView shouldChangeTextInRange:range replacementText:text];
+    if ([self.delegate respondsToSelector:@selector(editInputContainerView:inputTextView:
+                                                    shouldChangeTextInRange:replacementText:)]) {
+        return [self.delegate editInputContainerView:self
+                                       inputTextView:textView
+                             shouldChangeTextInRange:range
+                                     replacementText:text];
     }
-    
+
     return YES;
 }
 
@@ -420,9 +484,10 @@
 
 - (void)textViewDidChange:(UITextView *)textView {
     [self handleTextChange];
-    
+
     // Forward return-key handling to the delegate.
-    if ([self.delegate respondsToSelector:@selector(editInputContainerView:inputTextViewDidChange:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(editInputContainerView:inputTextViewDidChange:)]) {
         [self.delegate editInputContainerView:self inputTextViewDidChange:textView];
     }
 }
@@ -438,12 +503,14 @@
 - (void)editExpandButtonTapped:(UIButton *)sender {
     if (self.heightMode == NCEditHeightModeNormal) {
         // Expand to full-screen editing.
-        if ([self.delegate respondsToSelector:@selector(editInputContainerViewRequestFullScreenEdit:)]) {
+        if ([self.delegate
+                respondsToSelector:@selector(editInputContainerViewRequestFullScreenEdit:)]) {
             [self.delegate editInputContainerViewRequestFullScreenEdit:self];
         }
     } else {
         // Collapse to compact editing.
-        if ([self.delegate respondsToSelector:@selector(editInputContainerViewCollapseFromFullScreenEdit:)]) {
+        if ([self.delegate
+                respondsToSelector:@selector(editInputContainerViewCollapseFromFullScreenEdit:)]) {
             [self.delegate editInputContainerViewCollapseFromFullScreenEdit:self];
         }
     }
@@ -462,7 +529,8 @@
 }
 
 - (void)editEmojiButtonTapped:(UIButton *)sender {
-    if ([self.delegate respondsToSelector:@selector(editInputContainerViewEditEmojiButtonClicked:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(editInputContainerViewEditEmojiButtonClicked:)]) {
         [self.delegate editInputContainerViewEditEmojiButtonClicked:self];
     }
 }
@@ -473,13 +541,13 @@
     self.referencedSenderName = senderName;
     self.referencedContent = content;
     self.hasReferenceMessage = (senderName.length > 0 || content.length > 0);
-    
+
     if (self.hasReferenceMessage) {
-        
+
         [self updateReferencedContent];
     }
     self.referencedLabel.hidden = !self.hasReferenceMessage;
-    
+
     // Rebuild constraints only in compact mode; expanded mode always reserves the reference row.
     if (self.heightMode == NCEditHeightModeNormal) {
         [self updateEditConstraints];
@@ -521,7 +589,7 @@
 - (void)setEditEnabled:(BOOL)enabled withStatusMessage:(nullable NSString *)statusMessage {
     // Apply the edit status message.
     [self setEditStatus:statusMessage];
-    
+
     // Update the confirm button state.
     self.editConfirmButton.enabled = enabled;
     if (enabled) {
@@ -538,13 +606,17 @@
         // Display the current referenced-message content.
         NSString *senderName = self.referencedSenderName ?: @"";
         NSString *messageContent = self.referencedContent ?: @"";
-        self.referencedLabel.text = [NSString stringWithFormat:@"%@: %@", senderName, messageContent];
+        self.referencedLabel.text =
+            [NSString stringWithFormat:@"%@: %@", senderName, messageContent];
     }
 }
 
 - (void)updateExpandButtonIcon {
-    NSString *icon = (self.heightMode == NCEditHeightModeExpanded) ? @"edit_collapse" : @"edit_expand";
-    NSString *iconKey = (self.heightMode == NCEditHeightModeExpanded) ? @"channel_msg_edit_collapse_img" : @"channel_msg_edit_expand_img";
+    NSString *icon =
+        (self.heightMode == NCEditHeightModeExpanded) ? @"edit_collapse" : @"edit_expand";
+    NSString *iconKey = (self.heightMode == NCEditHeightModeExpanded)
+                            ? @"channel_msg_edit_collapse_img"
+                            : @"channel_msg_edit_expand_img";
     [self.editExpandButton setImage:NCDynamicImage(iconKey) forState:UIControlStateNormal];
 }
 
@@ -561,12 +633,16 @@
         _referencedLabel.lineBreakMode = NSLineBreakByTruncatingTail;
 
         // Preserve the label's intrinsic height.
-        [_referencedLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisVertical];
-        [_referencedLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisVertical];
-        
+        [_referencedLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh
+                                            forAxis:UILayoutConstraintAxisVertical];
+        [_referencedLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh
+                                                          forAxis:UILayoutConstraintAxisVertical];
+
         // Allow horizontal truncation before the row collapses.
-        [_referencedLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
-        [_referencedLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+        [_referencedLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh
+                                            forAxis:UILayoutConstraintAxisHorizontal];
+        [_referencedLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
+                                                          forAxis:UILayoutConstraintAxisHorizontal];
     }
     return _referencedLabel;
 }
@@ -574,7 +650,8 @@
 - (UIView *)inputContainerBackgroundView {
     if (!_inputContainerBackgroundView) {
         _inputContainerBackgroundView = [[UIView alloc] init];
-        _inputContainerBackgroundView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
+        _inputContainerBackgroundView.backgroundColor =
+            NCDynamicColor(@"auxiliary_background_1_color");
         _inputContainerBackgroundView.layer.cornerRadius = 6;
         _inputContainerBackgroundView.layer.masksToBounds = YES;
     }
@@ -586,13 +663,13 @@
         _inputTextView = [[NCTextView alloc] init];
         _inputTextView.delegate = self;
         _inputTextView.textChangeDelegate = self;
-        
+
         // Configure text container padding.
         UIEdgeInsets textEdge = _inputTextView.textContainerInset;
         textEdge.left = 5;
         textEdge.right = 5;
         _inputTextView.textContainerInset = textEdge;
-        
+
         // Apply the input view appearance.
         _inputTextView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
         _inputTextView.layer.borderWidth = 0;
@@ -611,7 +688,8 @@
 - (UIButton *)editExpandButton {
     if (!_editExpandButton) {
         _editExpandButton = [[UIButton alloc] init];
-        [_editExpandButton setImage:NCDynamicImage(@"channel_msg_edit_expand_img") forState:UIControlStateNormal];
+        [_editExpandButton setImage:NCDynamicImage(@"channel_msg_edit_expand_img")
+                           forState:UIControlStateNormal];
         _editExpandButton.layer.masksToBounds = YES;
         [_editExpandButton addTarget:self
                               action:@selector(editExpandButtonTapped:)
@@ -623,7 +701,8 @@
 - (UIButton *)editConfirmButton {
     if (!_editConfirmButton) {
         _editConfirmButton = [[UIButton alloc] init];
-        [_editConfirmButton setImage:NCDynamicImage(@"channel_msg_edit_confirm_img") forState:UIControlStateNormal];
+        [_editConfirmButton setImage:NCDynamicImage(@"channel_msg_edit_confirm_img")
+                            forState:UIControlStateNormal];
         _editConfirmButton.backgroundColor = NCDynamicColor(@"primary_color");
         _editConfirmButton.layer.cornerRadius = 4;
         _editConfirmButton.layer.masksToBounds = YES;
@@ -637,7 +716,8 @@
 - (UIButton *)editCancelButton {
     if (!_editCancelButton) {
         _editCancelButton = [[UIButton alloc] init];
-        [_editCancelButton setImage:NCDynamicImage(@"channel_msg_edit_cancel_img") forState:UIControlStateNormal];
+        [_editCancelButton setImage:NCDynamicImage(@"channel_msg_edit_cancel_img")
+                           forState:UIControlStateNormal];
         _editCancelButton.backgroundColor = NCDynamicColor(@"common_background_color");
         _editCancelButton.layer.cornerRadius = 4;
         _editCancelButton.layer.borderWidth = 0.5;
@@ -654,7 +734,8 @@
 - (UIButton *)editEmojiButton {
     if (!_editEmojiButton) {
         _editEmojiButton = [[UIButton alloc] init];
-        [_editEmojiButton setImage:NCDynamicImage(@"channel_msg_edit_emoji_img") forState:UIControlStateNormal];
+        [_editEmojiButton setImage:NCDynamicImage(@"channel_msg_edit_emoji_img")
+                          forState:UIControlStateNormal];
         _editEmojiButton.layer.cornerRadius = 14;
         _editEmojiButton.layer.masksToBounds = YES;
         [_editEmojiButton addTarget:self
@@ -672,7 +753,7 @@
         maxInputLines = TextViewMinInputLines;
     }
     _maxInputLines = maxInputLines;
-    
+
     // Recalculate height after the font changes.
     [self handleTextChange];
 }
@@ -706,13 +787,16 @@
         _editStatusLabel = [[UILabel alloc] init];
         _editStatusLabel.translatesAutoresizingMaskIntoConstraints = NO;
         _editStatusLabel.font = [[NCChatUIConfig defaultConfig].font fontOfAnnotationLevel];
-        _editStatusLabel.textColor = NCDynamicColor(@"hint_color"); // Use the configured hint color.
+        _editStatusLabel.textColor =
+            NCDynamicColor(@"hint_color"); // Use the configured hint color.
         _editStatusLabel.textAlignment = NSTextAlignmentRight;
         _editStatusLabel.numberOfLines = 1;
         _editStatusLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         // Preserve the status label's intrinsic width.
-        [_editStatusLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
-        [_editStatusLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
+        [_editStatusLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh
+                                            forAxis:UILayoutConstraintAxisHorizontal];
+        [_editStatusLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh
+                                                          forAxis:UILayoutConstraintAxisHorizontal];
     }
     return _editStatusLabel;
 }

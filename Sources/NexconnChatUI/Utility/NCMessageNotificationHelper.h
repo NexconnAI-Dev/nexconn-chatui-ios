@@ -17,8 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Checks whether the message can trigger a notification.
 /// - Parameter message: Message.
 /// - Parameter completion: Callback.
-+ (void)checkNotifyAbilityWith:(NCMessage *)message
-                    completion:(void (^)(BOOL show))completion;
++ (void)checkNotifyAbilityWith:(NCMessage *)message completion:(void (^)(BOOL show))completion;
 @end
 
 NS_ASSUME_NONNULL_END

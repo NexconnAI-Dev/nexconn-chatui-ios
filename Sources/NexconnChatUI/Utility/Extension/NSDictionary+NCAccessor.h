@@ -12,8 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSDictionary (NCAccessor)
 
-/// Use with care. This method is retained only for legacy parsing of strings, maps, arrays, and NSNumber values.
-/// Use nc_stringForKey for normal string parsing.
+/// Use with care. This method is retained only for legacy parsing of strings, maps, arrays, and
+/// NSNumber values. Use nc_stringForKey for normal string parsing.
 /// - Parameter key: key
 - (nullable NSString *)nc_mix_stringForKey:(id)key;
 
@@ -45,7 +45,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)nc_objectForKeyIsValid:(id)key;
 
 @end
-
 
 @interface NSDictionary (NCJson)
 

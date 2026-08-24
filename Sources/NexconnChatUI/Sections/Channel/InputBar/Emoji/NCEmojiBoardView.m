@@ -7,22 +7,23 @@
 //
 
 #import "NCEmojiBoardView.h"
-#import "NCPageControl.h"
-#import "NCEmoticonPackage.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIExtensionService.h"
-#import "NCChatUIConfig.h"
-#import "NCEmojiTabView.h"
 #import "NCBaseButton.h"
 #import "NCBaseScrollView.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIExtensionService.h"
+#import "NCEmojiTabView.h"
+#import "NCEmoticonPackage.h"
+#import "NCPageControl.h"
 #define NC_EMOJI_WIDTH 30
 #define NC_EMOTIONTAB_SIZE_HEIGHT 42
 #define NC_EMOTIONTAB_SIZE_WIDTH 42
 #define NC_EMOTIONTAB_ICON_SIZE 25
 #define IS_IPAD (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
 
-NSString *const NCUIExtensionEmoticonTabNeedReloadNotification = @"NCUIExtensionEmoticonTabNeedReloadNotification";
-@interface NCEmojiBoardView ()<NCEmojiTabViewDelegate> {
+NSString *const NCUIExtensionEmoticonTabNeedReloadNotification =
+    @"NCUIExtensionEmoticonTabNeedReloadNotification";
+@interface NCEmojiBoardView () <NCEmojiTabViewDelegate> {
     BOOL _disableDefaultEmoji;
 }
 @property (nonatomic, assign) int emojiTotal;
@@ -79,10 +80,12 @@ static int nc_currentSelectIndexPage;
 
         [self generateDefaultLayoutParameters];
         lastFrameWith = self.frame.size.width;
-        self.emojiBackgroundView = [[NCBaseScrollView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, 186)];
+        self.emojiBackgroundView =
+            [[NCBaseScrollView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, 186)];
         self.emojiBackgroundView.backgroundColor = NCDynamicColor(@"common_background_color");
         self.emojiBackgroundView.pagingEnabled = YES;
-        self.emojiBackgroundView.contentSize = CGSizeMake(self.emojiTotalPage * self.frame.size.width, 186);
+        self.emojiBackgroundView.contentSize =
+            CGSizeMake(self.emojiTotalPage * self.frame.size.width, 186);
         self.emojiBackgroundView.showsHorizontalScrollIndicator = NO;
         self.emojiBackgroundView.showsVerticalScrollIndicator = NO;
         self.emojiBackgroundView.delegate = self;
@@ -121,7 +124,7 @@ static int nc_currentSelectIndexPage;
         tabbarViewFrame.size.width = frame.size.width;
         self.tabbarView.frame = tabbarViewFrame;
     }
-    
+
     [self generateDefaultLayoutParameters];
     // Recalculate page metrics and rebuild content for the new width.
     for (UIView *subView in self.emojiBackgroundView.subviews) {
@@ -179,15 +182,20 @@ static int nc_currentSelectIndexPage;
     pageCtrl = [[NCPageControl alloc] initWithFrame:CGRectMake(0, 175, self.frame.size.width, 5)];
     pageCtrl.numberOfPages = self.emojiTotalPage; // Total built-in emoji pages
     pageCtrl.currentPage = 0;                     // Current page
-    [pageCtrl addTarget:self action:@selector(pageTurn:) forControlEvents:UIControlEventValueChanged];
+    [pageCtrl addTarget:self
+                  action:@selector(pageTurn:)
+        forControlEvents:UIControlEventValueChanged];
     [self addSubview:pageCtrl];
     [self addSubview:self.tabbarView];
     BOOL isAddButtonEnabled = NO;
     BOOL isSettingButtonEnabled = NO;
     if ([self.delegate isKindOfClass:[NCChatSessionInputBarControl class]]) {
-        NCChatSessionInputBarControl *inputBarControl = (NCChatSessionInputBarControl *)self.delegate;
-        isAddButtonEnabled = [[NCChatUIExtensionService sharedService] isEmoticonAddButtonEnabled:inputBarControl];
-        isSettingButtonEnabled = [[NCChatUIExtensionService sharedService] isEmoticonSettingButtonEnabled:inputBarControl];
+        NCChatSessionInputBarControl *inputBarControl =
+            (NCChatSessionInputBarControl *)self.delegate;
+        isAddButtonEnabled =
+            [[NCChatUIExtensionService sharedService] isEmoticonAddButtonEnabled:inputBarControl];
+        isSettingButtonEnabled = [[NCChatUIExtensionService sharedService]
+            isEmoticonSettingButtonEnabled:inputBarControl];
     }
     [self.tabbarView showAddButton:isAddButtonEnabled showSettingButton:isSettingButtonEnabled];
     [self loadCustomerEmoticonPackage];
@@ -198,17 +206,20 @@ static int nc_currentSelectIndexPage;
     if (enableSend) {
         sendButton.userInteractionEnabled = YES;
         sendButton.backgroundColor = NCDynamicColor(@"primary_color");
-        [sendButton setTitleColor:NCDynamicColor(@"control_title_white_color") forState:UIControlStateNormal];
+        [sendButton setTitleColor:NCDynamicColor(@"control_title_white_color")
+                         forState:UIControlStateNormal];
     } else {
         sendButton.userInteractionEnabled = NO;
         sendButton.backgroundColor = NCDynamicColor(@"disabled_color");
-        [sendButton setTitleColor:NCDynamicColor(@"text_secondary_color") forState:UIControlStateNormal];
+        [sendButton setTitleColor:NCDynamicColor(@"text_secondary_color")
+                         forState:UIControlStateNormal];
     }
 }
 
 - (void)addEmojiTab:(id<NCEmoticonTabSource>)viewDataSource {
-    NCEmoticonPackage *model = [[NCEmoticonPackage alloc] initEmoticonPackage:[viewDataSource image]
-                                                               withTotalCount:[viewDataSource pageCount]];
+    NCEmoticonPackage *model =
+        [[NCEmoticonPackage alloc] initEmoticonPackage:[viewDataSource image]
+                                        withTotalCount:[viewDataSource pageCount]];
     model.tabSource = viewDataSource;
     model.identify = [viewDataSource identify];
     model.emojBoardView = self;
@@ -224,8 +235,9 @@ static int nc_currentSelectIndexPage;
 }
 
 - (void)addExtensionEmojiTab:(id<NCEmoticonTabSource>)viewDataSource {
-    NCEmoticonPackage *model = [[NCEmoticonPackage alloc] initEmoticonPackage:[viewDataSource image]
-                                                               withTotalCount:[viewDataSource pageCount]];
+    NCEmoticonPackage *model =
+        [[NCEmoticonPackage alloc] initEmoticonPackage:[viewDataSource image]
+                                        withTotalCount:[viewDataSource pageCount]];
     model.tabSource = viewDataSource;
     model.identify = [viewDataSource identify];
     model.emojBoardView = self;
@@ -259,13 +271,15 @@ static int nc_currentSelectIndexPage;
         [self.emojiBackgroundView removeFromSuperview];
         self.emojiBackgroundView = nil;
     }
-    self.emojiBackgroundView = [[NCBaseScrollView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, 186)];
+    self.emojiBackgroundView =
+        [[NCBaseScrollView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, 186)];
     if ([NCChatUIUtility isRTL]) {
         [self.emojiBackgroundView setTransform:CGAffineTransformMakeScale(-1, 1)];
     }
     self.emojiBackgroundView.backgroundColor = NCDynamicColor(@"common_background_color");
     self.emojiBackgroundView.pagingEnabled = YES;
-    self.emojiBackgroundView.contentSize = CGSizeMake(self.emojiTotalPage * self.frame.size.width, 186);
+    self.emojiBackgroundView.contentSize =
+        CGSizeMake(self.emojiTotalPage * self.frame.size.width, 186);
     self.emojiBackgroundView.showsHorizontalScrollIndicator = NO;
     self.emojiBackgroundView.showsVerticalScrollIndicator = NO;
     self.emojiBackgroundView.delegate = self;
@@ -276,10 +290,12 @@ static int nc_currentSelectIndexPage;
         [_emojiModelList addObject:_appAddEmojiModelList[i]];
     }
     NSArray<id<NCEmoticonTabSource>> *emoticonTabSourceList =
-        [[NCChatUIExtensionService sharedService] getEmoticonTabList:self.channelType channelId:self.channelId];
+        [[NCChatUIExtensionService sharedService] getEmoticonTabList:self.channelType
+                                                           channelId:self.channelId];
     for (id<NCEmoticonTabSource> source in emoticonTabSourceList) {
         NCEmoticonPackage *model =
-            [[NCEmoticonPackage alloc] initEmoticonPackage:[source image] withTotalCount:[source pageCount]];
+            [[NCEmoticonPackage alloc] initEmoticonPackage:[source image]
+                                            withTotalCount:[source pageCount]];
         model.tabSource = source;
         model.identify = [source identify];
         model.emojBoardView = self;
@@ -294,8 +310,8 @@ static int nc_currentSelectIndexPage;
                 nc_currentSelectIndexPackage = i;
                 [self showEmoticonPackage:i];
                 CGSize viewSize = self.emojiBackgroundView.frame.size;
-                CGRect rect =
-                    CGRectMake(nc_currentSelectIndexPage * viewSize.width, 0, viewSize.width, viewSize.height);
+                CGRect rect = CGRectMake(nc_currentSelectIndexPage * viewSize.width, 0,
+                                         viewSize.width, viewSize.height);
                 [model.emotionContainerView scrollRectToVisible:rect animated:NO];
                 break;
             }
@@ -364,33 +380,39 @@ static int nc_currentSelectIndexPage;
 
 #pragma mark - NCEmojiTabViewDelegate
 
-- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didClickSendButton:(UIButton *)button{
+- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didClickSendButton:(UIButton *)button {
     if ([self.delegate respondsToSelector:@selector(didSendButtonEvent:sendButton:)]) {
         [self.delegate didSendButtonEvent:self sendButton:button];
     }
 }
 
-- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didClickSettingButton:(UIButton *)button{
+- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didClickSettingButton:(UIButton *)button {
     if ([self.delegate isKindOfClass:[NCChatSessionInputBarControl class]]) {
-        [[NCChatUIExtensionService sharedService] emoticonTab:self
-                                  didTouchSettingButton:button
-                                             inInputBar:(NCChatSessionInputBarControl *)self.delegate];
+        [[NCChatUIExtensionService sharedService]
+                      emoticonTab:self
+            didTouchSettingButton:button
+                       inInputBar:(NCChatSessionInputBarControl *)self.delegate];
     } else {
-        [[NCChatUIExtensionService sharedService] emoticonTab:self didTouchSettingButton:button inInputBar:nil];
+        [[NCChatUIExtensionService sharedService] emoticonTab:self
+                                        didTouchSettingButton:button
+                                                   inInputBar:nil];
     }
 }
 
-- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didClickAddButton:(UIButton *)button{
+- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didClickAddButton:(UIButton *)button {
     if ([self.delegate isKindOfClass:[NCChatSessionInputBarControl class]]) {
-        [[NCChatUIExtensionService sharedService] emoticonTab:self
-                                      didTouchAddButton:button
-                                             inInputBar:(NCChatSessionInputBarControl *)self.delegate];
+        [[NCChatUIExtensionService sharedService]
+                  emoticonTab:self
+            didTouchAddButton:button
+                   inInputBar:(NCChatSessionInputBarControl *)self.delegate];
     } else {
-        [[NCChatUIExtensionService sharedService] emoticonTab:self didTouchAddButton:button inInputBar:nil];
+        [[NCChatUIExtensionService sharedService] emoticonTab:self
+                                            didTouchAddButton:button
+                                                   inInputBar:nil];
     }
 }
 
-- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didSelectEmotion:(int)index{
+- (void)emojiTabView:(NCEmojiTabView *)emojiTabView didSelectEmotion:(int)index {
     _preSelectEmoticonPackageIndex = index;
     nc_currentSelectIndexPage = 0;
     [self loadEmotionTab:index];
@@ -399,14 +421,15 @@ static int nc_currentSelectIndexPage;
 #pragma mark - Private Methods
 - (void)loadEmotionTab:(int)index {
     if ([self.delegate isKindOfClass:[NCChatSessionInputBarControl class]]) {
-        [[NCChatUIExtensionService sharedService] emoticonTab:self
-                               didTouchEmotionIconIndex:index
-                                             inInputBar:(NCChatSessionInputBarControl *)self.delegate
-                                    isBlockDefaultEvent:^(BOOL isBlockDefaultEvent) {
-                                        if (!isBlockDefaultEvent) {
-                                            [self showEmoticonPackage:index];
-                                        }
-                                    }];
+        [[NCChatUIExtensionService sharedService]
+                         emoticonTab:self
+            didTouchEmotionIconIndex:index
+                          inInputBar:(NCChatSessionInputBarControl *)self.delegate
+                 isBlockDefaultEvent:^(BOOL isBlockDefaultEvent) {
+                   if (!isBlockDefaultEvent) {
+                       [self showEmoticonPackage:index];
+                   }
+                 }];
     } else {
         [self showEmoticonPackage:index];
     }
@@ -424,14 +447,16 @@ static int nc_currentSelectIndexPage;
     startPos_X = self.emojiMariginHorizontalMin + 6;
     for (int i = beginEmojiBtn; i < endEmojiBtn; i++) {
         int pageIndex = i / self.emojiMaxCountPerPage;
-        float emojiPosX =
-            startPos_X + 42 * (i % self.emojiMaxCountPerPage % self.emojiColumn) + pageIndex * self.frame.size.width;
+        float emojiPosX = startPos_X + 42 * (i % self.emojiMaxCountPerPage % self.emojiColumn) +
+                          pageIndex * self.frame.size.width;
         float emojiPosY = startPos_Y + 47 * (i % self.emojiMaxCountPerPage / self.emojiColumn);
-        NCBaseButton *emojiBtn =
-            [[NCBaseButton alloc] initWithFrame:CGRectMake(emojiPosX, emojiPosY, NC_EMOJI_WIDTH, NC_EMOJI_WIDTH)];
+        NCBaseButton *emojiBtn = [[NCBaseButton alloc]
+            initWithFrame:CGRectMake(emojiPosX, emojiPosY, NC_EMOJI_WIDTH, NC_EMOJI_WIDTH)];
         emojiBtn.titleLabel.font = [[NCChatUIConfig defaultConfig].font fontOfSize:26];
         [emojiBtn setTitle:self.faceEmojiArray[i] forState:UIControlStateNormal];
-        [emojiBtn addTarget:self action:@selector(emojiBtnHandle:) forControlEvents:UIControlEventTouchUpInside];
+        [emojiBtn addTarget:self
+                      action:@selector(emojiBtnHandle:)
+            forControlEvents:UIControlEventTouchUpInside];
         if ([NCChatUIUtility isRTL]) {
             [emojiBtn setTransform:CGAffineTransformMakeScale(-1, 1)];
         }
@@ -444,10 +469,12 @@ static int nc_currentSelectIndexPage;
                              action:@selector(emojiBtnHandle:)
                    forControlEvents:UIControlEventTouchUpInside];
             int offset = 30;
-            frame.origin.x = self.frame.size.width - startPos_X - offset + pageIndex * self.frame.size.width;
+            frame.origin.x =
+                self.frame.size.width - startPos_X - offset + pageIndex * self.frame.size.width;
             frame.size = CGSizeMake(NC_EMOJI_WIDTH, NC_EMOJI_WIDTH);
             deleteButton.frame = frame;
-            [deleteButton setImage:NCDynamicImage(@"channel_msg_cell_emoji_delete_img") forState:UIControlStateNormal];
+            [deleteButton setImage:NCDynamicImage(@"channel_msg_cell_emoji_delete_img")
+                          forState:UIControlStateNormal];
             deleteButton.contentEdgeInsets = UIEdgeInsetsMake(3, 0, 0, 0);
             [self.emojiBackgroundView addSubview:deleteButton];
         }
@@ -467,7 +494,8 @@ static int nc_currentSelectIndexPage;
     } else {
         self.emojiTotal = (int)[self.faceEmojiArray count];
     }
-    self.emojiColumn = (int)(self.frame.size.width / emojiSpanHorizontal); // Columns that fit the current width
+    self.emojiColumn =
+        (int)(self.frame.size.width / emojiSpanHorizontal); // Columns that fit the current width
     int left = ((int)self.frame.size.width) % 42;
     if (left < 12) {
         self.emojiColumn--;
@@ -475,13 +503,13 @@ static int nc_currentSelectIndexPage;
     }
     self.emojiMaxCountPerPage = self.emojiColumn * emojiRow - 1;
     self.emojiMariginHorizontalMin = left / 2;
-    self.emojiTotalPage =
-        self.emojiTotal / self.emojiMaxCountPerPage + (self.emojiTotal % self.emojiMaxCountPerPage ? 1 : 0);
+    self.emojiTotalPage = self.emojiTotal / self.emojiMaxCountPerPage +
+                          (self.emojiTotal % self.emojiMaxCountPerPage ? 1 : 0);
 }
 
 - (void)loadCustomerEmoticonPackage {
     NSMutableArray *emojiList = [NSMutableArray array];
-    if(!self.disableDefaultEmoji) {
+    if (!self.disableDefaultEmoji) {
         UIImage *img = NCDynamicImage(@"emoji_tab_face_img");
         if (img) {
             [emojiList addObject:img];
@@ -516,7 +544,7 @@ static int nc_currentSelectIndexPage;
 - (void)showEmoticonPackage:(int)index {
     int selectIndex = index;
     if (self.disableDefaultEmoji) {
-        if (index>=self.emojiModelList.count) {
+        if (index >= self.emojiModelList.count) {
             return;
         }
         NCEmoticonPackage *model = self.emojiModelList[index];
@@ -535,9 +563,9 @@ static int nc_currentSelectIndexPage;
                 nc_currentSelectIndexPage = 0;
             }
 
-    } else {
-        pageCtrl.numberOfPages = self.emojiTotalPage;
-    }
+        } else {
+            pageCtrl.numberOfPages = self.emojiTotalPage;
+        }
     }
     CGSize viewSize = self.emojiBackgroundView.frame.size;
     CGRect rect = CGRectMake(selectIndex * viewSize.width, 0, viewSize.width, viewSize.height);
@@ -551,7 +579,7 @@ static int nc_currentSelectIndexPage;
 
 - (void)showEmoticonView:(int)index {
     if (self.disableDefaultEmoji) {
-        if (nc_currentSelectIndexPackage>= self.emojiModelList.count) {
+        if (nc_currentSelectIndexPackage >= self.emojiModelList.count) {
             return;
         }
         NCEmoticonPackage *model = _emojiModelList[nc_currentSelectIndexPackage];
@@ -571,7 +599,8 @@ static int nc_currentSelectIndexPage;
             }
         }
     } else {
-        while (self.emojiLoadedPage <= index && (self.faceEmojiArray && self.faceEmojiArray.count > 0)) {
+        while (self.emojiLoadedPage <= index &&
+               (self.faceEmojiArray && self.faceEmojiArray.count > 0)) {
             [self loadEmojiViewPartly];
         }
         CGSize viewSize = self.emojiBackgroundView.frame.size;
@@ -598,7 +627,8 @@ static int nc_currentSelectIndexPage;
     if (emoticonTabList) {
         [self reloadExtensionEmoticonTabSource];
         if ([self.delegate isMemberOfClass:[NCChatSessionInputBarControl class]]) {
-            NCChatSessionInputBarControl *chatSessionInputBarControl = (NCChatSessionInputBarControl *)self.delegate;
+            NCChatSessionInputBarControl *chatSessionInputBarControl =
+                (NCChatSessionInputBarControl *)self.delegate;
             if (chatSessionInputBarControl.inputTextView.text &&
                 chatSessionInputBarControl.inputTextView.text.length > 0) {
                 [self enableSendButton:YES];
@@ -614,9 +644,10 @@ static int nc_currentSelectIndexPage;
     return CGSizeMake(self.frame.size.width, 186);
 }
 
-- (NCEmojiTabView *)tabbarView{
+- (NCEmojiTabView *)tabbarView {
     if (!_tabbarView) {
-        _tabbarView = [[NCEmojiTabView alloc] initWithFrame:CGRectMake(0, self.frame.size.height - 38, self.frame.size.width, 38)];
+        _tabbarView = [[NCEmojiTabView alloc]
+            initWithFrame:CGRectMake(0, self.frame.size.height - 38, self.frame.size.width, 38)];
         _tabbarView.backgroundColor = NCDynamicColor(@"auxiliary_background_2_color");
         _tabbarView.delegate = self;
         _tabbarView.accessibilityLabel = @"emoji_tabbarView";
@@ -624,12 +655,11 @@ static int nc_currentSelectIndexPage;
     return _tabbarView;
 }
 
-
 - (void)setDisableDefaultEmoji:(BOOL)disableDefaultEmoji {
     _disableDefaultEmoji = disableDefaultEmoji;
     if (disableDefaultEmoji) {
         [self cleanDefaultEmoji];
-       
+
         [self generateDefaultLayoutParameters];
         if (pageCtrl) {
             [pageCtrl removeFromSuperview];

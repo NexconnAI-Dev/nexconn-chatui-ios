@@ -34,8 +34,8 @@ static NSString *const NCPendingDraftCacheUpdatedAtKey = @"updatedAt";
          channelId:(NSString *)channelId
       subChannelId:(nullable NSString *)subChannelId {
     NSString *cacheKey = [self pendingDraftCacheKeyWithChannelType:channelType
-                                                          channelId:channelId
-                                                       subChannelId:subChannelId];
+                                                         channelId:channelId
+                                                      subChannelId:subChannelId];
     if (cacheKey.length == 0) {
         return;
     }
@@ -54,8 +54,8 @@ static NSString *const NCPendingDraftCacheUpdatedAtKey = @"updatedAt";
     NSMutableArray<NSString *> *resolvedKeys = [NSMutableArray array];
     for (NCChannelModel *model in modelList) {
         NSString *cacheKey = [self pendingDraftCacheKeyWithChannelType:model.channelType
-                                                              channelId:model.channelId
-                                                           subChannelId:model.subChannelId];
+                                                             channelId:model.channelId
+                                                          subChannelId:model.subChannelId];
         NSDictionary *cacheValue = self.pendingDraftCache[cacheKey];
         if (![cacheValue isKindOfClass:[NSDictionary class]]) {
             continue;
@@ -81,10 +81,8 @@ static NSString *const NCPendingDraftCacheUpdatedAtKey = @"updatedAt";
                                      subChannelId:(nullable NSString *)subChannelId {
     NSString *normalizedChannelId = channelId ?: @"";
     NSString *normalizedSubChannelId = subChannelId ?: @"";
-    return [NSString stringWithFormat:@"%ld_%@_%@",
-            (long)channelType,
-            normalizedChannelId,
-            normalizedSubChannelId];
+    return [NSString stringWithFormat:@"%ld_%@_%@", (long)channelType, normalizedChannelId,
+                                      normalizedSubChannelId];
 }
 
 - (void)cleanupExpiredPendingDraftCacheIfNeeded {

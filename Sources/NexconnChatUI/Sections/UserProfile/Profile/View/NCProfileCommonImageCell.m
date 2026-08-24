@@ -7,14 +7,14 @@
 //
 
 #import "NCProfileCommonImageCell.h"
-#import "NCImageView.h"
-#import "NCProfileCommonCellViewModel.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCImageView.h"
+#import "NCProfileCommonCellViewModel.h"
 
 #define NCProfileImageCellPortraitSize 32
 
-NSString  * const NCProfileImageCellIdentifier = @"NCProfileImageCellIdentifier";
+NSString *const NCProfileImageCellIdentifier = @"NCProfileImageCellIdentifier";
 @interface NCProfileCommonImageCell ()
 
 @property (nonatomic, strong) NSLayoutConstraint *portraitTrailingToArrowConstraint;
@@ -41,16 +41,19 @@ NSString  * const NCProfileImageCellIdentifier = @"NCProfileImageCellIdentifier"
         _portraitImageView = [[NCImageView alloc] init];
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-            _portraitImageView.layer.cornerRadius = NCProfileImageCellPortraitSize/2;
-        }else{
+            _portraitImageView.layer.cornerRadius = NCProfileImageCellPortraitSize / 2;
+        } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
         _portraitImageView.layer.masksToBounds = YES;
         _portraitImageView.translatesAutoresizingMaskIntoConstraints = NO;
-        [_portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+        [_portraitImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
         [NSLayoutConstraint activateConstraints:@[
-            [_portraitImageView.widthAnchor constraintEqualToConstant:NCProfileImageCellPortraitSize],
-            [_portraitImageView.heightAnchor constraintEqualToConstant:NCProfileImageCellPortraitSize]
+            [_portraitImageView.widthAnchor
+                constraintEqualToConstant:NCProfileImageCellPortraitSize],
+            [_portraitImageView.heightAnchor
+                constraintEqualToConstant:NCProfileImageCellPortraitSize]
         ]];
     }
     return _portraitImageView;

@@ -12,7 +12,7 @@
 
 @property (nonatomic, strong) NCProfileFooterViewModel *footerViewModel;
 
-@property (nonatomic, strong) NSArray <NSArray <NCProfileCellViewModel*> *> *profileList;
+@property (nonatomic, strong) NSArray<NSArray<NCProfileCellViewModel *> *> *profileList;
 
 @end
 
@@ -20,17 +20,18 @@
 @dynamic delegate;
 
 - (void)updateProfile {
-    
 }
 
 - (void)configFooterViewModel:(NCProfileFooterViewModel *)viewModel {
-    if ([self.delegate respondsToSelector:@selector(profileViewModel:willLoadProfileFooterViewModel:)]) {
-        self.footerViewModel = [self.delegate profileViewModel:self willLoadProfileFooterViewModel:viewModel];
+    if ([self.delegate
+            respondsToSelector:@selector(profileViewModel:willLoadProfileFooterViewModel:)]) {
+        self.footerViewModel = [self.delegate profileViewModel:self
+                                willLoadProfileFooterViewModel:viewModel];
     } else {
         self.footerViewModel = viewModel;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.responder reloadFooterView];
+      [self.responder reloadFooterView];
     });
 }
 
@@ -40,7 +41,8 @@
 
 - (void)setProfileList:(NSArray<NSArray<NCProfileCellViewModel *> *> *)profileList {
     NSArray *array = nil;
-    if ([self.delegate respondsToSelector:@selector(profileViewModel:willLoadProfileCellViewModel:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(profileViewModel:willLoadProfileCellViewModel:)]) {
         array = [self.delegate profileViewModel:self willLoadProfileCellViewModel:profileList];
     } else {
         array = profileList;

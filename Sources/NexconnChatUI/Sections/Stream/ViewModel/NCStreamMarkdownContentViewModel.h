@@ -9,7 +9,7 @@
 #import "NCStreamContentViewModel.h"
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NCStreamMarkdownContentViewModel : NCStreamContentViewModel<NCStreamViewModelProtocol>
+@interface NCStreamMarkdownContentViewModel : NCStreamContentViewModel <NCStreamViewModelProtocol>
 
 @property (nonatomic, copy) NSString *htmlContent;
 

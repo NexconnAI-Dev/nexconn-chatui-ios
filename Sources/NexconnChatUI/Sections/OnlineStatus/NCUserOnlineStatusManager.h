@@ -17,7 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Online status subscription manager delegate.
 ///
-/// Used by external modules, such as the channel list, to provide users whose online status should be displayed when the subscription limit is exceeded.
+/// Used by external modules, such as the channel list, to provide users whose online status should
+/// be displayed when the subscription limit is exceeded.
 @protocol NCUserOnlineStatusManagerDelegate <NSObject>
 
 @required
@@ -25,14 +26,19 @@ NS_ASSUME_NONNULL_BEGIN
 /// Gets the user ID list whose online status should be displayed.
 ///
 /// - Parameter manager: Online status manager instance.
-/// - Returns: User ID array whose online status should be displayed, sorted by priority with higher priority first.
+/// - Returns: User ID array whose online status should be displayed, sorted by priority with higher
+/// priority first.
 ///
 /// - Note:
-///   - When the subscription count exceeds the limit, the manager calls this method to get the users whose online status should be displayed.
-///   - The returned list can contain friends and non-friends. The manager filters it internally because friends do not need subscriptions.
-///   - The filtered list is truncated to the maximum subscription count, and extra users are not subscribed.
-///   - Returning nil or an empty array means no users need online status display, and the subscription flow stops.
-- (NSArray<NSString *> * _Nullable)userIdsNeedOnlineStatus:(NCUserOnlineStatusManager *)manager;
+///   - When the subscription count exceeds the limit, the manager calls this method to get the
+///   users whose online status should be displayed.
+///   - The returned list can contain friends and non-friends. The manager filters it internally
+///   because friends do not need subscriptions.
+///   - The filtered list is truncated to the maximum subscription count, and extra users are not
+///   subscribed.
+///   - Returning nil or an empty array means no users need online status display, and the
+///   subscription flow stops.
+- (NSArray<NSString *> *_Nullable)userIdsNeedOnlineStatus:(NCUserOnlineStatusManager *)manager;
 
 @end
 
@@ -49,7 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Note:
 ///   1. Fetches the latest status from Lib.
 ///   2. Updates the local cache.
-///   3. Posts NCChatUIUserOnlineStatusChangedNotification so all observing pages update automatically.
+///   3. Posts NCChatUIUserOnlineStatusChangedNotification so all observing pages update
+///   automatically.
 - (void)fetchOnlineStatus:(NSArray<NSString *> *)userIds;
 
 /// Fetches a user's online status and optionally handles subscription limit overflow.
@@ -58,14 +65,14 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - processSubscribeLimit: Whether to handle subscription limit overflow.
 /// - Note:
 ///   - If processSubscribeLimit is YES, subscription limit overflow is handled automatically.
-///   - If processSubscribeLimit is NO, subscription limit overflow is not handled automatically and must be handled externally.
+///   - If processSubscribeLimit is NO, subscription limit overflow is not handled automatically and
+///   must be handled externally.
 - (void)fetchOnlineStatus:(NSString *)userId processSubscribeLimit:(BOOL)processSubscribeLimit;
 
 /// Fetches friends' online status.
 ///
 /// - Parameter userIds: User ID array. All users must be friends.
 - (void)fetchFriendOnlineStatus:(NSArray<NSString *> *)userIds;
-
 
 /// Gets a user's online status from cache synchronously and returns immediately.
 ///
@@ -75,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Note:
 ///   - Used for fast UI display without sending a network request.
 ///   - If nil is returned, call fetchOnlineStatus: to get the latest status.
-- (NCSubscribeUserOnlineStatus * _Nullable)getCachedOnlineStatus:(NSString *)userId;
+- (NCSubscribeUserOnlineStatus *_Nullable)getCachedOnlineStatus:(NSString *)userId;
 
 /// Clears all caches and resets internal state.
 - (void)clearCache;

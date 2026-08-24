@@ -17,8 +17,8 @@
 #pragma mark - Lazy-Loaded Subviews
 - (UIActivityIndicatorView *)loadingView {
     if (!_loadingView) {
-        UIActivityIndicatorView *loadingView =
-            [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:self.activityIndicatorViewStyle];
+        UIActivityIndicatorView *loadingView = [[UIActivityIndicatorView alloc]
+            initWithActivityIndicatorStyle:self.activityIndicatorViewStyle];
         loadingView.hidesWhenStopped = YES;
         [self addSubview:_loadingView = loadingView];
     }

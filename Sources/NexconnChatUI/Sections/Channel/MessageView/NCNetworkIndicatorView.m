@@ -21,7 +21,8 @@
         self.networkUnreachableImageView.image = NCDynamicImage(@"network_unreachable_img");
         self.networkUnreachableDescriptionLabel = [[UILabel alloc] init];
         self.networkUnreachableDescriptionLabel.textColor = NCDynamicColor(@"text_primary_color");
-        self.networkUnreachableDescriptionLabel.font = [[NCChatUIConfig defaultConfig].font fontOfFourthLevel];
+        self.networkUnreachableDescriptionLabel.font =
+            [[NCChatUIConfig defaultConfig].font fontOfFourthLevel];
         self.networkUnreachableDescriptionLabel.text = text;
         self.networkUnreachableDescriptionLabel.backgroundColor = [UIColor clearColor];
 
@@ -33,27 +34,30 @@
         self.networkUnreachableDescriptionLabel.translatesAutoresizingMaskIntoConstraints = NO;
 
         // set autoLayout
-        NSDictionary *bindingViews = NSDictionaryOfVariableBindings(_networkUnreachableImageView,
-                                                                    _networkUnreachableDescriptionLabel);
+        NSDictionary *bindingViews = NSDictionaryOfVariableBindings(
+            _networkUnreachableImageView, _networkUnreachableDescriptionLabel);
 
+        [self addConstraints:
+                  [NSLayoutConstraint
+                      constraintsWithVisualFormat:@"H:|-19-[_networkUnreachableImageView(24)]-12-[_"
+                                                  @"networkUnreachableDescriptionLabel]"
+                                          options:0
+                                          metrics:nil
+                                            views:bindingViews]];
         [self addConstraints:[NSLayoutConstraint
-                                 constraintsWithVisualFormat:@"H:|-19-[_networkUnreachableImageView(24)]-12-[_"
-                                                             @"networkUnreachableDescriptionLabel]"
+                                 constraintsWithVisualFormat:@"V:[_networkUnreachableImageView(24)]"
                                                      options:0
                                                      metrics:nil
                                                        views:bindingViews]];
-        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_networkUnreachableImageView(24)]"
-                                                                     options:0
-                                                                     metrics:nil
-                                                                       views:bindingViews]];
 
-        [self addConstraint:[NSLayoutConstraint constraintWithItem:_networkUnreachableDescriptionLabel
-                                                         attribute:NSLayoutAttributeCenterY
-                                                         relatedBy:NSLayoutRelationEqual
-                                                            toItem:self
-                                                         attribute:NSLayoutAttributeCenterY
-                                                        multiplier:1.0f
-                                                          constant:0]];
+        [self
+            addConstraint:[NSLayoutConstraint constraintWithItem:_networkUnreachableDescriptionLabel
+                                                       attribute:NSLayoutAttributeCenterY
+                                                       relatedBy:NSLayoutRelationEqual
+                                                          toItem:self
+                                                       attribute:NSLayoutAttributeCenterY
+                                                      multiplier:1.0f
+                                                        constant:0]];
 
         [self addConstraint:[NSLayoutConstraint constraintWithItem:_networkUnreachableImageView
                                                          attribute:NSLayoutAttributeCenterY
@@ -66,7 +70,7 @@
     return self;
 }
 
-- (void)setText:(NSString *)text{
+- (void)setText:(NSString *)text {
     self.networkUnreachableDescriptionLabel.text = text;
 }
 @end

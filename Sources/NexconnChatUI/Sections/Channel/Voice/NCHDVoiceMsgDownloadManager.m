@@ -34,23 +34,23 @@
     static dispatch_once_t onceToken;
     static NCHDVoiceMsgDownloadManager *manager;
     dispatch_once(&onceToken, ^{
-        manager = [NCHDVoiceMsgDownloadManager new];
-        manager.downloadInfos = [NSMutableDictionary new];
-        manager.downloadMsgs = [NSMutableArray new];
-        manager.priorityMsgs = [NSMutableArray new];
-        manager.failedMsgs = [NSMutableArray new];
-        [[NCChatUI shared] addNetworkStatusDelegate:manager];
-        manager.status = [[NCChatUI shared] getCurrentNetworkStatus];
+      manager = [NCHDVoiceMsgDownloadManager new];
+      manager.downloadInfos = [NSMutableDictionary new];
+      manager.downloadMsgs = [NSMutableArray new];
+      manager.priorityMsgs = [NSMutableArray new];
+      manager.failedMsgs = [NSMutableArray new];
+      [[NCChatUI shared] addNetworkStatusDelegate:manager];
+      manager.status = [[NCChatUI shared] getCurrentNetworkStatus];
     });
     return manager;
 }
 
 - (void)pushVoiceMsgs:(NSArray<NCMessage *> *)voiceMsgs priority:(BOOL)priority {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self pushItemToDataSource:voiceMsgs priority:priority];
-        if (self.downloadInfos.allKeys.count == 1) {
-            [self startDownload];
-        }
+      [self pushItemToDataSource:voiceMsgs priority:priority];
+      if (self.downloadInfos.allKeys.count == 1) {
+          [self startDownload];
+      }
     });
 }
 
@@ -79,7 +79,9 @@
             NCHDVoiceMessage *hqMsg = (NCHDVoiceMessage *)voiceMsg.content;
             if (hqMsg.remoteUrl.length <= 0) {
                 info.status = NCHQDownloadStatusFailed;
-                [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify object:info];
+                [[NSNotificationCenter defaultCenter]
+                    postNotificationName:NCHQDownloadStatusChangeNotify
+                                  object:info];
                 continue;
             }
         }
@@ -117,55 +119,62 @@
             NSString *messageKey = [self voiceDownloadMessageKey:downloadMsg];
             __block NCHDVoiceMsgDownloadInfo *info = [self.downloadInfos objectForKey:messageKey];
             info.status = NCHQDownloadStatusDownloading;
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify object:info];
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:NCHQDownloadStatusChangeNotify
+                              object:info];
             [[NCChatUI shared] downloadMediaMessage:(long)downloadMsg.clientId
                 progress:^(int progress) {
 
                 }
-              completion:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-                    if (error || mediaPath.length == 0) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            info.status = NCHQDownloadStatusFailed;
-                            [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify
-                                                                                object:info];
-                            if (priority == 1) {
-                                [self.priorityMsgs removeObject:downloadMsg];
-                            } else if (priority == 2) {
-                                [self.downloadMsgs removeObject:downloadMsg];
-                            } else {
-                                [self.failedMsgs removeObject:downloadMsg];
-                            }
-                            [self.failedMsgs addObject:downloadMsg];
+                completion:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+                  if (error || mediaPath.length == 0) {
+                      dispatch_async(dispatch_get_main_queue(), ^{
+                        info.status = NCHQDownloadStatusFailed;
+                        [[NSNotificationCenter defaultCenter]
+                            postNotificationName:NCHQDownloadStatusChangeNotify
+                                          object:info];
+                        if (priority == 1) {
+                            [self.priorityMsgs removeObject:downloadMsg];
+                        } else if (priority == 2) {
+                            [self.downloadMsgs removeObject:downloadMsg];
+                        } else {
+                            [self.failedMsgs removeObject:downloadMsg];
+                        }
+                        [self.failedMsgs addObject:downloadMsg];
 
-                            if (times >= 0) {
-                                [self startDownload:times - 1];
-                            } else {
-                                [self removeDownloadInfo:downloadMsg priority:priority];
-                            }
-                        });
-                        return;
-                    }
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        info.status = NCHQDownloadStatusSuccess;
-                        ((NCHDVoiceMessage *)info.hqVoiceMsg.content).localPath = mediaPath;
-                        [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify
-                                                                            object:info];
-                        [self downloadEnd:downloadMsg priority:priority];
-                    });
+                        if (times >= 0) {
+                            [self startDownload:times - 1];
+                        } else {
+                            [self removeDownloadInfo:downloadMsg priority:priority];
+                        }
+                      });
+                      return;
+                  }
+                  dispatch_async(dispatch_get_main_queue(), ^{
+                    info.status = NCHQDownloadStatusSuccess;
+                    ((NCHDVoiceMessage *)info.hqVoiceMsg.content).localPath = mediaPath;
+                    [[NSNotificationCenter defaultCenter]
+                        postNotificationName:NCHQDownloadStatusChangeNotify
+                                      object:info];
+                    [self downloadEnd:downloadMsg priority:priority];
+                  });
                 }
                 cancel:^{
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        info.status = NCHQDownloadStatusFailed;
-                        [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify
-                                                                            object:info];
-                        [self removeDownloadInfo:downloadMsg priority:priority];
-                    });
+                  dispatch_async(dispatch_get_main_queue(), ^{
+                    info.status = NCHQDownloadStatusFailed;
+                    [[NSNotificationCenter defaultCenter]
+                        postNotificationName:NCHQDownloadStatusChangeNotify
+                                      object:info];
+                    [self removeDownloadInfo:downloadMsg priority:priority];
+                  });
                 }];
         } else {
             NSString *messageKey = [self voiceDownloadMessageKey:downloadMsg];
             __block NCHDVoiceMsgDownloadInfo *info = [self.downloadInfos objectForKey:messageKey];
             info.status = NCHQDownloadStatusFailed;
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCHQDownloadStatusChangeNotify object:info];
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:NCHQDownloadStatusChangeNotify
+                              object:info];
         }
     }
 }
@@ -176,29 +185,29 @@
 
 - (void)downloadEnd:(NCMessage *)downloadMsg priority:(NSInteger)priority {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (priority == 1) {
-            [self.priorityMsgs removeObject:downloadMsg];
-        } else if (priority == 2) {
-            [self.downloadMsgs removeObject:downloadMsg];
-        } else {
-            [self.failedMsgs removeObject:downloadMsg];
-        }
-        [self.downloadInfos removeObjectForKey:[self voiceDownloadMessageKey:downloadMsg]];
-        [self startDownload];
+      if (priority == 1) {
+          [self.priorityMsgs removeObject:downloadMsg];
+      } else if (priority == 2) {
+          [self.downloadMsgs removeObject:downloadMsg];
+      } else {
+          [self.failedMsgs removeObject:downloadMsg];
+      }
+      [self.downloadInfos removeObjectForKey:[self voiceDownloadMessageKey:downloadMsg]];
+      [self startDownload];
     });
 }
 
 - (void)removeDownloadInfo:(NCMessage *)downloadMsg priority:(NSInteger)priority {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (priority == 1) {
-            [self.priorityMsgs removeObject:downloadMsg];
-        } else if (priority == 2) {
-            [self.downloadMsgs removeObject:downloadMsg];
-        } else {
-            [self.failedMsgs removeObject:downloadMsg];
-        }
-        [self.downloadInfos removeObjectForKey:[self voiceDownloadMessageKey:downloadMsg]];
-        [self startDownload];
+      if (priority == 1) {
+          [self.priorityMsgs removeObject:downloadMsg];
+      } else if (priority == 2) {
+          [self.downloadMsgs removeObject:downloadMsg];
+      } else {
+          [self.failedMsgs removeObject:downloadMsg];
+      }
+      [self.downloadInfos removeObjectForKey:[self voiceDownloadMessageKey:downloadMsg]];
+      [self startDownload];
     });
 }
 

@@ -7,11 +7,11 @@
 //
 
 #import "NCStreamTextContentViewModel.h"
-#import "NCStreamMessageCellViewModel+internal.h"
-#import "NCChatUIConfig.h"
-#import "NCMessageCellTool.h"
-#import "NCMMMarkdown.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCMMMarkdown.h"
+#import "NCMessageCellTool.h"
+#import "NCStreamMessageCellViewModel+internal.h"
 #import "NCStreamTextContentView.h"
 @interface NCStreamTextContentViewModel ()
 
@@ -21,7 +21,7 @@
 
 @implementation NCStreamTextContentViewModel
 
-#pragma mark -- NCStreamViewModelProtocol
+#pragma mark-- NCStreamViewModelProtocol
 
 - (CGSize)calculateContentSize {
     self.contentSize = [self coreText];
@@ -39,20 +39,21 @@
     }
 }
 
-- (NCStreamContentView *)streamContentView{
+- (NCStreamContentView *)streamContentView {
     return [NCStreamTextContentView new];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (CGSize)coreText {
     CGFloat maxWidth = [self contentMaxWidth];
     CGSize maxSize = CGSizeMake(maxWidth, CGFLOAT_MAX); // Allow unbounded height.
-    
+
     // Calculate the required height with boundingRectWithSize:options:attributes:context:.
-    CGRect textRect = [self.attributedContent boundingRectWithSize:maxSize
-                                                   options:NSStringDrawingUsesLineFragmentOrigin
-                                                   context:nil];
+    CGRect textRect =
+        [self.attributedContent boundingRectWithSize:maxSize
+                                             options:NSStringDrawingUsesLineFragmentOrigin
+                                             context:nil];
     return CGSizeMake(maxWidth, ceilf(textRect.size.height));
 }
 
@@ -63,12 +64,15 @@
     }
     UIColor *color = NCDynamicColor(@"text_primary_color");
     if (!color) {
-        color = [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x262626) darkColor:NCMASKCOLOR(0xffffff, 0.8)];
+        color = [NCChatUIUtility generateDynamicColor:HEXCOLOR(0x262626)
+                                            darkColor:NCMASKCOLOR(0xffffff, 0.8)];
     }
-    NSAttributedString *attributedStr =
-    [[NSAttributedString alloc] initWithString:self.content
-                                    attributes:@{NSFontAttributeName: [[NCChatUIConfig defaultConfig].font fontOfSecondLevel],
-                                                 NSForegroundColorAttributeName: color}];
+    NSAttributedString *attributedStr = [[NSAttributedString alloc]
+        initWithString:self.content
+            attributes:@{
+                NSFontAttributeName : [[NCChatUIConfig defaultConfig].font fontOfSecondLevel],
+                NSForegroundColorAttributeName : color
+            }];
     return attributedStr;
 }
 

@@ -49,24 +49,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Adds an @mentioned user in editing mode, triggered by long-pressing an avatar.
 /// - Parameter userId The user ID.
-/// - Returns Whether handling succeeded. YES means editing mode handled it; NO means normal mode should handle it.
+/// - Returns Whether handling succeeded. YES means editing mode handled it; NO means normal mode
+/// should handle it.
 - (BOOL)edit_addMentionedUserToCurrentInput:(NCChatUIUserInfo *)userInfo;
 
 /// Refreshes the referenced message display in input bars, including normal and edit input bars.
-/// This method checks whether the message UId list contains the currently referenced message and updates only when matched.
-/// When status is recalled or deleted, pass the corresponding messages.
-/// When status is edited, pass the changed message list in messageModels. The implementation checks whether it contains the reference message currently shown in the input bar.
+/// This method checks whether the message UId list contains the currently referenced message and
+/// updates only when matched. When status is recalled or deleted, pass the corresponding messages.
+/// When status is edited, pass the changed message list in messageModels. The implementation checks
+/// whether it contains the reference message currently shown in the input bar.
 /// - Parameter messageModels The changed message list.
-/// - Parameter status                 The referenced message status, such as edited, recalled, or deleted.
+/// - Parameter status                 The referenced message status, such as edited, recalled, or
+/// deleted.
 - (void)edit_refreshReferenceViewContentIfNeeded:(NSArray<NCMessageModel *> *)messageModels
                                           status:(NCReferenceMessageStatus)status;
 
 /// Refreshes the referenced message display in the edit input bar.
-/// This method checks whether the message UId list contains the currently referenced message and updates only when matched.
-/// When status is recalled or deleted, pass the corresponding messages.
-/// When status is edited, pass the changed message list in messageModels. The implementation checks whether it contains the reference message currently shown in the input bar.
+/// This method checks whether the message UId list contains the currently referenced message and
+/// updates only when matched. When status is recalled or deleted, pass the corresponding messages.
+/// When status is edited, pass the changed message list in messageModels. The implementation checks
+/// whether it contains the reference message currently shown in the input bar.
 /// - Parameter messageModels The changed message list.
-/// - Parameter status                 The referenced message status, such as edited, recalled, or deleted.
+/// - Parameter status                 The referenced message status, such as edited, recalled, or
+/// deleted.
 - (void)edit_refreshEditInputReferenceViewIfNeeded:(NSArray<NCMessageModel *> *)messageModels
                                             status:(NCReferenceMessageStatus)status;
 
@@ -86,7 +91,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Handles edit confirmation.
 /// - Parameter editInputBarControl The edit control.
 /// - Parameter text The edited text.
-- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl didConfirmWithText:(NSString *)text;
+- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+              didConfirmWithText:(NSString *)text;
 
 /// Handles edit cancellation.
 /// - Parameter editInputBarControl The edit control.
@@ -95,7 +101,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Handles edit control frame changes.
 /// - Parameter editInputBarControl The edit control.
 /// - Parameter frame The new frame.
-- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl shouldChangeFrame:(CGRect)frame;
+- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+               shouldChangeFrame:(CGRect)frame;
 
 /// Handles displaying the user selector.
 /// - Parameter editInputBarControl The edit control.
@@ -110,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameter userId The user ID.
 /// - Returns User information.
 - (nullable NCChatUIUserInfo *)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
-                                      getUserInfo:(NSString *)userId;
+                                            getUserInfo:(NSString *)userId;
 
 /// Handles a full-screen edit request.
 /// - Parameter editInputBarControl The edit control.
@@ -127,11 +134,12 @@ NS_ASSUME_NONNULL_BEGIN
                showUserSelector:(void (^)(NCChatUIUserInfo *selectedUser))selectedBlock
                          cancel:(void (^)(void))cancelBlock;
 /// Handles tapping Confirm in full-screen editing.
-- (void)edit_fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView didConfirmWithText:(NSString *)text;
+- (void)edit_fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView
+             didConfirmWithText:(NSString *)text;
 
 /// Handles tapping the retry button after editing fails.
 - (void)edit_didTapEditRetryButton:(NCMessageModel *)model;
 
 @end
 
-NS_ASSUME_NONNULL_END 
+NS_ASSUME_NONNULL_END

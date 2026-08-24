@@ -10,7 +10,7 @@
 #import "NCSightAdaptiveHeader.h"
 #define NCBottomViewAlignBottom ([NCChatUIUtility getWindowSafeAreaInsets].bottom + 54)
 #define NCTopViewAlignHeight ([NCChatUIUtility getWindowSafeAreaInsets].top + 66)
-#define NCCloseButtonAlignTop [NCChatUIUtility getWindowSafeAreaInsets].top+30
+#define NCCloseButtonAlignTop [NCChatUIUtility getWindowSafeAreaInsets].top + 30
 @interface NCSightPlayerOverlayView ()
 
 @property (nonatomic, strong) NCBaseButton *playBtn;
@@ -43,10 +43,13 @@
 - (NCBaseButton *)playBtn {
     if (!_playBtn) {
         _playBtn = [[NCBaseButton alloc] init];
-        [_playBtn setImage:NCDynamicImage(@"video_player_start_button_img") forState:UIControlStateNormal];
+        [_playBtn setImage:NCDynamicImage(@"video_player_start_button_img")
+                  forState:UIControlStateNormal];
         [_playBtn setImage:NCDynamicImage(@"video_player_suspend_button_img")
                   forState:UIControlStateSelected];
-        [_playBtn addTarget:self action:@selector(playAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_playBtn addTarget:self
+                      action:@selector(playAction:)
+            forControlEvents:UIControlEventTouchUpInside];
     }
     return _playBtn;
 }
@@ -54,8 +57,11 @@
 - (NCBaseButton *)centerPlayBtn {
     if (!_centerPlayBtn) {
         _centerPlayBtn = [[NCBaseButton alloc] initWithFrame:CGRectMake(0, 0, 63, 63)];
-        [_centerPlayBtn setImage:NCDynamicImage(@"video_player_sight_play_btn_img") forState:UIControlStateNormal];
-        [_centerPlayBtn addTarget:self action:@selector(playAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_centerPlayBtn setImage:NCDynamicImage(@"video_player_sight_play_btn_img")
+                        forState:UIControlStateNormal];
+        [_centerPlayBtn addTarget:self
+                           action:@selector(playAction:)
+                 forControlEvents:UIControlEventTouchUpInside];
     }
     return _centerPlayBtn;
 }
@@ -63,8 +69,11 @@
 - (NCBaseButton *)closeBtn {
     if (!_closeBtn) {
         _closeBtn = [[NCBaseButton alloc] init];
-        [_closeBtn setImage:NCDynamicImage(@"video_player_top_close_button_img") forState:UIControlStateNormal];
-        [_closeBtn addTarget:self action:@selector(closeAction:) forControlEvents:UIControlEventTouchUpInside];
+        [_closeBtn setImage:NCDynamicImage(@"video_player_top_close_button_img")
+                   forState:UIControlStateNormal];
+        [_closeBtn addTarget:self
+                      action:@selector(closeAction:)
+            forControlEvents:UIControlEventTouchUpInside];
     }
     return _closeBtn;
 }
@@ -72,15 +81,21 @@
 - (UISlider *)slider {
     if (!_slider) {
         _slider = [[UISlider alloc] init];
-        [_slider setThumbImage:NCDynamicImage(@"video_player_top_slider_pan_img") forState:UIControlStateNormal];
-        [_slider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+        [_slider setThumbImage:NCDynamicImage(@"video_player_top_slider_pan_img")
+                      forState:UIControlStateNormal];
+        [_slider addTarget:self
+                      action:@selector(sliderValueChanged:)
+            forControlEvents:UIControlEventValueChanged];
         [_slider addTarget:self
                       action:@selector(sliderUpInside)
-            forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
-        [_slider addTarget:self action:@selector(sliderTouchDown) forControlEvents:UIControlEventTouchDown];
-        if([NCChatUIUtility isRTL]){
+            forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside |
+                             UIControlEventTouchCancel];
+        [_slider addTarget:self
+                      action:@selector(sliderTouchDown)
+            forControlEvents:UIControlEventTouchDown];
+        if ([NCChatUIUtility isRTL]) {
             _slider.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
-        }else{
+        } else {
             _slider.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
         }
     }
@@ -119,20 +134,29 @@
         NCBaseImageView *backgroudView = [[NCBaseImageView alloc] init];
         backgroudView.image = NCDynamicImage(@"video_player_top_shadow_img");
         [_topView addSubview:backgroudView];
-        self.topHeightConstraint = [self constrainView:_topView toSize:NCTopViewAlignHeight direction:CCSightLayoutDirectionVertical];
+        self.topHeightConstraint = [self constrainView:_topView
+                                                toSize:NCTopViewAlignHeight
+                                             direction:CCSightLayoutDirectionVertical];
         [self strechToSuperview:backgroudView];
         [_topView addSubview:self.closeBtn];
         [_topView addSubview:self.extraButton];
         [self constrainView:self.closeBtn toSize:44 direction:CCSightLayoutDirectionHorizontal];
         [self constrainView:self.closeBtn toSize:44 direction:CCSightLayoutDirectionVertical];
-        [self constraintAlignSuperView:self.closeBtn alignSpace:20
+        [self constraintAlignSuperView:self.closeBtn
+                            alignSpace:20
                              AlignMent:CCSightLayoutAlignLeading];
-        self.closeYConstraint = [self constraintAlignSuperView:self.closeBtn alignSpace:NCCloseButtonAlignTop AlignMent:CCSightLayoutAlignTop];
+        self.closeYConstraint = [self constraintAlignSuperView:self.closeBtn
+                                                    alignSpace:NCCloseButtonAlignTop
+                                                     AlignMent:CCSightLayoutAlignTop];
 
         [self constrainView:self.extraButton toSize:44 direction:CCSightLayoutDirectionHorizontal];
         [self constrainView:self.extraButton toSize:44 direction:CCSightLayoutDirectionVertical];
-        [self constraintAlignSuperView:self.extraButton alignSpace:ISX ? 31 : 9 AlignMent:CCSightLayoutAlignTop];
-        [self constraintAlignSuperView:self.extraButton alignSpace:ISX ? 8 : 0 AlignMent:CCSightLayoutAlignTrailing];
+        [self constraintAlignSuperView:self.extraButton
+                            alignSpace:ISX ? 31 : 9
+                             AlignMent:CCSightLayoutAlignTop];
+        [self constraintAlignSuperView:self.extraButton
+                            alignSpace:ISX ? 8 : 0
+                             AlignMent:CCSightLayoutAlignTrailing];
     }
     return _topView;
 }
@@ -144,34 +168,52 @@
         NCBaseView *contentView = [[NCBaseView alloc] init];
         contentView.backgroundColor = [UIColor clearColor];
         [_bottomView addSubview:contentView];
-        [self constraintAlignSuperView:contentView alignSpace:0 AlignMent:CCSightLayoutAlignLeading];
-        [self constraintAlignSuperView:contentView alignSpace:0 AlignMent:CCSightLayoutAlignTrailing];
+        [self constraintAlignSuperView:contentView
+                            alignSpace:0
+                             AlignMent:CCSightLayoutAlignLeading];
+        [self constraintAlignSuperView:contentView
+                            alignSpace:0
+                             AlignMent:CCSightLayoutAlignTrailing];
         [self constraintAlignSuperView:contentView alignSpace:0 AlignMent:CCSightLayoutAlignTop];
-        [self constraintAlignSuperView:contentView alignSpace:ISX ? 24 : 0 AlignMent:CCSightLayoutAlignBottom];
+        [self constraintAlignSuperView:contentView
+                            alignSpace:ISX ? 24 : 0
+                             AlignMent:CCSightLayoutAlignBottom];
 
         NCBaseImageView *backgroudView = [[NCBaseImageView alloc] init];
         backgroudView.image = NCDynamicImage(@"video_player_bottom_shadow_img");
         [contentView addSubview:backgroudView];
         [self strechToSuperview:backgroudView];
-        [self constrainView:_bottomView toSize:NCBottomViewAlignBottom direction:CCSightLayoutDirectionVertical];
+        [self constrainView:_bottomView
+                     toSize:NCBottomViewAlignBottom
+                  direction:CCSightLayoutDirectionVertical];
 
         [self constrainView:self.playBtn toSize:44 direction:CCSightLayoutDirectionHorizontal];
         [contentView addSubview:self.playBtn];
 
         [self constraintAlignSuperView:self.playBtn alignSpace:0 AlignMent:CCSightLayoutAlignTop];
-        [self constraintAlignSuperView:self.playBtn alignSpace:0 AlignMent:CCSightLayoutAlignLeading];
-        [self constraintAlignSuperView:self.playBtn alignSpace:0 AlignMent:CCSightLayoutAlignBottom];
+        [self constraintAlignSuperView:self.playBtn
+                            alignSpace:0
+                             AlignMent:CCSightLayoutAlignLeading];
+        [self constraintAlignSuperView:self.playBtn
+                            alignSpace:0
+                             AlignMent:CCSightLayoutAlignBottom];
 
-        [self constrainView:self.currentTimeLab toSize:50 direction:CCSightLayoutDirectionHorizontal];
+        [self constrainView:self.currentTimeLab
+                     toSize:50
+                  direction:CCSightLayoutDirectionHorizontal];
         [contentView addSubview:self.currentTimeLab];
 
         [self constraintCenterYInSuperview:self.currentTimeLab];
         [self constraintView:self.playBtn toView:self.currentTimeLab horizontalSpace:8];
 
-        [self constrainView:self.durationTimeLabel toSize:50 direction:CCSightLayoutDirectionHorizontal];
+        [self constrainView:self.durationTimeLabel
+                     toSize:50
+                  direction:CCSightLayoutDirectionHorizontal];
         [contentView addSubview:self.durationTimeLabel];
         [self constraintCenterYInSuperview:self.durationTimeLabel];
-        [self constraintAlignSuperView:self.durationTimeLabel alignSpace:0 AlignMent:CCSightLayoutAlignTrailing];
+        [self constraintAlignSuperView:self.durationTimeLabel
+                            alignSpace:0
+                             AlignMent:CCSightLayoutAlignTrailing];
 
         [contentView addSubview:self.slider];
         [self constraintCenterYInSuperview:self.slider];
@@ -211,16 +253,18 @@
     [self addSubview:self.bottomView];
 
     [self installHorizontalFlexibleConstraintsForView:self.topView];
-    self.topYConstraint =
-        [self constraintAlignSuperView:self.topView alignSpace:-NCTopViewAlignHeight AlignMent:CCSightLayoutAlignTop];
+    self.topYConstraint = [self constraintAlignSuperView:self.topView
+                                              alignSpace:-NCTopViewAlignHeight
+                                               AlignMent:CCSightLayoutAlignTop];
 
     [self installHorizontalFlexibleConstraintsForView:self.bottomView];
-    self.bottomConstraint =
-        [self constraintAlignSuperView:self.bottomView alignSpace:-NCBottomViewAlignBottom AlignMent:CCSightLayoutAlignBottom];
+    self.bottomConstraint = [self constraintAlignSuperView:self.bottomView
+                                                alignSpace:-NCBottomViewAlignBottom
+                                                 AlignMent:CCSightLayoutAlignBottom];
     self.bottomView.hidden = YES;
 
-    self.indicatorView =
-        [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    self.indicatorView = [[UIActivityIndicatorView alloc]
+        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     [self addSubview:self.indicatorView];
     [self constraintCenterInSuperview:self.indicatorView];
     self.indicatorView.hidden = YES;
@@ -235,35 +279,39 @@
     [self addGestureRecognizer:tapGesture];
 }
 
-- (void)dealloc{
+- (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 #pragma mark - Notification
 - (void)registerNotificationCenter {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(deviceOrientationDidChange:)
-                                                 name:UIApplicationDidChangeStatusBarFrameNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(deviceOrientationDidChange:)
+               name:UIApplicationDidChangeStatusBarFrameNotification
+             object:nil];
 }
 
 - (void)deviceOrientationDidChange:(NSNotification *)notification {
     UIDeviceOrientation interfaceOrientation = [UIDevice currentDevice].orientation;
-    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft || interfaceOrientation == UIDeviceOrientationLandscapeRight || interfaceOrientation == UIDeviceOrientationPortrait){
+    if (interfaceOrientation == UIDeviceOrientationLandscapeLeft ||
+        interfaceOrientation == UIDeviceOrientationLandscapeRight ||
+        interfaceOrientation == UIDeviceOrientationPortrait) {
         // Update the overlay layout after rotation.
-        [UIView animateWithDuration:0.3 animations:^{
-            self.closeYConstraint.constant = NCCloseButtonAlignTop;
-            self.topHeightConstraint.constant = NCTopViewAlignHeight;
-            if (self.controlsHidden) {
-                self.topYConstraint.constant = -NCTopViewAlignHeight;
-                self.bottomConstraint.constant = -NCBottomViewAlignBottom;
-            } else {
-                self.topYConstraint.constant = 0;
-                if (![self.delegate prefersBottomBarHidden]) {
-                    self.bottomConstraint.constant = 0;
-                }
-            }
-            [self layoutIfNeeded];
-        }];
+        [UIView animateWithDuration:0.3
+                         animations:^{
+                           self.closeYConstraint.constant = NCCloseButtonAlignTop;
+                           self.topHeightConstraint.constant = NCTopViewAlignHeight;
+                           if (self.controlsHidden) {
+                               self.topYConstraint.constant = -NCTopViewAlignHeight;
+                               self.bottomConstraint.constant = -NCBottomViewAlignBottom;
+                           } else {
+                               self.topYConstraint.constant = 0;
+                               if (![self.delegate prefersBottomBarHidden]) {
+                                   self.bottomConstraint.constant = 0;
+                               }
+                           }
+                           [self layoutIfNeeded];
+                         }];
     }
 }
 
@@ -325,7 +373,8 @@
     UIGraphicsBeginImageContextWithOptions(rect.size, NO, 0);
     [color setFill];
     UIRectFill(rect);
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext(); // Capture the rendered overlay image.
+    UIImage *image =
+        UIGraphicsGetImageFromCurrentImageContext(); // Capture the rendered overlay image.
     UIGraphicsEndImageContext();
     return image;
 }
@@ -334,12 +383,11 @@
 - (void)installHorizontalFlexibleConstraintsForView:(UIView *)view {
     view.translatesAutoresizingMaskIntoConstraints = NO;
     NSString *horizontalFromat = @"H:|[view]|";
-    NSArray *horizontalConstraints = [NSLayoutConstraint constraintsWithVisualFormat:horizontalFromat
-                                                                             options:0
-                                                                             metrics:nil
-                                                                               views:@{
-                                                                                   @"view" : view
-                                                                               }];
+    NSArray *horizontalConstraints =
+        [NSLayoutConstraint constraintsWithVisualFormat:horizontalFromat
+                                                options:0
+                                                metrics:nil
+                                                  views:@{@"view" : view}];
     [self addConstraints:horizontalConstraints];
 }
 
@@ -348,47 +396,58 @@ typedef NS_ENUM(NSInteger, CCSightLayoutDirection) {
     CCSightLayoutDirectionVertical,
 };
 
-- (NSLayoutConstraint *)constrainView:(UIView *)view toSize:(CGFloat)size direction:(CCSightLayoutDirection)direction {
+- (NSLayoutConstraint *)constrainView:(UIView *)view
+                               toSize:(CGFloat)size
+                            direction:(CCSightLayoutDirection)direction {
     NSString *axisString = direction == CCSightLayoutDirectionHorizontal ? @"H:" : @"V:";
     NSString *formatString = [NSString stringWithFormat:@"%@[view(==size)]", axisString];
     NSDictionary *bindings = NSDictionaryOfVariableBindings(view);
-    NSDictionary *metrics = @{ @"size" : @(size) };
-    NSArray *constraints =
-        [NSLayoutConstraint constraintsWithVisualFormat:formatString options:0 metrics:metrics views:bindings];
+    NSDictionary *metrics = @{@"size" : @(size)};
+    NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:formatString
+                                                                   options:0
+                                                                   metrics:metrics
+                                                                     views:bindings];
     [view addConstraints:constraints];
     return constraints.firstObject;
 }
 
-- (void)constraintView:(UIView *)leftview toView:(UIView *)rightView horizontalSpace:(CGFloat)space {
+- (void)constraintView:(UIView *)leftview
+                toView:(UIView *)rightView
+       horizontalSpace:(CGFloat)space {
     leftview.translatesAutoresizingMaskIntoConstraints = NO;
     rightView.translatesAutoresizingMaskIntoConstraints = NO;
     NSString *formatString = @"H:[left]-space-[right]";
-    NSDictionary *bindings = @{ @"left" : leftview, @"right" : rightView };
-    NSDictionary *metrics = @{ @"space" : @(space) };
+    NSDictionary *bindings = @{@"left" : leftview, @"right" : rightView};
+    NSDictionary *metrics = @{@"space" : @(space)};
     NSArray<NSLayoutConstraint *> *constraints =
-        [NSLayoutConstraint constraintsWithVisualFormat:formatString options:0 metrics:metrics views:bindings];
+        [NSLayoutConstraint constraintsWithVisualFormat:formatString
+                                                options:0
+                                                metrics:metrics
+                                                  views:bindings];
     constraints.firstObject.priority = UILayoutPriorityDefaultHigh;
     [leftview.superview addConstraints:constraints];
 }
 
 - (void)constraintCenterInSuperview:(UIView *)view {
     view.translatesAutoresizingMaskIntoConstraints = NO;
-    NSLayoutConstraint *constraintY = [NSLayoutConstraint constraintWithItem:view
-                                                                   attribute:NSLayoutAttributeCenterY
-                                                                   relatedBy:NSLayoutRelationEqual
-                                                                      toItem:view.superview
-                                                                   attribute:NSLayoutAttributeCenterY
-                                                                  multiplier:1.0f
-                                                                    constant:0];
+    NSLayoutConstraint *constraintY =
+        [NSLayoutConstraint constraintWithItem:view
+                                     attribute:NSLayoutAttributeCenterY
+                                     relatedBy:NSLayoutRelationEqual
+                                        toItem:view.superview
+                                     attribute:NSLayoutAttributeCenterY
+                                    multiplier:1.0f
+                                      constant:0];
     [view.superview addConstraint:constraintY];
 
-    NSLayoutConstraint *constraintX = [NSLayoutConstraint constraintWithItem:view
-                                                                   attribute:NSLayoutAttributeCenterX
-                                                                   relatedBy:NSLayoutRelationEqual
-                                                                      toItem:view.superview
-                                                                   attribute:NSLayoutAttributeCenterX
-                                                                  multiplier:1.0f
-                                                                    constant:0];
+    NSLayoutConstraint *constraintX =
+        [NSLayoutConstraint constraintWithItem:view
+                                     attribute:NSLayoutAttributeCenterX
+                                     relatedBy:NSLayoutRelationEqual
+                                        toItem:view.superview
+                                     attribute:NSLayoutAttributeCenterX
+                                    multiplier:1.0f
+                                      constant:0];
 
     [view.superview addConstraint:constraintX];
 }
@@ -399,15 +458,11 @@ typedef NS_ENUM(NSInteger, CCSightLayoutDirection) {
     NSArray *formats = @[ @"H:[view(==width)]", @"V:[view(==height)]" ];
 
     for (NSString *each in formats) {
-        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
-                                                                       options:0
-                                                                       metrics:@{
-                                                                           @"width" : @(size.width),
-                                                                           @"height" : @(size.height)
-                                                                       }
-                                                                         views:@{
-                                                                             @"view" : view
-                                                                         }];
+        NSArray *constraints = [NSLayoutConstraint
+            constraintsWithVisualFormat:each
+                                options:0
+                                metrics:@{@"width" : @(size.width), @"height" : @(size.height)}
+                                  views:@{@"view" : view}];
         [view addConstraints:constraints];
     }
 }
@@ -428,10 +483,10 @@ typedef NS_ENUM(NSInteger, CCSightLayoutDirection) {
     view.translatesAutoresizingMaskIntoConstraints = NO;
     NSArray *formats = @[ @"H:|[view]|", @"V:|[view]|" ];
     for (NSString *each in formats) {
-        NSArray *constraints =
-            [NSLayoutConstraint constraintsWithVisualFormat:each options:0 metrics:nil views:@{
-                @"view" : view
-            }];
+        NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:each
+                                                                       options:0
+                                                                       metrics:nil
+                                                                         views:@{@"view" : view}];
         [view.superview addConstraints:constraints];
     }
 }
@@ -439,9 +494,9 @@ typedef NS_ENUM(NSInteger, CCSightLayoutDirection) {
 - (void)animatedHideControls {
     [UIView animateWithDuration:0.3
                      animations:^{
-                         self.topYConstraint.constant = -NCTopViewAlignHeight;
-                         self.bottomConstraint.constant = -NCBottomViewAlignBottom;
-                         [self layoutIfNeeded];
+                       self.topYConstraint.constant = -NCTopViewAlignHeight;
+                       self.bottomConstraint.constant = -NCBottomViewAlignBottom;
+                       [self layoutIfNeeded];
                      }];
 }
 
@@ -466,13 +521,15 @@ typedef NS_ENUM(NSInteger, CCSightLayoutAlignMent) {
     } else if (CCSightLayoutAlignBottom == align) {
         formatString = @"V:[view]-space-|";
     }
-    NSDictionary *bindings = @{ @"view" : view };
-    NSDictionary *metrics = @{ @"space" : @(space) };
+    NSDictionary *bindings = @{@"view" : view};
+    NSDictionary *metrics = @{@"space" : @(space)};
     if (formatString.length <= 0) {
         return nil;
     }
-    NSArray *constraints =
-        [NSLayoutConstraint constraintsWithVisualFormat:formatString options:0 metrics:metrics views:bindings];
+    NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:formatString
+                                                                   options:0
+                                                                   metrics:metrics
+                                                                     views:bindings];
     [view.superview addConstraints:constraints];
     return constraints.firstObject;
 }
@@ -480,7 +537,8 @@ typedef NS_ENUM(NSInteger, CCSightLayoutAlignMent) {
 #pragma mark - CCSightTransport
 
 - (void)setControlBarHidden:(BOOL)hidden {
-    if ([self.delegate respondsToSelector:@selector(prefersControlBardHidden)] && [self.delegate prefersControlBardHidden]) {
+    if ([self.delegate respondsToSelector:@selector(prefersControlBardHidden)] &&
+        [self.delegate prefersControlBardHidden]) {
         return;
     }
     if (hidden) {
@@ -498,7 +556,8 @@ typedef NS_ENUM(NSInteger, CCSightLayoutAlignMent) {
 }
 
 - (void)toggleControls {
-    if ([self.delegate respondsToSelector:@selector(prefersControlBardHidden)] && [self.delegate prefersControlBardHidden]) {
+    if ([self.delegate respondsToSelector:@selector(prefersControlBardHidden)] &&
+        [self.delegate prefersControlBardHidden]) {
         return;
     }
     if (self.bottomView.hidden) {
@@ -506,23 +565,23 @@ typedef NS_ENUM(NSInteger, CCSightLayoutAlignMent) {
     }
     [UIView animateWithDuration:0.3
         animations:^{
-            if (!self.controlsHidden) {
-                self.topYConstraint.constant = -NCTopViewAlignHeight;
-                self.bottomConstraint.constant = -NCBottomViewAlignBottom;
-            } else {
-                self.topYConstraint.constant = 0;
-                self.closeYConstraint.constant = NCCloseButtonAlignTop;
-                if (![self.delegate prefersBottomBarHidden]) {
-                    self.bottomConstraint.constant = 0;
-                }
-            }
-            [self layoutIfNeeded];
-            self.controlsHidden = !self.controlsHidden;
+          if (!self.controlsHidden) {
+              self.topYConstraint.constant = -NCTopViewAlignHeight;
+              self.bottomConstraint.constant = -NCBottomViewAlignBottom;
+          } else {
+              self.topYConstraint.constant = 0;
+              self.closeYConstraint.constant = NCCloseButtonAlignTop;
+              if (![self.delegate prefersBottomBarHidden]) {
+                  self.bottomConstraint.constant = 0;
+              }
+          }
+          [self layoutIfNeeded];
+          self.controlsHidden = !self.controlsHidden;
         }
         completion:^(BOOL finished) {
-            if (self.bottomConstraint.constant < 0) {
-                self.bottomView.hidden = YES;
-            }
+          if (self.bottomConstraint.constant < 0) {
+              self.bottomView.hidden = YES;
+          }
         }];
 }
 

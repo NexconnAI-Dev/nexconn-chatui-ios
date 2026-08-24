@@ -3,11 +3,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// ChatUI display/cache model for group identity shown in conversation list, messages, notifications, and group UI.
+/// ChatUI display/cache model for group identity shown in conversation list, messages,
+/// notifications, and group UI.
 ///
-/// `groupInfo` is kept as a temporary compatibility bridge for callers that still receive SDK group details.
-/// New ChatUI cache/display code should read the flat fields on this object. SDK update/detail paths should use
-/// `NCGroupInfo` or explicit update params instead of treating this object as a backing SDK model.
+/// `groupInfo` is kept as a temporary compatibility bridge for callers that still receive SDK group
+/// details. New ChatUI cache/display code should read the flat fields on this object. SDK
+/// update/detail paths should use `NCGroupInfo` or explicit update params instead of treating this
+/// object as a backing SDK model.
 @interface NCChatUIGroup : NSObject
 
 /// The unique group identifier.
@@ -25,12 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// The group notice text used by group profile and related ChatUI views.
 @property (nonatomic, copy, nullable) NSString *notice;
 
-/// Temporary compatibility bridge to SDK group details. Do not use as the ChatUI cache truth source.
+/// Temporary compatibility bridge to SDK group details. Do not use as the ChatUI cache truth
+/// source.
 @property (nonatomic, strong, nullable) NCGroupInfo *groupInfo;
 
 /// Creates a ChatUI group display model from SDK group details.
 ///
-/// The returned object copies display fields from `groupInfo` and keeps `groupInfo` as a temporary compatibility bridge.
+/// The returned object copies display fields from `groupInfo` and keeps `groupInfo` as a temporary
+/// compatibility bridge.
 + (instancetype)groupWithGroupInfo:(NCGroupInfo *)groupInfo;
 
 @end

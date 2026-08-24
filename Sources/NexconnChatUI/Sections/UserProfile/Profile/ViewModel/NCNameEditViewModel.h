@@ -46,7 +46,7 @@ typedef NS_ENUM(NSUInteger, NCNameEditType) {
 
 - (void)updateName:(NSString *)name;
 
-- (void)getCurrentName:(void(^)(NSString *))block;
+- (void)getCurrentName:(void (^)(NSString *))block;
 @end
 
 NS_ASSUME_NONNULL_END

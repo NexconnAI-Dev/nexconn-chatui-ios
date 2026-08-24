@@ -7,12 +7,13 @@
 //
 
 #import "NCEditInputBarControl.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
 #import "NCChatUIExtensionService.h"
-#import "NCInputStateManager.h"
+#import "NCChatUIUtility.h"
 #import "NCInputKeyboardManager.h"
+#import "NCInputStateManager.h"
+#import "NCToastView.h"
 
 const CGFloat Height_EmojiBoardView = 223.5f; // Emoji panel height.
 
@@ -51,7 +52,8 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 
 - (void)setFrame:(CGRect)frame {
     [super setFrame:frame];
-    if (self.isVisible && !self.hidden && [self.delegate respondsToSelector:@selector(editInputBarControl:shouldChangeFrame:)]) {
+    if (self.isVisible && !self.hidden &&
+        [self.delegate respondsToSelector:@selector(editInputBarControl:shouldChangeFrame:)]) {
         [self.delegate editInputBarControl:self shouldChangeFrame:frame];
     }
 }
@@ -83,7 +85,7 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 - (void)dealloc {
     // Stop keyboard monitoring; the manager removes its observers.
     [_keyboardManager stopMonitoring];
-    
+
     // Detach the emoji panel delegate.
     [_emojiBoardView removeFromSuperview];
     _emojiBoardView = nil;
@@ -123,17 +125,17 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     }
     // Reset input state whenever a new edit is shown.
     [self.editInputContainer setInputText:@""];
-    
+
     // Populate the editable text.
     [self.editInputContainer setInputText:config.textContent ?: @""];
-    
+
     // Populate referenced-message metadata.
     if (config.referencedSenderName.length > 0 || config.referencedContent.length > 0) {
         [self setReferenceInfo:config.referencedSenderName content:config.referencedContent];
     } else {
         [self.editInputContainer clearReferencedMessage];
     }
-    
+
     if (config.mentionedRangeInfo) {
         [self.inputStateManager setupMentionedRangeInfo:config.mentionedRangeInfo];
     }
@@ -144,14 +146,15 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 }
 
 - (void)exitWithAnimation:(BOOL)animated completion:(void (^)(void))completion {
-    [self hideBottomPanelsWithAnimation:animated completion:^{
-        [self.editInputContainer setEditEnabled:YES withStatusMessage:@""];
-        self.hidden = YES;
-        self.isVisible = NO;
-        if (completion) {
-            completion();
-        }
-    }];
+    [self hideBottomPanelsWithAnimation:animated
+                             completion:^{
+                               [self.editInputContainer setEditEnabled:YES withStatusMessage:@""];
+                               self.hidden = YES;
+                               self.isVisible = NO;
+                               if (completion) {
+                                   completion();
+                               }
+                             }];
 }
 
 - (void)hideEditInputBar:(BOOL)hidden {
@@ -168,7 +171,7 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     // Notify the delegate of the frame change.
     [self notifyFrameChange:targetFrame];
 }
-    
+
 - (void)resetEditInputBar {
     self.editInputContainer.inputTextView.text = @"";
     [self.editInputContainer clearReferencedMessage];
@@ -209,6 +212,19 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     [self.editInputContainer setInputText:text];
 }
 
+- (BOOL)wouldInputTextExceedLimitInTextView:(UITextView *)textView
+                                      range:(NSRange)range
+                            replacementText:(NSString *)replacementText {
+    BOOL exceedsLimit = [NCChatUIUtility messageText:textView.text
+        wouldExceedMaxVisibleCharacterLimitReplacingRange:range
+                                                 withText:replacementText];
+    if (exceedsLimit) {
+        [NCToastView showToast:NCUILocalizedString(@"nc_message_too_long")
+                      rootView:self.superview ?: self];
+    }
+    return exceedsLimit;
+}
+
 #pragma mark - Bottom-Bar Animation
 
 - (float)getBoardViewBottomOriginY {
@@ -221,17 +237,17 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 
 - (void)layoutBottomBarWithStatus:(KBottomBarStatus)bottomBarStatus
                          animated:(BOOL)animated
-                       completion:(void (^ _Nullable)())completion {
+                       completion:(void (^_Nullable)())completion {
     [self layoutBottomBarWithStatus:bottomBarStatus
-                                    animated:animated
-                                 forceUpdate:NO
-                                  completion:completion];
+                           animated:animated
+                        forceUpdate:NO
+                         completion:completion];
 }
 
 - (void)layoutBottomBarWithStatus:(KBottomBarStatus)bottomBarStatus
                          animated:(BOOL)animated
                       forceUpdate:(BOOL)forceUpdate
-                       completion:(void (^ _Nullable)())completion {
+                       completion:(void (^_Nullable)())completion {
     if (self.currentBottomBarStatus == bottomBarStatus && !forceUpdate) {
         if (completion) {
             completion();
@@ -239,13 +255,17 @@ extern NSString *const NCUIKeyboardWillShowNotification;
         return;
     }
     if (animated) {
-        [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
-            [self layoutBottomBarWithStatus:bottomBarStatus];
-        } completion:^(BOOL finished) {
-            if (completion) {
-                completion();
+        [UIView animateWithDuration:0.25
+            delay:0
+            options:UIViewAnimationOptionCurveEaseOut
+            animations:^{
+              [self layoutBottomBarWithStatus:bottomBarStatus];
             }
-        }];
+            completion:^(BOOL finished) {
+              if (completion) {
+                  completion();
+              }
+            }];
     } else {
         [self layoutBottomBarWithStatus:bottomBarStatus];
         if (completion) {
@@ -254,45 +274,46 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     }
 }
 
-
 - (void)layoutBottomBarWithStatus:(KBottomBarStatus)bottomBarStatus {
     self.currentBottomBarStatus = bottomBarStatus;
-    
+
     // Calculate the input bar position for the requested state.
     CGRect editBarRect = self.frame;
     float bottomY = [self getBoardViewBottomOriginY];
     CGFloat changedHeight = 0;
     switch (bottomBarStatus) {
-        case KBottomBarDefaultStatus: {
-            [self hiddenEmojiBoardView];
-            [self.editInputContainer resignInputViewFirstResponder];
-            changedHeight = 0;
-            break;
-        }
-        case KBottomBarEmojiStatus: {
-            [self showEmojiBoardView];
-            [self.editInputContainer resignInputViewFirstResponder];
-            changedHeight = self.emojiBoardView.bounds.size.height;
-            break;
-        }
-        case KBottomBarKeyboardStatus: {
-            [self hiddenEmojiBoardView];
-            [self.editInputContainer becomeInputViewFirstResponder];
-            changedHeight = self.keyboardManager.currentKeyboardHeight - [NCChatUIUtility getWindowSafeAreaInsets].bottom;
-            break;
-        }
-        default:
-            break;
+    case KBottomBarDefaultStatus: {
+        [self hiddenEmojiBoardView];
+        [self.editInputContainer resignInputViewFirstResponder];
+        changedHeight = 0;
+        break;
+    }
+    case KBottomBarEmojiStatus: {
+        [self showEmojiBoardView];
+        [self.editInputContainer resignInputViewFirstResponder];
+        changedHeight = self.emojiBoardView.bounds.size.height;
+        break;
+    }
+    case KBottomBarKeyboardStatus: {
+        [self hiddenEmojiBoardView];
+        [self.editInputContainer becomeInputViewFirstResponder];
+        changedHeight = self.keyboardManager.currentKeyboardHeight -
+                        [NCChatUIUtility getWindowSafeAreaInsets].bottom;
+        break;
+    }
+    default:
+        break;
     }
     editBarRect.origin.y = bottomY - self.bounds.size.height - changedHeight;
     if (self.isFullScreen) {
         if ([self.delegate respondsToSelector:@selector(editInputBarControl:shouldChangeFrame:)]) {
-            [self.delegate editInputBarControl:self shouldChangeFrame:CGRectMake(0, 0, 0, changedHeight)];
+            [self.delegate editInputBarControl:self
+                             shouldChangeFrame:CGRectMake(0, 0, 0, changedHeight)];
         }
     } else {
         // Apply the input bar position.
         self.frame = editBarRect;
-        
+
         if ([self.delegate respondsToSelector:@selector(editInputBarControl:shouldChangeFrame:)]) {
             [self.delegate editInputBarControl:self shouldChangeFrame:editBarRect];
         }
@@ -301,17 +322,20 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 
 - (void)showEmojiBoardView {
     // Reposition the emoji panel below the input bar.
-    if (self.bottomPanelsContainerView && self.emojiBoardView.superview != self.bottomPanelsContainerView) {
+    if (self.bottomPanelsContainerView &&
+        self.emojiBoardView.superview != self.bottomPanelsContainerView) {
         self.emojiBoardView.hidden = NO;
-        self.emojiBoardView.frame = CGRectMake(0, 0, self.bottomPanelsContainerView.bounds.size.width, Height_EmojiBoardView);
-        
+        self.emojiBoardView.frame = CGRectMake(
+            0, 0, self.bottomPanelsContainerView.bounds.size.width, Height_EmojiBoardView);
+
         [self.bottomPanelsContainerView addSubview:self.emojiBoardView];
     } else if (self.emojiBoardView.superview != self.superview) {
         CGFloat bottomY = [self getBoardViewBottomOriginY];
         CGFloat topY = bottomY - Height_EmojiBoardView;
         self.emojiBoardView.hidden = NO;
-        self.emojiBoardView.frame = CGRectMake(0, topY, self.superview.bounds.size.width, Height_EmojiBoardView);
-        
+        self.emojiBoardView.frame =
+            CGRectMake(0, topY, self.superview.bounds.size.width, Height_EmojiBoardView);
+
         [self.superview addSubview:self.emojiBoardView];
     }
 }
@@ -341,20 +365,28 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     // Match layout changes to the system keyboard animation.
     // Switching layouts while the keyboard is visible can also trigger willShow.
     NSInteger animationCurveOption = (curve << 16);
-    [UIView animateWithDuration:duration delay:0.0 options:animationCurveOption animations:^{
-        [self layoutBottomBarWithStatus:KBottomBarKeyboardStatus animated:NO forceUpdate:YES completion:nil];
-    } completion:^(BOOL finished) {
-        // Publish the final keyboard frame after layout completes.
-        dispatch_async(dispatch_get_main_queue(), ^{
+    [UIView animateWithDuration:duration
+        delay:0.0
+        options:animationCurveOption
+        animations:^{
+          [self layoutBottomBarWithStatus:KBottomBarKeyboardStatus
+                                 animated:NO
+                              forceUpdate:YES
+                               completion:nil];
+        }
+        completion:^(BOOL finished) {
+          // Publish the final keyboard frame after layout completes.
+          dispatch_async(dispatch_get_main_queue(), ^{
             if (self.editInputContainer.textViewBeginEditing) {
-                // Forward the keyboard frame through the Chat UI notification used by input observers.
-                [[NSNotificationCenter defaultCenter] postNotificationName:NCUIKeyboardWillShowNotification
-                                                                    object:self
-                                                                  userInfo:@{@"endFrame": [NSValue valueWithCGRect:frame]}];
+                // Forward the keyboard frame through the Chat UI notification used by input
+                // observers.
+                [[NSNotificationCenter defaultCenter]
+                    postNotificationName:NCUIKeyboardWillShowNotification
+                                  object:self
+                                userInfo:@{@"endFrame" : [NSValue valueWithCGRect:frame]}];
             }
-        });
-
-    }];
+          });
+        }];
 }
 
 - (void)keyboardManagerWillHide:(NCInputKeyboardManager *)manager {
@@ -371,13 +403,16 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     }
 }
 
-- (void)editInputContainerViewCollapseFromFullScreenEdit:(NCEditInputContainerView *)editContainerView {
-    if ([self.delegate respondsToSelector:@selector(editInputBarControlCollapseFromFullScreenEdit:)]) {
+- (void)editInputContainerViewCollapseFromFullScreenEdit:
+    (NCEditInputContainerView *)editContainerView {
+    if ([self.delegate
+            respondsToSelector:@selector(editInputBarControlCollapseFromFullScreenEdit:)]) {
         [self.delegate editInputBarControlCollapseFromFullScreenEdit:self];
     }
 }
 
-- (void)editInputContainerViewEditConfirm:(NCEditInputContainerView *)editContainerView withText:(NSString *)text {
+- (void)editInputContainerViewEditConfirm:(NCEditInputContainerView *)editContainerView
+                                 withText:(NSString *)text {
     if ([self.delegate respondsToSelector:@selector(editInputBarControl:didConfirmWithText:)]) {
         [self.delegate editInputBarControl:self didConfirmWithText:text];
     }
@@ -397,27 +432,30 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     }
 }
 
-- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView didChangeFrame:(CGRect)frame {
+- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView
+                didChangeFrame:(CGRect)frame {
     // Resize the input bar when the edit container height changes.
     CGRect vRect = self.frame;
     vRect.size.height = frame.size.height;
     vRect.origin.y += self.frame.size.height - vRect.size.height;
     self.frame = vRect;
-    
+
     // Notify the delegate of the updated frame.
     if ([self.delegate respondsToSelector:@selector(editInputBarControl:shouldChangeFrame:)]) {
         [self.delegate editInputBarControl:self shouldChangeFrame:vRect];
     }
 }
 
-- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView inputTextViewDidChange:(UITextView *)textView {
+- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView
+        inputTextViewDidChange:(UITextView *)textView {
     // Text changes do not re-enable an edit that is currently disabled.
     if (!self.canEdit) {
         return;
     }
     // Keep the confirm button disabled for empty input.
-    NSString *trimmedText = [textView.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    
+    NSString *trimmedText = [textView.text
+        stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
     [self.editInputContainer setEditEnabled:trimmedText.length > 0 withStatusMessage:nil];
 }
 
@@ -426,7 +464,8 @@ extern NSString *const NCUIKeyboardWillShowNotification;
        shouldChangeTextInRange:(NSRange)range
                replacementText:(NSString *)text {
     if ([text isEqualToString:@"\n"]) {
-        NSString *trimmedText = [textView.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        NSString *trimmedText = [textView.text
+            stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
         if (trimmedText.length == 0) {
             textView.text = @"";
             [self.editInputContainer setInputText:@""];
@@ -438,10 +477,14 @@ extern NSString *const NCUIKeyboardWillShowNotification;
         }
         return NO;
     }
-    
+
+    if ([self wouldInputTextExceedLimitInTextView:textView range:range replacementText:text]) {
+        return NO;
+    }
+
     // Let the input state manager process mentions.
     BOOL shouldChange = [self.inputStateManager handleTextChange:text inRange:range];
-    
+
     return shouldChange;
 }
 
@@ -449,17 +492,21 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 
 - (void)didTouchEmojiView:(NCEmojiBoardView *)emojiView touchedEmoji:(NSString *)string {
     UITextView *textView = self.editInputContainer.inputTextView;
-    
+
     if (nil == string) {
         // 删除操作
         NSUInteger textLength = textView.textStorage.length;
         NSUInteger cursorLocation = textView.selectedRange.location;
-        if (textLength == 0 || cursorLocation == 0 || cursorLocation == NSNotFound || cursorLocation > textLength) {
+        if (textLength == 0 || cursorLocation == 0 || cursorLocation == NSNotFound ||
+            cursorLocation > textLength) {
             return;
         }
         NSRange range = NSMakeRange(cursorLocation - 1, 1);
-        if ([textView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
-            BOOL shouldChange = [textView.delegate textView:textView shouldChangeTextInRange:range replacementText:@""];
+        if ([textView.delegate
+                respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
+            BOOL shouldChange = [textView.delegate textView:textView
+                                    shouldChangeTextInRange:range
+                                            replacementText:@""];
             if (shouldChange) {
                 [textView deleteBackward];
             }
@@ -467,8 +514,32 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     } else {
         // Insert the selected emoji token.
         NSString *replaceString = string;
-        if (replaceString.length < 5000) {
-            NSMutableAttributedString *attStr = [[NSMutableAttributedString alloc] initWithString:replaceString];
+        NSInteger cursorPosition;
+        if (textView.selectedTextRange) {
+            cursorPosition = textView.selectedRange.location;
+        } else {
+            cursorPosition = 0;
+        }
+
+        // Read the current cursor position.
+        if (cursorPosition > textView.textStorage.length) {
+            cursorPosition = textView.textStorage.length;
+        }
+
+        NSRange replacementRange = NSMakeRange(cursorPosition, 0);
+        BOOL shouldChange = ![self wouldInputTextExceedLimitInTextView:textView
+                                                                 range:replacementRange
+                                                       replacementText:replaceString];
+        if (shouldChange &&
+            [textView.delegate
+                respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
+            shouldChange = [textView.delegate textView:textView
+                               shouldChangeTextInRange:replacementRange
+                                       replacementText:string];
+        }
+        if (shouldChange) {
+            NSMutableAttributedString *attStr =
+                [[NSMutableAttributedString alloc] initWithString:replaceString];
             [attStr addAttribute:NSFontAttributeName
                            value:textView.font
                            range:NSMakeRange(0, replaceString.length)];
@@ -478,30 +549,14 @@ extern NSString *const NCUIKeyboardWillShowNotification;
                                value:foreColor
                                range:NSMakeRange(0, replaceString.length)];
             }
-            
-            NSInteger cursorPosition;
-            if (textView.selectedTextRange) {
-                cursorPosition = textView.selectedRange.location;
-            } else {
-                cursorPosition = 0;
-            }
-            
-            // Read the current cursor position.
-            if (cursorPosition > textView.textStorage.length)
-                cursorPosition = textView.textStorage.length;
-            
+
             [textView.textStorage insertAttributedString:attStr atIndex:cursorPosition];
-            
+
             // Notify observers because emoji insertion mutates the text storage directly.
-            if ([textView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
-                BOOL shouldChange = [textView.delegate textView:textView shouldChangeTextInRange:textView.selectedRange replacementText:string];
-                if (shouldChange) {
-                    if ([textView.delegate respondsToSelector:@selector(textViewDidChange:)]) {
-                        [textView.delegate textViewDidChange:textView];
-                    }
-                }
+            if ([textView.delegate respondsToSelector:@selector(textViewDidChange:)]) {
+                [textView.delegate textViewDidChange:textView];
             }
-            
+
             // Move the cursor after the inserted emoji.
             NSRange range;
             range.location = textView.selectedRange.location + string.length;
@@ -509,28 +564,35 @@ extern NSString *const NCUIKeyboardWillShowNotification;
             textView.selectedRange = range;
         }
     }
-    
+
     // Keep the cursor visible after insertion.
+    if (!textView.window) {
+        return;
+    }
     CGRect line = [textView caretRectForPosition:textView.selectedTextRange.start];
-    CGFloat overflow = line.origin.y + line.size.height - (textView.contentOffset.y + textView.bounds.size.height - textView.contentInset.bottom - textView.contentInset.top);
+    CGFloat overflow = line.origin.y + line.size.height -
+                       (textView.contentOffset.y + textView.bounds.size.height -
+                        textView.contentInset.bottom - textView.contentInset.top);
     if (overflow > 0) {
         // Scroll just enough to reveal the cursor.
         CGPoint offset = textView.contentOffset;
         offset.y += overflow + 7; // Keep a 7-point margin.
-        [UIView animateWithDuration:.2 animations:^{
-            [textView setContentOffset:offset];
-        }];
+        [UIView animateWithDuration:.2
+                         animations:^{
+                           [textView setContentOffset:offset];
+                         }];
     }
 }
 
 - (void)didSendButtonEvent:(NCEmojiBoardView *)emojiView sendButton:(UIButton *)sendButton {
     NSString *sendText = [self.editInputContainer getInputText];
-    NSString *formatString = [sendText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *formatString = [sendText
+        stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (0 == [formatString length]) {
         // Empty text cannot be submitted.
         return;
     }
-    
+
     // Ask the delegate to confirm the edit.
     if ([self.delegate respondsToSelector:@selector(editInputBarControl:didConfirmWithText:)]) {
         [self.delegate editInputBarControl:self didConfirmWithText:sendText];
@@ -541,7 +603,7 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 
 - (void)setEditStatus:(BOOL)canEdit reason:(nullable NSString *)reason {
     self.canEdit = canEdit;
-    
+
     // Apply the enabled state to the edit container.
     [self.editInputContainer setEditEnabled:canEdit withStatusMessage:reason];
 }
@@ -563,19 +625,23 @@ extern NSString *const NCUIKeyboardWillShowNotification;
         return;
     }
     // Delay the responder transition to avoid competing first-responder changes.
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self.editInputContainer becomeInputViewFirstResponder];
-    });
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                     [self.editInputContainer becomeInputViewFirstResponder];
+                   });
 }
 
-- (void)hideBottomPanelsWithAnimation:(BOOL)animated completion:(void (^ _Nullable)(void))completion {
+- (void)hideBottomPanelsWithAnimation:(BOOL)animated
+                           completion:(void (^_Nullable)(void))completion {
     if (self.currentBottomBarStatus == KBottomBarDefaultStatus) {
         if (completion) {
             completion();
         };
         return;
     }
-    [self layoutBottomBarWithStatus:KBottomBarDefaultStatus animated:animated completion:completion];
+    [self layoutBottomBarWithStatus:KBottomBarDefaultStatus
+                           animated:animated
+                         completion:completion];
 }
 
 - (void)setIsMentionedEnabled:(BOOL)isMentionedEnabled {
@@ -599,13 +665,14 @@ extern NSString *const NCUIKeyboardWillShowNotification;
          showUserSelector:(void (^)(NCChatUIUserInfo *))completion
                    cancel:(void (^)(void))cancelBlock {
     // Forward mention user selection to the external delegate.
-    if ([self.delegate respondsToSelector:@selector(editInputBarControl:showUserSelector:cancel:)]) {
+    if ([self.delegate
+            respondsToSelector:@selector(editInputBarControl:showUserSelector:cancel:)]) {
         [self.delegate editInputBarControl:self showUserSelector:completion cancel:cancelBlock];
     }
 }
 
 - (nullable NCChatUIUserInfo *)inputStateManager:(NCInputStateManager *)manager
-                        getUserInfoForUserId:(NSString *)userId {
+                            getUserInfoForUserId:(NSString *)userId {
     // Forward user lookup to the external data source.
     if ([self.dataSource respondsToSelector:@selector(editInputBarControl:getUserInfo:)]) {
         return [self.dataSource editInputBarControl:self getUserInfo:userId];
@@ -619,9 +686,10 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 /// @param senderName The referenced message sender name.
 /// @param content The referenced message content.
 - (void)setReferenceInfo:(NSString *)senderName content:(NSString *)content {
-    
+
     // Update the input container preview at the same time.
-    if ([self.editInputContainer respondsToSelector:@selector(setReferencedContentWithSenderName:content:)]) {
+    if ([self.editInputContainer
+            respondsToSelector:@selector(setReferencedContentWithSenderName:content:)]) {
         [self.editInputContainer setReferencedContentWithSenderName:senderName content:content];
     }
 }
@@ -643,7 +711,7 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     if (self.editInputContainer && self.editInputContainer.inputTextView) {
         UITextView *textView = self.editInputContainer.inputTextView;
         NSUInteger textLength = textView.text.length;
-        
+
         // Apply only a cursor location within the current text.
         if (range.location != NSNotFound && range.location <= textLength) {
             // if (range.location + range.length > textLength) {
@@ -651,10 +719,10 @@ extern NSString *const NCUIKeyboardWillShowNotification;
             // }
             // This API restores a cursor location, not a text selection.
             range.length = 0;
-            
+
             // Restore the cursor asynchronously after the text is loaded.
             dispatch_async(dispatch_get_main_queue(), ^{
-                textView.selectedRange = range;
+              textView.selectedRange = range;
             });
         }
     }
@@ -680,11 +748,11 @@ extern NSString *const NCUIKeyboardWillShowNotification;
     return _inputBarConfig;
 }
 
-
 - (NCEditInputContainerView *)editInputContainer {
     if (!_editInputContainer) {
         // Create the edit input container for the current height mode.
-        NCEditHeightMode mode = self.isFullScreen ? NCEditHeightModeExpanded : NCEditHeightModeNormal;
+        NCEditHeightMode mode =
+            self.isFullScreen ? NCEditHeightModeExpanded : NCEditHeightModeNormal;
         _editInputContainer = [[NCEditInputContainerView alloc] initWithHeightMode:mode];
         _editInputContainer.delegate = self;
         _editInputContainer.translatesAutoresizingMaskIntoConstraints = NO;
@@ -694,9 +762,9 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 
 - (NCInputStateManager *)inputStateManager {
     if (!_inputStateManager) {
-        _inputStateManager = [[NCInputStateManager alloc]
-                              initWithTextView:self.editInputContainer.inputTextView
-                              delegate:self];
+        _inputStateManager =
+            [[NCInputStateManager alloc] initWithTextView:self.editInputContainer.inputTextView
+                                                 delegate:self];
         _inputStateManager.isMentionedEnabled = self.isMentionedEnabled;
     }
     return _inputStateManager;
@@ -713,8 +781,8 @@ extern NSString *const NCUIKeyboardWillShowNotification;
 - (NCEmojiBoardView *)emojiBoardView {
     if (!_emojiBoardView) {
         _emojiBoardView = [[NCEmojiBoardView alloc]
-                           initWithFrame:CGRectMake(0, 0, self.frame.size.width, Height_EmojiBoardView)
-                           delegate:self];
+            initWithFrame:CGRectMake(0, 0, self.frame.size.width, Height_EmojiBoardView)
+                 delegate:self];
         _emojiBoardView.hidden = YES;
     }
     return _emojiBoardView;

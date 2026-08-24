@@ -7,19 +7,19 @@
 //
 
 #import "NCFriendListViewController.h"
-#import "NCFriendListView.h"
-#import "NCChatUICommonDefine.h"
 #import "NCAlertView.h"
+#import "NCChatUICommonDefine.h"
+#import "NCFriendListView.h"
 #import "NCPaddingTableViewCell.h"
-@interface NCFriendListViewController ()<UITableViewDelegate, UITableViewDataSource,NCListViewModelResponder>
+@interface NCFriendListViewController () <UITableViewDelegate, UITableViewDataSource,
+                                          NCListViewModelResponder>
 
 @property (nonatomic, strong) NCFriendListViewModel *viewModel;
 @property (nonatomic, strong) NCFriendListView *listView;
 @end
 
 @implementation NCFriendListViewController
-- (instancetype)initWithViewModel:(NCFriendListViewModel *)viewModel
-{
+- (instancetype)initWithViewModel:(NCFriendListViewModel *)viewModel {
     self = [super init];
     if (self) {
         [viewModel bindResponder:self];
@@ -71,16 +71,12 @@
 }
 
 - (void)showTips:(NSString *)tips {
-    [NCAlertView showAlertController:nil
-                             message:tips
-                    hiddenAfterDelay:2];
+    [NCAlertView showAlertController:nil message:tips hiddenAfterDelay:2];
 }
 
 #pragma mark - UITableViewDelegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self.viewModel viewController:self
-                         tableView:tableView
-                      didSelectRow:indexPath];
+    [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
 #pragma mark - UITableViewDataSource
@@ -96,8 +92,9 @@
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell =  [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
     if ([cell isKindOfClass:[NCPaddingTableViewCell class]]) {
         NCPaddingTableViewCell *paddingCell = (NCPaddingTableViewCell *)cell;
         [paddingCell updatePaddingContainer:NCUserManagementPadding trailing:-1];
@@ -110,14 +107,16 @@
 }
 
 - (nullable UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    return [self.viewModel tableView:tableView viewForHeaderInSection:section];;
+    return [self.viewModel tableView:tableView viewForHeaderInSection:section];
+    ;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
     return nil;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return [self.viewModel heightForHeaderInSection:section];;
+    return [self.viewModel heightForHeaderInSection:section];
+    ;
 }
 
 // Without this delegate method, the table view uses the header height for its footer.

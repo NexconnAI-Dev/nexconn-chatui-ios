@@ -9,10 +9,9 @@
 #import "NCSightFileBrowserCell.h"
 #import "NCChatUICommonDefine.h"
 
-NSString  * const NCSightFileBrowserCellIdentifier = @"NCSightFileBrowserCellIdentifier";
+NSString *const NCSightFileBrowserCellIdentifier = @"NCSightFileBrowserCellIdentifier";
 
 @implementation NCSightFileBrowserCell
-
 
 - (void)setupView {
     [super setupView];
@@ -30,11 +29,15 @@ NSString  * const NCSightFileBrowserCellIdentifier = @"NCSightFileBrowserCellIde
     [super setupConstraints];
     [self updateLineViewConstraints:37 trailing:0];
     [NSLayoutConstraint activateConstraints:@[
-        [self.contentStackView.leadingAnchor constraintEqualToAnchor:self.paddingContainerView.leadingAnchor],
-        [self.contentStackView.trailingAnchor constraintEqualToAnchor:self.paddingContainerView.trailingAnchor],
-        [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor constant:NCUserManagementPadding],
-        [self.contentStackView.bottomAnchor constraintEqualToAnchor:self.paddingContainerView.bottomAnchor
-                                                           constant:-NCUserManagementPadding],
+        [self.contentStackView.leadingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.leadingAnchor],
+        [self.contentStackView.trailingAnchor
+            constraintEqualToAnchor:self.paddingContainerView.trailingAnchor],
+        [self.contentStackView.topAnchor constraintEqualToAnchor:self.paddingContainerView.topAnchor
+                                                        constant:NCUserManagementPadding],
+        [self.contentStackView.bottomAnchor
+            constraintEqualToAnchor:self.paddingContainerView.bottomAnchor
+                           constant:-NCUserManagementPadding],
         [self.imageIcon.widthAnchor constraintEqualToConstant:32],
         [self.imageIcon.heightAnchor constraintEqualToConstant:32]
     ]];
@@ -54,8 +57,10 @@ NSString  * const NCSightFileBrowserCellIdentifier = @"NCSightFileBrowserCellIde
         lab.translatesAutoresizingMaskIntoConstraints = NO;
         lab.font = [UIFont systemFontOfSize:12];
         lab.textColor = NCDynamicColor(@"text_secondary_color");
-        [lab setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
-        [lab setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh
+                                             forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentHuggingPriority:UILayoutPriorityDefaultHigh
+                               forAxis:UILayoutConstraintAxisHorizontal];
         _labelTime = lab;
     }
     return _labelTime;
@@ -78,8 +83,10 @@ NSString  * const NCSightFileBrowserCellIdentifier = @"NCSightFileBrowserCellIde
         lab.translatesAutoresizingMaskIntoConstraints = NO;
         lab.font = [UIFont systemFontOfSize:14];
         lab.textColor = NCDynamicColor(@"text_primary_color");
-        [lab setContentCompressionResistancePriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
-        [lab setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
+                                             forAxis:UILayoutConstraintAxisHorizontal];
+        [lab setContentHuggingPriority:UILayoutPriorityDefaultLow
+                               forAxis:UILayoutConstraintAxisHorizontal];
         _labelTitle = lab;
     }
     return _labelTitle;
@@ -109,16 +116,15 @@ NSString  * const NCSightFileBrowserCellIdentifier = @"NCSightFileBrowserCellIde
     return _rightStackView;
 }
 
-
 - (UIStackView *)contentStackView {
-   if (!_contentStackView) {
-       _contentStackView = [[UIStackView alloc] init];
-       _contentStackView.axis = UILayoutConstraintAxisHorizontal;
-       _contentStackView.alignment = UIStackViewAlignmentCenter;
-       _contentStackView.distribution = UIStackViewDistributionFill;
-       _contentStackView.spacing = 5;
-       _contentStackView.translatesAutoresizingMaskIntoConstraints = NO;
-   }
-   return _contentStackView;
+    if (!_contentStackView) {
+        _contentStackView = [[UIStackView alloc] init];
+        _contentStackView.axis = UILayoutConstraintAxisHorizontal;
+        _contentStackView.alignment = UIStackViewAlignmentCenter;
+        _contentStackView.distribution = UIStackViewDistributionFill;
+        _contentStackView.spacing = 5;
+        _contentStackView.translatesAutoresizingMaskIntoConstraints = NO;
+    }
+    return _contentStackView;
 }
 @end

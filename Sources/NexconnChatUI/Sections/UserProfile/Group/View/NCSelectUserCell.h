@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCStackTableViewCell.h"
 #import "NCImageView.h"
+#import "NCStackTableViewCell.h"
 #import "NCUserProfileDefine.h"
-UIKIT_EXTERN NSString  * _Nonnull const NCSelectUserCellIdentifier;
+UIKIT_EXTERN NSString *_Nonnull const NCSelectUserCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -14,21 +14,20 @@ static BOOL NCChannelInfoNullableStringEqual(NSString *lhs, NSString *rhs) {
 }
 
 static BOOL NCChannelInfoChatUIGroupEqual(NCChatUIGroup *lhs, NCChatUIGroup *rhs) {
-    return lhs == rhs ||
-           (NCChannelInfoNullableStringEqual(lhs.groupId, rhs.groupId) &&
-            NCChannelInfoNullableStringEqual(lhs.groupName, rhs.groupName) &&
-            NCChannelInfoNullableStringEqual(lhs.avatarUrl, rhs.avatarUrl) &&
-            NCChannelInfoNullableStringEqual(lhs.extra, rhs.extra) &&
-            NCChannelInfoNullableStringEqual(lhs.notice, rhs.notice));
+    return lhs == rhs || (NCChannelInfoNullableStringEqual(lhs.groupId, rhs.groupId) &&
+                          NCChannelInfoNullableStringEqual(lhs.groupName, rhs.groupName) &&
+                          NCChannelInfoNullableStringEqual(lhs.avatarUrl, rhs.avatarUrl) &&
+                          NCChannelInfoNullableStringEqual(lhs.extra, rhs.extra) &&
+                          NCChannelInfoNullableStringEqual(lhs.notice, rhs.notice));
 }
 
 @implementation NCChannelInfo
 
 - (instancetype)initWithConversationId:(NSString *)channelId
-                      channelType:(NCChannelType)channelType
+                           channelType:(NCChannelType)channelType
                                   name:(NSString *)name
-                           avatarUrl:(NSString *)avatarUrl
-                                 extra:(NSString *)extra{
+                             avatarUrl:(NSString *)avatarUrl
+                                 extra:(NSString *)extra {
     self = [super init];
 
     if (self) {
@@ -44,9 +43,9 @@ static BOOL NCChannelInfoChatUIGroupEqual(NCChatUIGroup *lhs, NCChatUIGroup *rhs
 
 - (instancetype)initWithGroupInfo:(NCChatUIGroup *)groupInfo {
     self = [self initWithConversationId:groupInfo.groupId
-                       channelType:NCChannelTypeGroup
+                            channelType:NCChannelTypeGroup
                                    name:groupInfo.groupName
-                            avatarUrl:groupInfo.avatarUrl
+                              avatarUrl:groupInfo.avatarUrl
                                   extra:groupInfo.extra];
     if (self) {
         _groupInfo = groupInfo;

@@ -20,15 +20,17 @@
 }
 
 - (CGPoint)targetContentOffsetForProposedContentOffset:(CGPoint)proposedContentOffset {
-    CGFloat offset = self.collectionViewNewContentSize.height - self.collectionView.contentSize.height;
+    CGFloat offset =
+        self.collectionViewNewContentSize.height - self.collectionView.contentSize.height;
     if (offset > 0) {
         proposedContentOffset.y += offset;
     }
     return proposedContentOffset;
 }
 
-- (UICollectionViewLayoutAttributes *)layoutAttributesForSupplementaryViewOfKind:(NSString *)elementKind
-                                                                     atIndexPath:(NSIndexPath *)indexPath {
+- (UICollectionViewLayoutAttributes *)
+    layoutAttributesForSupplementaryViewOfKind:(NSString *)elementKind
+                                   atIndexPath:(NSIndexPath *)indexPath {
     if (![super layoutAttributesForSupplementaryViewOfKind:elementKind atIndexPath:indexPath]) {
         UICollectionViewLayoutAttributes *layoutAttributes =
             [UICollectionViewLayoutAttributes layoutAttributesForSupplementaryViewOfKind:elementKind

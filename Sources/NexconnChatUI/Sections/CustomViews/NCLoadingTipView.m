@@ -11,7 +11,7 @@
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIUtility.h"
 
-@interface NCLoadingTipView()
+@interface NCLoadingTipView ()
 @property (nonatomic, copy) NSString *tip;
 @property (nonatomic, strong) NCBaseImageView *loadingImageView;
 @property (nonatomic, strong) UILabel *tipLabel;
@@ -20,9 +20,7 @@
 @end
 @implementation NCLoadingTipView
 
-+ (NCLoadingTipView *)loadingWithTip:(NSString *)tip
-                          parentView:(UIView *)parentView
-{
++ (NCLoadingTipView *)loadingWithTip:(NSString *)tip parentView:(UIView *)parentView {
     NCLoadingTipView *view = [[NCLoadingTipView alloc] initWithTip:tip];
     view.frame = parentView.bounds;
     [parentView addSubview:view];
@@ -51,8 +49,7 @@
     [self removeFromSuperview];
 }
 
-- (instancetype)initWithTip:(NSString *)tip
-{
+- (instancetype)initWithTip:(NSString *)tip {
     self = [super init];
     if (self) {
         self.tip = tip;
@@ -66,7 +63,7 @@
     self.userInteractionEnabled = NO;
     self.tipLabel.text = self.tip;
     [self.tipLabel sizeToFit];
-    
+
     [self.containerView addSubview:self.tipLabel];
     [self.containerView addSubview:self.loadingImageView];
     [self addSubview:self.containerView];
@@ -74,17 +71,17 @@
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    CGFloat containerWidth = 24 + self.loadingImageView.frame.size.width+8+self.tipLabel.frame.size.width;
+    CGFloat containerWidth =
+        24 + self.loadingImageView.frame.size.width + 8 + self.tipLabel.frame.size.width;
     CGFloat containerHeight = 41;
-    
+
     self.containerView.bounds = CGRectMake(0, 0, containerWidth, containerHeight);
     self.containerView.center = self.center;
-    
-    self.loadingImageView.frame = CGRectMake(10, (containerHeight-27)/2, 27, 27);
-    self.tipLabel.frame = CGRectMake(10 + 27 + 8,
-                                     (containerHeight - self.tipLabel.frame.size.height)/2,
-                                     self.tipLabel.frame.size.width,
-                                     self.tipLabel.frame.size.height);
+
+    self.loadingImageView.frame = CGRectMake(10, (containerHeight - 27) / 2, 27, 27);
+    self.tipLabel.frame =
+        CGRectMake(10 + 27 + 8, (containerHeight - self.tipLabel.frame.size.height) / 2,
+                   self.tipLabel.frame.size.width, self.tipLabel.frame.size.height);
 }
 
 - (void)startAnimation {

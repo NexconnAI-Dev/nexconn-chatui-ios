@@ -50,8 +50,9 @@
     UICollectionViewLayoutAttributes *attributes = [UICollectionViewLayoutAttributes
         layoutAttributesForCellWithIndexPath:
             path]; // Create attributes containing only the cell category and index path.
-                   //    CGFloat horizontalInsets = (self.collectionView.bounds.size.width - NCPlaginBoardCellSize.width
-                   //    *HorizontalItemsCount) /(HorizontalItemsCount + 1);
+                   //    CGFloat horizontalInsets = (self.collectionView.bounds.size.width -
+                   //    NCPlaginBoardCellSize.width *HorizontalItemsCount) /(HorizontalItemsCount +
+                   //    1);
 
     NSInteger currentPage = path.section;
     NSInteger currentRow = (NSInteger)floor((double)(path.row) / (double)HorizontalItemsCount);

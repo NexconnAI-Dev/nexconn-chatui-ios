@@ -97,11 +97,13 @@
         }
         self.canRecordMaxDuration = canRecordMaxDurationTemp;
         UILongPressGestureRecognizer *longPress =
-            [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGesture:)];
+            [[UILongPressGestureRecognizer alloc] initWithTarget:self
+                                                          action:@selector(longPressGesture:)];
         [self addGestureRecognizer:longPress];
         self.longPressGesture = longPress;
 
-        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGesture)];
+        UITapGestureRecognizer *tap =
+            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGesture)];
         [self addGestureRecognizer:tap];
     }
     return self;
@@ -184,7 +186,8 @@
         ringFrame = CGRectInset(mainFrame, -mainWith / 2.0f, -mainWith / 2.0f);
     }
 
-    UIBezierPath *ringPath = [UIBezierPath bezierPathWithRoundedRect:ringFrame cornerRadius:ringFrame.size.width / 2];
+    UIBezierPath *ringPath = [UIBezierPath bezierPathWithRoundedRect:ringFrame
+                                                        cornerRadius:ringFrame.size.width / 2];
     self.ringLayer.path = ringPath.CGPath;
 
     if (self.isPress) {
@@ -192,13 +195,15 @@
         mainFrame = CGRectMake((width - mainWith) / 2, (width - mainWith) / 2, mainWith, mainWith);
     }
 
-    UIBezierPath *mainPath = [UIBezierPath bezierPathWithRoundedRect:mainFrame cornerRadius:mainWith / 2];
+    UIBezierPath *mainPath = [UIBezierPath bezierPathWithRoundedRect:mainFrame
+                                                        cornerRadius:mainWith / 2];
     self.centerLayer.path = mainPath.CGPath;
 
     if (self.isPress) {
         CGRect progressFrame = CGRectInset(ringFrame, 2.0, 2.0);
         UIBezierPath *progressPath =
-            [UIBezierPath bezierPathWithRoundedRect:progressFrame cornerRadius:progressFrame.size.width / 2];
+            [UIBezierPath bezierPathWithRoundedRect:progressFrame
+                                       cornerRadius:progressFrame.size.width / 2];
         self.progressLayer.path = progressPath.CGPath;
         self.progressLayer.strokeEnd = self.progress;
     }

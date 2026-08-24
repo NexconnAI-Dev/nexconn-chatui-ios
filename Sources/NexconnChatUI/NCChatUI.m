@@ -7,44 +7,50 @@
 //
 
 #import "NCChatUI.h"
-#import "NCChatUILog.h"
-#import "NCChatUIUtility.h"
-#import "NCLocalNotification.h"
-#import "NCOldMessageNotificationMessage.h"
-#import "NCSystemSoundPlayer.h"
-#import "NCUserInfoCacheManager.h"
-#import "NCExtensionKit.h"
-#import "NCChatUIExtensionManager.h"
-#import "NCHDVoiceMsgDownloadManager.h"
+#import "NCChannelNotificationDataContext.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
-#import <AVFoundation/AVFoundation.h>
-#import "NCResendManager.h"
-#import "NCEventCenter.h"
-#import "NCMessageNotificationHelper.h"
-#import "NCChannelNotificationDataContext.h"
-#import "NCInfoProvider.h"
-#import "NCInfoManagement.h"
 #import "NCChatUIErrorCode.h"
+#import "NCChatUIExtensionManager.h"
+#import "NCChatUILog.h"
 #import "NCChatUINetworkStatusService.h"
+#import "NCChatUIUtility.h"
+#import "NCEventCenter.h"
+#import "NCExtensionKit.h"
 #import "NCFileUtility.h"
+#import "NCHDVoiceMsgDownloadManager.h"
+#import "NCInfoManagement.h"
+#import "NCInfoProvider.h"
+#import "NCLocalNotification.h"
+#import "NCMessageNotificationHelper.h"
+#import "NCOldMessageNotificationMessage.h"
+#import "NCResendManager.h"
+#import "NCSystemSoundPlayer.h"
+#import "NCUserInfoCacheManager.h"
+#import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 
 NSString *const NCUISendingMessageNotification = @"NCUISendingMessageNotification";
-NSString *const NCChatUIDispatchConnectionStatusChangedNotification = @"NCChatUIDispatchConnectionStatusChangedNotification";
+NSString *const NCChatUIDispatchConnectionStatusChangedNotification =
+    @"NCChatUIDispatchConnectionStatusChangedNotification";
 
 NSString *const NCUIDispatchDownloadMediaNotification = @"NCUIDispatchDownloadMediaNotification";
 NSString *const NCChatUIDispatchConversationStatusChangeNotification =
     @"NCChatUIDispatchConversationStatusChangeNotification";
-NSString *const NCChatUIChannelDraftSaveResultNotification = @"NCChatUIChannelDraftSaveResultNotification";
+NSString *const NCChatUIChannelDraftSaveResultNotification =
+    @"NCChatUIChannelDraftSaveResultNotification";
 
-NSString *const NCChatUIConversationCellOnlineStatusUpdateNotification = @"NCChatUIConversationCellOnlineStatusUpdateNotification";
-NSString *const NCChatUIUserOnlineStatusChangedNotification = @"NCChatUIUserOnlineStatusChangedNotification";
-NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey = @"NCChatUIUserOnlineStatusChangedUserIdsKey";
+NSString *const NCChatUIConversationCellOnlineStatusUpdateNotification =
+    @"NCChatUIConversationCellOnlineStatusUpdateNotification";
+NSString *const NCChatUIUserOnlineStatusChangedNotification =
+    @"NCChatUIUserOnlineStatusChangedNotification";
+NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey =
+    @"NCChatUIUserOnlineStatusChangedUserIdsKey";
 
 @interface NCChatUIMediaDownloadCallback : NSObject
 @property (nonatomic, copy) void (^progressBlock)(int progress);
-@property (nonatomic, copy) void (^completion)(NSString * _Nullable mediaPath, NCError * _Nullable error);
+@property (nonatomic, copy) void (^completion)
+    (NSString *_Nullable mediaPath, NCError *_Nullable error);
 @property (nonatomic, copy) void (^cancelBlock)(void);
 @end
 
@@ -79,7 +85,9 @@ NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey = @"NCChatUIUserOnline
 @property (nonatomic, copy) NSString *appKey;
 @property (nonatomic, copy) NSString *token;
 @property (nonatomic, strong) NSMutableArray *downloadingMeidaMessageIds;
-@property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSMutableArray<NCChatUIMediaDownloadCallback *> *> *mediaDownloadCallbacks;
+@property (nonatomic, strong)
+    NSMutableDictionary<NSNumber *, NSMutableArray<NCChatUIMediaDownloadCallback *> *>
+        *mediaDownloadCallbacks;
 @property (nonatomic, strong) NSHashTable<id<NCChatUIMessageEventObserver>> *messageObservers;
 @property (nonatomic, strong, nullable) NSDate *notificationQuietBeginTime;
 @property (nonatomic, strong, nullable) NSDate *notificationQuietEndTime;
@@ -89,15 +97,14 @@ NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey = @"NCChatUIUserOnline
 - (void)p_notifyNetworkStatusChanged:(NCChatUINetworkStatus)status;
 @end
 
-static NSString *const NexconnChatUIVersion = @"26.4.0";
+static NSString *const NexconnChatUIVersion = @"0.100.2";
 static NSString *const NCChatUIMessageHandlerIdentifier = @"NCChatUI.global";
 static NSString *const NCChatUIConnectionStatusHandlerIdentifier = @"NCChatUI.connectionStatus";
 static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
 
 static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     return @[
-        [NCOldMessageNotificationMessage class],
-        [NCInformationNotificationMessage class],
+        [NCOldMessageNotificationMessage class], [NCInformationNotificationMessage class],
         [NCGroupNotificationMessage class]
     ];
 }
@@ -116,25 +123,25 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     static NCChatUI *instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (instance == nil) {
-            instance = [[NCChatUI alloc] init];
-            instance.userInfoDataSource = nil;
-            instance.groupUserInfoDataSource = nil;
-            instance.groupInfoDataSource = nil;
-            instance.enablePersistentUserInfoCache = NO;
-            instance.messageObservers = [NSHashTable weakObjectsHashTable];
-            __weak typeof(instance) weakInstance = instance;
-            instance.networkStatusService =
-                [[NCChatUINetworkStatusService alloc] initWithStatusChangedHandler:^(NCChatUINetworkStatus status) {
-                    __strong typeof(weakInstance) strongInstance = weakInstance;
-                    if (!strongInstance) {
-                        return;
-                    }
-                    [strongInstance p_notifyNetworkStatusChanged:status];
-                }];
-            [instance.networkStatusService startMonitorIfNeeded];
-            [[NCChatUIExtensionManager sharedManager] loadAllExtensionModules];
-        }
+      if (instance == nil) {
+          instance = [[NCChatUI alloc] init];
+          instance.userInfoDataSource = nil;
+          instance.groupUserInfoDataSource = nil;
+          instance.groupInfoDataSource = nil;
+          instance.enablePersistentUserInfoCache = NO;
+          instance.messageObservers = [NSHashTable weakObjectsHashTable];
+          __weak typeof(instance) weakInstance = instance;
+          instance.networkStatusService = [[NCChatUINetworkStatusService alloc]
+              initWithStatusChangedHandler:^(NCChatUINetworkStatus status) {
+                __strong typeof(weakInstance) strongInstance = weakInstance;
+                if (!strongInstance) {
+                    return;
+                }
+                [strongInstance p_notifyNetworkStatusChanged:status];
+              }];
+          [instance.networkStatusService startMonitorIfNeeded];
+          [[NCChatUIExtensionManager sharedManager] loadAllExtensionModules];
+      }
     });
     return instance;
 }
@@ -142,7 +149,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 - (void)setCurrentUserInfo:(NCChatUIUserInfo *)currentUserInfo {
     self.cachedCurrentUserInfo = currentUserInfo;
     if (currentUserInfo) {
-        [[NCUserInfoCacheManager sharedManager] updateUserInfo:currentUserInfo forUserId:currentUserInfo.userId];
+        [[NCUserInfoCacheManager sharedManager] updateUserInfo:currentUserInfo
+                                                     forUserId:currentUserInfo.userId];
         [NCInfoProvider sharedManager].currentUserId = currentUserInfo.userId;
     }
 }
@@ -182,37 +190,36 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     [[NCChatUIExtensionManager sharedManager] initWithAppKey:params.appKey];
     [NCEngine addConnectionStatusHandlerWithIdentifier:NCChatUIConnectionStatusHandlerIdentifier
                                                handler:self];
-    [NCEngine addMessageHandlerWithIdentifier:NCChatUIMessageHandlerIdentifier
-                                      handler:self];
-    [NCEngine addChannelHandlerWithIdentifier:NCChatUIChannelHandlerIdentifier
-                                      handler:self];
+    [NCEngine addMessageHandlerWithIdentifier:NCChatUIMessageHandlerIdentifier handler:self];
+    [NCEngine addChannelHandlerWithIdentifier:NCChatUIChannelHandlerIdentifier handler:self];
 }
-
 
 - (BOOL)checkNoficationQuietStatus {
     return [self isInQuietTime];
 }
 
 - (void)connectWithParams:(NCConnectParams *)params
-    databaseOpenedHandler:(void (^)(BOOL isRecreated, NCError * _Nullable error))databaseOpenedHandler
-        completionHandler:(void (^)(NSString * _Nullable userId, NCError * _Nullable error))completionHandler {
+    databaseOpenedHandler:(void (^)(BOOL isRecreated,
+                                    NCError *_Nullable error))databaseOpenedHandler
+        completionHandler:
+            (void (^)(NSString *_Nullable userId, NCError *_Nullable error))completionHandler {
     [NCEngine connectWithParams:params
           databaseOpenedHandler:databaseOpenedHandler
-              completionHandler:^(NSString * _Nullable userId, NCError * _Nullable error) {
-        if (!error && userId.length > 0) {
-            [NCInfoProvider sharedManager].currentUserId = userId;
-            [self resetNotificationQuietStatus];
-            [self p_notifyExtensionModulesDidConnectIfNeeded:userId];
-        } else {
-            NSString *currentUserId = [[NCEngine getCurrentUserId] copy];
-            if (currentUserId.length > 0) {
-                [NCInfoProvider sharedManager].currentUserId = currentUserId;
-            }
-        }
-        if (completionHandler) {
-            completionHandler(userId, error);
-        }
-    }];
+              completionHandler:^(NSString *_Nullable userId, NCError *_Nullable error) {
+                if (!error && userId.length > 0) {
+                    [NCInfoProvider sharedManager].currentUserId = userId;
+                    [self resetNotificationQuietStatus];
+                    [self p_notifyExtensionModulesDidConnectIfNeeded:userId];
+                } else {
+                    NSString *currentUserId = [[NCEngine getCurrentUserId] copy];
+                    if (currentUserId.length > 0) {
+                        [NCInfoProvider sharedManager].currentUserId = currentUserId;
+                    }
+                }
+                if (completionHandler) {
+                    completionHandler(userId, error);
+                }
+              }];
     if ([NCEngine getCurrentUserId].length > 0) {
         NCChatUIUserInfo *currentUserInfo = self.currentUserInfo;
         self.currentUserInfo = currentUserInfo;
@@ -242,12 +249,16 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         return;
     }
 
-    NSDictionary *dictionary = [NCChatUIUtility getNotificationUserInfoDictionaryWithNCMessage:message];
-    [NCMessageNotificationHelper checkNotifyAbilityWith:message completion:^(BOOL show) {
-        if (show) {
-            [[NCLocalNotification defaultCenter] postLocalNotificationWithMessage:message userInfo:dictionary];
-        }
-    }];
+    NSDictionary *dictionary =
+        [NCChatUIUtility getNotificationUserInfoDictionaryWithNCMessage:message];
+    [NCMessageNotificationHelper checkNotifyAbilityWith:message
+                                             completion:^(BOOL show) {
+                                               if (show) {
+                                                   [[NCLocalNotification defaultCenter]
+                                                       postLocalNotificationWithMessage:message
+                                                                               userInfo:dictionary];
+                                               }
+                                             }];
 }
 
 #pragma mark - NCMessageHandler
@@ -268,7 +279,7 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     if ([message.content isKindOfClass:[NCHDVoiceMessage class]] && event.left == 0 &&
         NCChatUIConfigCenter.message.automaticDownloadHQVoiceMsgEnable) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self downloadMediaMessage:(long)message.clientId progress:nil completion:nil cancel:nil];
+          [self downloadMediaMessage:(long)message.clientId progress:nil completion:nil cancel:nil];
         });
     }
 
@@ -298,7 +309,7 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 
 - (void)p_dispatchMessageToObservers:(NCMessage *)message left:(int)left offline:(BOOL)offline {
     NSArray<id<NCChatUIMessageEventObserver>> *observers = nil;
-    @synchronized (self.messageObservers) {
+    @synchronized(self.messageObservers) {
         observers = self.messageObservers.allObjects;
     }
     for (id<NCChatUIMessageEventObserver> observer in observers) {
@@ -322,7 +333,7 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         return;
     }
     NSArray<id<NCChatUIMessageEventObserver>> *observers = nil;
-    @synchronized (self.messageObservers) {
+    @synchronized(self.messageObservers) {
         observers = self.messageObservers.allObjects;
     }
     NSArray<NCMessage *> *immutableMessages = [validMessages copy];
@@ -351,9 +362,11 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     NSString *senderUserId = senderUserInfo.userId;
     if (senderUserId.length > 0 && ![senderUserId isEqualToString:[NCEngine getCurrentUserId]]) {
         if (senderUserInfo.name.length > 0 || senderUserInfo.avatarUrl.length > 0) {
-            NCChatUIUserInfo *cachedUserInfo = [[NCUserInfoCacheManager sharedManager] getUserInfoFromCacheOnly:senderUserId];
+            NCChatUIUserInfo *cachedUserInfo =
+                [[NCUserInfoCacheManager sharedManager] getUserInfoFromCacheOnly:senderUserId];
             if (cachedUserInfo) {
-                if (0 == senderUserInfo.avatarUrl.length || [NCFileUtility isLocalPath:senderUserInfo.avatarUrl]) {
+                if (0 == senderUserInfo.avatarUrl.length ||
+                    [NCFileUtility isLocalPath:senderUserInfo.avatarUrl]) {
                     senderUserInfo.avatarUrl = cachedUserInfo.avatarUrl;
                 }
                 if (0 == senderUserInfo.alias.length) {
@@ -363,7 +376,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
                     senderUserInfo.extra = cachedUserInfo.extra;
                 }
             }
-            [[NCUserInfoCacheManager sharedManager] updateUserInfo:senderUserInfo forUserId:senderUserId];
+            [[NCUserInfoCacheManager sharedManager] updateUserInfo:senderUserInfo
+                                                         forUserId:senderUserId];
         }
     }
 }
@@ -385,7 +399,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         return YES;
     }
 
-    BOOL isUnknownMessage = (message.content == nil || [message.content isKindOfClass:[NCUnknownMessage class]]);
+    BOOL isUnknownMessage =
+        (message.content == nil || [message.content isKindOfClass:[NCUnknownMessage class]]);
     if (!NCChatUIConfigCenter.message.showUnkownMessageNotificaiton && isUnknownMessage) {
         return YES;
     }
@@ -403,30 +418,34 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     }
 
     if (message.content.mentionedInfo.isMentionedMe) {
-        [[NCSystemSoundPlayer defaultPlayer] playSoundByMessage:message completeBlock:^(BOOL complete) {
-            if (complete) {
-                [self setExclusiveSoundPlayer];
-            }
-        }];
+        [[NCSystemSoundPlayer defaultPlayer] playSoundByMessage:message
+                                                  completeBlock:^(BOOL complete) {
+                                                    if (complete) {
+                                                        [self setExclusiveSoundPlayer];
+                                                    }
+                                                  }];
     } else {
         NCChannelIdentifier *identifier = message.channelIdentifier;
         if (!identifier.channelId.length) {
             return;
         }
-        [NCBaseChannel getChannels:@[identifier] completion:^(NSArray<NCBaseChannel *> * _Nullable channels, NCError * _Nullable error) {
-            if (error || channels.count == 0) {
-                return;
-            }
-            NCChannelNoDisturbLevel level = channels.firstObject.noDisturbLevel;
-            if (level == NCChannelNoDisturbLevelMuted) {
-                return;
-            }
-            [[NCSystemSoundPlayer defaultPlayer] playSoundByMessage:message completeBlock:^(BOOL complete) {
-                if (complete) {
-                    [self setExclusiveSoundPlayer];
-                }
-            }];
-        }];
+        [NCBaseChannel
+            getChannels:@[ identifier ]
+             completion:^(NSArray<NCBaseChannel *> *_Nullable channels, NCError *_Nullable error) {
+               if (error || channels.count == 0) {
+                   return;
+               }
+               NCChannelNoDisturbLevel level = channels.firstObject.noDisturbLevel;
+               if (level == NCChannelNoDisturbLevelMuted) {
+                   return;
+               }
+               [[NCSystemSoundPlayer defaultPlayer] playSoundByMessage:message
+                                                         completeBlock:^(BOOL complete) {
+                                                           if (complete) {
+                                                               [self setExclusiveSoundPlayer];
+                                                           }
+                                                         }];
+             }];
     }
 }
 
@@ -468,15 +487,18 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 }
 
 - (void)setExclusiveSoundPlayer {
-    if (NCChatUIConfigCenter.message.isExclusiveSoundPlayer || [NCChatUIUtility isAudioHolding] ||[NCChatUIUtility isCameraHolding]) {
+    if (NCChatUIConfigCenter.message.isExclusiveSoundPlayer || [NCChatUIUtility isAudioHolding] ||
+        [NCChatUIUtility isCameraHolding]) {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
         [audioSession setActive:YES error:nil];
-    }else {
-        // Deactivate only when exclusive playback is disabled and neither audio nor camera is being held.
-        [[AVAudioSession sharedInstance] setActive:NO
-                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                             error:nil];
+    } else {
+        // Deactivate only when exclusive playback is disabled and neither audio nor camera is being
+        // held.
+        [[AVAudioSession sharedInstance]
+              setActive:NO
+            withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                  error:nil];
     }
 }
 
@@ -485,26 +507,28 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         [NCChannelNotificationDataContext clean];
     }
     if (status == NCConnectionStatusKickedOfflineByOtherClient ||
-        status == NCConnectionStatusSignOut ||
-        status == NCConnectionStatusTokenIncorrect) {
+        status == NCConnectionStatusSignOut || status == NCConnectionStatusTokenIncorrect) {
         self.hasNotifiedExtensionModuleUserId = NO;
         [[NCChatUIExtensionManager sharedManager] didDisconnect];
     }
 
-    if (NCConnectionStatusNetworkUnavailable != status &&
-        NCConnectionStatusUnknown != status &&
+    if (NCConnectionStatusNetworkUnavailable != status && NCConnectionStatusUnknown != status &&
         NCConnectionStatusUnconnected != status) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIDispatchConnectionStatusChangedNotification
-                                                            object:[NSNumber numberWithInteger:status]];
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:NCChatUIDispatchConnectionStatusChangedNotification
+                          object:[NSNumber numberWithInteger:status]];
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self performSelector:@selector(delayNotifyUnConnectedStatus) withObject:nil afterDelay:5];
+          [self performSelector:@selector(delayNotifyUnConnectedStatus)
+                     withObject:nil
+                     afterDelay:5];
         });
     }
 
     [self p_notifyExtensionModulesDidConnectIfNeeded:[[NCEngine getCurrentUserId] copy]];
 
-    for (id<NCChatUIConnectionStatusDelegate> delegate in [[NCEventCenter sharedManager] allConnectionStatusChangeDelegates]) {
+    for (id<NCChatUIConnectionStatusDelegate> delegate in
+         [[NCEventCenter sharedManager] allConnectionStatusChangeDelegates]) {
         if ([delegate respondsToSelector:@selector(onNCChatUIConnectionStatusChanged:)]) {
             [delegate onNCChatUIConnectionStatusChanged:status];
         }
@@ -517,9 +541,10 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 
 - (void)onChannelStatusSyncCompleted:(NCChannelStatusSyncCompletedEvent *)event {
     (void)event;
-    [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIDispatchConversationStatusChangeNotification
-                                                        object:nil
-                                                      userInfo:nil];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:NCChatUIDispatchConversationStatusChangeNotification
+                      object:nil
+                    userInfo:nil];
 }
 
 - (void)addConnectionStatusDelegate:(id<NCChatUIConnectionStatusDelegate>)delegate {
@@ -542,7 +567,7 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     if (!observer) {
         return;
     }
-    @synchronized (self.messageObservers) {
+    @synchronized(self.messageObservers) {
         [self.messageObservers addObject:observer];
     }
 }
@@ -551,7 +576,7 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     if (!observer) {
         return;
     }
-    @synchronized (self.messageObservers) {
+    @synchronized(self.messageObservers) {
         [self.messageObservers removeObject:observer];
     }
 }
@@ -594,15 +619,16 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     return [[NCUserInfoCacheManager sharedManager] getUserInfo:userId];
 }
 // Resolve user information from the cache or the configured provider.
-- (void)getUserInfo:(NSString *)userId complete:(void (^)(NCChatUIUserInfo *userInfo))completeBlock {
-    NCChatUIUserInfo *user = [[NCUserInfoCacheManager sharedManager] getUserInfoFromCacheOnly:userId];
+- (void)getUserInfo:(NSString *)userId
+           complete:(void (^)(NCChatUIUserInfo *userInfo))completeBlock {
+    NCChatUIUserInfo *user =
+        [[NCUserInfoCacheManager sharedManager] getUserInfoFromCacheOnly:userId];
     if (user) {
         if (completeBlock) {
             completeBlock(user);
         }
     } else {
-        [[NCUserInfoCacheManager sharedManager] getUserInfo:userId
-                                                   complete:completeBlock];
+        [[NCUserInfoCacheManager sharedManager] getUserInfo:userId complete:completeBlock];
     }
 }
 
@@ -634,8 +660,12 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     return [[NCUserInfoCacheManager sharedManager] getUserInfo:userId inGroupId:groupId];
 }
 
-- (void)refreshGroupUserInfoCache:(NCChatUIUserInfo *)userInfo withUserId:(NSString *)userId withGroupId:(NSString *)groupId {
-    [[NCUserInfoCacheManager sharedManager] updateUserInfo:userInfo forUserId:userId inGroup:groupId];
+- (void)refreshGroupUserInfoCache:(NCChatUIUserInfo *)userInfo
+                       withUserId:(NSString *)userId
+                      withGroupId:(NSString *)groupId {
+    [[NCUserInfoCacheManager sharedManager] updateUserInfo:userInfo
+                                                 forUserId:userId
+                                                   inGroup:groupId];
 }
 
 - (void)clearGroupUserInfoCache {
@@ -643,78 +673,82 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 }
 
 - (void)updateMyUserProfile:(NCUserProfile *)profile
-                 completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion {
+                 completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                               NCError *_Nullable error))completion {
     [[NCInfoManagement sharedInstance] updateMyUserProfile:profile
-                                              successBlock:^{
-        if (completion) {
-            completion(nil, nil);
+        successBlock:^{
+          if (completion) {
+              completion(nil, nil);
+          }
         }
-    }
-                                                errorBlock:^(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys) {
-        if (completion) {
-            completion(errorKeys, [NCError errorWithCode:errorCode]);
-        }
-    }];
+        errorBlock:^(NSInteger errorCode, NSArray<NSString *> *_Nullable errorKeys) {
+          if (completion) {
+              completion(errorKeys, [NCError errorWithCode:errorCode]);
+          }
+        }];
 }
 
 - (void)setFriendInfo:(NSString *)userId
                remark:(nullable NSString *)remark
-           extProfile:(nullable NSDictionary<NSString *, NSString*> *)extProfile
-           completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion {
+           extProfile:(nullable NSDictionary<NSString *, NSString *> *)extProfile
+           completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                         NCError *_Nullable error))completion {
     [[NCInfoManagement sharedInstance] setFriendInfo:userId
-                                              remark:remark
-                                          extProfile:extProfile
-                                        successBlock:^{
-        if (completion) {
-            completion(nil, nil);
+        remark:remark
+        extProfile:extProfile
+        successBlock:^{
+          if (completion) {
+              completion(nil, nil);
+          }
         }
-    }
-                                          errorBlock:^(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys) {
-        if (completion) {
-            completion(errorKeys, [NCError errorWithCode:errorCode]);
-        }
-    }];
+        errorBlock:^(NSInteger errorCode, NSArray<NSString *> *_Nullable errorKeys) {
+          if (completion) {
+              completion(errorKeys, [NCError errorWithCode:errorCode]);
+          }
+        }];
 }
 
 - (void)updateGroupInfo:(NCGroupInfo *)groupInfo
-             completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion {
+             completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                           NCError *_Nullable error))completion {
     [[NCInfoManagement sharedInstance] updateGroupInfo:groupInfo
-                                          successBlock:^{
-        if (completion) {
-            completion(nil, nil);
+        successBlock:^{
+          if (completion) {
+              completion(nil, nil);
+          }
         }
-    }
-                                            errorBlock:^(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys) {
-        if (completion) {
-            completion(errorKeys, [NCError errorWithCode:errorCode]);
-        }
-    }];
+        errorBlock:^(NSInteger errorCode, NSArray<NSString *> *_Nullable errorKeys) {
+          if (completion) {
+              completion(errorKeys, [NCError errorWithCode:errorCode]);
+          }
+        }];
 }
 
 - (void)setGroupMemberInfo:(NSString *)groupId
                     userId:(NSString *)userId
                   nickname:(nullable NSString *)nickname
                      extra:(nullable NSString *)extra
-                completion:(nullable void (^)(NSArray<NSString *> * _Nullable errorKeys, NCError * _Nullable error))completion {
+                completion:(nullable void (^)(NSArray<NSString *> *_Nullable errorKeys,
+                                              NCError *_Nullable error))completion {
     [[NCInfoManagement sharedInstance] setGroupMemberInfo:groupId
-                                                   userId:userId
-                                                 nickname:nickname
-                                                    extra:extra
-                                             successBlock:^{
-        if (completion) {
-            completion(nil, nil);
+        userId:userId
+        nickname:nickname
+        extra:extra
+        successBlock:^{
+          if (completion) {
+              completion(nil, nil);
+          }
         }
-    }
-                                               errorBlock:^(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys) {
-        if (completion) {
-            completion(errorKeys, [NCError errorWithCode:errorCode]);
-        }
-    }];
-
+        errorBlock:^(NSInteger errorCode, NSArray<NSString *> *_Nullable errorKeys) {
+          if (completion) {
+              completion(errorKeys, [NCError errorWithCode:errorCode]);
+          }
+        }];
 }
 
 - (void)sendMessageWithParams:(NCChatUISendMessageParams *)params
-                   completion:(void (^)(NCMessage * _Nullable message, NCError * _Nullable error))completion {
+                   completion:(void (^)(NCMessage *_Nullable message,
+                                        NCError *_Nullable error))completion {
     if (!params || params.channelId.length == 0 || params.content == nil) {
         if (completion) {
             completion(nil, [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessage]);
@@ -732,7 +766,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     sendingContent = params.content;
     if (!sendingContent) {
         if (completion) {
-            completion(nil, [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessageContent]);
+            completion(nil,
+                       [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessageContent]);
         }
         return;
     }
@@ -746,158 +781,215 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         return;
     }
     NCSendMessageParams *sendParams = [[NCSendMessageParams alloc] initWithContent:sendingContent];
-    sendParams.needReceipt = params.needReceipt || [self shouldNeedReadReceiptForChannelType:params.channelType];
+    sendParams.needReceipt =
+        params.needReceipt || [self shouldNeedReadReceiptForChannelType:params.channelType];
     sendParams.directedUserIds = params.directedUserIds;
     sendParams.disableNotification = params.disableNotification;
     sendParams.metadata = params.metadata;
     sendParams.pushConfig = params.pushConfig;
     [channel sendMessageWithParams:sendParams
-                   attachedHandler:^(NCMessage * _Nullable attachedMessage) {
-        if (!attachedMessage) {
-            return;
+        attachedHandler:^(NCMessage *_Nullable attachedMessage) {
+          if (!attachedMessage) {
+              return;
+          }
+          [[NSNotificationCenter defaultCenter] postNotificationName:NCUISendingMessageNotification
+                                                              object:attachedMessage
+                                                            userInfo:nil];
         }
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUISendingMessageNotification
-                                                            object:attachedMessage
-                                                          userInfo:nil];
-    } completionHandler:^(NCMessage * _Nullable sentMessage, NCError * _Nullable error) {
-        BOOL isSensitiveWordReplaced = (error.code == NCChatUIErrorCodeMessageReplacedSensitiveWord);
-        if (!error || isSensitiveWordReplaced) {
-            [self postSendMessageSentNotificationWithNCMessage:sentMessage];
-            [self sendMessageComplete:sentMessage error:nil];
-            if (completion) {
-                completion(sentMessage, nil);
-            }
-            return;
-        }
-        [self postSendMessageErrorNotificationWithNCMessage:sentMessage error:error];
-        [self sendMessageComplete:sentMessage error:error];
-        if (completion) {
-            completion(sentMessage, error);
-        }
-    }];
+        completionHandler:^(NCMessage *_Nullable sentMessage, NCError *_Nullable error) {
+          BOOL isSensitiveWordReplaced =
+              (error.code == NCChatUIErrorCodeMessageReplacedSensitiveWord);
+          if (!error || isSensitiveWordReplaced) {
+              [self postSendMessageSentNotificationWithNCMessage:sentMessage];
+              [self sendMessageComplete:sentMessage error:nil];
+              if (completion) {
+                  completion(sentMessage, nil);
+              }
+              return;
+          }
+          [self postSendMessageErrorNotificationWithNCMessage:sentMessage error:error];
+          [self sendMessageComplete:sentMessage error:error];
+          if (completion) {
+              completion(sentMessage, error);
+          }
+        }];
 }
 
 - (void)downloadMediaMessage:(long)clientId
                     progress:(void (^)(int progress))progressBlock
-                  completion:(void (^)(NSString * _Nullable mediaPath, NCError * _Nullable error))completion
+                  completion:(void (^)(NSString *_Nullable mediaPath,
+                                       NCError *_Nullable error))completion
                       cancel:(void (^)(void))cancelBlock {
     NSNumber *messageNumber = @(clientId);
     NCChatUIMediaDownloadCallback *callback = [self mediaDownloadCallbackWithProgress:progressBlock
-                                                                            completion:completion
-                                                                                 cancel:cancelBlock];
+                                                                           completion:completion
+                                                                               cancel:cancelBlock];
     [self addMediaDownloadCallback:callback clientId:messageNumber];
 
     if ([self.downloadingMeidaMessageIds containsObject:messageNumber]) {
         return;
     }
-    
+
     [self addMeidaMessageId:messageNumber];
 
-    NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageClientId:clientId];
-    [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-        if (!message || error) {
-            [self removeMeidaMessageId:messageNumber];
-            NSInteger errorCode = error ? error.code : NCChatUIErrorCodeUnknown;
-            NCError *resolvedError = error ?: [NCError errorWithCode:NCChatUIErrorCodeUnknown];
-            NSDictionary *statusDic = @{ @"clientId" : @(clientId), @"type" : @"error", @"errorCode" : @(errorCode) };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            [self notifyMediaDownloadCompletionForClientId:messageNumber mediaPath:nil error:resolvedError];
-            return;
-        }
-        [message downloadMediaWithProgressHandler:^(NSInteger progress) {
-            NSDictionary *statusDic =
-                @{ @"clientId" : @(clientId),
-                   @"type" : @"progress",
-                   @"progress" : @(progress) };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            [self notifyMediaDownloadProgressForClientId:messageNumber progress:(int)progress];
-        } successHandler:^(NSString * _Nullable mediaPath) {
-            [self removeMeidaMessageId:messageNumber];
-            NSDictionary *statusDic = @{ @"clientId" : @(clientId), @"type" : @"success", @"mediaPath" : mediaPath ?: @"" };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            NCError *resolvedError = mediaPath.length > 0 ? nil : [NCError errorWithCode:NCChatUIErrorCodeUnknown];
-            [self notifyMediaDownloadCompletionForClientId:messageNumber mediaPath:mediaPath error:resolvedError];
-        } errorHandler:^(NCError * _Nullable error) {
-            [self removeMeidaMessageId:messageNumber];
-            NSInteger errorCode = error ? error.code : NCChatUIErrorCodeUnknown;
-            NCError *resolvedError = error ?: [NCError errorWithCode:NCChatUIErrorCodeUnknown];
-            NSDictionary *statusDic = @{ @"clientId" : @(clientId), @"type" : @"error", @"errorCode" : @(errorCode) };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            [self notifyMediaDownloadCompletionForClientId:messageNumber mediaPath:nil error:resolvedError];
-        } cancelHandler:^{
-            [self removeMeidaMessageId:messageNumber];
-            NSDictionary *statusDic = @{ @"clientId" : @(clientId), @"type" : @"cancel" };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            [self notifyMediaDownloadCancelForClientId:messageNumber];
-        }];
-    }];
+    NCGetMessageByIdParams *params =
+        [[NCGetMessageByIdParams alloc] initWithMessageClientId:clientId];
+    [NCBaseChannel
+        getMessageByIdWithParams:params
+                      completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                        if (!message || error) {
+                            [self removeMeidaMessageId:messageNumber];
+                            NSInteger errorCode = error ? error.code : NCChatUIErrorCodeUnknown;
+                            NCError *resolvedError =
+                                error ?: [NCError errorWithCode:NCChatUIErrorCodeUnknown];
+                            NSDictionary *statusDic = @{
+                                @"clientId" : @(clientId),
+                                @"type" : @"error",
+                                @"errorCode" : @(errorCode)
+                            };
+                            [[NSNotificationCenter defaultCenter]
+                                postNotificationName:NCUIDispatchDownloadMediaNotification
+                                              object:nil
+                                            userInfo:statusDic];
+                            [self notifyMediaDownloadCompletionForClientId:messageNumber
+                                                                 mediaPath:nil
+                                                                     error:resolvedError];
+                            return;
+                        }
+                        [message
+                            downloadMediaWithProgressHandler:^(NSInteger progress) {
+                              NSDictionary *statusDic = @{
+                                  @"clientId" : @(clientId),
+                                  @"type" : @"progress",
+                                  @"progress" : @(progress)
+                              };
+                              [[NSNotificationCenter defaultCenter]
+                                  postNotificationName:NCUIDispatchDownloadMediaNotification
+                                                object:nil
+                                              userInfo:statusDic];
+                              [self notifyMediaDownloadProgressForClientId:messageNumber
+                                                                  progress:(int)progress];
+                            }
+                            successHandler:^(NSString *_Nullable mediaPath) {
+                              [self removeMeidaMessageId:messageNumber];
+                              NSDictionary *statusDic = @{
+                                  @"clientId" : @(clientId),
+                                  @"type" : @"success",
+                                  @"mediaPath" : mediaPath ?: @""
+                              };
+                              [[NSNotificationCenter defaultCenter]
+                                  postNotificationName:NCUIDispatchDownloadMediaNotification
+                                                object:nil
+                                              userInfo:statusDic];
+                              NCError *resolvedError =
+                                  mediaPath.length > 0
+                                      ? nil
+                                      : [NCError errorWithCode:NCChatUIErrorCodeUnknown];
+                              [self notifyMediaDownloadCompletionForClientId:messageNumber
+                                                                   mediaPath:mediaPath
+                                                                       error:resolvedError];
+                            }
+                            errorHandler:^(NCError *_Nullable error) {
+                              [self removeMeidaMessageId:messageNumber];
+                              NSInteger errorCode = error ? error.code : NCChatUIErrorCodeUnknown;
+                              NCError *resolvedError =
+                                  error ?: [NCError errorWithCode:NCChatUIErrorCodeUnknown];
+                              NSDictionary *statusDic = @{
+                                  @"clientId" : @(clientId),
+                                  @"type" : @"error",
+                                  @"errorCode" : @(errorCode)
+                              };
+                              [[NSNotificationCenter defaultCenter]
+                                  postNotificationName:NCUIDispatchDownloadMediaNotification
+                                                object:nil
+                                              userInfo:statusDic];
+                              [self notifyMediaDownloadCompletionForClientId:messageNumber
+                                                                   mediaPath:nil
+                                                                       error:resolvedError];
+                            }
+                            cancelHandler:^{
+                              [self removeMeidaMessageId:messageNumber];
+                              NSDictionary *statusDic =
+                                  @{@"clientId" : @(clientId),
+                                    @"type" : @"cancel"};
+                              [[NSNotificationCenter defaultCenter]
+                                  postNotificationName:NCUIDispatchDownloadMediaNotification
+                                                object:nil
+                                              userInfo:statusDic];
+                              [self notifyMediaDownloadCancelForClientId:messageNumber];
+                            }];
+                      }];
 }
 
 - (void)downloadMediaFile:(NSString *)fileName
                  mediaUrl:(NSString *)mediaUrl
                  progress:(void (^)(int))progressBlock
-               completion:(void (^)(NSString * _Nullable mediaPath, NCError * _Nullable error))completion
+               completion:(void (^)(NSString *_Nullable mediaPath,
+                                    NCError *_Nullable error))completion
                    cancel:(void (^)(void))cancelBlock {
     [NCBaseChannel downloadMediaUrl:mediaUrl
-                           fileName:fileName
-                    progressHandler:^(NSInteger progress) {
-        NSDictionary *statusDic =
-        @{ @"mediaUrl" : mediaUrl?:@"",
-           @"type" : @"progress",
-           @"progress" : @(progress) };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
-        if (progressBlock) {
-            progressBlock((int)progress);
+        fileName:fileName
+        progressHandler:^(NSInteger progress) {
+          NSDictionary *statusDic =
+              @{@"mediaUrl" : mediaUrl ?: @"",
+                @"type" : @"progress",
+                @"progress" : @(progress)};
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCUIDispatchDownloadMediaNotification
+                            object:nil
+                          userInfo:statusDic];
+          if (progressBlock) {
+              progressBlock((int)progress);
+          }
         }
-    } completionHandler:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-        if (error || mediaPath.length == 0) {
-            NSInteger errorCode = error ? error.code : NCChatUIErrorCodeUnknown;
-            NCError *resolvedError = error ?: [NCError errorWithCode:NCChatUIErrorCodeUnknown];
-            NSDictionary *statusDic = @{ @"mediaUrl" : mediaUrl?:@"", @"type" : @"error", @"errorCode" : @(errorCode) };
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                                object:nil
-                                                              userInfo:statusDic];
-            if (completion) {
-                completion(nil, resolvedError);
-            }
-            return;
+        completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+          if (error || mediaPath.length == 0) {
+              NSInteger errorCode = error ? error.code : NCChatUIErrorCodeUnknown;
+              NCError *resolvedError = error ?: [NCError errorWithCode:NCChatUIErrorCodeUnknown];
+              NSDictionary *statusDic =
+                  @{@"mediaUrl" : mediaUrl ?: @"",
+                    @"type" : @"error",
+                    @"errorCode" : @(errorCode)};
+              [[NSNotificationCenter defaultCenter]
+                  postNotificationName:NCUIDispatchDownloadMediaNotification
+                                object:nil
+                              userInfo:statusDic];
+              if (completion) {
+                  completion(nil, resolvedError);
+              }
+              return;
+          }
+          NSDictionary *statusDic = @{
+              @"mediaUrl" : mediaUrl ?: @"",
+              @"type" : @"success",
+              @"mediaPath" : mediaPath ?: @""
+          };
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCUIDispatchDownloadMediaNotification
+                            object:nil
+                          userInfo:statusDic];
+          if (completion) {
+              completion(mediaPath, nil);
+          }
         }
-        NSDictionary *statusDic = @{ @"mediaUrl" : mediaUrl?:@"", @"type" : @"success", @"mediaPath" : mediaPath?:@"" };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
-        if (completion) {
-            completion(mediaPath, nil);
-        }
-    } cancelHandler:^{
-        NSDictionary *statusDic = @{ @"mediaUrl" : mediaUrl?:@"", @"type" : @"cancel" };
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUIDispatchDownloadMediaNotification
-                                                            object:nil
-                                                          userInfo:statusDic];
-        if (cancelBlock) {
-            cancelBlock();
-        }
-    }];
+        cancelHandler:^{
+          NSDictionary *statusDic = @{@"mediaUrl" : mediaUrl ?: @"", @"type" : @"cancel"};
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCUIDispatchDownloadMediaNotification
+                            object:nil
+                          userInfo:statusDic];
+          if (cancelBlock) {
+              cancelBlock();
+          }
+        }];
 }
 
 - (void)addMeidaMessageId:(NSNumber *)clientId {
     if (self.downloadingMeidaMessageIds.count <= 0) {
-        self.downloadingMeidaMessageIds = [@[clientId] mutableCopy];
+        self.downloadingMeidaMessageIds = [@[ clientId ] mutableCopy];
         return;
     }
-    
+
     NSMutableArray *msgIds = [NSMutableArray arrayWithArray:self.downloadingMeidaMessageIds];
     [msgIds addObject:clientId];
     self.downloadingMeidaMessageIds = [msgIds copy];
@@ -907,20 +999,22 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     if (self.downloadingMeidaMessageIds.count <= 0) {
         return;
     }
-    
+
     NSMutableArray *msgIds = [NSMutableArray arrayWithArray:self.downloadingMeidaMessageIds];
-    [msgIds enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ([obj isEqualToNumber:clientId]) {
-            [msgIds removeObject:obj];
-            *stop = YES;
-        }
+    [msgIds enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
+      if ([obj isEqualToNumber:clientId]) {
+          [msgIds removeObject:obj];
+          *stop = YES;
+      }
     }];
     self.downloadingMeidaMessageIds = [msgIds copy];
 }
 
-- (NCChatUIMediaDownloadCallback *)mediaDownloadCallbackWithProgress:(void (^)(int progress))progressBlock
-                                                           completion:(void (^)(NSString * _Nullable mediaPath, NCError * _Nullable error))completion
-                                                               cancel:(void (^)(void))cancelBlock {
+- (NCChatUIMediaDownloadCallback *)
+    mediaDownloadCallbackWithProgress:(void (^)(int progress))progressBlock
+                           completion:(void (^)(NSString *_Nullable mediaPath,
+                                                NCError *_Nullable error))completion
+                               cancel:(void (^)(void))cancelBlock {
     NCChatUIMediaDownloadCallback *callback = [[NCChatUIMediaDownloadCallback alloc] init];
     callback.progressBlock = progressBlock;
     callback.completion = completion;
@@ -928,14 +1022,16 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     return callback;
 }
 
-- (void)addMediaDownloadCallback:(NCChatUIMediaDownloadCallback *)callback clientId:(NSNumber *)clientId {
+- (void)addMediaDownloadCallback:(NCChatUIMediaDownloadCallback *)callback
+                        clientId:(NSNumber *)clientId {
     if (!callback || !clientId) {
         return;
     }
     if (!self.mediaDownloadCallbacks) {
         self.mediaDownloadCallbacks = [NSMutableDictionary dictionary];
     }
-    NSMutableArray<NCChatUIMediaDownloadCallback *> *callbacks = self.mediaDownloadCallbacks[clientId];
+    NSMutableArray<NCChatUIMediaDownloadCallback *> *callbacks =
+        self.mediaDownloadCallbacks[clientId];
     if (!callbacks) {
         callbacks = [NSMutableArray array];
         self.mediaDownloadCallbacks[clientId] = callbacks;
@@ -943,8 +1039,10 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     [callbacks addObject:callback];
 }
 
-- (NSArray<NCChatUIMediaDownloadCallback *> *)mediaDownloadCallbacksForClientId:(NSNumber *)clientId remove:(BOOL)remove {
-    NSArray<NCChatUIMediaDownloadCallback *> *callbacks = [self.mediaDownloadCallbacks[clientId] copy] ?: @[];
+- (NSArray<NCChatUIMediaDownloadCallback *> *)mediaDownloadCallbacksForClientId:(NSNumber *)clientId
+                                                                         remove:(BOOL)remove {
+    NSArray<NCChatUIMediaDownloadCallback *> *callbacks =
+        [self.mediaDownloadCallbacks[clientId] copy] ?: @[];
     if (remove) {
         [self.mediaDownloadCallbacks removeObjectForKey:clientId];
     }
@@ -962,8 +1060,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 }
 
 - (void)notifyMediaDownloadCompletionForClientId:(NSNumber *)clientId
-                                       mediaPath:(NSString * _Nullable)mediaPath
-                                           error:(NCError * _Nullable)error {
+                                       mediaPath:(NSString *_Nullable)mediaPath
+                                           error:(NCError *_Nullable)error {
     NSArray<NCChatUIMediaDownloadCallback *> *callbacks =
         [self mediaDownloadCallbacksForClientId:clientId remove:YES];
     for (NCChatUIMediaDownloadCallback *callback in callbacks) {
@@ -989,19 +1087,23 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         return NO;
     }
 
-    NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageClientId:clientId];
-    [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-        if (!message || error) {
-            return;
-        }
-        [message cancelDownloadingMediaWithCompletion:nil];
-    }];
+    NCGetMessageByIdParams *params =
+        [[NCGetMessageByIdParams alloc] initWithMessageClientId:clientId];
+    [NCBaseChannel
+        getMessageByIdWithParams:params
+                      completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                        if (!message || error) {
+                            return;
+                        }
+                        [message cancelDownloadingMediaWithCompletion:nil];
+                      }];
     return YES;
 }
 
 - (void)sendMediaMessageWithParams:(NCChatUISendMediaMessageParams *)params
                           progress:(void (^)(int progress, NCMessage *progressMessage))progressBlock
-                        completion:(void (^)(NCMessage * _Nullable message, NCError * _Nullable error))completion
+                        completion:(void (^)(NCMessage *_Nullable message,
+                                             NCError *_Nullable error))completion
                             cancel:(void (^)(NCMessage *cancelMessage))cancelBlock {
     if (!params || params.channelId.length == 0 || params.content == nil) {
         if (completion) {
@@ -1015,7 +1117,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     }
     if (![sendingContent isKindOfClass:[NCMediaMessageContent class]]) {
         if (completion) {
-            completion(nil, [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessageContent]);
+            completion(nil,
+                       [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessageContent]);
         }
         return;
     }
@@ -1026,7 +1129,8 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     sendingContent = params.content;
     if (![sendingContent isKindOfClass:[NCMediaMessageContent class]]) {
         if (completion) {
-            completion(nil, [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessageContent]);
+            completion(nil,
+                       [NCError errorWithCode:NCChatUIErrorCodeInvalidParameterMessageContent]);
         }
         return;
     }
@@ -1039,46 +1143,53 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
         }
         return;
     }
-    NCSendMediaMessageParams *sendParams = [[NCSendMediaMessageParams alloc] initWithContent:(NCMediaMessageContent *)sendingContent];
-    sendParams.needReceipt = params.needReceipt || [self shouldNeedReadReceiptForChannelType:params.channelType];
+    NCSendMediaMessageParams *sendParams =
+        [[NCSendMediaMessageParams alloc] initWithContent:(NCMediaMessageContent *)sendingContent];
+    sendParams.needReceipt =
+        params.needReceipt || [self shouldNeedReadReceiptForChannelType:params.channelType];
     sendParams.directedUserIds = params.directedUserIds;
     sendParams.disableNotification = params.disableNotification;
     sendParams.metadata = params.metadata;
     sendParams.pushConfig = params.pushConfig;
     [channel sendMediaMessageWithParams:sendParams
-                        attachedHandler:^(NCMessage * _Nullable attachedMessage) {
-        if (!attachedMessage) {
-            return;
+        attachedHandler:^(NCMessage *_Nullable attachedMessage) {
+          if (!attachedMessage) {
+              return;
+          }
+          [[NSNotificationCenter defaultCenter] postNotificationName:NCUISendingMessageNotification
+                                                              object:attachedMessage
+                                                            userInfo:nil];
         }
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCUISendingMessageNotification
-                                                            object:attachedMessage
-                                                          userInfo:nil];
-    } progressHandler:^(NSInteger progress, NCMessage * _Nullable progressMessage) {
-        [self postSendMessageProgressNotificationWithNCMessage:progressMessage progress:(int)progress];
-        if (progressBlock) {
-            progressBlock((int)progress, progressMessage);
+        progressHandler:^(NSInteger progress, NCMessage *_Nullable progressMessage) {
+          [self postSendMessageProgressNotificationWithNCMessage:progressMessage
+                                                        progress:(int)progress];
+          if (progressBlock) {
+              progressBlock((int)progress, progressMessage);
+          }
         }
-    } completionHandler:^(NCMessage * _Nullable sentMessage, NCError * _Nullable error) {
-        BOOL isSensitiveWordReplaced = (error.code == NCChatUIErrorCodeMessageReplacedSensitiveWord);
-        if (!error || isSensitiveWordReplaced) {
-            [self postSendMessageSentNotificationWithNCMessage:sentMessage];
-            [self sendMessageComplete:sentMessage error:nil];
-            if (completion) {
-                completion(sentMessage, nil);
-            }
-            return;
+        completionHandler:^(NCMessage *_Nullable sentMessage, NCError *_Nullable error) {
+          BOOL isSensitiveWordReplaced =
+              (error.code == NCChatUIErrorCodeMessageReplacedSensitiveWord);
+          if (!error || isSensitiveWordReplaced) {
+              [self postSendMessageSentNotificationWithNCMessage:sentMessage];
+              [self sendMessageComplete:sentMessage error:nil];
+              if (completion) {
+                  completion(sentMessage, nil);
+              }
+              return;
+          }
+          [self postSendMessageErrorNotificationWithNCMessage:sentMessage error:error];
+          [self sendMessageComplete:sentMessage error:error];
+          if (completion) {
+              completion(sentMessage, error);
+          }
         }
-        [self postSendMessageErrorNotificationWithNCMessage:sentMessage error:error];
-        [self sendMessageComplete:sentMessage error:error];
-        if (completion) {
-            completion(sentMessage, error);
-        }
-    } cancelHandler:^(NCMessage * _Nullable cancelMessage) {
-        [self postSendMessageCancelNotificationWithNCMessage:cancelMessage];
-        if (cancelBlock) {
-            cancelBlock(cancelMessage);
-        }
-    }];
+        cancelHandler:^(NCMessage *_Nullable cancelMessage) {
+          [self postSendMessageCancelNotificationWithNCMessage:cancelMessage];
+          if (cancelBlock) {
+              cancelBlock(cancelMessage);
+          }
+        }];
 }
 
 - (BOOL)cancelSendMediaMessage:(long)clientId {
@@ -1090,31 +1201,34 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
 }
 
 - (BOOL)beforeInterceptSendMessageWithParams:(NCChatUISendMessageParams *)params {
-    if ([self.messageInterceptor respondsToSelector:@selector(interceptWillSendMessageWithParams:)]) {
+    if ([self.messageInterceptor
+            respondsToSelector:@selector(interceptWillSendMessageWithParams:)]) {
         return [self.messageInterceptor interceptWillSendMessageWithParams:params];
     }
     return NO;
 }
 
 - (BOOL)beforeInterceptSendMediaMessageWithParams:(NCChatUISendMediaMessageParams *)params {
-    if ([self.messageInterceptor respondsToSelector:@selector(interceptWillSendMediaMessageWithParams:)]) {
+    if ([self.messageInterceptor
+            respondsToSelector:@selector(interceptWillSendMediaMessageWithParams:)]) {
         return [self.messageInterceptor interceptWillSendMediaMessageWithParams:params];
     }
     return NO;
 }
 
 - (NCBaseChannel *)sendingChannelWithType:(NCChannelType)channelType
-                                 channelId:(NSString *)channelId
-                              subChannelId:(NSString *)subChannelId {
+                                channelId:(NSString *)channelId
+                             subChannelId:(NSString *)subChannelId {
     switch (channelType) {
-        case NCChannelTypeDirect:
-            return [[NCDirectChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCGroupChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeCommunity:
-            return [[NCCommunitySubChannel alloc] initWithChannelId:channelId subChannelId:(subChannelId ?: @"")];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCDirectChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCGroupChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeCommunity:
+        return [[NCCommunitySubChannel alloc] initWithChannelId:channelId
+                                                   subChannelId:(subChannelId ?: @"")];
+    default:
+        return nil;
     }
 }
 
@@ -1132,14 +1246,18 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     return pushConfig;
 }
 
-- (void)postSendMessageProgressNotificationWithNCMessage:(NCMessage *)message progress:(int)progress {
+- (void)postSendMessageProgressNotificationWithNCMessage:(NCMessage *)message
+                                                progress:(int)progress {
     if (!message) {
         return;
     }
     NSDictionary *statusDic = @{
         @"channelType" : @(message.channelIdentifier.channelType),
         @"channelId" : message.channelIdentifier.channelId ?: @"",
-        @"subChannelId" : [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]] ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @"" : @"",
+        @"subChannelId" :
+                [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+            ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @""
+            : @"",
         @"channelId" : message.channelIdentifier.channelId ?: @"",
         @"channelType" : @(message.channelIdentifier.channelType),
         @"clientId" : @(message.clientId),
@@ -1159,7 +1277,10 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     NSDictionary *statusDic = @{
         @"channelType" : @(message.channelIdentifier.channelType),
         @"channelId" : message.channelIdentifier.channelId ?: @"",
-        @"subChannelId" : [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]] ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @"" : @"",
+        @"subChannelId" :
+                [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+            ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @""
+            : @"",
         @"channelId" : message.channelIdentifier.channelId ?: @"",
         @"channelType" : @(message.channelIdentifier.channelType),
         @"clientId" : @(message.clientId),
@@ -1176,11 +1297,15 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     if (!message || !error) {
         return;
     }
-    [[NCResendManager sharedManager] addResendMessageIfNeed:(long)message.clientId error:(NCChatUIErrorCode)error.code];
+    [[NCResendManager sharedManager] addResendMessageIfNeed:(long)message.clientId
+                                                      error:(NCChatUIErrorCode)error.code];
     NSDictionary *statusDic = @{
         @"channelType" : @(message.channelIdentifier.channelType),
         @"channelId" : message.channelIdentifier.channelId ?: @"",
-        @"subChannelId" : [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]] ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @"" : @"",
+        @"subChannelId" :
+                [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+            ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @""
+            : @"",
         @"channelId" : message.channelIdentifier.channelId ?: @"",
         @"channelType" : @(message.channelIdentifier.channelType),
         @"clientId" : @(message.clientId),
@@ -1201,7 +1326,10 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     NSDictionary *statusDic = @{
         @"channelType" : @(message.channelIdentifier.channelType),
         @"channelId" : message.channelIdentifier.channelId ?: @"",
-        @"subChannelId" : [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]] ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @"" : @"",
+        @"subChannelId" :
+                [message.channelIdentifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+            ? ((NCCommunitySubChannelIdentifier *)message.channelIdentifier).subChannelId ?: @""
+            : @"",
         @"channelId" : message.channelIdentifier.channelId ?: @"",
         @"channelType" : @(message.channelIdentifier.channelType),
         @"clientId" : @(message.clientId),
@@ -1214,15 +1342,15 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
                                                       userInfo:statusDic];
 }
 
-
 - (void)sendMessageComplete:(NCMessage *)message error:(NCError *)error {
     if (!message) {
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (message && [self.messageInterceptor respondsToSelector:@selector(interceptDidSendMessage:)]) {
-            [self.messageInterceptor interceptDidSendMessage:message];
-        }
+      if (message &&
+          [self.messageInterceptor respondsToSelector:@selector(interceptDidSendMessage:)]) {
+          [self.messageInterceptor interceptDidSendMessage:message];
+      }
     });
 }
 
@@ -1262,26 +1390,28 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     [self refreshNoDisturbTimeWithCompletion:nil];
 }
 
-- (void)refreshNoDisturbTimeWithCompletion:(void (^)(NCError * _Nullable error))completion {
-    [NCEngine getNoDisturbTimeWithCompletion:^(NCNoDisturbTimeInfo * _Nullable info, NCError * _Nullable error) {
-        if (error) {
-            if (completion) {
-                completion(error);
-            }
-            return;
-        }
-        NSDateFormatter *dateFormatter = [self dateFormatter];
-        NSString *startTime = info.startTime ?: @"";
-        if (startTime.length > 0) {
-            self.notificationQuietBeginTime = [dateFormatter dateFromString:startTime];
-            self.notificationQuietEndTime = [self.notificationQuietBeginTime dateByAddingTimeInterval:info.spanMinutes * 60];
-        } else {
-            self.notificationQuietBeginTime = nil;
-            self.notificationQuietEndTime = nil;
-        }
-        if (completion) {
-            completion(nil);
-        }
+- (void)refreshNoDisturbTimeWithCompletion:(void (^)(NCError *_Nullable error))completion {
+    [NCEngine getNoDisturbTimeWithCompletion:^(NCNoDisturbTimeInfo *_Nullable info,
+                                               NCError *_Nullable error) {
+      if (error) {
+          if (completion) {
+              completion(error);
+          }
+          return;
+      }
+      NSDateFormatter *dateFormatter = [self dateFormatter];
+      NSString *startTime = info.startTime ?: @"";
+      if (startTime.length > 0) {
+          self.notificationQuietBeginTime = [dateFormatter dateFromString:startTime];
+          self.notificationQuietEndTime =
+              [self.notificationQuietBeginTime dateByAddingTimeInterval:info.spanMinutes * 60];
+      } else {
+          self.notificationQuietBeginTime = nil;
+          self.notificationQuietEndTime = nil;
+      }
+      if (completion) {
+          completion(nil);
+      }
     }];
 }
 
@@ -1289,42 +1419,43 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
     static NSDateFormatter *formatter = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        formatter = [[NSDateFormatter alloc] init];
-        [formatter setDateFormat:@"HH:mm:ss"];
+      formatter = [[NSDateFormatter alloc] init];
+      [formatter setDateFormat:@"HH:mm:ss"];
     });
     return formatter;
 }
 
 - (void)delayNotifyUnConnectedStatus {
     NCConnectionStatus status = [self getConnectionStatus];
-    if (NCConnectionStatusNetworkUnavailable == status ||
-        NCConnectionStatusUnknown == status ||
+    if (NCConnectionStatusNetworkUnavailable == status || NCConnectionStatusUnknown == status ||
         NCConnectionStatusUnconnected == status) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:NCChatUIDispatchConnectionStatusChangedNotification
-                                                            object:[NSNumber numberWithInteger:status]];
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:NCChatUIDispatchConnectionStatusChangedNotification
+                          object:[NSNumber numberWithInteger:status]];
     }
 }
 
 - (void)p_notifyExtensionModulesDidConnectIfNeeded:(NSString *)userId {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if ([self getConnectionStatus] == NCConnectionStatusConnected && !self.hasNotifiedExtensionModuleUserId) {
-            self.hasNotifiedExtensionModuleUserId = YES;
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [[NCChatUIExtensionManager sharedManager] didConnect:userId];
-            });
-        }
+      if ([self getConnectionStatus] == NCConnectionStatusConnected &&
+          !self.hasNotifiedExtensionModuleUserId) {
+          self.hasNotifiedExtensionModuleUserId = YES;
+          dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [[NCChatUIExtensionManager sharedManager] didConnect:userId];
+          });
+      }
     });
 }
 
 - (void)p_notifyNetworkStatusChanged:(NCChatUINetworkStatus)status {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSArray<id<NCChatUINetworkStatusDelegate>> *delegates =
-            [[NCEventCenter sharedManager] allNetworkStatusChangeDelegates];
-        for (id<NCChatUINetworkStatusDelegate> delegate in delegates) {
-            if ([delegate respondsToSelector:@selector(onNCChatUINetworkStatusChanged:)]) {
-                [delegate onNCChatUINetworkStatusChanged:status];
-            }
-        }
+      NSArray<id<NCChatUINetworkStatusDelegate>> *delegates =
+          [[NCEventCenter sharedManager] allNetworkStatusChangeDelegates];
+      for (id<NCChatUINetworkStatusDelegate> delegate in delegates) {
+          if ([delegate respondsToSelector:@selector(onNCChatUINetworkStatusChanged:)]) {
+              [delegate onNCChatUINetworkStatusChanged:status];
+          }
+      }
     });
 }
 

@@ -7,10 +7,10 @@
 //
 
 #import "NCChannelListHeaderView.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCChatUIConfig.h"
 #import "NCChannelModel+Display.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
 
 @implementation NCChannelListHeaderView
 #pragma mark - Life Cycle
@@ -38,27 +38,28 @@
     [self.backgroundView addSubview:self.headerImageView];
     self.headerImageStyle = NCChatUIConfigCenter.ui.globalConversationAvatarStyle;
 
-    
     if ([NCChatUIUtility isRTL]) {
-        self.bubbleView =
-        [[NCMessageBubbleTipView alloc] initWithParentView:self
-                                                 alignment:NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_LEFT];
+        self.bubbleView = [[NCMessageBubbleTipView alloc]
+            initWithParentView:self
+                     alignment:NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_LEFT];
     } else {
-        self.bubbleView =
-        [[NCMessageBubbleTipView alloc] initWithParentView:self
-                                                 alignment:NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_RIGHT];
+        self.bubbleView = [[NCMessageBubbleTipView alloc]
+            initWithParentView:self
+                     alignment:NC_MESSAGE_BUBBLE_TIP_VIEW_ALIGNMENT_TOP_RIGHT];
     }
-    self.bubbleView.bubbleTipBackgroundColor =  NCDynamicColor(@"hint_color");
-    
+    self.bubbleView.bubbleTipBackgroundColor = NCDynamicColor(@"hint_color");
+
     [self addSubviewConstraints];
 }
 
 - (void)setHeaderImageStyle:(NCUserAvatarStyle)headerImageStyle {
     _headerImageStyle = headerImageStyle;
     if (_headerImageStyle == NC_USER_AVATAR_RECTANGLE) {
-        self.headerImageView.layer.cornerRadius = [NCChatUIConfigCenter.ui portraitImageViewCornerRadius];
+        self.headerImageView.layer.cornerRadius =
+            [NCChatUIConfigCenter.ui portraitImageViewCornerRadius];
     } else if (_headerImageStyle == NC_USER_AVATAR_CYCLE) {
-        self.headerImageView.layer.cornerRadius = [NCChatUIConfigCenter.ui globalConversationPortraitSize].height / 2;
+        self.headerImageView.layer.cornerRadius =
+            [NCChatUIConfigCenter.ui globalConversationPortraitSize].height / 2;
     }
 }
 
@@ -82,8 +83,8 @@
     NSString *portraitUri = [reuseModel conversationCachedPortraitUri];
 
     if (portraitUri.length > 0) {
-        NSData *cachedImageData =
-            [[NCImageLoader sharedImageLoader] getImageDataForURL:[NSURL URLWithString:portraitUri]];
+        NSData *cachedImageData = [[NCImageLoader sharedImageLoader]
+            getImageDataForURL:[NSURL URLWithString:portraitUri]];
         if (cachedImageData) {
             return [UIImage imageWithData:cachedImageData];
             ;
@@ -98,28 +99,34 @@
                              constraintsWithVisualFormat:@"V:|[_backgroundView]|"
                                                  options:0
                                                  metrics:nil
-                                                   views:NSDictionaryOfVariableBindings(_backgroundView)]];
+                                                   views:NSDictionaryOfVariableBindings(
+                                                             _backgroundView)]];
     [self addConstraints:[NSLayoutConstraint
                              constraintsWithVisualFormat:@"H:|[_backgroundView]|"
                                                  options:0
                                                  metrics:nil
-                                                   views:NSDictionaryOfVariableBindings(_backgroundView)]];
+                                                   views:NSDictionaryOfVariableBindings(
+                                                             _backgroundView)]];
 
-    [self.backgroundView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_headerImageView]|"
-                                                                                options:0
-                                                                                metrics:nil
-                                                                                  views:NSDictionaryOfVariableBindings(
-                                                                                            _headerImageView)]];
-    [self.backgroundView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_headerImageView]|"
-                                                                                options:0
-                                                                                metrics:nil
-                                                                                  views:NSDictionaryOfVariableBindings(
-                                                                                            _headerImageView)]];
+    [self.backgroundView
+        addConstraints:[NSLayoutConstraint
+                           constraintsWithVisualFormat:@"V:|[_headerImageView]|"
+                                               options:0
+                                               metrics:nil
+                                                 views:NSDictionaryOfVariableBindings(
+                                                           _headerImageView)]];
+    [self.backgroundView
+        addConstraints:[NSLayoutConstraint
+                           constraintsWithVisualFormat:@"H:|[_headerImageView]|"
+                                               options:0
+                                               metrics:nil
+                                                 views:NSDictionaryOfVariableBindings(
+                                                           _headerImageView)]];
 }
 
 #pragma mark - Getter & Setter
 - (UIView *)backgroundView {
-    if(!_backgroundView) {
+    if (!_backgroundView) {
         _backgroundView = [[NCImageView alloc] initWithFrame:self.frame];
         _backgroundView.translatesAutoresizingMaskIntoConstraints = NO;
         _backgroundView.backgroundColor = [UIColor clearColor];
@@ -128,7 +135,7 @@
 }
 
 - (NCImageView *)headerImageView {
-    if(!_headerImageView) {
+    if (!_headerImageView) {
         _headerImageView = [[NCImageView alloc] initWithFrame:self.frame];
         _headerImageView.translatesAutoresizingMaskIntoConstraints = NO;
         _headerImageView.layer.cornerRadius = 4;

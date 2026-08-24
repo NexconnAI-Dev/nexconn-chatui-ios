@@ -10,8 +10,8 @@
 #define NCMessageReadDetailDefine_h
 
 typedef NS_ENUM(NSInteger, NCMessageReadDetailTabType) {
-    NCMessageReadDetailTabTypeRead = 0,    // Read
-    NCMessageReadDetailTabTypeUnread = 1   // Unread
+    NCMessageReadDetailTabTypeRead = 0,  // Read
+    NCMessageReadDetailTabTypeUnread = 1 // Unread
 };
 
 #endif /* NCMessageReadDetailDefine_h */

@@ -7,17 +7,16 @@
 //
 
 #import "NCUserSearchViewController.h"
-#import "NCUserSearchView.h"
 #import "NCChatUICommonDefine.h"
-@interface NCUserSearchViewController ()<NCListViewModelResponder>
+#import "NCUserSearchView.h"
+@interface NCUserSearchViewController () <NCListViewModelResponder>
 @property (nonatomic, strong) NCUserSearchView *listView;
 @property (nonatomic, strong) NCUserSearchViewModel *viewModel;
 @end
 
 @implementation NCUserSearchViewController
 
-- (instancetype)initWithViewModel:(NCUserSearchViewModel *)viewModel
-{
+- (instancetype)initWithViewModel:(NCUserSearchViewModel *)viewModel {
     self = [super init];
     if (self) {
         [viewModel bindResponder:self];
@@ -46,13 +45,16 @@
     }
     [self configureSearchBar];
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
 }
-
 
 - (void)configureSearchBar {
     UISearchBar *bar = [self.viewModel configureSearchBarForViewController:self];
@@ -70,7 +72,6 @@
 }
 
 #pragma mark - UITableViewDelegate
-
 
 #pragma mark - Property
 

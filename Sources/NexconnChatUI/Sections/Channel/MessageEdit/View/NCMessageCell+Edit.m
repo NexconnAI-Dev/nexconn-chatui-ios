@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCMessageCell+Edit.h"
-#import "NCChatUIUtility.h"
 #import "NCChatUICommonDefine.h"
 #import "NCChatUIConfig.h"
+#import "NCChatUIUtility.h"
+#import "NCMessageCell+Edit.h"
 #import "NCMessageModel+Edit.h"
 
 @interface NCMessageCell ()
@@ -38,22 +38,22 @@
     [self edit_hideAllEditStatusViews];
     self.editStatus = editStatus;
     self.editStatusContentView.hidden = editStatus == NCMessageUpdateStatusSuccess;
-    
+
     if (self.editStatusContentView.hidden) {
         return;
     }
     switch (editStatus) {
-        case NCMessageUpdateStatusSuccess:
-            [self edit_showEditStatusSuccess];
-            break;
-        case NCMessageUpdateStatusUpdating:
-            [self edit_showEditStatusUpdating];
-            break;
-        case NCMessageUpdateStatusFailed:
-            [self edit_showEditStatusFailed];
-            break;
+    case NCMessageUpdateStatusSuccess:
+        [self edit_showEditStatusSuccess];
+        break;
+    case NCMessageUpdateStatusUpdating:
+        [self edit_showEditStatusUpdating];
+        break;
+    case NCMessageUpdateStatusFailed:
+        [self edit_showEditStatusFailed];
+        break;
     }
-    
+
     // Refresh the edit status layout.
     [self edit_layoutEditStatusViews];
 }
@@ -63,9 +63,8 @@
 }
 
 + (CGFloat)edit_editStatusBarHeightWithModel:(NCMessageModel *)model {
-    if (NCChatUIConfigCenter.message.enableEditMessage
-        && model.updateInfo
-        && model.updateInfo.status != NCMessageUpdateStatusSuccess) {
+    if (NCChatUIConfigCenter.message.enableEditMessage && model.updateInfo &&
+        model.updateInfo.status != NCMessageUpdateStatusSuccess) {
         return 30.0; // Fixed height for the edit status row.
     }
     return 0.0;
@@ -120,23 +119,33 @@
     self.editCircularLoadingView.translatesAutoresizingMaskIntoConstraints = NO;
 
     // Prevent the status label from being compressed unnecessarily.
-    [self.editStatusLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
-    [self.editStatusLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
-    
+    [self.editStatusLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh
+                                            forAxis:UILayoutConstraintAxisHorizontal];
+    [self.editStatusLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh
+                                                          forAxis:UILayoutConstraintAxisHorizontal];
+
     NSMutableArray *constraints = [NSMutableArray array];
     [constraints addObjectsFromArray:@[
-        [self.editStatusLabel.centerYAnchor constraintEqualToAnchor:self.editStatusContentView.centerYAnchor],
-        [self.editStatusLabel.trailingAnchor constraintEqualToAnchor:self.editStatusContentView.trailingAnchor],
-        
-        [self.editCircularLoadingView.centerYAnchor constraintEqualToAnchor:self.editStatusLabel.centerYAnchor],
-        [self.editCircularLoadingView.trailingAnchor constraintEqualToAnchor:self.editStatusLabel.leadingAnchor constant:-5],
+        [self.editStatusLabel.centerYAnchor
+            constraintEqualToAnchor:self.editStatusContentView.centerYAnchor],
+        [self.editStatusLabel.trailingAnchor
+            constraintEqualToAnchor:self.editStatusContentView.trailingAnchor],
+
+        [self.editCircularLoadingView.centerYAnchor
+            constraintEqualToAnchor:self.editStatusLabel.centerYAnchor],
+        [self.editCircularLoadingView.trailingAnchor
+            constraintEqualToAnchor:self.editStatusLabel.leadingAnchor
+                           constant:-5],
         [self.editCircularLoadingView.widthAnchor constraintEqualToConstant:12],
         [self.editCircularLoadingView.heightAnchor constraintEqualToConstant:12],
-        
-        [self.editRetryButton.trailingAnchor constraintEqualToAnchor:self.editStatusContentView.trailingAnchor constant:0],
-        [self.editRetryButton.centerYAnchor constraintEqualToAnchor:self.editStatusContentView.centerYAnchor],
+
+        [self.editRetryButton.trailingAnchor
+            constraintEqualToAnchor:self.editStatusContentView.trailingAnchor
+                           constant:0],
+        [self.editRetryButton.centerYAnchor
+            constraintEqualToAnchor:self.editStatusContentView.centerYAnchor],
     ]];
-    
+
     [self.editStatusContentView addConstraints:constraints];
 
     // Apply the new constraints immediately.
@@ -159,4 +168,4 @@
     }
 }
 
-@end 
+@end

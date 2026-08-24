@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCChatUIConfig.h"
 #import "UIImage+NCDynamicImage.h"
 #include <objc/runtime.h>
-#import "NCChatUIConfig.h"
 
 static const NSString *NCImageLocalPathKey = @"NCImageLocalPathKey";
 
@@ -30,14 +30,17 @@ static const NSString *NCImageLocalPathKey = @"NCImageLocalPathKey";
     if ([[self class] isDarkMode]) {
         if (![self.nc_imageLocalPath containsString:@"_dark"]) {
             NSString *currentPath = self.nc_imageLocalPath;
-            currentPath = [currentPath stringByReplacingOccurrencesOfString:@".png" withString:@"_dark.png"];
+            currentPath = [currentPath stringByReplacingOccurrencesOfString:@".png"
+                                                                 withString:@"_dark.png"];
             if ([[NSFileManager defaultManager] fileExistsAtPath:currentPath] ||
                 [[NSFileManager defaultManager]
-                    fileExistsAtPath:[currentPath stringByReplacingOccurrencesOfString:@".png"
-                                                                            withString:@"@2x.png"]] ||
+                    fileExistsAtPath:[currentPath
+                                         stringByReplacingOccurrencesOfString:@".png"
+                                                                   withString:@"@2x.png"]] ||
                 [[NSFileManager defaultManager]
-                    fileExistsAtPath:[currentPath stringByReplacingOccurrencesOfString:@".png"
-                                                                            withString:@"@3x.png"]]) {
+                    fileExistsAtPath:[currentPath
+                                         stringByReplacingOccurrencesOfString:@".png"
+                                                                   withString:@"@3x.png"]]) {
                 return YES;
             }
             return NO;
@@ -57,14 +60,17 @@ static const NSString *NCImageLocalPathKey = @"NCImageLocalPathKey";
     NSString *currentPath = path;
     if ([self isDarkMode]) {
         if (![path containsString:@"_dark"]) {
-            currentPath = [path stringByReplacingOccurrencesOfString:@".png" withString:@"_dark.png"];
+            currentPath = [path stringByReplacingOccurrencesOfString:@".png"
+                                                          withString:@"_dark.png"];
             if ([[NSFileManager defaultManager] fileExistsAtPath:currentPath] ||
                 [[NSFileManager defaultManager]
-                    fileExistsAtPath:[currentPath stringByReplacingOccurrencesOfString:@".png"
-                                                                            withString:@"@2x.png"]] ||
+                    fileExistsAtPath:[currentPath
+                                         stringByReplacingOccurrencesOfString:@".png"
+                                                                   withString:@"@2x.png"]] ||
                 [[NSFileManager defaultManager]
-                    fileExistsAtPath:[currentPath stringByReplacingOccurrencesOfString:@".png"
-                                                                            withString:@"@3x.png"]]) {
+                    fileExistsAtPath:[currentPath
+                                         stringByReplacingOccurrencesOfString:@".png"
+                                                                   withString:@"@3x.png"]]) {
                 return currentPath;
             } else {
                 currentPath = path;
@@ -82,9 +88,10 @@ static const NSString *NCImageLocalPathKey = @"NCImageLocalPathKey";
 + (BOOL)isDarkMode {
     if (@available(iOS 13.0, *)) {
         NSNumber *currentUserInterfaceStyle =
-        [[NSUserDefaults standardUserDefaults] objectForKey:@"NCCurrentUserInterfaceStyle"];
+            [[NSUserDefaults standardUserDefaults] objectForKey:@"NCCurrentUserInterfaceStyle"];
         if (!currentUserInterfaceStyle) {
-            currentUserInterfaceStyle = @(UITraitCollection.currentTraitCollection.userInterfaceStyle);
+            currentUserInterfaceStyle =
+                @(UITraitCollection.currentTraitCollection.userInterfaceStyle);
         }
         if (currentUserInterfaceStyle.integerValue == UIUserInterfaceStyleDark) {
             return YES;
@@ -94,7 +101,8 @@ static const NSString *NCImageLocalPathKey = @"NCImageLocalPathKey";
 }
 
 - (void)setNc_imageLocalPath:(NSString *)nc_imageLocalPath {
-    objc_setAssociatedObject(self, &NCImageLocalPathKey, nc_imageLocalPath, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject(self, &NCImageLocalPathKey, nc_imageLocalPath,
+                             OBJC_ASSOCIATION_RETAIN);
 }
 
 - (NSString *)nc_imageLocalPath {

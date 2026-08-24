@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "NCButton.h"
-#import "NCTextView.h"
-#import "NCChatSessionInputBarDefine.h"
 #import "NCBaseView.h"
+#import "NCButton.h"
+#import "NCChatSessionInputBarDefine.h"
+#import "NCTextView.h"
+#import <UIKit/UIKit.h>
 @protocol NCInputContainerViewDelegate;
 
 @interface NCInputContainerView : NCBaseView
@@ -37,7 +37,7 @@
 @property (nonatomic, assign) NSInteger maxInputLines;
 
 // Hide the emoji button.
-@property(nonatomic, assign) BOOL hideEmojiButton;
+@property (nonatomic, assign) BOOL hideEmojiButton;
 
 @property (nonatomic, weak) id<NCInputContainerViewDelegate> delegate;
 
@@ -55,11 +55,14 @@
 
 - (void)inputContainerViewAdditionalButtonClicked:(NCInputContainerView *)inputContainerView;
 
-- (void)inputContainerView:(NCInputContainerView *)inputContainerView forControlEvents:(UIControlEvents)controlEvents;
+- (void)inputContainerView:(NCInputContainerView *)inputContainerView
+          forControlEvents:(UIControlEvents)controlEvents;
 
 - (void)inputContainerView:(NCInputContainerView *)inputContainerView didChangeFrame:(CGRect)frame;
 
-- (BOOL)inputTextView:(UITextView *)inputTextView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text;
+- (BOOL)inputTextView:(UITextView *)inputTextView
+    shouldChangeTextInRange:(NSRange)range
+            replacementText:(NSString *)text;
 
 - (void)inputTextViewDidChange:(UITextView *)textView;
 @end

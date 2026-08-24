@@ -7,8 +7,8 @@
 //
 
 #import "NCMessageModel.h"
-#import "NCCombineMessageUtility.h"
 #import "NCChatUIUtility.h"
+#import "NCCombineMessageUtility.h"
 
 @interface NCMessageModel ()
 
@@ -194,7 +194,8 @@
     if (voiceMessage.name.length > 0) {
         return voiceMessage.name;
     }
-    NSString *lastPathComponent = [[NSURL URLWithString:voiceMessage.remoteUrl ?: @""] lastPathComponent];
+    NSString *lastPathComponent =
+        [[NSURL URLWithString:voiceMessage.remoteUrl ?: @""] lastPathComponent];
     if (lastPathComponent.length > 0) {
         return lastPathComponent;
     }
@@ -310,9 +311,9 @@
 
 - (NSString *)formattedTipMessageText {
     return [NCChatUIUtility formatMessage:self.content
-                              channelId:self.channelId
-                      channelType:self.channelType
-                          isAllMessage:YES];
+                                channelId:self.channelId
+                              channelType:self.channelType
+                             isAllMessage:YES];
 }
 
 - (NSMutableSet *)tipMessageRelatedUserIdList {
@@ -334,9 +335,10 @@
     if (object == self) {
         return YES;
     }
-    
+
     NCMessageModel *model = (NCMessageModel *)object;
-    if ([model.channelId isEqualToString:self.channelId] && model.channelType == self.channelType && model.clientId == self.clientId) {
+    if ([model.channelId isEqualToString:self.channelId] && model.channelType == self.channelType &&
+        model.clientId == self.clientId) {
         return YES;
     }
     return NO;

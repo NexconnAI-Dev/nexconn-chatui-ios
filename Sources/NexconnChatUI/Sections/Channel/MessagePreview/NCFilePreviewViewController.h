@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCMessageModel.h"
 #import "NCBaseViewController.h"
+#import "NCMessageModel.h"
 
 @interface NCFilePreviewViewController : NCBaseViewController
 

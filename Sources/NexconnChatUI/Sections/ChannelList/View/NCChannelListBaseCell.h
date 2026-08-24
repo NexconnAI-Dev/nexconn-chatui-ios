@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCBaseTableViewCell.h"
 #import "NCChannelModel.h"
 #import <UIKit/UIKit.h>
-#import "NCBaseTableViewCell.h"
 /// Base class for channel cells.
 @interface NCChannelListBaseCell : NCBaseTableViewCell
 

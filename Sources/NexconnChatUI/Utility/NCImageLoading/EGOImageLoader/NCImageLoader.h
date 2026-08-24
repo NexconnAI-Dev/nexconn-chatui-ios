@@ -60,7 +60,8 @@
 #endif
 
 #if __EGOIL_USE_BLOCKS
-- (void)loadImageForURL:(NSURL *)aURL completion:(void (^)(UIImage *image, NSURL *imageURL, NSError *error))completion;
+- (void)loadImageForURL:(NSURL *)aURL
+             completion:(void (^)(UIImage *image, NSURL *imageURL, NSError *error))completion;
 - (void)loadImageForURL:(NSURL *)aURL
                   style:(NSString *)style
                  styler:(UIImage * (^)(UIImage *image))styler
@@ -80,7 +81,8 @@
 @protocol NCImageLoaderObserver <NSObject>
 @optional
 - (void)imageLoaderDidLoad:
-    (NSNotification *)notification; // Object will be EGOImageLoader, userInfo will contain imageURL and image
+    (NSNotification *)
+        notification; // Object will be EGOImageLoader, userInfo will contain imageURL and image
 - (void)imageLoaderDidFailToLoad:
     (NSNotification *)notification; // Object will be EGOImageLoader, userInfo will contain error
 @end

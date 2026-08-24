@@ -7,8 +7,8 @@
 //
 
 #import "NCBaseViewModel.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCCollectionViewModelProtocol.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupMembersCollectionViewModel:(NCGroupMembersCollectionViewModel *)viewModel
-                         viewController:(UIViewController*)viewController
+                         viewController:(UIViewController *)viewController
                         didSelectMember:(NCGroupMemberInfo *)member;
 
 /// Handles tap on add button
@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupMembersCollectionViewModel:(NCGroupMembersCollectionViewModel *)viewModel
-                           didSelectAdd:(UIViewController*)viewController;
+                           didSelectAdd:(UIViewController *)viewController;
 
 /// Handles tap on remove button
 ///
@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupMembersCollectionViewModel:(NCGroupMembersCollectionViewModel *)viewModel
-                        didSelectRemove:(UIViewController*)viewController;
+                        didSelectRemove:(UIViewController *)viewController;
 
 /// Adds group members
 ///
@@ -59,11 +59,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)groupMembersCollectionViewModel:(NCGroupMembersCollectionViewModel *)viewModel
                          didInviteUsers:(NSArray<NSString *> *)userIds
                             processCode:(NSInteger)processCode
-                         viewController:(UIViewController*)viewController;
+                         viewController:(UIViewController *)viewController;
 @end
 
 /// Group profile members cell view model
-@interface NCGroupMembersCollectionViewModel : NCBaseViewModel<NCCollectionViewModelProtocol>
+@interface NCGroupMembersCollectionViewModel : NCBaseViewModel <NCCollectionViewModelProtocol>
 
 /// Delegate
 @property (nonatomic, weak) id<NCGroupMembersCollectionViewModelDelegate> delegate;
@@ -75,7 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readonly) NSString *groupId;
 
 /// Data source
-@property (nonatomic, strong, readonly) NSArray <NCGroupMemberInfo *> *members;
+@property (nonatomic, strong, readonly) NSArray<NCGroupMemberInfo *> *members;
 
 /// Whether adding members is allowed
 @property (nonatomic, assign, readonly) BOOL allowAdd;
@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param allowRemove Whether removing members is allowed
 /// @param inViewController The current view controller
 + (instancetype)viewModelWithGroupId:(NSString *)groupId
-                             members:(NSArray <NCGroupMemberInfo *> *)members
+                             members:(NSArray<NCGroupMemberInfo *> *)members
                             allowAdd:(BOOL)allowAdd
                          allowRemove:(BOOL)allowRemove
                     inViewController:(UIViewController *)inViewController;

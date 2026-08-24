@@ -11,22 +11,23 @@
 
 #import "NCYYTransaction.h"
 
-
-@interface NCYYTransaction()
+@interface NCYYTransaction ()
 @property (nonatomic, strong) id target;
 @property (nonatomic, assign) SEL selector;
 @end
 
 static NSMutableSet *transactionSet = nil;
 
-static void NCYYRunLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
-    if (transactionSet.count == 0) return;
+static void NCYYRunLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity,
+                                        void *info) {
+    if (transactionSet.count == 0)
+        return;
     NSSet *currentSet = transactionSet;
     transactionSet = [NSMutableSet new];
     [currentSet enumerateObjectsUsingBlock:^(NCYYTransaction *transaction, BOOL *stop) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        [transaction.target performSelector:transaction.selector];
+      [transaction.target performSelector:transaction.selector];
 #pragma clang diagnostic pop
     }];
 }
@@ -34,25 +35,25 @@ static void NCYYRunLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoop
 static void NCYYTransactionSetup() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        transactionSet = [NSMutableSet new];
-        CFRunLoopRef runloop = CFRunLoopGetMain();
-        CFRunLoopObserverRef observer;
-        
-        observer = CFRunLoopObserverCreate(CFAllocatorGetDefault(),
-                                           kCFRunLoopBeforeWaiting | kCFRunLoopExit,
-                                           true,      // repeat
-                                           0xFFFFFF,  // after CATransaction(2000000)
-                                           NCYYRunLoopObserverCallBack, NULL);
-        CFRunLoopAddObserver(runloop, observer, kCFRunLoopCommonModes);
-        CFRelease(observer);
+      transactionSet = [NSMutableSet new];
+      CFRunLoopRef runloop = CFRunLoopGetMain();
+      CFRunLoopObserverRef observer;
+
+      observer =
+          CFRunLoopObserverCreate(CFAllocatorGetDefault(), kCFRunLoopBeforeWaiting | kCFRunLoopExit,
+                                  true,     // repeat
+                                  0xFFFFFF, // after CATransaction(2000000)
+                                  NCYYRunLoopObserverCallBack, NULL);
+      CFRunLoopAddObserver(runloop, observer, kCFRunLoopCommonModes);
+      CFRelease(observer);
     });
 }
 
-
 @implementation NCYYTransaction
 
-+ (NCYYTransaction *)transactionWithTarget:(id)target selector:(SEL)selector{
-    if (!target || !selector) return nil;
++ (NCYYTransaction *)transactionWithTarget:(id)target selector:(SEL)selector {
+    if (!target || !selector)
+        return nil;
     NCYYTransaction *t = [NCYYTransaction new];
     t.target = target;
     t.selector = selector;
@@ -60,7 +61,8 @@ static void NCYYTransactionSetup() {
 }
 
 - (void)commit {
-    if (!_target || !_selector) return;
+    if (!_target || !_selector)
+        return;
     NCYYTransactionSetup();
     [transactionSet addObject:self];
 }
@@ -72,8 +74,10 @@ static void NCYYTransactionSetup() {
 }
 
 - (BOOL)isEqual:(id)object {
-    if (self == object) return YES;
-    if (![object isMemberOfClass:self.class]) return NO;
+    if (self == object)
+        return YES;
+    if (![object isMemberOfClass:self.class])
+        return NO;
     NCYYTransaction *other = object;
     return other.selector == _selector && other.target == _target;
 }

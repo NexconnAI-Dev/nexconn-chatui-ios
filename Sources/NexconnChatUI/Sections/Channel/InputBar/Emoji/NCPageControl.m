@@ -23,12 +23,11 @@
         self.hidesForSinglePage = YES;
         self.enabled = NO;
         self.currentPage = 0;
-        if([NCChatUIUtility isRTL]) {
+        if ([NCChatUIUtility isRTL]) {
             self.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
         } else {
             self.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
         }
-        
     }
     return self;
 }

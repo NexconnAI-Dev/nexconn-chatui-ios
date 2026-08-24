@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
+#import "NCChatUILog.h"
 #import <Foundation/Foundation.h>
 #import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCChatUILog.h"
 
 @class NCChannelIdentifier;
 
@@ -28,13 +28,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameter completion: Success callback.
 /// - Parameter errorBlock: Failure callback.
 + (void)queryNotificationLevelWith:(NCChannelType)type
-                          channelId:(NSString *__nullable)channelId
-                       subChannelId:(NSString *__nullable)subChannelId
+                         channelId:(NSString *__nullable)channelId
+                      subChannelId:(NSString *__nullable)subChannelId
                         completion:(void (^)(NCChannelNoDisturbLevel level))completion;
 
 /// NCChannelIdentifier variant used by the NCMessage path.
 + (void)queryNotificationLevelWithChannelIdentifier:(NCChannelIdentifier *)channelIdentifier
-                                         completion:(void (^)(NCChannelNoDisturbLevel level))completion;
+                                         completion:
+                                             (void (^)(NCChannelNoDisturbLevel level))completion;
 
 /// Destroys the context.
 + (void)destroy;

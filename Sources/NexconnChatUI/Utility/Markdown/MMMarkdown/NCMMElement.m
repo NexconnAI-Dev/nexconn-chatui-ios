@@ -12,10 +12,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,139 +27,122 @@
 
 #import "NCMMElement.h"
 
-
-static NSString * __MMStringFromElementType(MMElementType type)
-{
-    switch (type)
-    {
-        case MMElementTypeNone:
-            return @"none";
-        case MMElementTypeHeader:
-            return @"header";
-        case MMElementTypeParagraph:
-            return @"paragraph";
-        case MMElementTypeBlockquote:
-            return @"blockquote";
-        case MMElementTypeNumberedList:
-            return @"ol";
-        case MMElementTypeBulletedList:
-            return @"ul";
-        case MMElementTypeListItem:
-            return @"li";
-        case MMElementTypeCodeBlock:
-            return @"code";
-        case MMElementTypeHorizontalRule:
-            return @"hr";
-        case MMElementTypeHTML:
-            return @"html";
-        case MMElementTypeLineBreak:
-            return @"br";
-        case MMElementTypeStrikethrough:
-            return @"del";
-        case MMElementTypeStrong:
-            return @"strong";
-        case MMElementTypeEm:
-            return @"em";
-        case MMElementTypeCodeSpan:
-            return @"code";
-        case MMElementTypeImage:
-            return @"image";
-        case MMElementTypeLink:
-            return @"link";
-        case MMElementTypeMailTo:
-            return @"mailto";
-        case MMElementTypeEntity:
-            return @"entity";
-        case MMElementTypeDefinition:
-            return @"definition";
-        default:
-            return @"unknown";
+static NSString *__MMStringFromElementType(MMElementType type) {
+    switch (type) {
+    case MMElementTypeNone:
+        return @"none";
+    case MMElementTypeHeader:
+        return @"header";
+    case MMElementTypeParagraph:
+        return @"paragraph";
+    case MMElementTypeBlockquote:
+        return @"blockquote";
+    case MMElementTypeNumberedList:
+        return @"ol";
+    case MMElementTypeBulletedList:
+        return @"ul";
+    case MMElementTypeListItem:
+        return @"li";
+    case MMElementTypeCodeBlock:
+        return @"code";
+    case MMElementTypeHorizontalRule:
+        return @"hr";
+    case MMElementTypeHTML:
+        return @"html";
+    case MMElementTypeLineBreak:
+        return @"br";
+    case MMElementTypeStrikethrough:
+        return @"del";
+    case MMElementTypeStrong:
+        return @"strong";
+    case MMElementTypeEm:
+        return @"em";
+    case MMElementTypeCodeSpan:
+        return @"code";
+    case MMElementTypeImage:
+        return @"image";
+    case MMElementTypeLink:
+        return @"link";
+    case MMElementTypeMailTo:
+        return @"mailto";
+    case MMElementTypeEntity:
+        return @"entity";
+    case MMElementTypeDefinition:
+        return @"definition";
+    default:
+        return @"unknown";
     }
 }
 
-@implementation NCMMElement
-{
+@implementation NCMMElement {
     NSMutableArray *_innerRanges;
     NSMutableArray *_children;
 }
 
 #pragma mark - NSObject
 
-- (id)init
-{
+- (id)init {
     self = [super init];
-    
-    if (self)
-    {
+
+    if (self) {
         _innerRanges = [NSMutableArray new];
-        _children    = [NSMutableArray new];
+        _children = [NSMutableArray new];
     }
-    
+
     return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     [self.children makeObjectsPerformSelector:@selector(setParent:) withObject:nil];
 }
 
-- (NSString *)description
-{
-    return [NSString stringWithFormat:@"<%@: %p; type=%@; range=%@>",
-            NSStringFromClass(self.class), self, __MMStringFromElementType(self.type), NSStringFromRange(self.range)];
-            
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<%@: %p; type=%@; range=%@>", NSStringFromClass(self.class),
+                                      self, __MMStringFromElementType(self.type),
+                                      NSStringFromRange(self.range)];
 }
-
 
 #pragma mark - Public Methods
 
-- (void)addInnerRange:(NSRange)aRange
-{
+- (void)addInnerRange:(NSRange)aRange {
     [self willChangeValueForKey:@"innerRanges"];
     [_innerRanges addObject:[NSValue valueWithRange:aRange]];
     [self didChangeValueForKey:@"innerRanges"];
 }
 
-- (void)removeLastInnerRange
-{
+- (void)removeLastInnerRange {
     [self willChangeValueForKey:@"innerRanges"];
     [_innerRanges removeLastObject];
     [self didChangeValueForKey:@"innerRanges"];
 }
 
-- (void)addChild:(NCMMElement *)aChild
-{
+- (void)addChild:(NCMMElement *)aChild {
     [self willChangeValueForKey:@"children"];
     [_children addObject:aChild];
     aChild.parent = self;
     [self didChangeValueForKey:@"children"];
 }
 
-- (void)removeChild:(NCMMElement *)aChild
-{
+- (void)removeChild:(NCMMElement *)aChild {
     [self willChangeValueForKey:@"children"];
     [_children removeObjectIdenticalTo:aChild];
     aChild.parent = nil;
     [self didChangeValueForKey:@"children"];
 }
 
-- (NCMMElement *)removeLastChild
-{
+- (NCMMElement *)removeLastChild {
     NCMMElement *child = [self.children lastObject];
     [_children removeLastObject];
     return child;
 }
 
-
 #pragma mark - Public Properties
 
-- (void)setInnerRanges:(NSArray *)innerRanges
-{
+- (void)setInnerRanges:(NSArray *)innerRanges {
     _innerRanges = [innerRanges mutableCopy];
 }
 
-- (void)setChildren:(NSArray *)children
-{
+- (void)setChildren:(NSArray *)children {
     for (NCMMElement *child in _children) {
         child.parent = nil;
     }
@@ -168,6 +151,5 @@ static NSString * __MMStringFromElementType(MMElementType type)
         child.parent = self;
     }
 }
-
 
 @end

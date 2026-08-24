@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCTextPreviewView+Edit.h"
 #import "NCAttributedLabel+Edit.h"
 #import "NCChatUICommonDefine.h"
+#import "NCTextPreviewView+Edit.h"
 
 @interface NCTextPreviewView ()
 
@@ -23,12 +23,17 @@
 
 @implementation NCTextPreviewView (Edit)
 
-+ (void)edit_showText:(NSString *)text clientId:(long)clientId edited:(BOOL)edited delegate:(id<NCTextPreviewViewDelegate>)delegate {
++ (void)edit_showText:(NSString *)text
+             clientId:(long)clientId
+               edited:(BOOL)edited
+             delegate:(id<NCTextPreviewViewDelegate>)delegate {
     NSString *originalText = text;
-    NSString *displayText = [NCMessageEditUtil displayTextForOriginalText:originalText isEdited:edited];
-    NCTextPreviewView *textPreviewView = [[NCTextPreviewView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-                                                                             text:displayText
-                                                                        clientId:clientId];
+    NSString *displayText = [NCMessageEditUtil displayTextForOriginalText:originalText
+                                                                 isEdited:edited];
+    NCTextPreviewView *textPreviewView =
+        [[NCTextPreviewView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+                                            text:displayText
+                                        clientId:clientId];
     textPreviewView.originalText = originalText;
     // Append and style the localized edited marker when needed.
     [textPreviewView.label edit_setTextWithEditedState:originalText isEdited:edited];

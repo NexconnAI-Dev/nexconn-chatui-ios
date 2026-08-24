@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCBaseCollectionView.h"
+#import <UIKit/UIKit.h>
 @protocol NCPluginBoardViewDelegate;
 
 /*!
@@ -45,9 +45,14 @@
  @param tag   Unique identifier of the extension item
 
   You can add custom extension items after NCChannelViewController's viewDidLoad.
- The SDK reserves identifiers in the 1XXX range; avoid using 1XXX for custom items to prevent conflicts.
+ The SDK reserves identifiers in the 1XXX range; avoid using 1XXX for custom items to prevent
+ conflicts.
  */
-- (void)insertItem:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title atIndex:(NSInteger)index tag:(NSInteger)tag;
+- (void)insertItem:(UIImage *)normalImage
+    highlightedImage:(UIImage *)highlightedImage
+               title:(NSString *)title
+             atIndex:(NSInteger)index
+                 tag:(NSInteger)tag;
 
 /*!
  Append an extension item to the end of the plugin board
@@ -58,9 +63,13 @@
  @param tag   Unique identifier of the extension item
 
   You can add custom extension items after NCChannelViewController's viewDidLoad.
- The SDK reserves identifiers in the 1XXX range; avoid using 1XXX for custom items to prevent conflicts.
+ The SDK reserves identifiers in the 1XXX range; avoid using 1XXX for custom items to prevent
+ conflicts.
  */
-- (void)insertItem:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title tag:(NSInteger)tag;
+- (void)insertItem:(UIImage *)normalImage
+    highlightedImage:(UIImage *)highlightedImage
+               title:(NSString *)title
+                 tag:(NSInteger)tag;
 
 /*!
  Update the specified extension item
@@ -70,7 +79,10 @@
  @param highlightedImage Highlighted image of the extension item
  @param title Display title of the extension item
  */
-- (void)updateItemAtIndex:(NSInteger)index normalImage:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title;
+- (void)updateItemAtIndex:(NSInteger)index
+              normalImage:(UIImage *)normalImage
+         highlightedImage:(UIImage *)highlightedImage
+                    title:(NSString *)title;
 
 /*!
  Update the specified extension item
@@ -80,7 +92,10 @@
  @param highlightedImage Highlighted image of the extension item
  @param title Display title of the extension item
  */
-- (void)updateItemWithTag:(NSInteger)tag normalImage:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title;
+- (void)updateItemWithTag:(NSInteger)tag
+              normalImage:(UIImage *)normalImage
+         highlightedImage:(UIImage *)highlightedImage
+                    title:(NSString *)title;
 
 /*!
  Remove the specified extension item from the plugin board

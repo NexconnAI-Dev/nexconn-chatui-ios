@@ -7,12 +7,12 @@
 //
 
 #import "NCPluginBoardView.h"
-#import "NCPageControl.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCPageControl.h"
 #import "NCPluginBoardHorizontalCollectionViewLayout.h"
 #import "NCPluginBoardItem.h"
 #import "UIImage+NCDynamicImage.h"
-#import "NCChatUIConfig.h"
 #define NCPluginBoardCell @"NCPluginBoardCell"
 
 @interface NCPluginBoardView () <UICollectionViewDataSource, UICollectionViewDelegate> {
@@ -31,7 +31,8 @@
     if (self) {
         _currentIndex = 0;
         CGRect contentViewFrame = CGRectMake(0, 0, frame.size.width, frame.size.height);
-        self.contentView = [[NCBaseCollectionView alloc] initWithFrame:contentViewFrame collectionViewLayout:self.layout];
+        self.contentView = [[NCBaseCollectionView alloc] initWithFrame:contentViewFrame
+                                                  collectionViewLayout:self.layout];
         self.contentView.dataSource = self;
         self.contentView.delegate = self;
         self.contentView.pagingEnabled = YES;
@@ -45,11 +46,11 @@
         [self.contentView setShowsHorizontalScrollIndicator:NO];
         [self.contentView setShowsVerticalScrollIndicator:NO];
         [self.contentView setBackgroundColor:NCDynamicColor(@"common_background_color")];
-        [self.contentView registerClass:[NCPluginBoardItem class] forCellWithReuseIdentifier:NCPluginBoardCell];
+        [self.contentView registerClass:[NCPluginBoardItem class]
+             forCellWithReuseIdentifier:NCPluginBoardCell];
         if ([NCChatUIUtility isRTL]) {
             [self.contentView setTransform:CGAffineTransformMakeScale(-1, 1)];
         }
-
     }
     return self;
 }
@@ -63,9 +64,9 @@
     [super setFrame:frame];
     if (_lastWidth != self.bounds.size.width) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.contentView.frame = self.bounds;
-            [_contentView reloadData];
-            [self scrollToCurrentIndexIfNeeded];
+          self.contentView.frame = self.bounds;
+          [_contentView reloadData];
+          [self scrollToCurrentIndexIfNeeded];
         });
     }
     _lastWidth = self.bounds.size.width;
@@ -79,23 +80,42 @@
     if (!needScroll) {
         return;
     }
-    [_contentView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:_currentIndex]
-                         atScrollPosition:[NCChatUIUtility isRTL] ? UICollectionViewScrollPositionRight : UICollectionViewScrollPositionLeft
-                                 animated:[NCChatUIUtility isRTL] ? NO : YES];
+    [_contentView
+        scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:_currentIndex]
+               atScrollPosition:[NCChatUIUtility isRTL] ? UICollectionViewScrollPositionRight
+                                                        : UICollectionViewScrollPositionLeft
+                       animated:[NCChatUIUtility isRTL] ? NO : YES];
     _pageCtrl.currentPage = _currentIndex;
 }
 
 #pragma mark - Public Methods
-- (void)insertItem:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title atIndex:(NSInteger)index tag:(NSInteger)tag{
-    NCPluginBoardItem *__item = [[NCPluginBoardItem alloc] initWithTitle:title normalImage:normalImage highlightedImage:highlightedImage tag:tag];
+- (void)insertItem:(UIImage *)normalImage
+    highlightedImage:(UIImage *)highlightedImage
+               title:(NSString *)title
+             atIndex:(NSInteger)index
+                 tag:(NSInteger)tag {
+    NCPluginBoardItem *__item = [[NCPluginBoardItem alloc] initWithTitle:title
+                                                             normalImage:normalImage
+                                                        highlightedImage:highlightedImage
+                                                                     tag:tag];
     [self insertItem:__item atIndex:index];
 }
 
-- (void)insertItem:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title tag:(NSInteger)tag{
-    [self insertItem:normalImage highlightedImage:highlightedImage title:title atIndex:self.allItems.count tag:tag];
+- (void)insertItem:(UIImage *)normalImage
+    highlightedImage:(UIImage *)highlightedImage
+               title:(NSString *)title
+                 tag:(NSInteger)tag {
+    [self insertItem:normalImage
+        highlightedImage:highlightedImage
+                   title:title
+                 atIndex:self.allItems.count
+                     tag:tag];
 }
 
-- (void)updateItemAtIndex:(NSInteger)index normalImage:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title{
+- (void)updateItemAtIndex:(NSInteger)index
+              normalImage:(UIImage *)normalImage
+         highlightedImage:(UIImage *)highlightedImage
+                    title:(NSString *)title {
     if (index >= 0 && index < self.allItems.count) {
         NCPluginBoardItem *item = self.allItems[index];
         if (normalImage) {
@@ -111,7 +131,10 @@
     }
 }
 
-- (void)updateItemWithTag:(NSInteger)tag normalImage:(UIImage *)normalImage highlightedImage:(UIImage *)highlightedImage title:(NSString *)title{
+- (void)updateItemWithTag:(NSInteger)tag
+              normalImage:(UIImage *)normalImage
+         highlightedImage:(UIImage *)highlightedImage
+                    title:(NSString *)title {
     for (int i = 0; i < self.allItems.count; i++) {
         NCPluginBoardItem *item = _allItems[i];
         if (item.tag == tag) {
@@ -159,7 +182,8 @@
 
 #pragma mark - UICollectionViewDataSource
 // Returns the number of collection-view cells to display.
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionView:(UICollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
     if ((section + 1) * self.layout.itemsPerSection >= self.allItems.count) {
         return self.allItems.count - section * self.layout.itemsPerSection;
     } else {
@@ -168,7 +192,8 @@
 }
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
-    NSInteger sectionNumber = (NSInteger)ceilf((double)self.allItems.count / self.layout.itemsPerSection);
+    NSInteger sectionNumber =
+        (NSInteger)ceilf((double)self.allItems.count / self.layout.itemsPerSection);
     [self setPageTips:sectionNumber];
     return sectionNumber;
 }
@@ -176,24 +201,27 @@
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *CellIdentifier = NCPluginBoardCell;
-    NCPluginBoardItem *cell =
-        [collectionView dequeueReusableCellWithReuseIdentifier:CellIdentifier forIndexPath:indexPath];
+    NCPluginBoardItem *cell = [collectionView dequeueReusableCellWithReuseIdentifier:CellIdentifier
+                                                                        forIndexPath:indexPath];
     for (UIView *subview in cell.contentView.subviews) {
         [subview removeFromSuperview];
     }
-    NCPluginBoardItem *item = _allItems[indexPath.row + indexPath.section * self.layout.itemsPerSection];
+    NCPluginBoardItem *item =
+        _allItems[indexPath.row + indexPath.section * self.layout.itemsPerSection];
     cell.title = item.title;
     cell.normalImage = item.normalImage;
     cell.highlightedImage = item.highlightedImage;
     __weak typeof(self) weakSelf = self;
     [cell setItemclick:^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf.pluginBoardDelegate &&
-            [strongSelf.pluginBoardDelegate respondsToSelector:@selector(pluginBoardView:clickedItemWithTag:)]) {
-            NCPluginBoardItem *item =
-            strongSelf.allItems[indexPath.row + indexPath.section * strongSelf.layout.itemsPerSection];
-            [strongSelf.pluginBoardDelegate pluginBoardView:strongSelf clickedItemWithTag:item.tag];
-        }
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (strongSelf.pluginBoardDelegate &&
+          [strongSelf.pluginBoardDelegate
+              respondsToSelector:@selector(pluginBoardView:clickedItemWithTag:)]) {
+          NCPluginBoardItem *item =
+              strongSelf
+                  .allItems[indexPath.row + indexPath.section * strongSelf.layout.itemsPerSection];
+          [strongSelf.pluginBoardDelegate pluginBoardView:strongSelf clickedItemWithTag:item.tag];
+      }
     }];
     cell.tag = item.tag;
     [cell loadView];
@@ -225,10 +253,12 @@
     if (@available(iOS 13.0, *)) {
         for (NCPluginBoardItem *item in self.allItems) {
             if (item.normalImage.nc_imageLocalPath) {
-                item.normalImage = [UIImage nc_imageWithLocalPath:item.normalImage.nc_imageLocalPath];
+                item.normalImage =
+                    [UIImage nc_imageWithLocalPath:item.normalImage.nc_imageLocalPath];
             }
             if (item.highlightedImage.nc_imageLocalPath) {
-                item.highlightedImage = [UIImage nc_imageWithLocalPath:item.highlightedImage.nc_imageLocalPath];
+                item.highlightedImage =
+                    [UIImage nc_imageWithLocalPath:item.highlightedImage.nc_imageLocalPath];
             }
         }
         [self.contentView reloadData];

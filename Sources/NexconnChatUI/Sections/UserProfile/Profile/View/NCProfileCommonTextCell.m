@@ -11,9 +11,7 @@
 
 #define NCProfileTextCellDetailFont 15
 
-
-NSString  * const NCProfileTextCellIdentifier = @"NCProfileTextCellIdentifier";
-
+NSString *const NCProfileTextCellIdentifier = @"NCProfileTextCellIdentifier";
 
 @implementation NCProfileCommonTextCell
 

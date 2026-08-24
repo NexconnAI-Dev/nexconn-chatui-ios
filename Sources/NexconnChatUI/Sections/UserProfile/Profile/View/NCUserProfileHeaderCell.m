@@ -7,9 +7,9 @@
 //
 
 #import "NCUserProfileHeaderCell.h"
-#import "NCOnlineStatusView.h"
-#import "NCChatUIConfig.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCOnlineStatusView.h"
 
 #define NCUserProfileHeaderCellSize 60
 #define NCUserProfileHeaderCellNameFont 11
@@ -19,11 +19,13 @@
 #define NCUserProfileHeaderCellRemarkLeadingSpace 17
 #define NCUserProfileHeaderCellRemarkTop 21
 
-NSString  * const NCUserProfileHeaderCellIdentifier = @"NCUserProfileHeaderCellIdentifier";
+NSString *const NCUserProfileHeaderCellIdentifier = @"NCUserProfileHeaderCellIdentifier";
 
 @interface NCUserProfileHeaderCell ()
-@property (nonatomic, strong) UIStackView *labelStackView; // Vertical stack: remarkStackView and name.
-@property (nonatomic, strong) UIStackView *remarkStackView; // Horizontal stack: online status and remark.
+@property (nonatomic, strong)
+    UIStackView *labelStackView; // Vertical stack: remarkStackView and name.
+@property (nonatomic, strong)
+    UIStackView *remarkStackView; // Horizontal stack: online status and remark.
 @end
 
 @implementation NCUserProfileHeaderCell
@@ -42,22 +44,21 @@ NSString  * const NCUserProfileHeaderCellIdentifier = @"NCUserProfileHeaderCellI
     // Add online status and remark to the horizontal stack.
     [self.remarkStackView addArrangedSubview:self.onlineStatusView];
     [self.remarkStackView addArrangedSubview:self.remarkLabel];
-    
+
     // Add remarkStackView and nameLabel to the vertical stack.
     [self.labelStackView addArrangedSubview:self.remarkStackView];
     [self.labelStackView addArrangedSubview:self.nameLabel];
-
 }
 
 - (void)setupConstraints {
     [super setupConstraints];
-    
+
     self.portraitImageView.translatesAutoresizingMaskIntoConstraints = NO;
     self.labelStackView.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     [self.remarkLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
-                                           forAxis:UILayoutConstraintAxisHorizontal];
-    
+                                                      forAxis:UILayoutConstraintAxisHorizontal];
+
     [NSLayoutConstraint activateConstraints:@[
         [self.portraitImageView.widthAnchor constraintEqualToConstant:NCUserProfileHeaderCellSize],
         [self.portraitImageView.heightAnchor constraintEqualToConstant:NCUserProfileHeaderCellSize],
@@ -83,12 +84,13 @@ NSString  * const NCUserProfileHeaderCellIdentifier = @"NCUserProfileHeaderCellI
         _portraitImageView = [[NCImageView alloc] init];
         if (NCChatUIConfigCenter.ui.globalConversationAvatarStyle == NC_USER_AVATAR_CYCLE &&
             NCChatUIConfigCenter.ui.globalMessageAvatarStyle == NC_USER_AVATAR_CYCLE) {
-            _portraitImageView.layer.cornerRadius = NCUserProfileHeaderCellSize/2;
-        }else{
+            _portraitImageView.layer.cornerRadius = NCUserProfileHeaderCellSize / 2;
+        } else {
             _portraitImageView.layer.cornerRadius = 5.f;
         }
         _portraitImageView.layer.masksToBounds = YES;
-        [_portraitImageView setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
+        [_portraitImageView
+            setPlaceholderImage:NCDynamicImage(@"channel-list_cell_portrait_msg_img")];
     }
     return _portraitImageView;
 }
@@ -135,11 +137,10 @@ NSString  * const NCUserProfileHeaderCellIdentifier = @"NCUserProfileHeaderCellI
 - (UILabel *)remarkLabel {
     if (!_remarkLabel) {
         _remarkLabel = [[UILabel alloc] init];
-        _remarkLabel.textColor =NCDynamicColor(@"text_primary_color");
+        _remarkLabel.textColor = NCDynamicColor(@"text_primary_color");
         _remarkLabel.font = [UIFont systemFontOfSize:NCUserProfileHeaderCellRemarkFont];
     }
     return _remarkLabel;
 }
-
 
 @end

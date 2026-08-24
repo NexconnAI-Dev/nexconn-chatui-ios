@@ -8,12 +8,12 @@
 
 #import "NCComplexTextMessageCell.h"
 #import "NCAsyncLabel.h"
+#import "NCBaseButton.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
 #import "NCMessageCellTool.h"
-#import "NCChatUIConfig.h"
 #import "NCMessageModel+Txt.h"
-#import "NCBaseButton.h"
 #define TEXT_SPACE_LEFT 12
 #define TEXT_SPACE_RIGHT 12
 #define TEXT_SPACE_TOP 9.5
@@ -27,7 +27,7 @@ NSString *const NCComplexTextMessageCellIdentifier = @"NCComplexTextMessageCellI
 
 @end
 
-@interface NCComplexTextMessageCell()<NCAsyncLabelDelegate>
+@interface NCComplexTextMessageCell () <NCAsyncLabelDelegate>
 @property (nonatomic, strong) NCAsyncLabel *contentAyncLab;
 @property (nonatomic, strong) NCBaseButton *acceptBtn;
 @property (nonatomic, strong) NCBaseButton *rejectBtn;
@@ -81,35 +81,36 @@ NSString *const NCComplexTextMessageCellIdentifier = @"NCComplexTextMessageCellI
     [self.messageContentView addSubview:self.contentAyncLab];
 }
 
-
 - (void)setAutoLayout {
-    CGSize labelSize = [[self class] getTextSize:self.model];//textlabelsize
-    
+    CGSize labelSize = [[self class] getTextSize:self.model]; // textlabelsize
+
     float maxWidth = [NCMessageCellTool getMessageContentViewMaxWidth];
     CGFloat bubbleHeight = [[self class] getMessageContentHeight:self.model];
     CGFloat bubbleWidth = labelSize.width + TEXT_SPACE_RIGHT + TEXT_SPACE_LEFT;
     if (bubbleWidth >= maxWidth) {
         bubbleWidth = maxWidth;
     }
-    
+
     [self setCSEvaUILayout:bubbleWidth bubbleHeight:bubbleHeight];
 
     self.messageContentView.contentSize = CGSizeMake(bubbleWidth, bubbleHeight);
-    self.contentAyncLab.frame =  CGRectMake(TEXT_SPACE_LEFT, (bubbleHeight - labelSize.height) / 2, labelSize.width, labelSize.height);
+    self.contentAyncLab.frame = CGRectMake(TEXT_SPACE_LEFT, (bubbleHeight - labelSize.height) / 2,
+                                           labelSize.width, labelSize.height);
 
-    if([self.model textMessageContent]){
+    if ([self.model textMessageContent]) {
         self.contentAyncLab.text = [self.model textMessageContent];
-    }else{
+    } else {
         NCLogD(@"[NexconnChatUI]: NCMessageModel.content is NOT NCTextMessage object");
     }
 }
 
 - (NSDictionary *)attributeDictionary {
-    return [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:self.model.messageDirection
-                                                             linkColorKey:@"primary_color"];
+    return
+        [NCMessageCellTool getTextLinkOrPhoneNumberAttributeDictionary:self.model.messageDirection
+                                                          linkColorKey:@"primary_color"];
 }
 
-- (void)setCSEvaUILayout:(CGFloat)bubbleWidth bubbleHeight:(CGFloat)bubbleHeight{
+- (void)setCSEvaUILayout:(CGFloat)bubbleWidth bubbleHeight:(CGFloat)bubbleHeight {
     [self.acceptBtn removeFromSuperview];
     [self.rejectBtn removeFromSuperview];
     [self.separateLine removeFromSuperview];
@@ -120,7 +121,7 @@ NSString *const NCComplexTextMessageCellIdentifier = @"NCComplexTextMessageCellI
     self.tipLablel = nil;
 }
 
-+ (CGFloat)getMessageContentHeight:(NCMessageModel *)model{
++ (CGFloat)getMessageContentHeight:(NCMessageModel *)model {
     CGSize textMessageSize = [model txt_textSize];
     // Minimum bubble background height.
     CGFloat messagecontentview_height = textMessageSize.height + TEXT_SPACE_TOP + TEXT_SPACE_BOTTOM;
@@ -131,8 +132,9 @@ NSString *const NCComplexTextMessageCellIdentifier = @"NCComplexTextMessageCellI
     return messagecontentview_height;
 }
 
-+ (CGSize)getTextSize:(NCMessageModel *)model{
-    CGFloat textMaxWidth = [NCMessageCellTool getMessageContentViewMaxWidth] - TEXT_SPACE_LEFT - TEXT_SPACE_RIGHT;
++ (CGSize)getTextSize:(NCMessageModel *)model {
+    CGFloat textMaxWidth =
+        [NCMessageCellTool getMessageContentViewMaxWidth] - TEXT_SPACE_LEFT - TEXT_SPACE_RIGHT;
     CGSize textMessageSize;
     textMessageSize = [model txt_textSize];
     if (textMessageSize.width > textMaxWidth) {
@@ -155,20 +157,20 @@ NSString *const NCComplexTextMessageCellIdentifier = @"NCComplexTextMessageCellI
     NSMutableDictionary *dic = [NSMutableDictionary dictionary];
     UIColor *linkColor = NCDynamicColor(@"link_color");
     if (linkColor) {
-        NSDictionary *numAttr =  @{
-             NSForegroundColorAttributeName :linkColor,
-             NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle),
-             NSUnderlineColorAttributeName : linkColor
-         };
-         dic[@(NSTextCheckingTypePhoneNumber)] = numAttr;
-        NSDictionary *linkAttr =  @{
-            NSForegroundColorAttributeName :linkColor,
+        NSDictionary *numAttr = @{
+            NSForegroundColorAttributeName : linkColor,
             NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle),
-            NSUnderlineColorAttributeName :linkColor
+            NSUnderlineColorAttributeName : linkColor
+        };
+        dic[@(NSTextCheckingTypePhoneNumber)] = numAttr;
+        NSDictionary *linkAttr = @{
+            NSForegroundColorAttributeName : linkColor,
+            NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle),
+            NSUnderlineColorAttributeName : linkColor
         };
         dic[@(NSTextCheckingTypeLink)] = linkAttr;
     }
-   
+
     if (self.model.messageDirection == NCMessageDirectionReceive) {
         UIColor *color = NCDynamicColor(@"text_primary_color");
         dic[NSForegroundColorAttributeName] = color;
@@ -178,7 +180,6 @@ NSString *const NCComplexTextMessageCellIdentifier = @"NCComplexTextMessageCellI
     }
     return dic;
 }
-
 
 - (void)asyncLabel:(NCAsyncLabel *)label didSelectLinkWithURL:(NSURL *)url {
     NCLogD(@"url: %@", url);

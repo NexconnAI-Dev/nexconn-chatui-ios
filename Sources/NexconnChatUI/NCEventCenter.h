@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returns all ChatUI connection status observers.
 ///
 /// - Returns: All registered ChatUI connection status observers.
-- (NSArray <id<NCChatUIConnectionStatusDelegate>> *)allConnectionStatusChangeDelegates;
+- (NSArray<id<NCChatUIConnectionStatusDelegate>> *)allConnectionStatusChangeDelegates;
 
 #pragma mark - Network Status Observers
 

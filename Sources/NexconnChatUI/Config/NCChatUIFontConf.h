@@ -9,16 +9,19 @@
 #import <UIKit/UIKit.h>
 
 /// ChatUI font configuration.
-/// All internal fonts are constructed through this class instead of using UIFont directly, for centralized management.
+/// All internal fonts are constructed through this class instead of using UIFont directly, for
+/// centralized management.
 @interface NCChatUIFontConf : NSObject
 
 /// First level heading, default fontSize is 18.
 @property (nonatomic, assign) CGFloat firstLevel;
-/// Second level heading, default fontSize is 17 (text message, quote message content, channel list title).
+/// Second level heading, default fontSize is 17 (text message, quote message content, channel list
+/// title).
 @property (nonatomic, assign) CGFloat secondLevel;
 /// Third level heading, default fontSize is 15.
 @property (nonatomic, assign) CGFloat thirdLevel;
-/// Fourth level heading, default fontSize is 14 (rich text message title, info tip message, quote message referenced content).
+/// Fourth level heading, default fontSize is 14 (rich text message title, info tip message, quote
+/// message referenced content).
 @property (nonatomic, assign) CGFloat fourthLevel;
 /// Guide text, default fontSize is 13.
 @property (nonatomic, assign) CGFloat guideLevel;

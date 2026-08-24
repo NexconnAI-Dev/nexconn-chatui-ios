@@ -8,9 +8,9 @@
 
 #import "NCSightCapturer.h"
 #import "NCChatUILog.h"
-#import <UIKit/UIKit.h>
-#import <CoreTelephony/CTCallCenter.h>
 #import "NCSightAdaptiveHeader.h"
+#import <CoreTelephony/CTCallCenter.h>
+#import <UIKit/UIKit.h>
 
 @interface NCSightCapturer () <AVCaptureVideoDataOutputSampleBufferDelegate,
                                AVCaptureAudioDataOutputSampleBufferDelegate>
@@ -91,7 +91,8 @@
 
 - (dispatch_queue_t)sessionQueue {
     if (!_sessionQueue) {
-        _sessionQueue = dispatch_queue_create("ai.nexconn.sightcapturer.session", DISPATCH_QUEUE_SERIAL);
+        _sessionQueue =
+            dispatch_queue_create("ai.nexconn.sightcapturer.session", DISPATCH_QUEUE_SERIAL);
     }
     return _sessionQueue;
 }
@@ -106,8 +107,9 @@
 
 - (NSURL *)recordUrl {
     if (!_recordUrl) {
-        _recordUrl =
-            [[NSURL alloc] initFileURLWithPath:[NSString pathWithComponents:@[ NSTemporaryDirectory(), @"Movie.mp4" ]]];
+        _recordUrl = [[NSURL alloc]
+            initFileURLWithPath:[NSString
+                                    pathWithComponents:@[ NSTemporaryDirectory(), @"Movie.mp4" ]]];
     }
     return _recordUrl;
 }
@@ -120,14 +122,16 @@
                       selector:@selector(sessionWasInterrupted:)
                           name:AVCaptureSessionWasInterruptedNotification
                         object:nil];
-    
+
     /*audio*/
     CTCallCenter *center = [[CTCallCenter alloc] init];
-    if (center.currentCalls.count == 0) {   // 打电话时，麦克风被占用，不能录音，否则 15+ 系统报错
+    if (center.currentCalls.count == 0) { // 打电话时，麦克风被占用，不能录音，否则 15+ 系统报错
         NSError *audioError = nil;
         AVCaptureDevice *audioDevice = self.audioDevice;
         AVCaptureDeviceInput *audioDeviceInput =
-            audioDevice ? [[AVCaptureDeviceInput alloc] initWithDevice:audioDevice error:&audioError] : nil;
+            audioDevice
+                ? [[AVCaptureDeviceInput alloc] initWithDevice:audioDevice error:&audioError]
+                : nil;
         if (audioError) {
             NSLog(@"Failed to create audio input: %@", audioError);
         }
@@ -144,7 +148,8 @@
             self.activeAudioDeviceOutput = audioDeviceOutput;
         }
         if (self.activeAudioDeviceOutput) {
-            self.audioConnection = [self.activeAudioDeviceOutput connectionWithMediaType:AVMediaTypeAudio];
+            self.audioConnection =
+                [self.activeAudioDeviceOutput connectionWithMediaType:AVMediaTypeAudio];
         }
     }
 
@@ -152,7 +157,8 @@
     NSError *videoError = nil;
     AVCaptureDevice *videoDevice = self.videoDevice;
     AVCaptureDeviceInput *videoDeviceInput =
-        videoDevice ? [[AVCaptureDeviceInput alloc] initWithDevice:videoDevice error:&videoError] : nil;
+        videoDevice ? [[AVCaptureDeviceInput alloc] initWithDevice:videoDevice error:&videoError]
+                    : nil;
     if (videoError) {
         NSLog(@"Failed to create video input: %@", videoError);
     }
@@ -176,7 +182,7 @@
     self.videoConnection = [self.captureSession.outputs containsObject:videoDeviceOutput]
                                ? [videoDeviceOutput connectionWithMediaType:AVMediaTypeVideo]
                                : nil;
-    
+
     // Enable video stabilization when supported.
     AVCaptureDevice *device = [self activeCamera];
     AVCaptureVideoStabilizationMode stabilizationMode = AVCaptureVideoStabilizationModeCinematic;
@@ -198,17 +204,17 @@
         self.videoDevice.activeVideoMinFrameDuration = frameDuration;
         [self.videoDevice unlockForConfiguration];
     }
-    
+
     NSDictionary *audioSettingDic = @{
-         AVFormatIDKey : @(kAudioFormatMPEG4AAC),
-         AVNumberOfChannelsKey : @1,
-         AVSampleRateKey : @44100,
-         AVEncoderBitRateKey : @96000,
-     };
-    
+        AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+        AVNumberOfChannelsKey : @1,
+        AVSampleRateKey : @44100,
+        AVEncoderBitRateKey : @96000,
+    };
+
     self.audioCompressionSettings = audioSettingDic;
-    self.videoCompressionSettings =
-        [[videoDeviceOutput recommendedVideoSettingsForAssetWriterWithOutputFileType:AVFileTypeMPEG4] copy];
+    self.videoCompressionSettings = [[videoDeviceOutput
+        recommendedVideoSettingsForAssetWriterWithOutputFileType:AVFileTypeMPEG4] copy];
 
     self.readyForRecording = [self hasValidCaptureSettings];
     if (self.readyForRecording) {
@@ -292,7 +298,8 @@
             AVVideoAverageBitRateKey : @(width * height * 6),
             AVVideoProfileLevelKey : AVVideoProfileLevelH264HighAutoLevel,
             AVVideoExpectedSourceFrameRateKey : @(30), // Frame rate
-            AVVideoMaxKeyFrameIntervalKey : @(5) // Maximum keyframe interval; larger values improve compression.
+            AVVideoMaxKeyFrameIntervalKey :
+                @(5) // Maximum keyframe interval; larger values improve compression.
         }
     };
     /*
@@ -304,8 +311,10 @@
      settings[@"AVVideoCompressionPropertiesKey"][@"MaxKeyFrameIntervalDuration"] = @(5);
      settings[@"AVVideoCompressionPropertiesKey"][@"AverageBitRate"] = @(1024 * 1024);
      settings[@"AVVideoCompressionPropertiesKey"][@"ProfileLevel"] = @"H264_High_AutoLevel";
-     [settings[@"AVVideoCompressionPropertiesKey"] removeObjectForKey:@"SoftMaxQuantizationParameter"];
-     [settings[@"AVVideoCompressionPropertiesKey"] removeObjectForKey:@"SoftMinQuantizationParameter"];
+     [settings[@"AVVideoCompressionPropertiesKey"]
+     removeObjectForKey:@"SoftMaxQuantizationParameter"];
+     [settings[@"AVVideoCompressionPropertiesKey"]
+     removeObjectForKey:@"SoftMinQuantizationParameter"];
      [settings[@"AVVideoCompressionPropertiesKey"] removeObjectForKey:@"RelaxAverageBitRateTarget"];
      [settings[@"AVVideoCompressionPropertiesKey"] removeObjectForKey:@"AllowOpenGOP"];
      [settings[@"AVVideoCompressionPropertiesKey"] removeObjectForKey:@"MaxQuantizationParameter"];
@@ -340,10 +349,11 @@
     if (![self.captureSession isRunning] && [self hasValidCaptureSettings]) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(self.sessionQueue, ^{
-            [[AVAudioSession sharedInstance] setActive:NO error:nil];
-            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
-            [[AVAudioSession sharedInstance] setActive:YES error:nil];
-            [weakSelf.captureSession startRunning];
+          [[AVAudioSession sharedInstance] setActive:NO error:nil];
+          [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                                 error:nil];
+          [[AVAudioSession sharedInstance] setActive:YES error:nil];
+          [weakSelf.captureSession startRunning];
         });
     }
 }
@@ -352,17 +362,18 @@
     if ([self.captureSession isRunning]) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(self.sessionQueue, ^{
-            [weakSelf.captureSession stopRunning];
-            if (NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
-                [[AVAudioSession sharedInstance] setActive:NO error:nil];
-                [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
-                [[AVAudioSession sharedInstance] setActive:YES error:nil];
-            } else {
-                [[AVAudioSession sharedInstance] setActive:NO
-                                               withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                                     error:nil];
-            }
-            [weakSelf teardownCaptureSession];
+          [weakSelf.captureSession stopRunning];
+          if (NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
+              [[AVAudioSession sharedInstance] setActive:NO error:nil];
+              [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
+              [[AVAudioSession sharedInstance] setActive:YES error:nil];
+          } else {
+              [[AVAudioSession sharedInstance]
+                    setActive:NO
+                  withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                        error:nil];
+          }
+          [weakSelf teardownCaptureSession];
         });
     }
 }
@@ -371,11 +382,13 @@
     if (self.addAdjustingFocusKVOFlag && [self cameraSupportsTapToFocus]) {
         [[self activeCamera] removeObserver:self forKeyPath:@"adjustingFocus"];
         self.addAdjustingFocusKVOFlag = NO;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            if ([self.delegate respondsToSelector:@selector(focusDidfinish:)]) {
-                [self.delegate focusDidfinish:[self activeCamera].focusPointOfInterest];
-            }
-        });
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+                         if ([self.delegate respondsToSelector:@selector(focusDidfinish:)]) {
+                             [self.delegate
+                                 focusDidfinish:[self activeCamera].focusPointOfInterest];
+                         }
+                       });
     }
 }
 
@@ -390,19 +403,20 @@
     NSError *error;
     AVCaptureDevice *videoDevice = [self activeCamera];
 
-    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice
+                                                                             error:&error];
 
     if (videoInput) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [self.captureSession beginConfiguration];
-            [self.captureSession removeInput:self.activeVideoInput];
-            if ([self.captureSession canAddInput:videoInput]) {
-                [self.captureSession addInput:videoInput];
-                self.activeVideoInput = videoInput;
-            } else if ([self.captureSession canAddInput:self.activeVideoInput]) {
-                [self.captureSession addInput:self.activeVideoInput];
-            }
-            [self.captureSession commitConfiguration];
+          [self.captureSession beginConfiguration];
+          [self.captureSession removeInput:self.activeVideoInput];
+          if ([self.captureSession canAddInput:videoInput]) {
+              [self.captureSession addInput:videoInput];
+              self.activeVideoInput = videoInput;
+          } else if ([self.captureSession canAddInput:self.activeVideoInput]) {
+              [self.captureSession addInput:self.activeVideoInput];
+          }
+          [self.captureSession commitConfiguration];
         });
     } else {
         ////error
@@ -413,35 +427,37 @@
 
 - (void)resetAudioSession {
     CTCallCenter *center = [[CTCallCenter alloc] init];
-    if (center.currentCalls.count != 0) return; // Do not reconfigure the audio session while a call owns the microphone.
+    if (center.currentCalls.count != 0)
+        return; // Do not reconfigure the audio session while a call owns the microphone.
     AVCaptureDevice *newAudioDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        /*audio*/
-        [self.captureSession beginConfiguration];
-        [self.captureSession removeInput:self.activeAudioInput];
-        AVCaptureDeviceInput *audioDeviceInput = [[AVCaptureDeviceInput alloc] initWithDevice:newAudioDevice error:nil];
-        if ([self.captureSession canAddInput:audioDeviceInput]) {
-            [self.captureSession addInput:audioDeviceInput];
-            self.activeAudioInput = audioDeviceInput;
-            _audioDevice = newAudioDevice;
-        }else if ([self.captureSession canAddInput:self.activeAudioInput]) {
-            [self.captureSession addInput:self.activeAudioInput];
-        }
-        
-        AVCaptureAudioDataOutput *audioDeviceOutput = [[AVCaptureAudioDataOutput alloc] init];
-        [audioDeviceOutput setSampleBufferDelegate:self queue:self.sessionQueue];
-        [self.captureSession removeOutput:self.activeAudioDeviceOutput];
-        if ([self.captureSession canAddOutput:audioDeviceOutput]) {
-            [self.captureSession addOutput:audioDeviceOutput];
-            self.activeAudioDeviceOutput = audioDeviceOutput;
-        }else if ([self.captureSession canAddOutput:self.activeAudioDeviceOutput]) {
-            [self.captureSession addOutput:self.activeAudioDeviceOutput];
-        }
-        self.audioConnection = [self.activeAudioDeviceOutput connectionWithMediaType:AVMediaTypeAudio];
+      /*audio*/
+      [self.captureSession beginConfiguration];
+      [self.captureSession removeInput:self.activeAudioInput];
+      AVCaptureDeviceInput *audioDeviceInput =
+          [[AVCaptureDeviceInput alloc] initWithDevice:newAudioDevice error:nil];
+      if ([self.captureSession canAddInput:audioDeviceInput]) {
+          [self.captureSession addInput:audioDeviceInput];
+          self.activeAudioInput = audioDeviceInput;
+          _audioDevice = newAudioDevice;
+      } else if ([self.captureSession canAddInput:self.activeAudioInput]) {
+          [self.captureSession addInput:self.activeAudioInput];
+      }
 
-        [self.captureSession commitConfiguration];
+      AVCaptureAudioDataOutput *audioDeviceOutput = [[AVCaptureAudioDataOutput alloc] init];
+      [audioDeviceOutput setSampleBufferDelegate:self queue:self.sessionQueue];
+      [self.captureSession removeOutput:self.activeAudioDeviceOutput];
+      if ([self.captureSession canAddOutput:audioDeviceOutput]) {
+          [self.captureSession addOutput:audioDeviceOutput];
+          self.activeAudioDeviceOutput = audioDeviceOutput;
+      } else if ([self.captureSession canAddOutput:self.activeAudioDeviceOutput]) {
+          [self.captureSession addOutput:self.activeAudioDeviceOutput];
+      }
+      self.audioConnection =
+          [self.activeAudioDeviceOutput connectionWithMediaType:AVMediaTypeAudio];
+
+      [self.captureSession commitConfiguration];
     });
-
 }
 
 - (BOOL)switchCamera {
@@ -455,7 +471,8 @@
     NSError *error;
     AVCaptureDevice *videoDevice = [self inactiveCamera];
 
-    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice
+                                                                             error:&error];
 
     if (videoInput) {
         [self.captureSession beginConfiguration];
@@ -484,18 +501,20 @@
         return;
     }
     AVCaptureDevice *device = [self activeCamera];
-    if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+    if (device.isFocusPointOfInterestSupported &&
+        [device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
 
         [device addObserver:self
                  forKeyPath:@"adjustingFocus"
                     options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
                     context:nil];
         self.addAdjustingFocusKVOFlag = YES;
-        self.adjustingFocusTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:0.1
-                                                                           target:self
-                                                                         selector:@selector(adjustingFocusTimeout)
-                                                                         userInfo:nil
-                                                                          repeats:NO];
+        self.adjustingFocusTimeoutTimer =
+            [NSTimer scheduledTimerWithTimeInterval:0.1
+                                             target:self
+                                           selector:@selector(adjustingFocusTimeout)
+                                           userInfo:nil
+                                            repeats:NO];
         NSError *error;
         if ([device lockForConfiguration:&error]) {
             device.focusPointOfInterest = point;
@@ -507,7 +526,8 @@
     }
 }
 
-- (void)captureStillImage:(AVCaptureVideoOrientation)orientation completion:(void (^)(UIImage *image))completion {
+- (void)captureStillImage:(AVCaptureVideoOrientation)orientation
+               completion:(void (^)(UIImage *image))completion {
 
     AVCaptureConnection *connection = [self.imageOutput connectionWithMediaType:AVMediaTypeVideo];
 
@@ -518,39 +538,41 @@
 
     __weak typeof(self) weakSelf = self;
     id handler = ^(CMSampleBufferRef sampleBuffer, NSError *error) {
-        if (sampleBuffer != NULL) {
+      if (sampleBuffer != NULL) {
 
-            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:sampleBuffer];
-            /// Image represented in camera coordinates.
-            UIImage *image = [[UIImage alloc] initWithData:imageData];
-            /// Convert the image to screen coordinates.
-            image = [weakSelf fixOrientationOfImage:image];
-            tryCount = 0;
-            if (completion) {
-                completion(image);
-            }
+          NSData *imageData =
+              [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:sampleBuffer];
+          /// Image represented in camera coordinates.
+          UIImage *image = [[UIImage alloc] initWithData:imageData];
+          /// Convert the image to screen coordinates.
+          image = [weakSelf fixOrientationOfImage:image];
+          tryCount = 0;
+          if (completion) {
+              completion(image);
+          }
 
-        } else {
-            tryCount++;
-            if (tryCount > 3) {
-                tryCount = 0;
-                completion(nil);
-                return;
-            }
-            NCLogE(@"NULL sampleBuffer: %@", [error localizedDescription]);
-            [weakSelf captureStillImage:orientation completion:completion];
-        }
+      } else {
+          tryCount++;
+          if (tryCount > 3) {
+              tryCount = 0;
+              completion(nil);
+              return;
+          }
+          NCLogE(@"NULL sampleBuffer: %@", [error localizedDescription]);
+          [weakSelf captureStillImage:orientation completion:completion];
+      }
     };
     // Capture still image
     if (connection && connection.enabled && connection.active) {
-        [self.imageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:handler];
+        [self.imageOutput captureStillImageAsynchronouslyFromConnection:connection
+                                                      completionHandler:handler];
     }
 }
 
 #pragma mark - AVCaptureAudioDataOutputSampleBufferDelegate
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
-didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-       fromConnection:(AVCaptureConnection *)connection {
+    didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+           fromConnection:(AVCaptureConnection *)connection {
     [self.delegate didOutputSampleBuffer:sampleBuffer];
 }
 
@@ -582,11 +604,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                 [self.adjustingFocusTimeoutTimer invalidate];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
-                if ([self.delegate respondsToSelector:@selector(focusDidfinish:)]) {
-                    [self.delegate focusDidfinish:device.focusPointOfInterest];
-                }
+              if ([self.delegate respondsToSelector:@selector(focusDidfinish:)]) {
+                  [self.delegate focusDidfinish:device.focusPointOfInterest];
+              }
             });
-            
         }
     }
 }

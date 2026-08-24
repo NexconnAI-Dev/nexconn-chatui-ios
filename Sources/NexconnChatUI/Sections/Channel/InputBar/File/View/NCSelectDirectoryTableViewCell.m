@@ -16,7 +16,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         [self setupSelectDirectoryCellView];
-        self.contentView.backgroundColor =NCDynamicColor(@"common_background_color");
+        self.contentView.backgroundColor = NCDynamicColor(@"common_background_color");
     }
     return self;
 }
@@ -54,21 +54,23 @@
 
     NSDictionary *views = NSDictionaryOfVariableBindings(_directoryImageView, _directoryNameLabel);
 
-    [self
-        addConstraints:[NSLayoutConstraint
-                           constraintsWithVisualFormat:@"H:|-49-[_directoryImageView(36)]-9-[_directoryNameLabel]-10-|"
-                                               options:kNilOptions
-                                               metrics:nil
-                                                 views:views]];
+    [self addConstraints:[NSLayoutConstraint
+                             constraintsWithVisualFormat:
+                                 @"H:|-49-[_directoryImageView(36)]-9-[_directoryNameLabel]-10-|"
+                                                 options:kNilOptions
+                                                 metrics:nil
+                                                   views:views]];
 
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_directoryImageView(36)]"
-                                                                 options:kNilOptions
-                                                                 metrics:nil
-                                                                   views:views]];
+    [self addConstraints:[NSLayoutConstraint
+                             constraintsWithVisualFormat:@"V:[_directoryImageView(36)]"
+                                                 options:kNilOptions
+                                                 metrics:nil
+                                                   views:views]];
 
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_directoryNameLabel(21)]"
-                                                                 options:kNilOptions
-                                                                 metrics:nil
-                                                                   views:views]];
+    [self addConstraints:[NSLayoutConstraint
+                             constraintsWithVisualFormat:@"V:[_directoryNameLabel(21)]"
+                                                 options:kNilOptions
+                                                 metrics:nil
+                                                   views:views]];
 }
 @end

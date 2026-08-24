@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCChatUIUserInfo.h"
+#import <Foundation/Foundation.h>
 
 @protocol NCUserInfoUpdateDelegate <NSObject>
 

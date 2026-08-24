@@ -11,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NCChannelDataSource (RRS)
-- (void)rrs_fetchReadReceiptInfo:(NSArray <NCMessageModel *>*)models;
+- (void)rrs_fetchReadReceiptInfo:(NSArray<NCMessageModel *> *)models;
 - (void)rrs_respondReadReceipt:(NSDictionary *)dic;
 @end
 

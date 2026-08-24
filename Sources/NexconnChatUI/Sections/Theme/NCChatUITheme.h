@@ -45,26 +45,28 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param path Theme folder path. The folder should contain:
 ///             - theme.plist: theme configuration file
 ///             - resources/: resource folder (containing images and other assets)
-/// @return A theme instance. Returns an incomplete instance if the path is invalid or the configuration format is wrong.
+/// @return A theme instance. Returns an incomplete instance if the path is invalid or the
+/// configuration format is wrong.
 - (instancetype)initWithThemePath:(NSString *)path;
 
 #pragma mark - Public Methods
 
 /// Get a dynamic color.
-/// Retrieves the color from the theme configuration first; falls back to the default color if not configured.
+/// Retrieves the color from the theme configuration first; falls back to the default color if not
+/// configured.
 /// @param colorKey Color identifier used to look up the color value in the theme configuration.
 /// @param hex Default color value (hex format, e.g. #RRGGBB or 0xRRGGBB).
 /// @return The color object, or nil if parameters are invalid.
-- (UIColor * _Nullable)dynamicColor:(NSString *)colorKey
-                       defaultColor:(NSString *)hex;
+- (UIColor *_Nullable)dynamicColor:(NSString *)colorKey defaultColor:(NSString *)hex;
 
 /// Get a dynamic image.
-/// Retrieves the image from the theme configuration first; falls back to the default image if not configured.
+/// Retrieves the image from the theme configuration first; falls back to the default image if not
+/// configured.
 /// @param imageKey Image identifier used to look up the image filename in the theme configuration.
 /// @param defaultImage Default image to use when the theme does not configure one or loading fails.
 /// @return The image object; returns the default image if the theme does not configure one.
-- (UIImage * _Nullable)dynamicImage:(NSString *)imageKey
-                       defaultImage:(UIImage * _Nullable)defaultImage;
+- (UIImage *_Nullable)dynamicImage:(NSString *)imageKey
+                      defaultImage:(UIImage *_Nullable)defaultImage;
 
 @end
 

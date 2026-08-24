@@ -7,11 +7,11 @@
 //
 
 #import "NCVoicePlayer.h"
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import <AVFoundation/AVFoundation.h>
-#import "NCChatUIConfig.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCHDVoiceMsgDownloadManager.h"
+#import <AVFoundation/AVFoundation.h>
+#import <NexconnChatSDK/NexconnChatSDK.h>
 
 NSString *const kNCContinuousPlayNotification = @"NCContinuousPlayNotification";
 NSString *const kNotificationStopVoicePlayer = @"kNotificationStopVoicePlayer";
@@ -56,10 +56,11 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
 - (void)setDefaultAudioSession:(NSString *)category {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NCLogD(@"[NexconnChatUI]: [audioSession category ] %@", [audioSession category]);
-    //    // Use speaker playback by default, but do not replace AVAudioSessionCategoryRecord while recording.
-    //    if(![[audioSession category ] isEqualToString:AVAudioSessionCategoryRecord])
+    //    // Use speaker playback by default, but do not replace AVAudioSessionCategoryRecord while
+    //    recording. if(![[audioSession category ] isEqualToString:AVAudioSessionCategoryRecord])
     [audioSession setCategory:category
-                        error:nil]; // 2016-12-05, edited by dulizhao: use this category so audio plays in silent mode.
+                        error:nil]; // 2016-12-05, edited by dulizhao: use this category so audio
+                                    // plays in silent mode.
     [audioSession setActive:YES error:nil];
 }
 
@@ -69,16 +70,18 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
         bSensorStateStart = NO;
 
         dispatch_async(dispatch_get_main_queue(), ^{
-            if ([[UIDevice currentDevice] proximityState] == YES) {
-                self.playerCategory = AVAudioSessionCategoryPlayAndRecord;
-                NCLogD(@"[NexconnChatUI]: Device is close to user");
-                [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
-            } else {
-                NCLogD(@"[NexconnChatUI]: Device is not close to user");
-                self.playerCategory = AVAudioSessionCategoryPlayback;
-                [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-            }
-            bSensorStateStart = YES;
+          if ([[UIDevice currentDevice] proximityState] == YES) {
+              self.playerCategory = AVAudioSessionCategoryPlayAndRecord;
+              NCLogD(@"[NexconnChatUI]: Device is close to user");
+              [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                                     error:nil];
+          } else {
+              NCLogD(@"[NexconnChatUI]: Device is not close to user");
+              self.playerCategory = AVAudioSessionCategoryPlayback;
+              [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+                                                     error:nil];
+          }
+          bSensorStateStart = YES;
         });
     }
 }
@@ -94,11 +97,17 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
 
 - (void)playNormalVoiceMessage:(NCMessageModel *)model {
     NCHDVoiceMessage *voiceContent = (NCHDVoiceMessage *)model.content;
-    if (voiceContent.localPath.length > 0 && [[NSFileManager defaultManager] fileExistsAtPath:voiceContent.localPath]) {
+    if (voiceContent.localPath.length > 0 &&
+        [[NSFileManager defaultManager] fileExistsAtPath:voiceContent.localPath]) {
         NSError *error;
-        NSData *wavAudioData =
-            [[NSData alloc] initWithContentsOfFile:voiceContent.localPath options:NSDataReadingMappedAlways error:&error];
-        [self playVoice:model.channelType channelId:model.channelId messageClientId:model.clientId voiceData:wavAudioData observer:nil];
+        NSData *wavAudioData = [[NSData alloc] initWithContentsOfFile:voiceContent.localPath
+                                                              options:NSDataReadingMappedAlways
+                                                                error:&error];
+        [self playVoice:model.channelType
+                  channelId:model.channelId
+            messageClientId:model.clientId
+                  voiceData:wavAudioData
+                   observer:nil];
     } else {
         NCLogD(@"[NexconnChatUI]: NCHDVoiceMessage.localPath is NULL");
     }
@@ -109,9 +118,14 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
     if (voiceContent.localPath.length > 0 &&
         [[NSFileManager defaultManager] fileExistsAtPath:voiceContent.localPath]) {
         NSError *error;
-        NSData *wavAudioData =
-            [[NSData alloc] initWithContentsOfFile:voiceContent.localPath options:NSDataReadingMappedAlways error:&error];
-        [self playVoice:model.channelType channelId:model.channelId messageClientId:model.clientId voiceData:wavAudioData observer:nil];
+        NSData *wavAudioData = [[NSData alloc] initWithContentsOfFile:voiceContent.localPath
+                                                              options:NSDataReadingMappedAlways
+                                                                error:&error];
+        [self playVoice:model.channelType
+                  channelId:model.channelId
+            messageClientId:model.clientId
+                  voiceData:wavAudioData
+                   observer:nil];
     } else if ([self shouldFallbackToRemoteHQVoiceDownloadForModel:model]) {
         self.messageClientId = model.clientId;
         self.channelType = model.channelType;
@@ -120,31 +134,36 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
         [NCBaseChannel downloadMediaUrl:[model hqVoiceMessageRemoteURL]
                                fileName:[model hqVoiceMessageDownloadFileName]
                         progressHandler:nil
-                      completionHandler:^(NSString * _Nullable mediaPath, NCError * _Nullable error) {
-                          if (error || mediaPath.length == 0) {
+                      completionHandler:^(NSString *_Nullable mediaPath, NCError *_Nullable error) {
+                        if (error || mediaPath.length == 0) {
+                            return;
+                        }
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                          __strong typeof(weakSelf) strongSelf = weakSelf;
+                          if (!strongSelf) {
                               return;
                           }
-                          dispatch_async(dispatch_get_main_queue(), ^{
-                              __strong typeof(weakSelf) strongSelf = weakSelf;
-                              if (!strongSelf) {
-                                  return;
-                              }
-                              [model setHQVoiceMessageLocalPath:mediaPath];
-                              [strongSelf playHQVoiceMessage:model];
-                          });
+                          [model setHQVoiceMessageLocalPath:mediaPath];
+                          [strongSelf playHQVoiceMessage:model];
+                        });
                       }
                           cancelHandler:nil];
     } else {
         self.messageClientId = model.clientId;
         self.channelType = model.channelType;
         self.channelId = model.channelId;
-        NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageClientId:model.clientId];
-        [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-            (void)error;
-            if (message) {
-                [[NCHDVoiceMsgDownloadManager defaultManager] pushVoiceMsgs:@[message] priority:YES];
-            }
-        }];
+        NCGetMessageByIdParams *params =
+            [[NCGetMessageByIdParams alloc] initWithMessageClientId:model.clientId];
+        [NCBaseChannel
+            getMessageByIdWithParams:params
+                          completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                            (void)error;
+                            if (message) {
+                                [[NCHDVoiceMsgDownloadManager defaultManager]
+                                    pushVoiceMsgs:@[ message ]
+                                         priority:YES];
+                            }
+                          }];
     }
 }
 
@@ -157,10 +176,10 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
 }
 
 - (BOOL)playVoice:(NCChannelType)channelType
-         channelId:(NSString *)channelId
-  messageClientId:(long)messageClientId
-        voiceData:(NSData *)data
-         observer:(id<NCVoicePlayerObserver>)observer {
+          channelId:(NSString *)channelId
+    messageClientId:(long)messageClientId
+          voiceData:(NSData *)data
+           observer:(id<NCVoicePlayerObserver>)observer {
     if (self.isPlaying) {
         [self resetPlayer];
     }
@@ -190,9 +209,10 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
     self.voicePlayerObserver = nil;
     self.audioPlayer = nil;
     if (!NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
-        [[AVAudioSession sharedInstance] setActive:NO
-                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                             error:nil];
+        [[AVAudioSession sharedInstance]
+              setActive:NO
+            withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                  error:nil];
     } else {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
@@ -206,18 +226,19 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
     [[NSNotificationCenter defaultCenter] postNotificationName:kNCContinuousPlayNotification
                                                         object:@(self.messageClientId)
                                                       userInfo:@{
-        @"channelType" : @(self.channelType),
-        @"channelId" : self.channelId
-    }];
+                                                          @"channelType" : @(self.channelType),
+                                                          @"channelId" : self.channelId
+                                                      }];
 }
 
 - (void)sendVoiceWillPlayNotification:(NCMessageModel *)model {
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationVoiceWillPlayNotification
-                                                        object:@(model.clientId)
-                                                      userInfo:@{
-                                                          @"channelType" : @(model.channelType),
-                                                          @"channelId" : model.channelId
-                                                      }];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:kNotificationVoiceWillPlayNotification
+                      object:@(model.clientId)
+                    userInfo:@{
+                        @"channelType" : @(model.channelType),
+                        @"channelId" : model.channelId
+                    }];
 }
 
 - (void)sendPlayStartNotification {
@@ -251,9 +272,10 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
     self.voicePlayerObserver = nil;
     self.audioPlayer = nil;
     if (!NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
-        [[AVAudioSession sharedInstance] setActive:NO
-                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                             error:nil];
+        [[AVAudioSession sharedInstance]
+              setActive:NO
+            withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                  error:nil];
     } else {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
@@ -284,16 +306,18 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
     }
     self.isPlaying = self.audioPlayer.playing;
     NCLogD(@"self.isPlaying > %d", self.isPlaying);
-    NCLogD(@"[NexconnChatUI]: [audioSession category ] %@", [[AVAudioSession sharedInstance] category]);
+    NCLogD(@"[NexconnChatUI]: [audioSession category ] %@",
+           [[AVAudioSession sharedInstance] category]);
     return ready;
 }
 
 - (void)stopPlayVoice {
     [self resetPlayer];
     if (!NCChatUIConfigCenter.message.isExclusiveSoundPlayer) {
-        [[AVAudioSession sharedInstance] setActive:NO
-                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
-                                             error:nil];
+        [[AVAudioSession sharedInstance]
+              setActive:NO
+            withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                  error:nil];
     } else {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryAmbient error:nil];
@@ -315,7 +339,8 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
 
 - (void)enableSystemProperties {
     [[UIDevice currentDevice]
-        setProximityMonitoringEnabled:YES]; // Enable proximity monitoring before playback and disable it afterward.
+        setProximityMonitoringEnabled:YES]; // Enable proximity monitoring before playback and
+                                            // disable it afterward.
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:UIDeviceProximityStateDidChangeNotification
                                                   object:nil];
@@ -328,13 +353,14 @@ static NCVoicePlayer *ncVoicePlayerHandler = nil;
 - (void)disableSystemProperties {
     dispatch_time_t time = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC));
     dispatch_after(time, dispatch_get_main_queue(), ^(void) {
-        if (!self.isPlaying) {
-            self.playerCategory = AVAudioSessionCategoryPlayback;
-            [[UIDevice currentDevice] setProximityMonitoringEnabled:NO];
-            [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                            name:UIDeviceProximityStateDidChangeNotification
-                                                          object:nil];
-        }
+      if (!self.isPlaying) {
+          self.playerCategory = AVAudioSessionCategoryPlayback;
+          [[UIDevice currentDevice] setProximityMonitoringEnabled:NO];
+          [[NSNotificationCenter defaultCenter]
+              removeObserver:self
+                        name:UIDeviceProximityStateDidChangeNotification
+                      object:nil];
+      }
     });
     [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
 }

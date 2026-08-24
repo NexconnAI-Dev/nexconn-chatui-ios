@@ -9,7 +9,8 @@
 #import "NCMessageSelectionUtility.h"
 NSString *const NCMessageMultiSelectStatusChanged = @"NCMessageMultiSelectStatusChanged";
 
-NSString *const NCNotificationMessagesMultiSelectedCountChanged = @"NCNotificationMessagesMultiSelectedCountChanged";
+NSString *const NCNotificationMessagesMultiSelectedCountChanged =
+    @"NCNotificationMessagesMultiSelectedCountChanged";
 
 @interface NCMessageSelectionUtility ()
 @property (nonatomic, strong) NSMutableArray<NCMessageModel *> *messages;
@@ -20,8 +21,8 @@ NSString *const NCNotificationMessagesMultiSelectedCountChanged = @"NCNotificati
     static NCMessageSelectionUtility *manager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        manager = [[[self class] alloc] init];
-        manager.messages = [NSMutableArray new];
+      manager = [[[self class] alloc] init];
+      manager.messages = [NSMutableArray new];
     });
     return manager;
 }
@@ -30,8 +31,9 @@ NSString *const NCNotificationMessagesMultiSelectedCountChanged = @"NCNotificati
     if (self.multiSelect != multiSelect) {
         _multiSelect = multiSelect;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:NCMessageMultiSelectStatusChanged
-                                                                object:@(multiSelect)];
+          [[NSNotificationCenter defaultCenter]
+              postNotificationName:NCMessageMultiSelectStatusChanged
+                            object:@(multiSelect)];
         });
     } else {
         _multiSelect = multiSelect;
@@ -40,30 +42,41 @@ NSString *const NCNotificationMessagesMultiSelectedCountChanged = @"NCNotificati
 
 - (void)addMessageModel:(NCMessageModel *)model {
     BOOL exectued = YES;
-    if (self.delegate && [self.delegate respondsToSelector:@selector(onMessagesMultiSelectedCountWillChanged:model:)]) {
-        exectued =
-            [self.delegate onMessagesMultiSelectedCountWillChanged:NCMessageMultiSelectStatusSelected model:model];
+    if (self.delegate &&
+        [self.delegate
+            respondsToSelector:@selector(onMessagesMultiSelectedCountWillChanged:model:)]) {
+        exectued = [self.delegate
+            onMessagesMultiSelectedCountWillChanged:NCMessageMultiSelectStatusSelected
+                                              model:model];
     }
     if (exectued && model && ![self isContainMessage:model]) {
         [self.messages addObject:model];
         if (self.delegate &&
-            [self.delegate respondsToSelector:@selector(onMessagesMultiSelectedCountDidChanged:model:)]) {
-            [self.delegate onMessagesMultiSelectedCountDidChanged:NCMessageMultiSelectStatusSelected model:model];
+            [self.delegate
+                respondsToSelector:@selector(onMessagesMultiSelectedCountDidChanged:model:)]) {
+            [self.delegate onMessagesMultiSelectedCountDidChanged:NCMessageMultiSelectStatusSelected
+                                                            model:model];
         }
     }
 }
 
 - (void)removeMessageModel:(NCMessageModel *)model {
     BOOL exectued = YES;
-    if (self.delegate && [self.delegate respondsToSelector:@selector(onMessagesMultiSelectedCountWillChanged:model:)]) {
-        exectued = [self.delegate onMessagesMultiSelectedCountWillChanged:NCMessageMultiSelectStatusCancelSelected
-                                                                    model:model];
+    if (self.delegate &&
+        [self.delegate
+            respondsToSelector:@selector(onMessagesMultiSelectedCountWillChanged:model:)]) {
+        exectued = [self.delegate
+            onMessagesMultiSelectedCountWillChanged:NCMessageMultiSelectStatusCancelSelected
+                                              model:model];
     }
     if (exectued) {
         [self.messages removeObject:model];
         if (self.delegate &&
-            [self.delegate respondsToSelector:@selector(onMessagesMultiSelectedCountDidChanged:model:)]) {
-            [self.delegate onMessagesMultiSelectedCountDidChanged:NCMessageMultiSelectStatusCancelSelected model:model];
+            [self.delegate
+                respondsToSelector:@selector(onMessagesMultiSelectedCountDidChanged:model:)]) {
+            [self.delegate
+                onMessagesMultiSelectedCountDidChanged:NCMessageMultiSelectStatusCancelSelected
+                                                 model:model];
         }
     }
 }
@@ -71,8 +84,8 @@ NSString *const NCNotificationMessagesMultiSelectedCountChanged = @"NCNotificati
 - (BOOL)isContainMessage:(NCMessageModel *)model {
     for (int i = 0; i < self.messages.count; i++) {
         NCMessageModel *tmp = self.messages[i];
-        if (tmp.channelType == model.channelType && [tmp.channelId isEqualToString:model.channelId] &&
-            tmp.clientId == model.clientId) {
+        if (tmp.channelType == model.channelType &&
+            [tmp.channelId isEqualToString:model.channelId] && tmp.clientId == model.clientId) {
             return YES;
         }
     }
@@ -100,21 +113,22 @@ NSString *const NCNotificationMessagesMultiSelectedCountChanged = @"NCNotificati
 
 - (NSArray<NCMessageModel *> *)selectedMessages {
     [self.messages sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
-        if (((NCMessageModel *)obj1).sentTime < ((NCMessageModel *)obj2).sentTime) {
-            return NSOrderedAscending;
-        } else if (((NCMessageModel *)obj1).sentTime == ((NCMessageModel *)obj2).sentTime) {
-            return NSOrderedSame;
-        } else {
-            return NSOrderedDescending;
-        }
+      if (((NCMessageModel *)obj1).sentTime < ((NCMessageModel *)obj2).sentTime) {
+          return NSOrderedAscending;
+      } else if (((NCMessageModel *)obj1).sentTime == ((NCMessageModel *)obj2).sentTime) {
+          return NSOrderedSame;
+      } else {
+          return NSOrderedDescending;
+      }
     }];
     return self.messages;
 }
 
 - (void)removeAllMessages {
     [self.messages removeAllObjects];
-    [[NSNotificationCenter defaultCenter] postNotificationName:NCNotificationMessagesMultiSelectedCountChanged
-                                                        object:nil];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:NCNotificationMessagesMultiSelectedCountChanged
+                      object:nil];
 }
 
 - (void)clear {

@@ -6,9 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import "NCChatUIUserInfo.h"
 #import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)sharedInstance;
 
-#pragma mark -- userInfo
+#pragma mark-- userInfo
 
 // Get from cache first. If missing, return nil and invoke the info management interface.
 - (nullable NCChatUIUserInfo *)getUserInfo:(NSString *)userId;
@@ -37,22 +37,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearAllUserInfo;
 
-#pragma mark -- groupMember
+#pragma mark-- groupMember
 
 // Get from cache only.
-- (nullable NCChatUIUserInfo *)getGroupMemberFromCacheOnly:(NSString *)userId withGroupId:(NSString *)groupId;
+- (nullable NCChatUIUserInfo *)getGroupMemberFromCacheOnly:(NSString *)userId
+                                               withGroupId:(NSString *)groupId;
 
 // Get from cache first. If missing, return nil and invoke the info management interface.
 - (nullable NCChatUIUserInfo *)getGroupMember:(NSString *)userId withGroupId:(NSString *)groupId;
 
-- (void)getGroupMember:(NSString *)userId withGroupId:(NSString *)groupId complete:(nullable void (^)(NCChatUIUserInfo *_Nullable user))complete;
+- (void)getGroupMember:(NSString *)userId
+           withGroupId:(NSString *)groupId
+              complete:(nullable void (^)(NCChatUIUserInfo *_Nullable user))complete;
 
-/// Loads group member info. Uses cache first and automatically sends network requests for missing entries.
+/// Loads group member info. Uses cache first and automatically sends network requests for missing
+/// entries.
 /// @param userIds User ID array.
 /// @param groupId Group ID.
 /// @note Sends a notification after data is updated.
-- (void)preloadGroupMembers:(NSArray<NSString *> *)userIds
-                 inGroup:(NSString *)groupId;
+- (void)preloadGroupMembers:(NSArray<NSString *> *)userIds inGroup:(NSString *)groupId;
 
 - (void)refreshGroupMember:(NCChatUIUserInfo *)userInfo withGroupId:(NSString *)groupId;
 
@@ -60,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearAllGroupMember;
 
-#pragma mark -- group
+#pragma mark-- group
 
 // Get from cache first. If missing, return nil and invoke the info management interface.
 - (nullable NCChatUIGroup *)getGroupInfo:(NSString *)groupId;
@@ -68,7 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
 // Get from cache only.
 - (nullable NCChatUIGroup *)getGroupInfoFromCacheOnly:(NSString *)groupId;
 
-- (void)getGroupInfo:(NSString *)groupId complete:(nullable void (^)(NCChatUIGroup * _Nullable group))complete;
+- (void)getGroupInfo:(NSString *)groupId
+            complete:(nullable void (^)(NCChatUIGroup *_Nullable group))complete;
 
 /// Loads group info. Uses cache first and automatically sends network requests for missing entries.
 /// @param groupIds Group ID array.
@@ -85,23 +89,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateMyUserProfile:(NCUserProfile *)profile
                     success:(void (^)(void))successBlock
-                      error:(nullable void (^)(NSInteger errorCode, NSString * _Nullable errorKey))errorBlock;
+                      error:(nullable void (^)(NSInteger errorCode,
+                                               NSString *_Nullable errorKey))errorBlock;
 
 - (void)updateMyUserProfile:(NCUserProfile *)profile
                successBlock:(void (^)(void))successBlock
-                 errorBlock:(nullable void (^)(NSInteger errorCode,  NSArray<NSString *> * _Nullable errorKeys))errorBlock;
+                 errorBlock:(nullable void (^)(NSInteger errorCode,
+                                               NSArray<NSString *> *_Nullable errorKeys))errorBlock;
 
 - (void)setFriendInfo:(NSString *)userId
                remark:(nullable NSString *)remark
-           extProfile:(nullable NSDictionary<NSString *, NSString*> *)extProfile
+           extProfile:(nullable NSDictionary<NSString *, NSString *> *)extProfile
               success:(void (^)(void))successBlock
                 error:(void (^)(NSInteger errorCode))errorBlock;
 
 - (void)setFriendInfo:(NSString *)userId
                remark:(nullable NSString *)remark
-           extProfile:(nullable NSDictionary<NSString *, NSString*> *)extProfile
+           extProfile:(nullable NSDictionary<NSString *, NSString *> *)extProfile
          successBlock:(void (^)(void))successBlock
-           errorBlock:(void (^)(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys))errorBlock;
+           errorBlock:
+               (void (^)(NSInteger errorCode, NSArray<NSString *> *_Nullable errorKeys))errorBlock;
 
 - (void)updateGroupInfo:(NCGroupInfo *)groupInfo
                 success:(void (^)(void))successBlock
@@ -109,7 +116,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateGroupInfo:(NCGroupInfo *)groupInfo
            successBlock:(void (^)(void))successBlock
-             errorBlock:(void (^)(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys))errorBlock;
+             errorBlock:(void (^)(NSInteger errorCode,
+                                  NSArray<NSString *> *_Nullable errorKeys))errorBlock;
 
 - (void)setGroupMemberInfo:(NSString *)groupId
                     userId:(NSString *)userId
@@ -123,7 +131,8 @@ NS_ASSUME_NONNULL_BEGIN
                   nickname:(nullable NSString *)nickname
                      extra:(nullable NSString *)extra
               successBlock:(void (^)(void))successBlock
-                errorBlock:(void (^)(NSInteger errorCode, NSArray<NSString *> * _Nullable errorKeys))errorBlock;
+                errorBlock:(void (^)(NSInteger errorCode,
+                                     NSArray<NSString *> *_Nullable errorKeys))errorBlock;
 @end
 
 NS_ASSUME_NONNULL_END

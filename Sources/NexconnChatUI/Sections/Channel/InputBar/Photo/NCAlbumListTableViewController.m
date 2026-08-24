@@ -9,14 +9,14 @@
 #import "NCAlbumListTableViewController.h"
 #import "NCAlbumModel.h"
 #import "NCAlbumTableCell.h"
+#import "NCAlertView.h"
 #import "NCAssetModel.h"
 #import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCPhotosPickerController.h"
-#import "NCMBProgressHUD.h"
-#import <MobileCoreServices/UTCoreTypes.h>
 #import "NCChatUIConfig.h"
-#import "NCAlertView.h"
+#import "NCChatUIUtility.h"
+#import "NCMBProgressHUD.h"
+#import "NCPhotosPickerController.h"
+#import <MobileCoreServices/UTCoreTypes.h>
 
 static NSString *const cellReuseIdentifier = @"cell";
 
@@ -29,7 +29,6 @@ static NSString *const cellReuseIdentifier = @"cell";
 @implementation NCAlbumListTableViewController
 #pragma mark - Life Cycle
 - (void)dealloc {
-    
 }
 
 - (instancetype)init {
@@ -60,8 +59,10 @@ static NSString *const cellReuseIdentifier = @"cell";
     return self.libraryList.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCAlbumTableCell *cell = [tableView dequeueReusableCellWithIdentifier:cellReuseIdentifier forIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCAlbumTableCell *cell = [tableView dequeueReusableCellWithIdentifier:cellReuseIdentifier
+                                                             forIndexPath:indexPath];
     [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
     [cell configCellWithItem:self.libraryList[indexPath.row]];
     return cell;
@@ -73,34 +74,36 @@ static NSString *const cellReuseIdentifier = @"cell";
 }
 
 #pragma mark - Private Methods
-- (void)setNavigationItem{
+- (void)setNavigationItem {
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
     btn.titleLabel.font = [[NCChatUIConfig defaultConfig].font fontOfSecondLevel];
     UIColor *color = NCDynamicResourceColor(@"primary_color", @"photoPicker_cancel", @"0x0099ff");
     [btn setTitleColor:color forState:UIControlStateNormal];
     [btn addTarget:self
-            action:@selector(dismissCurrentModelViewController)
-  forControlEvents:UIControlEventTouchUpInside];
+                  action:@selector(dismissCurrentModelViewController)
+        forControlEvents:UIControlEventTouchUpInside];
     [btn setTitle:NCUILocalizedString(@"cancel") forState:UIControlStateNormal];
     [btn sizeToFit];
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:btn];
     [self.navigationItem setRightBarButtonItem:rightItem];
 }
 
-- (void)setupTableView{
-    [self.tableView registerClass:[NCAlbumTableCell class] forCellReuseIdentifier:cellReuseIdentifier];
+- (void)setupTableView {
+    [self.tableView registerClass:[NCAlbumTableCell class]
+           forCellReuseIdentifier:cellReuseIdentifier];
     self.tableView.tableFooterView = [[UIView alloc] init];
     self.tableView.rowHeight = 65.0f;
     self.tableView.tableFooterView = [UIView new];
     self.tableView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
     self.tableView.separatorColor = NCDynamicColor(@"line_background_color");
-    self.tableView.frame = CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height);
+    self.tableView.frame = CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width,
+                                      [UIScreen mainScreen].bounds.size.height);
     if ([self.tableView respondsToSelector:@selector(setSeparatorInset:)]) {
         [self.tableView setSeparatorInset:UIEdgeInsetsMake(0, 0, 0, 0)];
     }
 }
 
-- (void)getDataSourceAndReloadView{
+- (void)getDataSourceAndReloadView {
     NCAssetHelper *sharedAssetHelper = [NCAssetHelper shareAssetHelper];
     NSArray *cacheAssetGroup = [sharedAssetHelper getCachePhotoGroups];
     if (cacheAssetGroup && cacheAssetGroup.count > 0) {
@@ -114,54 +117,64 @@ static NSString *const cellReuseIdentifier = @"cell";
         [self.tableView reloadData];
     } else {
         [NCChatUIUtility showProgressViewFor:self.tableView text:nil animated:YES];
-        [sharedAssetHelper
-            getAlbumsFromSystem:^(NSArray *assetGroup) {
-                              if (assetGroup) {
-                                  self.libraryList = assetGroup;
-                              }
-            
-                              dispatch_async(dispatch_get_main_queue(), ^{
-                                  BOOL isFirstRun = [[NSUserDefaults standardUserDefaults] boolForKey:@"nckit_first_happen"];
-                                  // Handle this recovery only once per installation.
-                                  if (assetGroup.count == 0 && !isFirstRun) {
-                                      if (@available(iOS 15, *)) {
-                                          // nothing to do
-                                      } else if (@available(iOS 14, *)) {
-                                          [NCChatUIUtility hideProgressViewFor:self.tableView animated:YES];
-                                          // Photo library issue: https://developer.apple.com/forums/thread/658114
-                                          [NCAlertView showAlertController:NCUILocalizedString(@"photo_library_bug_error_alert") message:nil actionTitles:nil cancelTitle:NCUILocalizedString(@"cancel") confirmTitle:NCUILocalizedString(@"restart_app") preferredStyle:UIAlertControllerStyleAlert actionsBlock:nil cancelBlock:nil confirmBlock:^{
-                                              // Record the restart recovery so this case is not handled again.
-                                              [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"nckit_first_happen"];
-                                              [[NSUserDefaults standardUserDefaults] synchronize];
-                                              
-                                              exit(0);
-                                          } inViewController:self];
-                                          
-                                          return;
-                                      } else {
-                                          // nothing to do
-                                      }
-                                  }
+        [sharedAssetHelper getAlbumsFromSystem:^(NSArray *assetGroup) {
+          if (assetGroup) {
+              self.libraryList = assetGroup;
+          }
 
-                                  
-                                  [NCChatUIUtility hideProgressViewFor:self.tableView animated:YES];
+          dispatch_async(dispatch_get_main_queue(), ^{
+            BOOL isFirstRun =
+                [[NSUserDefaults standardUserDefaults] boolForKey:@"nckit_first_happen"];
+            // Handle this recovery only once per installation.
+            if (assetGroup.count == 0 && !isFirstRun) {
+                if (@available(iOS 15, *)) {
+                    // nothing to do
+                } else if (@available(iOS 14, *)) {
+                    [NCChatUIUtility hideProgressViewFor:self.tableView animated:YES];
+                    // Photo library issue: https://developer.apple.com/forums/thread/658114
+                    [NCAlertView
+                        showAlertController:NCUILocalizedString(@"photo_library_bug_error_alert")
+                                    message:nil
+                               actionTitles:nil
+                                cancelTitle:NCUILocalizedString(@"cancel")
+                               confirmTitle:NCUILocalizedString(@"restart_app")
+                             preferredStyle:UIAlertControllerStyleAlert
+                               actionsBlock:nil
+                                cancelBlock:nil
+                               confirmBlock:^{
+                                 // Record the restart recovery so this case is not handled again.
+                                 [[NSUserDefaults standardUserDefaults]
+                                     setBool:YES
+                                      forKey:@"nckit_first_happen"];
+                                 [[NSUserDefaults standardUserDefaults] synchronize];
 
-                                  if (self.libraryList.count) {
-                                      NCAlbumModel *assetsGroup = self.libraryList[0];
-                                      [self pushImagePickerController:assetsGroup animated:NO];
-                                      // Albums are available, so hide the authorization prompt.
-                                      [self.tipsLabel setHidden:YES];
-                                  } else {
-                                      if ([[NCAssetHelper shareAssetHelper] hasAuthorizationStatusAuthorized]) {
-                                          [self.tipsLabel setHidden:YES];
-                                      }else{
-                                          [self.tipsLabel setHidden:NO];
-                                      }
-                                  }
-                                  [self.tableView reloadData];
+                                 exit(0);
+                               }
+                           inViewController:self];
 
-                              });
-                          }];
+                    return;
+                } else {
+                    // nothing to do
+                }
+            }
+
+            [NCChatUIUtility hideProgressViewFor:self.tableView animated:YES];
+
+            if (self.libraryList.count) {
+                NCAlbumModel *assetsGroup = self.libraryList[0];
+                [self pushImagePickerController:assetsGroup animated:NO];
+                // Albums are available, so hide the authorization prompt.
+                [self.tipsLabel setHidden:YES];
+            } else {
+                if ([[NCAssetHelper shareAssetHelper] hasAuthorizationStatusAuthorized]) {
+                    [self.tipsLabel setHidden:YES];
+                } else {
+                    [self.tipsLabel setHidden:NO];
+                }
+            }
+            [self.tableView reloadData];
+          });
+        }];
     }
 }
 - (NSString *)moveVideoFileAt:(NSString *)filePath {
@@ -214,13 +227,16 @@ static NSString *const cellReuseIdentifier = @"cell";
 - (void)handlePhotos:(NSMutableArray *)photos result:(NSMutableArray *)results full:(BOOL)isFull {
     if (photos.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.progressHUD hideAnimated:YES];
-            self.isShowHUD = NO;
-            if ([self.delegate respondsToSelector:@selector(albumListViewController:selectedImages:isSendFullImage:)] &&
-                results.count) {
-                [self.delegate albumListViewController:nil selectedImages:results isSendFullImage:isFull];
-            }
-            [self dismissCurrentModelViewController];
+          [self.progressHUD hideAnimated:YES];
+          self.isShowHUD = NO;
+          if ([self.delegate respondsToSelector:@selector(albumListViewController:selectedImages:
+                                                          isSendFullImage:)] &&
+              results.count) {
+              [self.delegate albumListViewController:nil
+                                      selectedImages:results
+                                     isSendFullImage:isFull];
+          }
+          [self dismissCurrentModelViewController];
         });
     } else {
         NCAssetModel *model = [photos objectAtIndex:0];
@@ -233,95 +249,104 @@ static NSString *const cellReuseIdentifier = @"cell";
     }
 }
 
-- (void)p_getOriginVideo:(NCAssetModel *)model photos:(NSMutableArray *)photos result:(NSMutableArray *)results full:(BOOL)isFull{
+- (void)p_getOriginVideo:(NCAssetModel *)model
+                  photos:(NSMutableArray *)photos
+                  result:(NSMutableArray *)results
+                    full:(BOOL)isFull {
     __weak typeof(self) weakSelf = self;
     [[NCAssetHelper shareAssetHelper] getOriginVideoWithAsset:model.asset
         result:^(AVAsset *avAsset, NSDictionary *info, NSString *imageIdentifier) {
-            if (![[[NCAssetHelper shareAssetHelper] getAssetIdentifier:model.asset] isEqualToString:imageIdentifier]) {
-                return;
-            }
-            if (avAsset) {
-                NSMutableDictionary *assetInfo = [[NSMutableDictionary alloc] initWithCapacity:5];
-                if (avAsset) {
-                    [assetInfo setObject:avAsset forKey:@"avAsset"];
-                }
-                if (model.thumbnailImage) {
-                    [assetInfo setObject:model.thumbnailImage forKey:@"thumbnail"];
-                }
-                NSString *localPath = [self p_localPathForVideoAsset:avAsset info:info];
-                localPath = [self moveVideoFileAt:localPath];
-                if (localPath.length < 1) {
-                    [NCAlertView showAlertController:nil
-                                             message:NCUILocalizedString(@"Selected_Damaged_Video")
-                                    hiddenAfterDelay:1
-                                    inViewController:self];
-                    [self handlePhotos:photos result:results full:isFull];
-                    return;
-                }
+          if (![[[NCAssetHelper shareAssetHelper] getAssetIdentifier:model.asset]
+                  isEqualToString:imageIdentifier]) {
+              return;
+          }
+          if (avAsset) {
+              NSMutableDictionary *assetInfo = [[NSMutableDictionary alloc] initWithCapacity:5];
+              if (avAsset) {
+                  [assetInfo setObject:avAsset forKey:@"avAsset"];
+              }
+              if (model.thumbnailImage) {
+                  [assetInfo setObject:model.thumbnailImage forKey:@"thumbnail"];
+              }
+              NSString *localPath = [self p_localPathForVideoAsset:avAsset info:info];
+              localPath = [self moveVideoFileAt:localPath];
+              if (localPath.length < 1) {
+                  [NCAlertView showAlertController:nil
+                                           message:NCUILocalizedString(@"Selected_Damaged_Video")
+                                  hiddenAfterDelay:1
+                                  inViewController:self];
+                  [self handlePhotos:photos result:results full:isFull];
+                  return;
+              }
 
-                [assetInfo setObject:localPath forKey:@"localPath"];
+              [assetInfo setObject:localPath forKey:@"localPath"];
 
-                // NSDictionary* assetInfo = @{@"avAsset":model.avAsset,@"thumbnail":!model.thumbnailImage ?
-                // [NSNull null] : model.thumbnailImage};
-                [results addObject:[assetInfo copy]];
-            }
-            [self handlePhotos:photos result:results full:isFull];
+              // NSDictionary* assetInfo =
+              // @{@"avAsset":model.avAsset,@"thumbnail":!model.thumbnailImage ? [NSNull null] :
+              // model.thumbnailImage};
+              [results addObject:[assetInfo copy]];
+          }
+          [self handlePhotos:photos result:results full:isFull];
         }
         progressHandler:^(double progress, NSError *error, BOOL *stop, NSDictionary *info) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (progress < 1 && !error && !strongSelf.isShowHUD) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    strongSelf.isShowHUD = YES;
-                    strongSelf.progressHUD =
-                        [NCMBProgressHUD showHUDAddedTo:[NCChatUIUtility getWindowForView:self.view] animated:YES];
-                    strongSelf.progressHUD.label.text = NCUILocalizedString(@"i_cloud_downloading");
-                });
-            }
-            if (error) {
-                // from iCloud download error
-                strongSelf.progressHUD.label.text = NCUILocalizedString(@"i_cloud_download_fail");
-                [strongSelf.progressHUD hideAnimated:YES afterDelay:1];
-                strongSelf.isShowHUD = NO;
-            }
-    }];
+          __strong typeof(weakSelf) strongSelf = weakSelf;
+          if (progress < 1 && !error && !strongSelf.isShowHUD) {
+              dispatch_async(dispatch_get_main_queue(), ^{
+                strongSelf.isShowHUD = YES;
+                strongSelf.progressHUD =
+                    [NCMBProgressHUD showHUDAddedTo:[NCChatUIUtility getWindowForView:self.view]
+                                           animated:YES];
+                strongSelf.progressHUD.label.text = NCUILocalizedString(@"i_cloud_downloading");
+              });
+          }
+          if (error) {
+              // from iCloud download error
+              strongSelf.progressHUD.label.text = NCUILocalizedString(@"i_cloud_download_fail");
+              [strongSelf.progressHUD hideAnimated:YES afterDelay:1];
+              strongSelf.isShowHUD = NO;
+          }
+        }];
 }
 
-- (void)p_getOriginImageData:(NCAssetModel *)model photos:(NSMutableArray *)photos result:(NSMutableArray *)results full:(BOOL)isFull{
+- (void)p_getOriginImageData:(NCAssetModel *)model
+                      photos:(NSMutableArray *)photos
+                      result:(NSMutableArray *)results
+                        full:(BOOL)isFull {
     __weak typeof(self) weakself = self;
     [[NCAssetHelper shareAssetHelper] getOriginImageDataWithAsset:model
         result:^(NSData *imageData, NSDictionary *info, NCAssetModel *assetModel) {
-            BOOL downloadFinined = (![[info objectForKey:PHImageCancelledKey] boolValue] &&
-                                    ![info objectForKey:PHImageErrorKey] &&
-                                    ![[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
-            if (downloadFinined && imageData) {
-                if ([[model.asset valueForKey:@"uniformTypeIdentifier"]
-                        isEqualToString:(__bridge NSString *)kUTTypeGIF]) {
-                    NSMutableDictionary *gifInfo = [[NSMutableDictionary alloc] init];
-                    [gifInfo setObject:@"GIF" forKey:@"GIF"];
-                    [gifInfo setObject:imageData forKey:@"imageData"];
-                    [results addObject:gifInfo];
-                } else {
-                    [results addObject:imageData];
-                }
-                [weakself handlePhotos:photos result:results full:isFull];
-            }
+          BOOL downloadFinined = (![[info objectForKey:PHImageCancelledKey] boolValue] &&
+                                  ![info objectForKey:PHImageErrorKey] &&
+                                  ![[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
+          if (downloadFinined && imageData) {
+              if ([[model.asset valueForKey:@"uniformTypeIdentifier"]
+                      isEqualToString:(__bridge NSString *)kUTTypeGIF]) {
+                  NSMutableDictionary *gifInfo = [[NSMutableDictionary alloc] init];
+                  [gifInfo setObject:@"GIF" forKey:@"GIF"];
+                  [gifInfo setObject:imageData forKey:@"imageData"];
+                  [results addObject:gifInfo];
+              } else {
+                  [results addObject:imageData];
+              }
+              [weakself handlePhotos:photos result:results full:isFull];
+          }
         }
         progressHandler:^(double progress, NSError *error, BOOL *stop, NSDictionary *info) {
-            if (progress < 1 && !error && !weakself.isShowHUD) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    weakself.isShowHUD = YES;
-                    weakself.progressHUD =
-                        [NCMBProgressHUD showHUDAddedTo:[NCChatUIUtility getWindowForView:self.view]
-                                             animated:YES];
-                    weakself.progressHUD.label.text = NCUILocalizedString(@"i_cloud_downloading");
-                });
-            }
-            if (error) {
-                // from iCloud download error
-                weakself.progressHUD.label.text = NCUILocalizedString(@"i_cloud_download_fail");
-                [weakself.progressHUD hideAnimated:YES afterDelay:1];
-                weakself.isShowHUD = NO;
-            }
+          if (progress < 1 && !error && !weakself.isShowHUD) {
+              dispatch_async(dispatch_get_main_queue(), ^{
+                weakself.isShowHUD = YES;
+                weakself.progressHUD =
+                    [NCMBProgressHUD showHUDAddedTo:[NCChatUIUtility getWindowForView:self.view]
+                                           animated:YES];
+                weakself.progressHUD.label.text = NCUILocalizedString(@"i_cloud_downloading");
+              });
+          }
+          if (error) {
+              // from iCloud download error
+              weakself.progressHUD.label.text = NCUILocalizedString(@"i_cloud_download_fail");
+              [weakself.progressHUD hideAnimated:YES afterDelay:1];
+              weakself.isShowHUD = NO;
+          }
         }];
 }
 
@@ -333,8 +358,8 @@ static NSString *const cellReuseIdentifier = @"cell";
     imagePickerVC.title = assetsGroup.albumName;
     __weak typeof(self) weakself = self;
     [imagePickerVC setSendPhotosBlock:^(NSArray *photos, BOOL isFull) {
-        NSMutableArray *selectedPhotos = [NSMutableArray array];
-        [weakself handlePhotos:[photos mutableCopy] result:selectedPhotos full:isFull];
+      NSMutableArray *selectedPhotos = [NSMutableArray array];
+      [weakself handlePhotos:[photos mutableCopy] result:selectedPhotos full:isFull];
     }];
 
     [self.navigationController pushViewController:imagePickerVC animated:animated];
@@ -345,12 +370,13 @@ static NSString *const cellReuseIdentifier = @"cell";
 }
 
 - (void)setAuthorizationStatusAuthorized {
-    if (![[NCAssetHelper shareAssetHelper] hasAuthorizationStatusAuthorized] && [PHPhotoLibrary authorizationStatus] != PHAuthorizationStatusNotDetermined) {
+    if (![[NCAssetHelper shareAssetHelper] hasAuthorizationStatusAuthorized] &&
+        [PHPhotoLibrary authorizationStatus] != PHAuthorizationStatusNotDetermined) {
         self.tipsLabel.hidden = NO;
     }
 }
 
-- (UILabel *)tipsLabel{
+- (UILabel *)tipsLabel {
     if (!_tipsLabel) {
         _tipsLabel = [[UILabel alloc] init];
         _tipsLabel.frame = CGRectMake(8, 64, self.view.frame.size.width - 16, 100);

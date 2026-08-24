@@ -7,18 +7,15 @@
 //
 
 #import "NCProfileViewController.h"
-#import "NCUserProfileViewModel.h"
-#import "NCProfileTableView.h"
 #import "NCChatUICommonDefine.h"
-#import "NCViewModelAdapterCenter.h"
-#import "NCMyProfileViewModel.h"
 #import "NCGroupProfileViewModel.h"
+#import "NCMyProfileViewModel.h"
+#import "NCProfileTableView.h"
+#import "NCUserProfileViewModel.h"
+#import "NCViewModelAdapterCenter.h"
 
-@interface NCProfileViewController ()<
-UITableViewDelegate,
-UITableViewDataSource,
-NCListViewModelResponder
->
+@interface NCProfileViewController () <UITableViewDelegate, UITableViewDataSource,
+                                       NCListViewModelResponder>
 
 @property (nonatomic, strong) NCProfileViewModel *viewModel;
 
@@ -59,12 +56,12 @@ NCListViewModelResponder
     [self.viewModel updateProfile];
 }
 
-#pragma mark -- UITableViewDelegate
+#pragma mark-- UITableViewDelegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return self.viewModel.profileList.count;
 }
@@ -73,17 +70,22 @@ NCListViewModelResponder
     return self.viewModel.profileList[section].count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCProfileCellViewModel *viewModel = self.viewModel.profileList[indexPath.section][indexPath.row] ;
-    return [viewModel tableView:tableView cellForRowAtIndexPath:indexPath];;
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCProfileCellViewModel *viewModel =
+        self.viewModel.profileList[indexPath.section][indexPath.row];
+    return [viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+    ;
 }
 
-- (CGFloat)tableView:(nonnull UITableView *)tableView heightForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    NCProfileCellViewModel *viewModel = self.viewModel.profileList[indexPath.section][indexPath.row] ;
+- (CGFloat)tableView:(nonnull UITableView *)tableView
+    heightForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
+    NCProfileCellViewModel *viewModel =
+        self.viewModel.profileList[indexPath.section][indexPath.row];
     return [viewModel tableView:tableView heightForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- NCListViewModelResponder
+#pragma mark-- NCListViewModelResponder
 
 - (void)reloadData:(BOOL)isEmpty {
     [self.profileView reloadData];
@@ -101,26 +103,32 @@ NCListViewModelResponder
     self.profileView.tableFooterView = [self.viewModel loadFooterView];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCProfileTableView *)profileView {
     if (!_profileView) {
-        _profileView = [[NCProfileTableView alloc] initWithFrame:CGRectZero style:(UITableViewStyleGrouped)];
-        _profileView.backgroundColor =  NCDynamicColor(@"auxiliary_background_1_color");
-        _profileView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 15)];
+        _profileView = [[NCProfileTableView alloc] initWithFrame:CGRectZero
+                                                           style:(UITableViewStyleGrouped)];
+        _profileView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
+        _profileView.tableHeaderView =
+            [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 15)];
         _profileView.sectionHeaderHeight = 0;
         _profileView.separatorStyle = UITableViewCellSeparatorStyleNone;
         if (@available(iOS 15.0, *)) {
@@ -128,7 +136,6 @@ NCListViewModelResponder
         }
         _profileView.delegate = self;
         _profileView.dataSource = self;
-        
     }
     return _profileView;
 }

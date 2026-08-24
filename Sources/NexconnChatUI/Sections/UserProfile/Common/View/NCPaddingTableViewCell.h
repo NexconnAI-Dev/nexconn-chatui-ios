@@ -17,11 +17,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIView *lineView;
 @property (nonatomic, strong) UIView *paddingContainerView;
 @property (nonatomic, assign) BOOL hideSeparatorLine;
-- (void)updateLineViewConstraints:(NSInteger)leading
-                         trailing:(NSInteger)trailing;
+- (void)updateLineViewConstraints:(NSInteger)leading trailing:(NSInteger)trailing;
 
-- (void)updatePaddingContainer:(NSInteger)leading
-                      trailing:(NSInteger)trailing;
+- (void)updatePaddingContainer:(NSInteger)leading trailing:(NSInteger)trailing;
 @end
 
 NS_ASSUME_NONNULL_END

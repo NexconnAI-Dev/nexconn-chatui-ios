@@ -6,23 +6,22 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCCellViewModelProtocol.h"
 #import "NCBaseCellViewModel.h"
+#import "NCCellViewModelProtocol.h"
 #import "NCListViewModelProtocol.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, NCFriendApplyCellStyle) {
-    NCFriendApplyCellStyleNone, // No style
+    NCFriendApplyCellStyleNone,   // No style
     NCFriendApplyCellStyleNormal, // Normal
     NCFriendApplyCellStyleFolder, // Collapsed
     NCFriendApplyCellStyleExpand  // Expanded
 };
 
-
 /// Friend request list cell view model
-@interface NCApplyFriendCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCApplyFriendCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 
 /// Request info
 @property (nonatomic, strong) NCFriendApplicationInfo *application;
@@ -48,13 +47,12 @@ typedef NS_ENUM(NSInteger, NCFriendApplyCellStyle) {
 /// Registers the cell
 + (void)registerCellForTableView:(UITableView *)tableView;
 
-
 /// Determines whether to show the expand button based on the remark size
 /// @param size The current size
 /// @param natureSize The natural size
 - (BOOL)shouldHideExpandButton:(CGSize)size natureSize:(CGSize)natureSize;
 /// Binds the responder
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder;
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder;
 
 /// Header height
 ///   - tableView: tableView
@@ -63,8 +61,8 @@ typedef NS_ENUM(NSInteger, NCFriendApplyCellStyle) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (NSArray<UITableViewRowAction *> *)tableView:(UITableView *)tableView
-                  editActionsForRowAtIndexPath:(NSIndexPath *)indexPath  
-                                    completion:(void(^)(NSInteger errorCode))completion;
+                  editActionsForRowAtIndexPath:(NSIndexPath *)indexPath
+                                    completion:(void (^)(NSInteger errorCode))completion;
 #pragma clang diagnostic pop
 @end
 

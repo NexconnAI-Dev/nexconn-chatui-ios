@@ -7,10 +7,10 @@
 //
 
 #import "NCUserInfoCacheManager.h"
-#import "NCInfoProvider.h"
-#import "NCInfoManagement.h"
-#import "NCChatUIUserInfo.h"
 #import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
+#import "NCInfoManagement.h"
+#import "NCInfoProvider.h"
 
 @interface NCUserInfoCacheManager ()
 
@@ -22,14 +22,15 @@
     static id instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
+      instance = [[self alloc] init];
     });
     return instance;
 }
 
 #pragma mark - UserInfo
 
-// Return the cached value when available. On a miss, return nil and request it from the user info provider.
+// Return the cached value when available. On a miss, return nil and request it from the user info
+// provider.
 - (NCChatUIUserInfo *)getUserInfo:(NSString *)userId {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
         return [[NCInfoManagement sharedInstance] getUserInfo:userId];
@@ -39,7 +40,8 @@
 }
 
 // Resolve the value from the cache or the user info provider.
-- (void)getUserInfo:(NSString *)userId complete:(void (^)(NCChatUIUserInfo *userInfo))completeBlock {
+- (void)getUserInfo:(NSString *)userId
+           complete:(void (^)(NCChatUIUserInfo *userInfo))completeBlock {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
         [[NCInfoManagement sharedInstance] getUserInfo:userId complete:completeBlock];
     } else {
@@ -101,29 +103,35 @@
           inGroupId:(NSString *)groupId
            complete:(void (^)(NCChatUIUserInfo *userInfo))completeBlock {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
-        [[NCInfoManagement sharedInstance] getGroupMember:userId withGroupId:groupId complete:completeBlock];
+        [[NCInfoManagement sharedInstance] getGroupMember:userId
+                                              withGroupId:groupId
+                                                 complete:completeBlock];
     } else {
-        [[NCInfoProvider sharedManager] getUserInfo:userId inGroupId:groupId complete:completeBlock];
+        [[NCInfoProvider sharedManager] getUserInfo:userId
+                                          inGroupId:groupId
+                                           complete:completeBlock];
     }
 }
 
 - (NCChatUIUserInfo *)getUserInfoFromCacheOnly:(NSString *)userId inGroupId:(NSString *)groupId {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
-        return [[NCInfoManagement sharedInstance] getGroupMemberFromCacheOnly:userId withGroupId:groupId];
+        return [[NCInfoManagement sharedInstance] getGroupMemberFromCacheOnly:userId
+                                                                  withGroupId:groupId];
     } else {
         return [[NCInfoProvider sharedManager] getUserInfoFromCacheOnly:userId inGroupId:groupId];
     }
 }
 
 // This cache-only path avoids overloading the hosted user-info provider.
-- (void)preloadGroupMembers:(NSArray<NSString *> *)userIds
-                 inGroup:(NSString *)groupId {
+- (void)preloadGroupMembers:(NSArray<NSString *> *)userIds inGroup:(NSString *)groupId {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
         [[NCInfoManagement sharedInstance] preloadGroupMembers:userIds inGroup:groupId];
     }
 }
 
-- (void)updateUserInfo:(NCChatUIUserInfo *)userInfo forUserId:(NSString *)userId inGroup:(NSString *)groupId {
+- (void)updateUserInfo:(NCChatUIUserInfo *)userInfo
+             forUserId:(NSString *)userId
+               inGroup:(NSString *)groupId {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
         [[NCInfoManagement sharedInstance] refreshGroupMember:userInfo withGroupId:groupId];
     } else {
@@ -157,7 +165,8 @@
     }
 }
 
-- (void)getGroupInfo:(NSString *)groupId complete:(void (^)(NCChatUIGroup *groupInfo))completeBlock {
+- (void)getGroupInfo:(NSString *)groupId
+            complete:(void (^)(NCChatUIGroup *groupInfo))completeBlock {
     if ([NCChatUI shared].currentDataSourceType == NCDataSourceTypeInfoManagement) {
         [[NCInfoManagement sharedInstance] getGroupInfo:groupId complete:completeBlock];
     } else {

@@ -7,8 +7,8 @@
 //
 
 #import "NCBaseViewModel.h"
-#import "NCRemoveGroupMemberCellViewModel.h"
 #import "NCListViewModelProtocol.h"
+#import "NCRemoveGroupMemberCellViewModel.h"
 #import "NCSearchBarViewModel.h"
 
 @class NCRemoveGroupMembersViewModel;
@@ -32,8 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param dataSource The current data source
 /// @return The data source processed by the app, or `nil` to use the default
 ///
-- (NSArray <NCRemoveGroupMemberCellViewModel *> *)groupRemoveMembers:(NCRemoveGroupMembersViewModel *)viewModel
-                                           willLoadItemsInDataSource:(NSArray <NCRemoveGroupMemberCellViewModel *>*)dataSource;
+- (NSArray<NCRemoveGroupMemberCellViewModel *> *)
+           groupRemoveMembers:(NCRemoveGroupMembersViewModel *)viewModel
+    willLoadItemsInDataSource:(NSArray<NCRemoveGroupMemberCellViewModel *> *)dataSource;
 
 /// Called when the user taps a cell
 ///
@@ -45,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupRemoveMembers:(NCRemoveGroupMembersViewModel *)viewModel
-            viewController:(UIViewController*)viewController
+            viewController:(UIViewController *)viewController
                  tableView:(UITableView *)tableView
               didSelectRow:(NSIndexPath *)indexPath
              cellViewModel:(NCRemoveGroupMemberCellViewModel *)cellViewModel;
@@ -58,21 +59,21 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)groupRemoveMembersDidSelectComplete:(NCRemoveGroupMembersViewModel *)viewModel
-                              selectUserIds:(NSMutableArray <NSString *>*)selectUserIds
-                             viewController:(UIViewController*)viewController;
+                              selectUserIds:(NSMutableArray<NSString *> *)selectUserIds
+                             viewController:(UIViewController *)viewController;
 @end
 
 /// Remove group member view model
-@interface NCRemoveGroupMembersViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCRemoveGroupMembersViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Delegate
 @property (nonatomic, weak) id<NCGroupRemoveMembersViewModelDelelgate> delegate;
 
 /// List of selected users
-@property (nonatomic, strong, readonly) NSMutableArray <NSString *>*selectUserIds;
+@property (nonatomic, strong, readonly) NSMutableArray<NSString *> *selectUserIds;
 
 /// Current data source
-@property (nonatomic, strong, readonly) NSArray <NCRemoveGroupMemberCellViewModel *>*memberList;
+@property (nonatomic, strong, readonly) NSArray<NCRemoveGroupMemberCellViewModel *> *memberList;
 
 /// Group identifier
 @property (nonatomic, copy, readonly) NSString *groupId;

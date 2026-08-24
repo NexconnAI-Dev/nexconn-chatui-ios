@@ -6,10 +6,9 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NCAssetModel.h"
 #import "NCBaseImageView.h"
+#import <UIKit/UIKit.h>
 @interface NCPhotoPickImageView : NCBaseImageView
 - (void)setPhotoModel:(NCAssetModel *)model;
 @end
-

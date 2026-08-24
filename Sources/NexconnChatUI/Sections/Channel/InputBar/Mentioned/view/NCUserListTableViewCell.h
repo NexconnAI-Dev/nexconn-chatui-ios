@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "NCBaseTableViewCell.h"
 #import "NCBaseImageView.h"
 #import "NCBaseLabel.h"
+#import "NCBaseTableViewCell.h"
+#import <UIKit/UIKit.h>
 @interface NCUserListTableViewCell : NCBaseTableViewCell
-@property (nonatomic, strong) NCBaseImageView *headImageView; //Avatar
-@property (nonatomic, strong) NCBaseLabel *nameLabel;         //Name
+@property (nonatomic, strong) NCBaseImageView *headImageView; // Avatar
+@property (nonatomic, strong) NCBaseLabel *nameLabel;         // Name
 @end

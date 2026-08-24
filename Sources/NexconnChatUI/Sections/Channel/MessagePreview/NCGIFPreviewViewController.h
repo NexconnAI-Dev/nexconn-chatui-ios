@@ -7,8 +7,8 @@
 //
 
 #import "NCBaseViewController.h"
-#import "NCMessageModel.h"
 #import "NCGIFImageView.h"
+#import "NCMessageModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -7,18 +7,18 @@
 //
 
 #import "NCChannelListViewController.h"
-#import "NCChatUILog.h"
 #import "NCChannelListCell.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCNetworkIndicatorView.h"
-#import "NCMJRefresh.h"
-#import "UIImage+NCDynamicImage.h"
 #import "NCChannelListDataSource.h"
 #import "NCChannelListPendingDraftStore.h"
-#import "NCChatUIConfig.h"
 #import "NCChannelViewController.h"
 #import "NCChatUI.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUILog.h"
+#import "NCChatUIUtility.h"
+#import "NCMJRefresh.h"
+#import "NCNetworkIndicatorView.h"
+#import "UIImage+NCDynamicImage.h"
 
 static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     @"NCChatUIChannelDraftSaveWillBeginNotification";
@@ -28,7 +28,10 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 - (void)rebuildConversationKeySet;
 @end
 
-@interface NCChannelListViewController () <UITableViewDataSource, UITableViewDelegate, NCChannelListCellDelegate,NCChannelListDataSourceDelegate, NCConnectionStatusHandler, NCChannelHandler, NCChatUINetworkStatusDelegate>
+@interface NCChannelListViewController () <
+    UITableViewDataSource, UITableViewDelegate, NCChannelListCellDelegate,
+    NCChannelListDataSourceDelegate, NCConnectionStatusHandler, NCChannelHandler,
+    NCChatUINetworkStatusDelegate>
 
 @property (nonatomic, strong) UIView *connectionStatusView;
 @property (nonatomic, strong) UIView *navigationTitleView;
@@ -42,8 +45,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 @implementation NCChannelListViewController
 
 #pragma mark - Initialization
-- (instancetype)initWithDisplayConversationTypes:(NSArray *)displayConversationTypeArray
-{
+- (instancetype)initWithDisplayConversationTypes:(NSArray *)displayConversationTypeArray {
     self = [super init];
     if (self) {
         [self nc_commonInit];
@@ -74,7 +76,8 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     self.dataSource.delegate = self;
     self.pendingDraftStore = [[NCChannelListPendingDraftStore alloc] init];
     self.isShowNetworkIndicatorView = YES;
-    self.displayConversationTypeArray = @[@(NCChannelTypeDirect), @(NCChannelTypeGroup), @(NCChannelTypeSystem)];
+    self.displayConversationTypeArray =
+        @[ @(NCChannelTypeDirect), @(NCChannelTypeGroup), @(NCChannelTypeSystem) ];
 }
 
 #pragma mark - Life cycle
@@ -84,14 +87,16 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     if ([self respondsToSelector:@selector(setExtendedLayoutIncludesOpaqueBars:)]) {
         self.extendedLayoutIncludesOpaqueBars = YES;
     }
-    self.conversationListTableView = [[NCBaseTableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
+    self.conversationListTableView =
+        [[NCBaseTableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
     self.conversationListTableView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
-    self.conversationListTableView.backgroundColor =
-    NCDynamicColor(@"clear_color");
+    self.conversationListTableView.backgroundColor = NCDynamicColor(@"clear_color");
     self.view.backgroundColor = NCDynamicColor(@"view_background_color");
-    self.conversationListTableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(1, 1, 0, CGFLOAT_MIN)];
+    self.conversationListTableView.tableHeaderView =
+        [[UIView alloc] initWithFrame:CGRectMake(1, 1, 0, CGFLOAT_MIN)];
     self.conversationListTableView.separatorColor = NCDynamicColor(@"line_background_color");
-    CGFloat leftOffset = 12 + [NCChatUIConfig defaultConfig].ui.globalConversationPortraitSize.width + 12;
+    CGFloat leftOffset =
+        12 + [NCChatUIConfig defaultConfig].ui.globalConversationPortraitSize.width + 12;
     if ([self.conversationListTableView respondsToSelector:@selector(setSeparatorInset:)]) {
         self.conversationListTableView.separatorInset = UIEdgeInsetsMake(0, leftOffset, 0, 0);
     }
@@ -127,26 +132,26 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf || !strongSelf.dataSource.isConverstaionListAppear) {
-            return;
-        }
-        if (strongSelf.dataSource.dataList.count == 0 &&
-            [NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
-            [strongSelf refreshConversationTableViewIfNeeded];
-        }
-    });
+                     __strong typeof(weakSelf) strongSelf = weakSelf;
+                     if (!strongSelf || !strongSelf.dataSource.isConverstaionListAppear) {
+                         return;
+                     }
+                     if (strongSelf.dataSource.dataList.count == 0 &&
+                         [NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
+                         [strongSelf refreshConversationTableViewIfNeeded];
+                     }
+                   });
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.5 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf || !strongSelf.dataSource.isConverstaionListAppear) {
-            return;
-        }
-        if (strongSelf.dataSource.dataList.count == 0 &&
-            [NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
-            [strongSelf refreshConversationTableViewIfNeeded];
-        }
-    });
+                     __strong typeof(weakSelf) strongSelf = weakSelf;
+                     if (!strongSelf || !strongSelf.dataSource.isConverstaionListAppear) {
+                         return;
+                     }
+                     if (strongSelf.dataSource.dataList.count == 0 &&
+                         [NCEngine getConnectionStatus] == NCConnectionStatusConnected) {
+                         [strongSelf refreshConversationTableViewIfNeeded];
+                     }
+                   });
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -162,12 +167,13 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 
-    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
-        [self layoutSubview:size];
-    }
-        completion:^(id<UIViewControllerTransitionCoordinatorContext> context){
+    [coordinator
+        animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+          [self layoutSubview:size];
+        }
+                        completion:^(id<UIViewControllerTransitionCoordinatorContext> context){
 
-        }];
+                        }];
 }
 
 - (void)dealloc {
@@ -182,19 +188,22 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     return self.dataSource.dataList.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NCChannelModel *model = nil;
     if (indexPath.row < self.dataSource.dataList.count) {
         model = self.dataSource.dataList[indexPath.row];
     }
 
     if (model.conversationModelType == NC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION) {
-        NCChannelListBaseCell *userCustomCell =
-            [self ncChannelListTableView:tableView cellForRowAtIndexPath:indexPath];
+        NCChannelListBaseCell *userCustomCell = [self ncChannelListTableView:tableView
+                                                       cellForRowAtIndexPath:indexPath];
         if (!userCustomCell) {
-            NCLogReleaseW(@"The custom cell is returned as nil, "
-                  @"if the conversationModelType is NC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION, and the message type is NCContactNotificationMessage "
-                  @"needs customized cell to display");
+            NCLogReleaseW(
+                @"The custom cell is returned as nil, "
+                @"if the conversationModelType is NC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION, and "
+                @"the message type is NCContactNotificationMessage "
+                @"needs customized cell to display");
         }
         userCustomCell.selectionStyle = UITableViewCellSelectionStyleDefault;
         [userCustomCell setDataModel:model];
@@ -205,8 +214,8 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         static NSString *cellReuseIdentifier = @"nc.channelList.cellReuseIdentifier";
         NCChannelListCell *cell = [tableView dequeueReusableCellWithIdentifier:cellReuseIdentifier];
         if (!cell) {
-            cell =
-                [[NCChannelListCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellReuseIdentifier];
+            cell = [[NCChannelListCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                            reuseIdentifier:cellReuseIdentifier];
         }
         cell.delegate = self;
         cell.selectionStyle = UITableViewCellSelectionStyleDefault;
@@ -231,7 +240,9 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         return;
     }
     NCChannelModel *model = self.dataSource.dataList[indexPath.row];
-    [self onSelectedTableRow:model.conversationModelType conversationModel:model atIndexPath:indexPath];
+    [self onSelectedTableRow:model.conversationModelType
+           conversationModel:model
+                 atIndexPath:indexPath];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
@@ -265,15 +276,18 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         NCChannelModel *model = self.dataSource.dataList[indexPath.row];
 
         if (model.conversationModelType == NC_CONVERSATION_MODEL_TYPE_NORMAL) {
-            [self.dataSource deleteConversation:model completion:^(BOOL success) {
-                if (success) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self removeDeletedConversationModel:model];
-                    });
-                }
-            }];
+            [self.dataSource deleteConversation:model
+                                     completion:^(BOOL success) {
+                                       if (success) {
+                                           dispatch_async(dispatch_get_main_queue(), ^{
+                                             [self removeDeletedConversationModel:model];
+                                           });
+                                       }
+                                     }];
         } else {
-            [self ncChannelListTableView:tableView commitEditingStyle:editingStyle forRowAtIndexPath:indexPath];
+            [self ncChannelListTableView:tableView
+                      commitEditingStyle:editingStyle
+                       forRowAtIndexPath:indexPath];
             [self deleteAndReloadConversationCell:model];
         }
     } else {
@@ -328,7 +342,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     [self deleteAndReloadConversationCell:model];
 }
 
-- (void)deleteAndReloadConversationCell:(NCChannelModel *)model{
+- (void)deleteAndReloadConversationCell:(NCChannelModel *)model {
     [self didDeleteConversationCell:model];
     [self notifyUpdateUnreadMessageCount];
     [self updateEmptyConversationView];
@@ -337,11 +351,11 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 - (void)loadMore {
     __weak typeof(self) ws = self;
     [self.dataSource loadMoreConversations:^(NSMutableArray<NCChannelModel *> *modelList) {
-        if(modelList.count > 0) {
-            [ws.conversationListTableView reloadData];
-            [ws updateEmptyConversationView];
-        }
-        [ws.footer endRefreshing];
+      if (modelList.count > 0) {
+          [ws.conversationListTableView reloadData];
+          [ws updateEmptyConversationView];
+      }
+      [ws.footer endRefreshing];
     }];
 }
 
@@ -355,16 +369,16 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 
 - (void)refreshConversationTableViewIfNeeded {
     [self.dataSource forceLoadConversationModelList:^(NSMutableArray *modelList) {
-        [self mergePendingDraftCacheIntoModelList:modelList];
-        [self.conversationListTableView reloadData];
-        [self updateEmptyConversationView];
+      [self mergePendingDraftCacheIntoModelList:modelList];
+      [self.conversationListTableView reloadData];
+      [self updateEmptyConversationView];
     }];
 }
 
 - (void)cachePendingDraft:(NSString *)draft
-               channelType:(NCChannelType)channelType
-                 channelId:(NSString *)channelId
-              subChannelId:(NSString *)subChannelId {
+              channelType:(NCChannelType)channelType
+                channelId:(NSString *)channelId
+             subChannelId:(NSString *)subChannelId {
     [self.pendingDraftStore cacheDraft:draft
                            channelType:channelType
                              channelId:channelId
@@ -383,8 +397,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     return YES;
 }
 
-
-- (void)sendReadReceiptIfNeed:(NCChannelModel *)model{
+- (void)sendReadReceiptIfNeed:(NCChannelModel *)model {
     [NCChatUIUtility syncConversationReadStatusIfEnabled:model];
 }
 
@@ -394,45 +407,50 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     return self.topPriority;
 }
 
-- (NSMutableArray<NCChannelModel *> *)dataSource:(NCChannelListDataSource *)datasource willReloadTableData:(NSMutableArray<NCChannelModel *> *)modelList {
+- (NSMutableArray<NCChannelModel *> *)dataSource:(NCChannelListDataSource *)datasource
+                             willReloadTableData:(NSMutableArray<NCChannelModel *> *)modelList {
     return [self willReloadTableData:modelList];
 }
-- (void)dataSource:(NCChannelListDataSource *)dataSource willReloadAtIndexPaths:(NSArray <NSIndexPath *> *)indexPaths {
+- (void)dataSource:(NCChannelListDataSource *)dataSource
+    willReloadAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths {
     dispatch_main_async_safe(^{
-        if (self.dataSource.isConverstaionListAppear) {
-            [self.conversationListTableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
-            [self updateEmptyConversationView];
-        }
+      if (self.dataSource.isConverstaionListAppear) {
+          [self.conversationListTableView reloadRowsAtIndexPaths:indexPaths
+                                                withRowAnimation:UITableViewRowAnimationNone];
+          [self updateEmptyConversationView];
+      }
     });
 }
-- (void)dataSource:(NCChannelListDataSource *)dataSource willInsertAtIndexPaths:(NSArray <NSIndexPath *> *)indexPaths {
+- (void)dataSource:(NCChannelListDataSource *)dataSource
+    willInsertAtIndexPaths:(NSArray<NSIndexPath *> *)indexPaths {
     dispatch_main_async_safe(^{
-        [self.conversationListTableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationAutomatic];
-        [self updateEmptyConversationView];
+      [self.conversationListTableView insertRowsAtIndexPaths:indexPaths
+                                            withRowAnimation:UITableViewRowAnimationAutomatic];
+      [self updateEmptyConversationView];
     });
 }
-- (void)dataSource:(NCChannelListDataSource *)dataSource willDeleteAtIndexPaths:(NSArray <NSIndexPath *> *)deleteIndexPaths willInsertAtIndexPaths:(NSArray <NSIndexPath *> *)insertIndexPaths {
+- (void)dataSource:(NCChannelListDataSource *)dataSource
+    willDeleteAtIndexPaths:(NSArray<NSIndexPath *> *)deleteIndexPaths
+    willInsertAtIndexPaths:(NSArray<NSIndexPath *> *)insertIndexPaths {
     dispatch_main_async_safe(^{
-        [self.conversationListTableView beginUpdates];
-        [self.conversationListTableView
-            deleteRowsAtIndexPaths:deleteIndexPaths
-                  withRowAnimation:UITableViewRowAnimationAutomatic];
-        [self.conversationListTableView
-            insertRowsAtIndexPaths:insertIndexPaths
-                  withRowAnimation:UITableViewRowAnimationAutomatic];
-        [self.conversationListTableView endUpdates];
-        [self updateEmptyConversationView];
+      [self.conversationListTableView beginUpdates];
+      [self.conversationListTableView deleteRowsAtIndexPaths:deleteIndexPaths
+                                            withRowAnimation:UITableViewRowAnimationAutomatic];
+      [self.conversationListTableView insertRowsAtIndexPaths:insertIndexPaths
+                                            withRowAnimation:UITableViewRowAnimationAutomatic];
+      [self.conversationListTableView endUpdates];
+      [self updateEmptyConversationView];
     });
 }
 - (void)refreshConversationTableViewIfNeededInDataSource:(NCChannelListDataSource *)datasource {
     dispatch_main_async_safe(^{
-        [self refreshConversationTableViewIfNeeded];
+      [self refreshConversationTableViewIfNeeded];
     });
 }
 
 - (void)notifyUpdateUnreadMessageCountInDataSource {
     dispatch_main_async_safe(^{
-        [self notifyUpdateUnreadMessageCount];
+      [self notifyUpdateUnreadMessageCount];
     });
 }
 
@@ -440,19 +458,19 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 
 - (void)didUpdateCell:(NCChannelListCell *)cell model:(NCChannelModel *)model {
     dispatch_main_async_safe(^{
-        NSIndexPath *indexPath = [self.conversationListTableView indexPathForCell:cell];
-        
-        // Fall back to iteration when the cell is offscreen or in the reuse pool.
-        if (!indexPath) {
-            NSInteger index = [self.conversationListDataSource indexOfObject:model];
-            if (index != NSNotFound) {
-                indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-            }
-        }
-        
-        if (indexPath) {
-            [self updateCellAtIndexPath:indexPath];
-        }
+      NSIndexPath *indexPath = [self.conversationListTableView indexPathForCell:cell];
+
+      // Fall back to iteration when the cell is offscreen or in the reuse pool.
+      if (!indexPath) {
+          NSInteger index = [self.conversationListDataSource indexOfObject:model];
+          if (index != NSNotFound) {
+              indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+          }
+      }
+
+      if (indexPath) {
+          [self updateCellAtIndexPath:indexPath];
+      }
     });
 }
 
@@ -482,7 +500,8 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
             [[NCChatUI shared] getCurrentNetworkStatus] != NCChatUINetworkStatusNotReachable;
         showBar = !netAvailable;
     }
-    // 其余（NetworkUnavailable / Unknown / 其它未知断连）走默认「网络不可用」，对齐 Android 兜底分支。
+    // 其余（NetworkUnavailable / Unknown / 其它未知断连）走默认「网络不可用」，对齐 Android
+    // 兜底分支。
 
     if (showBar) {
         self.networkIndicatorView.hidden = NO;
@@ -497,8 +516,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 }
 
 - (void)updateConnectionStatusView {
-    if (!self.showConnectingStatusOnNavigatorBar ||
-        !self.dataSource.isConverstaionListAppear) {
+    if (!self.showConnectingStatusOnNavigatorBar || !self.dataSource.isConverstaionListAppear) {
         return;
     }
 
@@ -567,30 +585,32 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         [self refreshConversationTableViewIfNeeded];
     }
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(refreshConversationTableViewIfNeeded)
-                                                 name:UIApplicationWillEnterForegroundNotification
-                                               object:nil];
-    
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(refreshConversationTableViewIfNeeded)
+               name:UIApplicationWillEnterForegroundNotification
+             object:nil];
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(draftSaveResultDidUpdate:)
                                                  name:NCChatUIChannelDraftSaveResultNotification
                                                object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(draftSaveWillBegin:)
-                                                 name:NCChatUIChannelDraftSaveWillBeginNotificationName
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(draftSaveWillBegin:)
+               name:NCChatUIChannelDraftSaveWillBeginNotificationName
+             object:nil];
 }
 
 #pragma mark - NCConnectionStatusHandler
 
 - (void)onConnectionStatusChanged:(NCConnectionStatusChangedEvent *)event {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self updateConnectionStatusView];
-        [self updateNetworkIndicatorView];
-        if (event.status == NCConnectionStatusConnected) {
-            [self refreshConversationTableViewIfNeeded];
-        }
+      [self updateConnectionStatusView];
+      [self updateNetworkIndicatorView];
+      if (event.status == NCConnectionStatusConnected) {
+          [self refreshConversationTableViewIfNeeded];
+      }
     });
 }
 
@@ -601,8 +621,8 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     // 红条/连接中的展示逻辑收敛在 updateNetworkIndicatorView / updateConnectionStatusView，
     // 这两处都会用设备真实网络状态交叉校验，因此仅在网络变化时重跑一遍即可。
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self updateConnectionStatusView];
-        [self updateNetworkIndicatorView];
+      [self updateConnectionStatusView];
+      [self updateNetworkIndicatorView];
     });
 }
 
@@ -614,28 +634,28 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     }
     __weak typeof(self) ws = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (ws.conversationListDataSource.count <= 0) {
-            return;
-        }
-        NCChannelIdentifier *identifier = event.channelIdentifier;
-        NSString *eventSubChannelId =
-            [identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
-                ? ((NCCommunitySubChannelIdentifier *)identifier).subChannelId
-                : nil;
-        NSString *rightSubChannelId = eventSubChannelId ?: @"";
-        for (int i = 0; i < ws.conversationListDataSource.count; i++) {
-            NCChannelModel *model = ws.conversationListDataSource[i];
-            if (![model isMatchingChannelType:identifier.channelType
-                                      channelId:identifier.channelId]) {
-                continue;
-            }
-            NSString *leftSubChannelId = model.subChannelId ?: @"";
-            if ([leftSubChannelId isEqualToString:rightSubChannelId]) {
-                model.isTop = event.isPinned;
-                [ws refreshConversationTableViewIfNeeded];
-                break;
-            }
-        }
+      if (ws.conversationListDataSource.count <= 0) {
+          return;
+      }
+      NCChannelIdentifier *identifier = event.channelIdentifier;
+      NSString *eventSubChannelId =
+          [identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+              ? ((NCCommunitySubChannelIdentifier *)identifier).subChannelId
+              : nil;
+      NSString *rightSubChannelId = eventSubChannelId ?: @"";
+      for (int i = 0; i < ws.conversationListDataSource.count; i++) {
+          NCChannelModel *model = ws.conversationListDataSource[i];
+          if (![model isMatchingChannelType:identifier.channelType
+                                  channelId:identifier.channelId]) {
+              continue;
+          }
+          NSString *leftSubChannelId = model.subChannelId ?: @"";
+          if ([leftSubChannelId isEqualToString:rightSubChannelId]) {
+              model.isTop = event.isPinned;
+              [ws refreshConversationTableViewIfNeeded];
+              break;
+          }
+      }
     });
 }
 
@@ -645,31 +665,31 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     }
     __weak typeof(self) ws = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (ws.conversationListDataSource.count <= 0) {
-            return;
-        }
-        NCChannelIdentifier *identifier = event.channelIdentifier;
-        NSString *eventSubChannelId =
-            [identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
-                ? ((NCCommunitySubChannelIdentifier *)identifier).subChannelId
-                : nil;
-        NSString *rightSubChannelId = eventSubChannelId ?: @"";
-        for (int i = 0; i < ws.conversationListDataSource.count; i++) {
-            NCChannelModel *model = ws.conversationListDataSource[i];
-            if (![model isMatchingChannelType:identifier.channelType
-                                    channelId:identifier.channelId]) {
-                continue;
-            }
-            NSString *leftSubChannelId = model.subChannelId ?: @"";
-            if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
-                continue;
-            }
-            model.noDisturbLevel = event.level;
-            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
-            [ws.conversationListTableView reloadRowsAtIndexPaths:@[ indexPath ]
-                                                withRowAnimation:UITableViewRowAnimationNone];
-            break;
-        }
+      if (ws.conversationListDataSource.count <= 0) {
+          return;
+      }
+      NCChannelIdentifier *identifier = event.channelIdentifier;
+      NSString *eventSubChannelId =
+          [identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]
+              ? ((NCCommunitySubChannelIdentifier *)identifier).subChannelId
+              : nil;
+      NSString *rightSubChannelId = eventSubChannelId ?: @"";
+      for (int i = 0; i < ws.conversationListDataSource.count; i++) {
+          NCChannelModel *model = ws.conversationListDataSource[i];
+          if (![model isMatchingChannelType:identifier.channelType
+                                  channelId:identifier.channelId]) {
+              continue;
+          }
+          NSString *leftSubChannelId = model.subChannelId ?: @"";
+          if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
+              continue;
+          }
+          model.noDisturbLevel = event.level;
+          NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
+          [ws.conversationListTableView reloadRowsAtIndexPaths:@[ indexPath ]
+                                              withRowAnimation:UITableViewRowAnimationNone];
+          break;
+      }
     });
 }
 
@@ -700,46 +720,45 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     }
     NCChannelType channelType = (NCChannelType)channelTypeNumber.integerValue;
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (!updated) {
-            [self finishPendingDraftSaveWithoutUpdate];
-            return;
-        }
-        NSString *normalizedDraft = [draft isKindOfClass:[NSString class]] ? draft : @"";
-        [self cachePendingDraft:normalizedDraft
-                    channelType:channelType
-                      channelId:channelId
-                   subChannelId:subChannelId];
-        NCChannelModel *conversationModel;
-        for (NCChannelModel *model in self.conversationListDataSource) {
-            if (![model isMatchingChannelType:channelType
-                                     channelId:channelId]) {
-                continue;
-            }
-            NSString *leftSubChannelId = model.subChannelId ?: @"";
-            NSString *rightSubChannelId = subChannelId ?: @"";
-            if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
-                continue;
-            }
-            conversationModel = model;
-            break;
-        }
-        if (conversationModel) {
-            NSInteger index = [self.conversationListDataSource indexOfObject:conversationModel];
-            if (NSNotFound == index) {
-                return;
-            }
-            conversationModel.draft = normalizedDraft;
-            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-            [self.conversationListTableView reloadRowsAtIndexPaths:@[indexPath]
-                                                  withRowAnimation:UITableViewRowAnimationNone];
-        }
-        [self finishPendingDraftSaveAfterUpdate];
+      if (!updated) {
+          [self finishPendingDraftSaveWithoutUpdate];
+          return;
+      }
+      NSString *normalizedDraft = [draft isKindOfClass:[NSString class]] ? draft : @"";
+      [self cachePendingDraft:normalizedDraft
+                  channelType:channelType
+                    channelId:channelId
+                 subChannelId:subChannelId];
+      NCChannelModel *conversationModel;
+      for (NCChannelModel *model in self.conversationListDataSource) {
+          if (![model isMatchingChannelType:channelType channelId:channelId]) {
+              continue;
+          }
+          NSString *leftSubChannelId = model.subChannelId ?: @"";
+          NSString *rightSubChannelId = subChannelId ?: @"";
+          if (![leftSubChannelId isEqualToString:rightSubChannelId]) {
+              continue;
+          }
+          conversationModel = model;
+          break;
+      }
+      if (conversationModel) {
+          NSInteger index = [self.conversationListDataSource indexOfObject:conversationModel];
+          if (NSNotFound == index) {
+              return;
+          }
+          conversationModel.draft = normalizedDraft;
+          NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+          [self.conversationListTableView reloadRowsAtIndexPaths:@[ indexPath ]
+                                                withRowAnimation:UITableViewRowAnimationNone];
+      }
+      [self finishPendingDraftSaveAfterUpdate];
     });
 }
 
 - (void)draftSaveWillBegin:(NSNotification *)notification {
     void (^work)(void) = ^{
-        self.pendingDraftSaveCount += 1;
+      self.pendingDraftSaveCount += 1;
     };
     if ([NSThread isMainThread]) {
         work();
@@ -778,8 +797,9 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 #pragma mark - View Setter&Getter
 
 - (NCMJRefreshAutoNormalFooter *)footer {
-    if(!_footer) {
-        _footer = [NCMJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(loadMore)];
+    if (!_footer) {
+        _footer = [NCMJRefreshAutoNormalFooter footerWithRefreshingTarget:self
+                                                         refreshingAction:@selector(loadMore)];
         _footer.refreshingTitleHidden = YES;
     }
     return _footer;
@@ -805,18 +825,21 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         [_connectionStatusView addSubview:indicatorView];
 
         NSString *loading = NCUILocalizedString(@"connecting");
-        CGSize textSize = [NCChatUIUtility getTextDrawingSize:loading
-                                                      font:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]
-                                           constrainedSize:CGSizeMake(_connectionStatusView.frame.size.width, 2000)];
+        CGSize textSize = [NCChatUIUtility
+            getTextDrawingSize:loading
+                          font:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]
+               constrainedSize:CGSizeMake(_connectionStatusView.frame.size.width, 2000)];
 
         CGRect frame = CGRectMake(
-            (_connectionStatusView.frame.size.width - (indicatorView.frame.size.width + textSize.width + 3)) / 2,
+            (_connectionStatusView.frame.size.width -
+             (indicatorView.frame.size.width + textSize.width + 3)) /
+                2,
             (_connectionStatusView.frame.size.height - indicatorView.frame.size.height) / 2,
             indicatorView.frame.size.width, indicatorView.frame.size.height);
         indicatorView.frame = frame;
         frame = CGRectMake(indicatorView.frame.origin.x + 14 + indicatorView.frame.size.width,
-                           (_connectionStatusView.frame.size.height - textSize.height) / 2, textSize.width,
-                           textSize.height);
+                           (_connectionStatusView.frame.size.height - textSize.height) / 2,
+                           textSize.width, textSize.height);
         UILabel *label = [[UILabel alloc] initWithFrame:frame];
         [label setFont:[[NCChatUIConfig defaultConfig].font fontOfSecondLevel]];
         [label setText:loading];
@@ -828,19 +851,21 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 @synthesize emptyConversationView = _emptyConversationView;
 - (UIView *)emptyConversationView {
     if (!_emptyConversationView) {
-        _emptyConversationView = [[NCBaseImageView alloc] initWithImage:NCDynamicImage(@"channel-list_no_message_img")];
+        _emptyConversationView =
+            [[NCBaseImageView alloc] initWithImage:NCDynamicImage(@"channel-list_no_message_img")];
         _emptyConversationView.center = self.view.center;
         CGRect emptyRect = _emptyConversationView.frame;
         emptyRect.origin.y -= 36;
         [_emptyConversationView setFrame:emptyRect];
-        UILabel *emptyLabel =
-            [[UILabel alloc] init];
+        UILabel *emptyLabel = [[UILabel alloc] init];
         emptyLabel.text = NCUILocalizedString(@"no_message");
         [emptyLabel setFont:[[NCChatUIConfig defaultConfig].font fontOfFourthLevel]];
         [emptyLabel setTextColor:NCDynamicColor(@"text_primary_color")];
         emptyLabel.textAlignment = NSTextAlignmentCenter;
         [emptyLabel sizeToFit];
-        emptyLabel.center = CGPointMake(_emptyConversationView.bounds.size.width/2, _emptyConversationView.frame.size.height + emptyLabel.frame.size.height/2);
+        emptyLabel.center = CGPointMake(_emptyConversationView.bounds.size.width / 2,
+                                        _emptyConversationView.frame.size.height +
+                                            emptyLabel.frame.size.height / 2);
         [_emptyConversationView addSubview:emptyLabel];
         [self.conversationListTableView addSubview:_emptyConversationView];
     }
@@ -871,7 +896,8 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 }
 
 - (void)setDisplayConversationTypeArray:(NSArray *)displayConversationTypeArray {
-    self.dataSource.displayConversationTypeArray = [self filteredDisplayConversationTypes:displayConversationTypeArray];
+    self.dataSource.displayConversationTypeArray =
+        [self filteredDisplayConversationTypes:displayConversationTypeArray];
 }
 
 - (NSArray *)displayConversationTypeArray {
@@ -901,10 +927,12 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 }
 - (void)didLongPressCellPortrait:(NCChannelModel *)model {
 }
-- (NSMutableArray<NCChannelModel *> *)willReloadTableData:(NSMutableArray<NCChannelModel *> *)dataSource {
+- (NSMutableArray<NCChannelModel *> *)willReloadTableData:
+    (NSMutableArray<NCChannelModel *> *)dataSource {
     return dataSource;
 }
-- (void)willDisplayConversationTableCell:(NCChannelListBaseCell *)cell atIndexPath:(NSIndexPath *)indexPath {
+- (void)willDisplayConversationTableCell:(NCChannelListBaseCell *)cell
+                             atIndexPath:(NSIndexPath *)indexPath {
 }
 - (void)updateCellAtIndexPath:(NSIndexPath *)indexPath {
 }
@@ -918,7 +946,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         }
         NCChannelViewController *conversationVC =
             [[NCChannelViewController alloc] initWithChannelType:channelType
-                                                                  channelId:model.channelId];
+                                                       channelId:model.channelId];
         conversationVC.channelType = channelType;
         conversationVC.channelId = model.channelId;
         conversationVC.subChannelId = model.subChannelId;
@@ -929,21 +957,24 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
             conversationVC.enableUnreadMessageIcon = YES;
         }
         [self.navigationController pushViewController:conversationVC animated:YES];
-    }else{
-        NCLogI(@"navigationController is nil , Please Rewrite `onSelectedTableRow:conversationModel:atIndexPath:` method to implement the conversation cell click to push NCChannelViewController vc");
+    } else {
+        NCLogI(@"navigationController is nil , Please Rewrite "
+               @"`onSelectedTableRow:conversationModel:atIndexPath:` method to implement the "
+               @"conversation cell click to push NCChannelViewController vc");
     }
 }
 - (void)didDeleteConversationCell:(NCChannelModel *)model {
 }
 - (void)ncChannelListTableView:(UITableView *)tableView
-                commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
-                 forRowAtIndexPath:(NSIndexPath *)indexPath {
+            commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
+             forRowAtIndexPath:(NSIndexPath *)indexPath {
 }
 - (NCChannelListBaseCell *)ncChannelListTableView:(UITableView *)tableView
-                                 cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+                            cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     return nil;
 }
-- (CGFloat)ncChannelListTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (CGFloat)ncChannelListTableView:(UITableView *)tableView
+          heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     return 64.5f;
 }
 
@@ -962,14 +993,14 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     for (NSNumber *typeNumber in displayConversationTypeArray) {
         NCChannelType channelType = (NCChannelType)typeNumber.integerValue;
         switch (channelType) {
-            case NCChannelTypeDirect:
-            case NCChannelTypeGroup:
-            case NCChannelTypeSystem:
-            case NCChannelTypeCommunity:
-                [filteredTypes addObject:typeNumber];
-                break;
-            default:
-                break;
+        case NCChannelTypeDirect:
+        case NCChannelTypeGroup:
+        case NCChannelTypeSystem:
+        case NCChannelTypeCommunity:
+            [filteredTypes addObject:typeNumber];
+            break;
+        default:
+            break;
         }
     }
     return filteredTypes.copy;
@@ -997,7 +1028,8 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         return;
     }
     if (@available(iOS 13.0, *)) {
-        self.networkIndicatorView.networkUnreachableImageView.image = NCDynamicImage(@"network_unreachable_img");
+        self.networkIndicatorView.networkUnreachableImageView.image =
+            NCDynamicImage(@"network_unreachable_img");
         if ([self.emptyConversationView isKindOfClass:[UIImageView class]]) {
             UIImageView *imageView = (UIImageView *)self.emptyConversationView;
             if (imageView.image.nc_imageLocalPath && imageView.image.nc_imageLocalPath.length > 0 &&

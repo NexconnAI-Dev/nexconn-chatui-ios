@@ -7,19 +7,19 @@
 //
 
 #import "NCGroupNotificationViewController.h"
-#import "NCGroupNotificationView.h"
-#import "NCGroupNotificationViewModel.h"
 #import "NCAlertView.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupNotificationView.h"
+#import "NCGroupNotificationViewModel.h"
 
-@interface NCGroupNotificationViewController ()<UITableViewDelegate, UITableViewDataSource,NCListViewModelResponder>
+@interface NCGroupNotificationViewController () <UITableViewDelegate, UITableViewDataSource,
+                                                 NCListViewModelResponder>
 @property (nonatomic, strong) NCGroupNotificationViewModel *viewModel;
 @property (nonatomic, strong) NCGroupNotificationView *listView;
 @end
 
 @implementation NCGroupNotificationViewController
-- (instancetype)initWithViewModel:(NCGroupNotificationViewModel *)viewModel
-{
+- (instancetype)initWithViewModel:(NCGroupNotificationViewModel *)viewModel {
     self = [super init];
     if (self) {
         [viewModel bindResponder:self];
@@ -34,7 +34,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-//    self.edgesForExtendedLayout = UIRectEdgeNone;
+    //    self.edgesForExtendedLayout = UIRectEdgeNone;
     [self setupView];
     [self.viewModel fetchData];
 }
@@ -46,7 +46,11 @@
     }
     [self configureRightNaviItems];
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)leftBarButtonItemPressed {
@@ -78,17 +82,12 @@
     if (tips.length == 0) {
         return;
     }
-    [NCAlertView showAlertController:nil
-                             message:tips
-                    hiddenAfterDelay:2];
+    [NCAlertView showAlertController:nil message:tips hiddenAfterDelay:2];
 }
-
 
 #pragma mark - UITableViewDelegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self.viewModel viewController:self
-                         tableView:tableView
-                      didSelectRow:indexPath];
+    [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
 }
 
 #pragma mark - UITableViewDataSource
@@ -101,9 +100,9 @@
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return  [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
 #pragma mark - Property

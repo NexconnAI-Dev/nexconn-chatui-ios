@@ -344,6 +344,7 @@
 "message_edit_not_exist"="云端消息不存在，无法编辑";
 "message_edit_content_sensitive"="编辑内容含有敏感信息，更新失败";
 "message_edit_expired_toast"="超过有效编辑时间，无法编辑";
+"message_edit_text_length_exceeded"="编辑内容不能超过 5000 个字符";
 
 "message_read_status"="消息阅读状态";
 "message_read_status_none_read"="无人已读";

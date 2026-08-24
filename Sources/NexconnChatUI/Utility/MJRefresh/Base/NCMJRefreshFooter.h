@@ -27,7 +27,9 @@
 /** Additional bottom content inset ignored when positioning the footer. */
 @property (assign, nonatomic) CGFloat ignoredScrollViewContentInsetBottom;
 
-/** Deprecated compatibility flag. This implementation stores the value but does not show or hide the footer. */
+/** Deprecated compatibility flag. This implementation stores the value but does not show or hide
+ * the footer. */
 @property (assign, nonatomic, getter=isAutomaticallyHidden)
-    BOOL automaticallyHidden NCMJRefreshDeprecated("Deprecated. Control the footer's hidden property directly.");
+    BOOL automaticallyHidden NCMJRefreshDeprecated(
+        "Deprecated. Control the footer's hidden property directly.");
 @end

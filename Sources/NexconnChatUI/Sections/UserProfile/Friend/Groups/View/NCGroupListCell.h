@@ -9,7 +9,7 @@
 #import "NCFriendListPermanentCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
-UIKIT_EXTERN NSString  * const NCGroupListCellIdentifier;
+UIKIT_EXTERN NSString *const NCGroupListCellIdentifier;
 
 @interface NCGroupListCell : NCFriendListPermanentCell
 - (void)showPortrait:(NSString *)url;

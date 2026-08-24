@@ -7,28 +7,29 @@
 //
 
 #import "NCChatSessionInputBarControl.h"
-#import <NexconnChatUI/NCChatUILog.h>
-#import "NCAlbumListTableViewController.h"
-#import "NCAssetHelper.h"
-#import "NCChatUICommonDefine.h"
-#import "NCChatUIUtility.h"
-#import "NCChatUIExtensionService.h"
-#import "NCFileSelectorViewController.h"
-#import "NCMentionedStringRangeInfo.h"
-#import "NCUserListViewController.h"
-#import <CoreText/CoreText.h>
-#import "NCVoiceRecordControl.h"
-#import "NCAlertView.h"
-#import "NCChatUIConfig.h"
 #import "NCActionSheetView.h"
-#import "NCInputContainerView+internal.h"
-#import "NCSightViewController+ChatUI.h"
-#import "NCSemanticContext.h"
+#import "NCAlbumListTableViewController.h"
+#import "NCAlertView.h"
+#import "NCAssetHelper.h"
 #import "NCBaseButton.h"
-#import "NCMenuController.h"
+#import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
+#import "NCChatUIExtensionService.h"
+#import "NCChatUIUtility.h"
+#import "NCFileSelectorViewController.h"
 #import "NCGroupMentionViewModel.h"
-//单个cell的高度是70（RCPlaginBoardCellSize）*2 + 上下padding的高度14*2 ＋
-//上下两个图标之间的padding
+#import "NCInputContainerView+internal.h"
+#import "NCMentionedStringRangeInfo.h"
+#import "NCMenuController.h"
+#import "NCSemanticContext.h"
+#import "NCSightViewController+ChatUI.h"
+#import "NCToastView.h"
+#import "NCUserListViewController.h"
+#import "NCVoiceRecordControl.h"
+#import <CoreText/CoreText.h>
+#import <NexconnChatUI/NCChatUILog.h>
+// 单个cell的高度是70（RCPlaginBoardCellSize）*2 + 上下padding的高度14*2 ＋
+// 上下两个图标之间的padding
 #define Height_EmojBoardView 223.5f
 #define Height_PluginBoardView 223.5f
 // Standard system status-bar height
@@ -37,7 +38,8 @@
 #define HOTSPOT_STATUSBAR_HEIGHT 20
 #define APP_STATUSBAR_HEIGHT ([NCChatUIUtility getStatusBarHeightForView:nil])
 // 根据APP_STATUSBAR_HEIGHT判断是不是存在热门栏
-#define IS_HOTSPOT_CONNECTED (APP_STATUSBAR_HEIGHT == (SYS_STATUSBAR_HEIGHT + HOTSPOT_STATUSBAR_HEIGHT) ? YES : NO)
+#define IS_HOTSPOT_CONNECTED                                                                       \
+    (APP_STATUSBAR_HEIGHT == (SYS_STATUSBAR_HEIGHT + HOTSPOT_STATUSBAR_HEIGHT) ? YES : NO)
 
 NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotification";
 
@@ -45,10 +47,11 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)updateKeyboardFrame:(CGRect)keyboardFrame visible:(BOOL)visible;
 @end
 
-@interface NCChatSessionInputBarControl () <NCEmojiViewDelegate, NCPluginBoardViewDelegate, UINavigationControllerDelegate,
+@interface NCChatSessionInputBarControl () <
+    NCEmojiViewDelegate, NCPluginBoardViewDelegate, UINavigationControllerDelegate,
     UIImagePickerControllerDelegate, NCAlbumListViewControllerDelegate,
-    NCFileSelectorViewControllerDelegate, NCSelectingUserDataSource,
-    NCVoiceRecordControlDelegate, NCInputContainerViewDelegate>
+    NCFileSelectorViewControllerDelegate, NCSelectingUserDataSource, NCVoiceRecordControlDelegate,
+    NCInputContainerViewDelegate>
 
 @property (nonatomic) CGRect keyboardFrame;
 
@@ -100,7 +103,7 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 #pragma mark - Super Methods
-- (void)setFrame:(CGRect)frame{
+- (void)setFrame:(CGRect)frame {
     [super setFrame:frame];
     if (!self.isContainViewAppeared) {
         return;
@@ -115,7 +118,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 #pragma mark - Public Methods
-- (void)setInputBarType:(NCChatSessionInputBarControlType)type style:(NCChatSessionInputBarControlStyle)style {
+- (void)setInputBarType:(NCChatSessionInputBarControlType)type
+                  style:(NCChatSessionInputBarControlStyle)style {
     self.currentControlType = type;
     self.currentControlStyle = style;
     [self resetInputBar];
@@ -144,19 +148,21 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)openSystemAlbum {
     NCAlbumListTableViewController *albumListVC = [[NCAlbumListTableViewController alloc] init];
     albumListVC.delegate = self;
-    NCBaseNavigationController *rootVC = [[NCBaseNavigationController alloc] initWithRootViewController:albumListVC];
+    NCBaseNavigationController *rootVC =
+        [[NCBaseNavigationController alloc] initWithRootViewController:albumListVC];
     [self.delegate presentViewController:rootVC functionTag:PLUGIN_BOARD_ITEM_ALBUM_TAG];
 }
 
 // Opens the camera.
 - (void)openSystemCamera {
-    if ([AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo] == AVAuthorizationStatusNotDetermined) {
+    if ([AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo] ==
+        AVAuthorizationStatusNotDetermined) {
         [self requestCameraAccess:^(BOOL granted) {
-            if (granted) {
-                [self startCamera];
-            } else {
-                [self checkAndAlertCameraAccessRight];
-            }
+          if (granted) {
+              [self startCamera];
+          } else {
+              [self checkAndAlertCameraAccessRight];
+          }
         }];
     } else {
         if ([self checkAndAlertCameraAccessRight]) {
@@ -168,14 +174,14 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)requestCameraAccess:(void (^)(BOOL granted))handler {
     [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo
                              completionHandler:^(BOOL granted) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (granted) {
-                handler(YES);
-            } else {
-                handler(NO);
-            }
-        });
-    }];
+                               dispatch_async(dispatch_get_main_queue(), ^{
+                                 if (granted) {
+                                     handler(YES);
+                                 } else {
+                                     handler(NO);
+                                 }
+                               });
+                             }];
 }
 
 - (void)startCamera {
@@ -184,11 +190,13 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         BOOL isAudioHolding = [self inputBarIsAudioHolding];
         BOOL isCameraHolding = [self inputBarIsCameraHolding];
         if (isAudioHolding || isCameraHolding) {
-            NSString *alertMessage =
-            isCameraHolding
-            ? NCUILocalizedString(@"voip_video_call_existed_warning")
-            : NCUILocalizedString(@"voip_audio_call_existed_warning");
-            [NCAlertView showAlertController:alertMessage message:nil hiddenAfterDelay:1 inViewController:nil];
+            NSString *alertMessage = isCameraHolding
+                                         ? NCUILocalizedString(@"voip_video_call_existed_warning")
+                                         : NCUILocalizedString(@"voip_audio_call_existed_warning");
+            [NCAlertView showAlertController:alertMessage
+                                     message:nil
+                            hiddenAfterDelay:1
+                            inViewController:nil];
             return;
         }
         NCSightViewController *svc = [[sightType alloc] init];
@@ -212,9 +220,10 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     NCFileSelectorViewController *picker =
         [[NCFileSelectorViewController alloc] initWithRootPath:rootPath];
     picker.delegate = self;
-    NCBaseNavigationController *rootVC = [[NCBaseNavigationController alloc] initWithRootViewController:picker];
+    NCBaseNavigationController *rootVC =
+        [[NCBaseNavigationController alloc] initWithRootViewController:picker];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate presentViewController:rootVC functionTag:PLUGIN_BOARD_ITEM_FILE_TAG];
+      [self.delegate presentViewController:rootVC functionTag:PLUGIN_BOARD_ITEM_FILE_TAG];
     });
 }
 
@@ -297,7 +306,7 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 #pragma mark - NCVoiceRecordControlDelegate
-- (BOOL)recordWillBegin{
+- (BOOL)recordWillBegin {
     if ([self.delegate respondsToSelector:@selector(recordWillBegin)]) {
         NCLogF(@"recordWillBegin:==============> %d", [self.delegate recordWillBegin]);
         return [self.delegate recordWillBegin];
@@ -352,7 +361,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     }
 }
 
-- (void)inputContainerView:(NCInputContainerView *)inputContainerView forControlEvents:(UIControlEvents)controlEvents {
+- (void)inputContainerView:(NCInputContainerView *)inputContainerView
+          forControlEvents:(UIControlEvents)controlEvents {
     [self didTouchRecordButtonEvent:controlEvents];
 }
 
@@ -363,16 +373,24 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     self.frame = vRect;
 }
 
-- (BOOL)inputTextView:(UITextView *)inputTextView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text{
-    if ([self.delegate respondsToSelector:@selector(inputTextView:shouldChangeTextInRange:replacementText:)]) {
-        [self.delegate inputTextView:inputTextView shouldChangeTextInRange:range replacementText:text];
+- (BOOL)inputTextView:(UITextView *)inputTextView
+    shouldChangeTextInRange:(NSRange)range
+            replacementText:(NSString *)text {
+    if ([self.delegate
+            respondsToSelector:@selector(inputTextView:shouldChangeTextInRange:replacementText:)]) {
+        [self.delegate inputTextView:inputTextView
+             shouldChangeTextInRange:range
+                     replacementText:text];
     }
 
     if ([text isEqualToString:@"\n"]) {
         if ([self.delegate respondsToSelector:@selector(inputTextViewDidTouchSendKey:)]) {
-            NSString *formatString =
-                [inputTextView.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            NSString *formatString = [inputTextView.text
+                stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
             if (formatString.length > 0) {
+                if ([self isInputTextTooLongForSending:inputTextView.text]) {
+                    return NO;
+                }
                 [self.delegate inputTextViewDidTouchSendKey:inputTextView];
                 [self.mentionedRangeInfoList removeAllObjects];
             }
@@ -396,7 +414,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     if (nil == string) {
         NSUInteger textLength = self.inputTextView.textStorage.length;
         NSUInteger cursorLocation = self.inputTextView.selectedRange.location;
-        if (textLength == 0 || cursorLocation == 0 || cursorLocation == NSNotFound || cursorLocation > textLength) {
+        if (textLength == 0 || cursorLocation == 0 || cursorLocation == NSNotFound ||
+            cursorLocation > textLength) {
             return;
         }
         NSRange range = NSMakeRange(cursorLocation - 1, 1);
@@ -404,20 +423,41 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
             return;
         }
         if (self.delegate &&
-            [self.delegate respondsToSelector:@selector(inputTextView:shouldChangeTextInRange:replacementText:)]) {
-            [self.delegate inputTextView:self.inputTextView shouldChangeTextInRange:range replacementText:string];
+            [self.delegate
+                respondsToSelector:@selector(
+                                       inputTextView:shouldChangeTextInRange:replacementText:)]) {
+            [self.delegate inputTextView:self.inputTextView
+                 shouldChangeTextInRange:range
+                         replacementText:string];
         }
         // Update mention metadata.
-        if ([self.inputTextView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
-            BOOL shouldChange = [self.inputTextView.delegate textView:self.inputTextView shouldChangeTextInRange:range replacementText:string];
+        if ([self.inputTextView.delegate
+                respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
+            BOOL shouldChange = [self.inputTextView.delegate textView:self.inputTextView
+                                              shouldChangeTextInRange:range
+                                                      replacementText:string];
             if (shouldChange) {
                 [self.inputTextView deleteBackward];
             }
         }
     } else {
         NSString *replaceString = string;
-        if (replaceString.length < 5000) {
-            NSMutableAttributedString *attStr = [[NSMutableAttributedString alloc] initWithString:replaceString];
+        NSInteger cursorPosition;
+        if (self.inputTextView.selectedTextRange) {
+            cursorPosition = self.inputTextView.selectedRange.location;
+        } else {
+            cursorPosition = 0;
+        }
+        // Clamp the caret position to the text storage length.
+        if (cursorPosition > self.inputTextView.textStorage.length) {
+            cursorPosition = self.inputTextView.textStorage.length;
+        }
+        NSRange replacementRange = NSMakeRange(cursorPosition, 0);
+        if (![self wouldInputTextExceedLimitInTextView:self.inputTextView
+                                                 range:replacementRange
+                                       replacementText:replaceString]) {
+            NSMutableAttributedString *attStr =
+                [[NSMutableAttributedString alloc] initWithString:replaceString];
             [attStr addAttribute:NSFontAttributeName
                            value:self.inputTextView.font
                            range:NSMakeRange(0, replaceString.length)];
@@ -427,34 +467,38 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
                                value:foreColor
                                range:NSMakeRange(0, replaceString.length)];
             }
-       
-            NSInteger cursorPosition;
-            if (self.inputTextView.selectedTextRange) {
-                cursorPosition = self.inputTextView.selectedRange.location;
-            } else {
-                cursorPosition = 0;
-            }
-            // Clamp the caret position to the text storage length.
-            if (cursorPosition > self.inputTextView.textStorage.length)
-                cursorPosition = self.inputTextView.textStorage.length;
+
             [self.inputTextView.textStorage insertAttributedString:attStr atIndex:cursorPosition];
             // Notify the text delegate so mention ranges follow the inserted emoji.
-            if ([self.inputTextView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
-                [self.inputTextView.delegate textView:self.inputTextView shouldChangeTextInRange:self.inputTextView.selectedRange replacementText:string];
+            if ([self.inputTextView.delegate
+                    respondsToSelector:@selector(
+                                           textView:shouldChangeTextInRange:replacementText:)]) {
+                [self.inputTextView.delegate textView:self.inputTextView
+                              shouldChangeTextInRange:self.inputTextView.selectedRange
+                                      replacementText:string];
             }
-            
+
             NSRange range;
             range.location = self.inputTextView.selectedRange.location + string.length;
             range.length = 0;
             self.inputTextView.selectedRange = range;
+        } else {
+            return;
         }
     }
-    
+
     UITextView *textView = self.inputTextView;
+    if (!textView.window) {
+        [self enableEmojiBoardViewSendButton];
+        if ([self.delegate respondsToSelector:@selector(emojiView:didTouchedEmoji:)]) {
+            [self.delegate emojiView:emojiView didTouchedEmoji:string];
+        }
+        return;
+    }
     CGRect line = [textView caretRectForPosition:textView.selectedTextRange.start];
-    CGFloat overflow =
-    line.origin.y + line.size.height - (textView.contentOffset.y + textView.bounds.size.height -
-                                        textView.contentInset.bottom - textView.contentInset.top);
+    CGFloat overflow = line.origin.y + line.size.height -
+                       (textView.contentOffset.y + textView.bounds.size.height -
+                        textView.contentInset.bottom - textView.contentInset.top);
     if (overflow > 0) {
         // We are at the bottom of the visible text and introduced a line feed,
         // scroll down (iOS 7 does not do it)
@@ -465,11 +509,11 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         __weak typeof(textView) weakTextView = textView;
         [UIView animateWithDuration:.2
                          animations:^{
-            [weakTextView setContentOffset:offset];
-        }];
+                           [weakTextView setContentOffset:offset];
+                         }];
     }
     [self enableEmojiBoardViewSendButton];
-   
+
     if ([self.delegate respondsToSelector:@selector(emojiView:didTouchedEmoji:)]) {
         [self.delegate emojiView:emojiView didTouchedEmoji:string];
     }
@@ -478,12 +522,16 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)didSendButtonEvent:(NCEmojiBoardView *)emojiView sendButton:(UIButton *)sendButton {
     NSString *_sendText = self.inputTextView.text;
 
-    NSString *_formatString = [_sendText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    NSString *_formatString =
+        [_sendText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
     if (0 == [_formatString length]) {
         [self showAlertController:nil
                           message:NCUILocalizedString(@"white_space_message")
                       cancelTitle:NCUILocalizedString(@"ok")];
+        return;
+    }
+    if ([self isInputTextTooLongForSending:_sendText]) {
         return;
     }
     if ([self.delegate respondsToSelector:@selector(emojiView:didTouchSendButton:)]) {
@@ -493,6 +541,28 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     self.inputTextView.text = @"";
     [self.mentionedRangeInfoList removeAllObjects];
     [self enableEmojiBoardViewSendButton];
+}
+
+- (BOOL)isInputTextTooLongForSending:(NSString *)text {
+    if (![NCChatUIUtility isMessageTextOverMaxVisibleCharacterLimit:text]) {
+        return NO;
+    }
+    [NCToastView showToast:NCUILocalizedString(@"nc_message_too_long")
+                  rootView:self.containerView ?: self];
+    return YES;
+}
+
+- (BOOL)wouldInputTextExceedLimitInTextView:(UITextView *)textView
+                                      range:(NSRange)range
+                            replacementText:(NSString *)replacementText {
+    BOOL exceedsLimit = [NCChatUIUtility messageText:textView.text
+        wouldExceedMaxVisibleCharacterLimitReplacingRange:range
+                                                 withText:replacementText];
+    if (exceedsLimit) {
+        [NCToastView showToast:NCUILocalizedString(@"nc_message_too_long")
+                      rootView:self.containerView ?: self];
+    }
+    return exceedsLimit;
 }
 
 #pragma mark - UIImagePickerControllerDelegate method
@@ -511,7 +581,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 #pragma mark - NCSightViewControllerDelegate
-- (void)sightViewController:(UIViewController *)sightVC didFinishCapturingStillImage:(UIImage *)image {
+- (void)sightViewController:(UIViewController *)sightVC
+    didFinishCapturingStillImage:(UIImage *)image {
     if ([self.delegate respondsToSelector:@selector(imageDidCapture:)]) {
         [self.delegate imageDidCapture:image];
     }
@@ -522,23 +593,33 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
          didWriteSightAtURL:(NSURL *)url
                   thumbnail:(UIImage *)thumnail
                    duration:(NSUInteger)duration {
-    [sightVC
-     dismissViewControllerAnimated:YES
-     completion:^{
-        NSString *path = url.path;
-        if (path.length == 0 || ![[NSFileManager defaultManager] fileExistsAtPath:path]) {
-            if ([self.delegate respondsToSelector:@selector(sightDidRecordFailedWith:status:)]) {
-                NSError *error = [NSError errorWithDomain:@"NCChatSessionInputBar"
-                                                     code:-1
-                                                 userInfo:@{NSLocalizedDescriptionKey : @"Invalid short video local path"}];
-                [self.delegate sightDidRecordFailedWith:error status:0];
-            }
-            return;
-        }
-        if ([self.delegate respondsToSelector:@selector(sightDidFinishRecord:thumbnail:duration:)]) {
-            [self.delegate sightDidFinishRecord:path thumbnail:thumnail duration:duration];
-        }
-    }];
+    [sightVC dismissViewControllerAnimated:YES
+                                completion:^{
+                                  NSString *path = url.path;
+                                  if (path.length == 0 ||
+                                      ![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+                                      if ([self.delegate
+                                              respondsToSelector:
+                                                  @selector(sightDidRecordFailedWith:status:)]) {
+                                          NSError *error = [NSError
+                                              errorWithDomain:@"NCChatSessionInputBar"
+                                                         code:-1
+                                                     userInfo:@{
+                                                         NSLocalizedDescriptionKey :
+                                                             @"Invalid short video local path"
+                                                     }];
+                                          [self.delegate sightDidRecordFailedWith:error status:0];
+                                      }
+                                      return;
+                                  }
+                                  if ([self.delegate
+                                          respondsToSelector:@selector(sightDidFinishRecord:
+                                                                       thumbnail:duration:)]) {
+                                      [self.delegate sightDidFinishRecord:path
+                                                                thumbnail:thumnail
+                                                                 duration:duration];
+                                  }
+                                }];
 }
 
 - (void)sightViewController:(NCSightViewController *)sightVC
@@ -575,13 +656,14 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (self.photoEditorDelegate &&
-        [self.photoEditorDelegate respondsToSelector:@selector(onClickEditPicture:originalImage:editCompletion:)]) {
+        [self.photoEditorDelegate
+            respondsToSelector:@selector(onClickEditPicture:originalImage:editCompletion:)]) {
         [self.photoEditorDelegate onClickEditPicture:rootCtrl
                                        originalImage:previewImage
                                       editCompletion:^(UIImage *editedImage) {
-                                          [[NSNotificationCenter defaultCenter]
-                                              postNotificationName:@"onClickEditPictureCompletion"
-                                                            object:editedImage];
+                                        [[NSNotificationCenter defaultCenter]
+                                            postNotificationName:@"onClickEditPictureCompletion"
+                                                          object:editedImage];
                                       }];
     }
 #pragma clang diagnostic pop
@@ -590,12 +672,13 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 #pragma mark - NCSelectingUserDataSource
 - (void)getSelectingUserIdList:(void (^)(NSArray<NSString *> *userIdList))completion {
     if ([self.dataSource respondsToSelector:@selector(getSelectingUserIdList:functionTag:)]) {
-        [self.dataSource getSelectingUserIdList:^(NSArray<NSString *> *userIdList) {
-            if (completion) {
-                completion(userIdList);
+        [self.dataSource
+            getSelectingUserIdList:^(NSArray<NSString *> *userIdList) {
+              if (completion) {
+                  completion(userIdList);
+              }
             }
-        }
-                                    functionTag:INPUT_MENTIONED_SELECT_TAG];
+                       functionTag:INPUT_MENTIONED_SELECT_TAG];
     } else {
         if (completion) {
             completion(nil);
@@ -645,7 +728,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 #pragma mark - NCPictureEditDelegate
 - (void)setPhotoEditorDelegate:(id<NCPictureEditDelegate>)photoEditorDelegate {
     if (photoEditorDelegate &&
-        [photoEditorDelegate respondsToSelector:@selector(onClickEditPicture:originalImage:editCompletion:)]) {
+        [photoEditorDelegate
+            respondsToSelector:@selector(onClickEditPicture:originalImage:editCompletion:)]) {
         _photoEditorDelegate = photoEditorDelegate;
     }
 }
@@ -655,20 +739,23 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)nc_inputBar_registerForNotifications {
     [self nc_inputBar_unregisterForNotifications];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(nc_inputBar_didReceiveKeyboardWillShowNotification:)
-                                                 name:UIKeyboardWillShowNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(nc_inputBar_didReceiveKeyboardWillShowNotification:)
-                                                 name:NCUIKeyboardWillShowNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(nc_inputBar_didReceiveKeyboardWillShowNotification:)
+               name:UIKeyboardWillShowNotification
+             object:nil];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(nc_inputBar_didReceiveKeyboardWillHideNotification:)
-                                                 name:UIKeyboardWillHideNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(nc_inputBar_didReceiveKeyboardWillShowNotification:)
+               name:NCUIKeyboardWillShowNotification
+             object:nil];
+
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(nc_inputBar_didReceiveKeyboardWillHideNotification:)
+               name:UIKeyboardWillHideNotification
+             object:nil];
 }
 
 - (void)nc_inputBar_unregisterForNotifications {
@@ -686,31 +773,40 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
             return;
         }
     }
-    
+
     BOOL shouldHideMenuControllers = NO;
-    
-    // textViewBeginEditing is set by the input text view's textViewShouldBeginEditing delegate callback.
-    // Ignore keyboard events initiated by other text fields on the channel page.
+
+    // textViewBeginEditing is set by the input text view's textViewShouldBeginEditing delegate
+    // callback. Ignore keyboard events initiated by other text fields on the channel page.
     if (self.inputContainerView.textViewBeginEditing) {
         NSDictionary *userInfo = [notification userInfo];
         CGRect keyboardBeginFrame = [userInfo[UIKeyboardFrameBeginUserInfoKey] CGRectValue];
         CGRect keyboardEndFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
         [[NCMenuController sharedMenuController] updateKeyboardFrame:keyboardEndFrame visible:YES];
-        BOOL shouldUpdateKeyboardLayout = !CGRectEqualToRect(keyboardBeginFrame, keyboardEndFrame) || self.inputContainerView.currentBottomBarStatus != KBottomBarKeyboardStatus;
+        BOOL shouldUpdateKeyboardLayout =
+            !CGRectEqualToRect(keyboardBeginFrame, keyboardEndFrame) ||
+            self.inputContainerView.currentBottomBarStatus != KBottomBarKeyboardStatus;
         if (shouldUpdateKeyboardLayout) {
-            UIViewAnimationCurve animationCurve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue];
+            UIViewAnimationCurve animationCurve =
+                [userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue];
             NSInteger animationCurveOption = (animationCurve << 16);
-            
-            double animationDuration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-            [UIView animateWithDuration:animationDuration delay:0.0 options:animationCurveOption animations:^{
-                self.keyboardFrame = keyboardEndFrame;
-                [self animationLayoutBottomBarWithStatus:KBottomBarKeyboardStatus animated:NO];
-            }completion:^(BOOL finished){
-                
-            }];
+
+            double animationDuration =
+                [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+            [UIView animateWithDuration:animationDuration
+                                  delay:0.0
+                                options:animationCurveOption
+                             animations:^{
+                               self.keyboardFrame = keyboardEndFrame;
+                               [self animationLayoutBottomBarWithStatus:KBottomBarKeyboardStatus
+                                                               animated:NO];
+                             }
+                             completion:^(BOOL finished){
+
+                             }];
         }
         shouldHideMenuControllers = shouldUpdateKeyboardLayout;
-    }else {
+    } else {
         /*
          PAASIOSDEV-407: After an alert restores the input text view as first
          responder, the system keyboard posts a second notification after
@@ -721,19 +817,22 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
          keyboard layout.
          */
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.inputContainerView.textViewBeginEditing) {
-                NSMutableDictionary *userInfo = notification.userInfo.mutableCopy;
-                userInfo[UIKeyboardFrameEndUserInfoKey] = @(self.keyboardFrame);
-                [[NSNotificationCenter defaultCenter] postNotificationName:NCUIKeyboardWillShowNotification object:notification.object userInfo:userInfo.copy];
-            }
+          if (self.inputContainerView.textViewBeginEditing) {
+              NSMutableDictionary *userInfo = notification.userInfo.mutableCopy;
+              userInfo[UIKeyboardFrameEndUserInfoKey] = @(self.keyboardFrame);
+              [[NSNotificationCenter defaultCenter]
+                  postNotificationName:NCUIKeyboardWillShowNotification
+                                object:notification.object
+                              userInfo:userInfo.copy];
+          }
         });
         shouldHideMenuControllers = YES;
     }
-    
+
     if (!shouldHideMenuControllers) {
         return;
     }
-    
+
     if (@available(iOS 13.0, *)) {
         [[UIMenuController sharedMenuController] hideMenuFromView:self];
     } else {
@@ -741,7 +840,6 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         [UIMenuController sharedMenuController].menuVisible = NO;
     }
     [[NCMenuController sharedMenuController] hideMenuAnimated:NO];
-
 }
 
 - (void)nc_inputBar_didReceiveKeyboardWillHideNotification:(NSNotification *)notification {
@@ -760,7 +858,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)updateAllMentionedRangeInfo:(NSInteger)changedLocation length:(NSInteger)changedLength {
     for (NCMentionedStringRangeInfo *mentionedInfo in self.mentionedRangeInfoList) {
         if (mentionedInfo.range.location >= changedLocation) {
-            mentionedInfo.range = NSMakeRange(mentionedInfo.range.location + changedLength, mentionedInfo.range.length);
+            mentionedInfo.range = NSMakeRange(mentionedInfo.range.location + changedLength,
+                                              mentionedInfo.range.length);
         }
     }
 }
@@ -770,9 +869,9 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     // Prefer the delegate's custom user-selection flow when it implements the optional callback.
     if ([self.delegate respondsToSelector:@selector(showChooseUserViewController:cancel:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate performSelector:@selector(showChooseUserViewController:cancel:)
-                                withObject:selectedBlock
-                                withObject:cancelBlock];
+          [self.delegate performSelector:@selector(showChooseUserViewController:cancel:)
+                              withObject:selectedBlock
+                              withObject:cancelBlock];
         });
 
         return;
@@ -786,7 +885,7 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     return range.length <= textLength - range.location;
 }
 
-- (BOOL)willUpdateInputTextMetionedInfo:(NSString *)text range:(NSRange)range{
+- (BOOL)willUpdateInputTextMetionedInfo:(NSString *)text range:(NSRange)range {
     BOOL shouldUseDefaultChangeText = YES;
     if (self.isMentionedEnabled) {
         // Track the edited range.
@@ -798,16 +897,18 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
             for (NCMentionedStringRangeInfo *mentionedInfo in [self.mentionedRangeInfoList copy]) {
                 NSRange mentionedRange = mentionedInfo.range;
                 if (![self isMentionedRange:mentionedRange
-                             validForTextLength:self.inputTextView.textStorage.length]) {
+                         validForTextLength:self.inputTextView.textStorage.length]) {
                     [self.mentionedRangeInfoList removeObject:mentionedInfo];
                     continue;
                 }
-                //如果删除的光标在@信息的最后，删除这个@信息
-                if (range.length == 1 && (mentionedRange.location + mentionedRange.length == range.location + 1)) {
+                // 如果删除的光标在@信息的最后，删除这个@信息
+                if (range.length == 1 &&
+                    (mentionedRange.location + mentionedRange.length == range.location + 1)) {
                     NSUInteger originalTextLength = self.inputTextView.textStorage.length;
                     shouldUseDefaultChangeText = NO;
                     [self.inputTextView.textStorage deleteCharactersInRange:mentionedRange];
-                    // Mutating textStorage does not trigger inputTextViewDidChange, so invoke it explicitly.
+                    // Mutating textStorage does not trigger inputTextViewDidChange, so invoke it
+                    // explicitly.
                     [self inputTextViewDidChange:self.inputTextView];
                     range.location = range.location - mentionedRange.length + 1;
                     range.length = 0;
@@ -817,9 +918,11 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
                     changedLength = -(NSInteger)mentionedInfo.range.length;
 
                     [self.mentionedRangeInfoList removeObject:mentionedInfo];
-                    for (NCMentionedStringRangeInfo *remainingInfo in [self.mentionedRangeInfoList copy]) {
+                    for (NCMentionedStringRangeInfo *remainingInfo in
+                         [self.mentionedRangeInfoList copy]) {
                         NSRange remainingRange = remainingInfo.range;
-                        if (![self isMentionedRange:remainingRange validForTextLength:originalTextLength] ||
+                        if (![self isMentionedRange:remainingRange
+                                 validForTextLength:originalTextLength] ||
                             NSIntersectionRange(remainingRange, mentionedRange).length > 0) {
                             [self.mentionedRangeInfoList removeObject:remainingInfo];
                         }
@@ -841,24 +944,29 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
             if ([text isEqualToString:@"@"]) {
                 if ([self shouldTriggerMentionedChoose:self.inputTextView range:range]) {
                     __weak typeof(self) weakSelf = self;
-                    [self showChooseUserViewController:^(NCChatUIUserInfo *selectedUserInfo) {
-                        [weakSelf insertMentionedUser:selectedUserInfo symbolRequset:NO];
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [weakSelf animationLayoutBottomBarWithStatus:(KBottomBarKeyboardStatus) animated:YES];
-                        });
-                    }
+                    [self
+                        showChooseUserViewController:^(NCChatUIUserInfo *selectedUserInfo) {
+                          [weakSelf insertMentionedUser:selectedUserInfo symbolRequset:NO];
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                            [weakSelf animationLayoutBottomBarWithStatus:(KBottomBarKeyboardStatus)
+                                                                animated:YES];
+                          });
+                        }
                         cancel:^{
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                [weakSelf animationLayoutBottomBarWithStatus:(KBottomBarKeyboardStatus) animated:YES];
-                            });
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                            [weakSelf animationLayoutBottomBarWithStatus:(KBottomBarKeyboardStatus)
+                                                                animated:YES];
+                          });
                         }];
                 }
             }
 
-            // Inserting inside a mention invalidates it; other mentions are shifted by the edit length below.
+            // Inserting inside a mention invalidates it; other mentions are shifted by the edit
+            // length below.
             for (NCMentionedStringRangeInfo *mentionedInfo in [self.mentionedRangeInfoList copy]) {
                 NSRange strRange = mentionedInfo.range;
-                if ((range.location > strRange.location) && (range.location < (strRange.location + strRange.length))) {
+                if ((range.location > strRange.location) &&
+                    (range.location < (strRange.location + strRange.length))) {
                     [self.mentionedRangeInfoList removeObject:mentionedInfo];
                     break;
                 }
@@ -888,61 +996,65 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Clamp the caret position to the text storage length.
-        NSUInteger cursorPosition = self.inputTextView.selectedRange.location;
-        if (cursorPosition > self.inputTextView.textStorage.length) {
-            cursorPosition = self.inputTextView.textStorage.length;
-        }
-        // Mention start position
-        NSUInteger mentionedPosition;
+      // Clamp the caret position to the text storage length.
+      NSUInteger cursorPosition = self.inputTextView.selectedRange.location;
+      if (cursorPosition > self.inputTextView.textStorage.length) {
+          cursorPosition = self.inputTextView.textStorage.length;
+      }
+      // Mention start position
+      NSUInteger mentionedPosition;
 
-        // Mention display text
-        NSString *insertContent = nil;
-        NSInteger changeRangeLength;
-        if (symbolRequset) {
-            if (userInfo.name.length > 0) {
-                insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.name];
-            } else {
-                insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.userId];
-            }
-            mentionedPosition = cursorPosition;
-            changeRangeLength = [insertContent length];
-        } else {
-            if (userInfo.name.length > 0) {
-                insertContent = [NSString stringWithFormat:@"%@ ", userInfo.name];
-            } else {
-                insertContent = [NSString stringWithFormat:@"%@ ", userInfo.userId];
-            }
-            mentionedPosition = (cursorPosition >= 1) ? (cursorPosition - 1) : 0;
-            changeRangeLength = [insertContent length] + 1;
-        }
+      // Mention display text
+      NSString *insertContent = nil;
+      NSInteger changeRangeLength;
+      if (symbolRequset) {
+          if (userInfo.name.length > 0) {
+              insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.name];
+          } else {
+              insertContent = [NSString stringWithFormat:@"@%@ ", userInfo.userId];
+          }
+          mentionedPosition = cursorPosition;
+          changeRangeLength = [insertContent length];
+      } else {
+          if (userInfo.name.length > 0) {
+              insertContent = [NSString stringWithFormat:@"%@ ", userInfo.name];
+          } else {
+              insertContent = [NSString stringWithFormat:@"%@ ", userInfo.userId];
+          }
+          mentionedPosition = (cursorPosition >= 1) ? (cursorPosition - 1) : 0;
+          changeRangeLength = [insertContent length] + 1;
+      }
 
-        NSMutableAttributedString *attStr = [[NSMutableAttributedString alloc] initWithString:insertContent];
-        [attStr addAttribute:NSFontAttributeName
-                       value:self.inputTextView.font
-                       range:NSMakeRange(0, insertContent.length)];
-        UIColor *foreColor = NCDynamicColor(@"text_primary_color");
-        if (foreColor) {
-            [attStr addAttribute:NSForegroundColorAttributeName
-                           value:foreColor
-                           range:NSMakeRange(0, insertContent.length)];
-        }
-     
-        [self.inputTextView.textStorage insertAttributedString:attStr atIndex:cursorPosition];
-        // Mutating textStorage does not trigger inputTextViewDidChange, so invoke it explicitly.
-        [self inputTextViewDidChange:self.inputTextView];
-        self.inputTextView.selectedRange = NSMakeRange(cursorPosition + insertContent.length, 0);
-        [self updateAllMentionedRangeInfo:cursorPosition length:insertContent.length];
+      NSMutableAttributedString *attStr =
+          [[NSMutableAttributedString alloc] initWithString:insertContent];
+      [attStr addAttribute:NSFontAttributeName
+                     value:self.inputTextView.font
+                     range:NSMakeRange(0, insertContent.length)];
+      UIColor *foreColor = NCDynamicColor(@"text_primary_color");
+      if (foreColor) {
+          [attStr addAttribute:NSForegroundColorAttributeName
+                         value:foreColor
+                         range:NSMakeRange(0, insertContent.length)];
+      }
 
-        NCMentionedStringRangeInfo *mentionedStrInfo = [[NCMentionedStringRangeInfo alloc] init];
-        mentionedStrInfo.content = insertContent;
-        mentionedStrInfo.userId = userInfo.userId;
-        mentionedStrInfo.range = NSMakeRange(mentionedPosition, changeRangeLength);
-        [self.mentionedRangeInfoList addObject:mentionedStrInfo];
+      [self.inputTextView.textStorage insertAttributedString:attStr atIndex:cursorPosition];
+      // Mutating textStorage does not trigger inputTextViewDidChange, so invoke it explicitly.
+      [self inputTextViewDidChange:self.inputTextView];
+      self.inputTextView.selectedRange = NSMakeRange(cursorPosition + insertContent.length, 0);
+      [self updateAllMentionedRangeInfo:cursorPosition length:insertContent.length];
 
-        if ([self.inputTextView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
-            [self.inputTextView.delegate textView:self.inputTextView shouldChangeTextInRange: self.inputTextView.selectedRange replacementText:insertContent];
-        }
+      NCMentionedStringRangeInfo *mentionedStrInfo = [[NCMentionedStringRangeInfo alloc] init];
+      mentionedStrInfo.content = insertContent;
+      mentionedStrInfo.userId = userInfo.userId;
+      mentionedStrInfo.range = NSMakeRange(mentionedPosition, changeRangeLength);
+      [self.mentionedRangeInfoList addObject:mentionedStrInfo];
+
+      if ([self.inputTextView.delegate
+              respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
+          [self.inputTextView.delegate textView:self.inputTextView
+                        shouldChangeTextInRange:self.inputTextView.selectedRange
+                                replacementText:insertContent];
+      }
     });
 }
 
@@ -951,11 +1063,12 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     float gap = (NC_IOS_SYSTEM_VERSION_LESS_THAN(@"7.0")) ? 64 : 0;
     float bottom = [self getSafeAreaExtraBottomHeight];
     gap += bottom;
-    if (bottom > 0) {// A hotspot does not add another status-bar offset on devices with a bottom safe area.
+    if (bottom >
+        0) { // A hotspot does not add another status-bar offset on devices with a bottom safe area.
         return [UIScreen mainScreen].bounds.size.height - gap;
     } else {
         return IS_HOTSPOT_CONNECTED ? [UIScreen mainScreen].bounds.size.height - gap - 20
-        : [UIScreen mainScreen].bounds.size.height - gap;
+                                    : [UIScreen mainScreen].bounds.size.height - gap;
     }
 }
 
@@ -964,8 +1077,10 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 }
 
 - (BOOL)checkAndAlertCameraAccessRight {
-    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    if (authStatus == AVAuthorizationStatusDenied || authStatus == AVAuthorizationStatusRestricted) {
+    AVAuthorizationStatus authStatus =
+        [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if (authStatus == AVAuthorizationStatusDenied ||
+        authStatus == AVAuthorizationStatusRestricted) {
         [self showAlertController:NCUILocalizedString(@"access_right_title")
                           message:NCUILocalizedString(@"camera_access_right")
                       cancelTitle:NCUILocalizedString(@"ok")];
@@ -974,12 +1089,12 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     return YES;
 }
 
-
 - (void)resetInputContainerView {
     [self setInputBarType:self.currentControlType style:self.currentControlStyle];
 }
 
-- (void)animationLayoutBottomBarWithStatus:(KBottomBarStatus)bottomBarStatus animated:(BOOL)animated {
+- (void)animationLayoutBottomBarWithStatus:(KBottomBarStatus)bottomBarStatus
+                                  animated:(BOOL)animated {
     [self.pluginBoardView.extensionView setHidden:YES];
     if (animated == YES) {
         [UIView beginAnimations:@"Move_bar" context:nil];
@@ -998,41 +1113,47 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     CGRect chatInputBarRect = self.frame;
     float bottomY = [self getBoardViewBottomOriginY];
     switch (bottomBarStatus) {
-        case KBottomBarDefaultStatus: {
-            [self hiddenEmojiBoardView:YES pluginBoardView:YES];
+    case KBottomBarDefaultStatus: {
+        [self hiddenEmojiBoardView:YES pluginBoardView:YES];
+        chatInputBarRect.origin.y = bottomY - self.bounds.size.height;
+    } break;
+    case KBottomBarKeyboardStatus: {
+        [self hiddenEmojiBoardView:YES pluginBoardView:YES];
+        // bottomY already excludes the bottom safe-area inset.
+        if (self.keyboardFrame.size.height > 0) {
+            // The system keyboard height includes the same inset, so add it back after subtracting
+            // the keyboard.
+            chatInputBarRect.origin.y = bottomY - self.bounds.size.height -
+                                        self.keyboardFrame.size.height +
+                                        [self getSafeAreaExtraBottomHeight];
+        } else {
+            // An external keyboard does not present the on-screen keyboard.
             chatInputBarRect.origin.y = bottomY - self.bounds.size.height;
-        } break;
-        case KBottomBarKeyboardStatus: {
-            [self hiddenEmojiBoardView:YES pluginBoardView:YES];
-            // bottomY already excludes the bottom safe-area inset.
-            if (self.keyboardFrame.size.height > 0) {
-                // The system keyboard height includes the same inset, so add it back after subtracting the keyboard.
-                chatInputBarRect.origin.y = bottomY - self.bounds.size.height - self.keyboardFrame.size.height + [self getSafeAreaExtraBottomHeight];
-            }else{
-               // An external keyboard does not present the on-screen keyboard.
-                chatInputBarRect.origin.y = bottomY - self.bounds.size.height;
-            }
-        } break;
-        case KBottomBarPluginStatus: {
-            [self pluginBoardView];
-            [self hiddenEmojiBoardView:YES pluginBoardView:NO];
-            chatInputBarRect.origin.y = bottomY - self.bounds.size.height - self.pluginBoardView.bounds.size.height;
-        } break;
-        case KBottomBarEmojiStatus: {
-            [self emojiBoardView];
-            [self hiddenEmojiBoardView:NO pluginBoardView:YES];
-            chatInputBarRect.origin.y = bottomY - self.bounds.size.height - self.emojiBoardView.bounds.size.height;
-        } break;
-        case KBottomBarRecordStatus: {
-            [self hiddenEmojiBoardView:YES pluginBoardView:YES];
-            chatInputBarRect.origin.y = bottomY - self.bounds.size.height;
-        } break;
-        default:
-            break;
+        }
+    } break;
+    case KBottomBarPluginStatus: {
+        [self pluginBoardView];
+        [self hiddenEmojiBoardView:YES pluginBoardView:NO];
+        chatInputBarRect.origin.y =
+            bottomY - self.bounds.size.height - self.pluginBoardView.bounds.size.height;
+    } break;
+    case KBottomBarEmojiStatus: {
+        [self emojiBoardView];
+        [self hiddenEmojiBoardView:NO pluginBoardView:YES];
+        chatInputBarRect.origin.y =
+            bottomY - self.bounds.size.height - self.emojiBoardView.bounds.size.height;
+    } break;
+    case KBottomBarRecordStatus: {
+        [self hiddenEmojiBoardView:YES pluginBoardView:YES];
+        chatInputBarRect.origin.y = bottomY - self.bounds.size.height;
+    } break;
+    default:
+        break;
     }
     [self setFrame:chatInputBarRect];
-    
-    [[NCChatUIExtensionService sharedService] inputBarStatusDidChange:bottomBarStatus inInputBar:self];
+
+    [[NCChatUIExtensionService sharedService] inputBarStatusDidChange:bottomBarStatus
+                                                           inInputBar:self];
 }
 
 - (void)hiddenEmojiBoardView:(BOOL)hiddenEmojiBoardView
@@ -1040,14 +1161,17 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     if (self.emojiBoardView) {
         [self.emojiBoardView setHidden:hiddenEmojiBoardView];
         if (!hiddenEmojiBoardView) {
-            self.emojiBoardView.frame = CGRectMake(0, [self getBoardViewBottomOriginY] - Height_EmojBoardView, self.containerView.bounds.size.width, Height_EmojBoardView);
+            self.emojiBoardView.frame =
+                CGRectMake(0, [self getBoardViewBottomOriginY] - Height_EmojBoardView,
+                           self.containerView.bounds.size.width, Height_EmojBoardView);
         }
     }
     if (self.pluginBoardView) {
         [self.pluginBoardView setHidden:hiddenPluginBoardView];
         if (!hiddenPluginBoardView) {
-            self.pluginBoardView.frame = CGRectMake(0, [self getBoardViewBottomOriginY] - Height_PluginBoardView,
-                                                    self.containerView.bounds.size.width, Height_PluginBoardView);
+            self.pluginBoardView.frame =
+                CGRectMake(0, [self getBoardViewBottomOriginY] - Height_PluginBoardView,
+                           self.containerView.bounds.size.width, Height_PluginBoardView);
         }
     }
 }
@@ -1079,15 +1203,15 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     }
 }
 
-- (void)enableEmojiBoardViewSendButton{
+- (void)enableEmojiBoardViewSendButton {
     if (self.inputTextView.text && self.inputTextView.text.length > 0) {
-           [self.emojiBoardView enableSendButton:YES];
-       } else {
-           [self.emojiBoardView enableSendButton:NO];
-       }
+        [self.emojiBoardView enableSendButton:YES];
+    } else {
+        [self.emojiBoardView enableSendButton:NO];
+    }
 }
 
-- (void)updateSubviewsLayout{
+- (void)updateSubviewsLayout {
     CGRect containerViewFrame = self.bounds;
     if (self.currentControlType == NCChatSessionInputBarControlNoAvailableType) {
         self.inputContainerView.frame = containerViewFrame;
@@ -1112,9 +1236,14 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
     }
 }
 
-- (void)showAlertController:(NSString *)title message:(NSString *)message cancelTitle:(NSString *)cancelTitle {
+- (void)showAlertController:(NSString *)title
+                    message:(NSString *)message
+                cancelTitle:(NSString *)cancelTitle {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NCAlertView showAlertController:title message:message cancelTitle:cancelTitle inViewController:nil];
+      [NCAlertView showAlertController:title
+                               message:message
+                           cancelTitle:cancelTitle
+                      inViewController:nil];
     });
 }
 
@@ -1165,10 +1294,12 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (NCEmojiBoardView *)emojiBoardView {
     if (!_emojiBoardView) {
         _emojiBoardView = [[NCEmojiBoardView alloc]
-            initWithFrame:CGRectMake(0, [self getBoardViewBottomOriginY], self.frame.size.width, Height_EmojBoardView)
+            initWithFrame:CGRectMake(0, [self getBoardViewBottomOriginY], self.frame.size.width,
+                                     Height_EmojBoardView)
                  delegate:self];
         for (id<NCEmoticonTabSource> source in
-             [[NCChatUIExtensionService sharedService] getEmoticonTabList:self.channelType channelId:self.channelId]) {
+             [[NCChatUIExtensionService sharedService] getEmoticonTabList:self.channelType
+                                                                channelId:self.channelId]) {
             [_emojiBoardView addExtensionEmojiTab:source];
         };
         _emojiBoardView.hidden = YES;
@@ -1183,8 +1314,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (NCPluginBoardView *)pluginBoardView {
     if (!_pluginBoardView) {
         _pluginBoardView = [[NCPluginBoardView alloc]
-            initWithFrame:CGRectMake(0, [self getBoardViewBottomOriginY], self.containerView.bounds.size.width,
-                                     Height_PluginBoardView)];
+            initWithFrame:CGRectMake(0, [self getBoardViewBottomOriginY],
+                                     self.containerView.bounds.size.width, Height_PluginBoardView)];
 
         // Add the default plugin items before app-provided custom items.
         [_pluginBoardView insertItem:NCDynamicImage(@"channel_plugin_item_picture_img")
@@ -1192,7 +1323,7 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
                                title:NCUILocalizedString(@"photos")
                              atIndex:0
                                  tag:PLUGIN_BOARD_ITEM_ALBUM_TAG];
-        
+
         [_pluginBoardView insertItem:NCDynamicImage(@"channel_plugin_item_camera_img")
                     highlightedImage:NCDynamicImage(@"channel_plugin_item_camera_highlighted_img")
                                title:NCUILocalizedString(@"camera")
@@ -1202,7 +1333,7 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         NSInteger index = 100;
         NSArray *pluginItemInfoList =
             [[NCChatUIExtensionService sharedService] getPluginBoardItemInfoList:self.channelType
-                                                                  channelId:self.channelId];
+                                                                       channelId:self.channelId];
         for (NCChatUIExtensionPluginItemInfo *itemInfo in pluginItemInfoList) {
             NSInteger tag;
             if (itemInfo.tag > 0) {
@@ -1210,7 +1341,11 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
             } else {
                 tag = PLUGIN_BOARD_ITEM_RED_PACKET_TAG;
             }
-            [self.pluginBoardView insertItem:itemInfo.normalImage highlightedImage:itemInfo.highlightedImage title:itemInfo.title atIndex:index tag:tag];
+            [self.pluginBoardView insertItem:itemInfo.normalImage
+                            highlightedImage:itemInfo.highlightedImage
+                                       title:itemInfo.title
+                                     atIndex:index
+                                         tag:tag];
             [self.pluginTapBlockDic setObject:itemInfo.tapBlock forKey:@(tag)];
             index++;
         }
@@ -1235,19 +1370,21 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         __autoreleasing NSError *error = nil;
         NSData *draftData = [draft dataUsingEncoding:NSUTF8StringEncoding];
         if (draftData) {
-            NSDictionary *draftDict =
-                [NSJSONSerialization JSONObjectWithData:draftData options:kNilOptions error:&error];
+            NSDictionary *draftDict = [NSJSONSerialization JSONObjectWithData:draftData
+                                                                      options:kNilOptions
+                                                                        error:&error];
             if (!error && [draftDict count] > 0) {
                 if ([draftDict.allKeys containsObject:@"draftContent"]) {
                     draft = [draftDict objectForKey:@"draftContent"];
                 }
                 NSString *draftContent = [draft isKindOfClass:[NSString class]] ? draft : @"";
-                NSArray *mentionedRangeInfoList = [draftDict objectForKey:@"mentionedRangeInfoList"];
+                NSArray *mentionedRangeInfoList =
+                    [draftDict objectForKey:@"mentionedRangeInfoList"];
                 for (NSString *mentionedInfoString in mentionedRangeInfoList) {
-                    NCMentionedStringRangeInfo *mentionedInfo =
-                        [[NCMentionedStringRangeInfo alloc] initWithDecodeString:mentionedInfoString];
-                    if (mentionedInfo &&
-                        [self isMentionedRange:mentionedInfo.range validForTextLength:draftContent.length]) {
+                    NCMentionedStringRangeInfo *mentionedInfo = [[NCMentionedStringRangeInfo alloc]
+                        initWithDecodeString:mentionedInfoString];
+                    if (mentionedInfo && [self isMentionedRange:mentionedInfo.range
+                                             validForTextLength:draftContent.length]) {
                         [self.mentionedRangeInfoList addObject:mentionedInfo];
                     }
                 }
@@ -1286,7 +1423,9 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         if (mentionedRangeInfoList.count > 0) {
             [dataDict setObject:mentionedRangeInfoList forKey:@"mentionedRangeInfoList"];
         }
-        NSData *data = [NSJSONSerialization dataWithJSONObject:dataDict options:kNilOptions error:nil];
+        NSData *data = [NSJSONSerialization dataWithJSONObject:dataDict
+                                                       options:kNilOptions
+                                                         error:nil];
         draft = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         return draft;
     }
@@ -1307,12 +1446,15 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
         [mentionedUserIdList addObject:mentionedInfo.userId];
     }
     if (containsMentionAll) {
-        return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeAll userIdList:nil mentionedContent:nil];
+        return [[NCMentionedInfo alloc] initWithType:NCMentionedTypeAll
+                                          userIdList:nil
+                                    mentionedContent:nil];
     }
     if (mentionedUserIdList.count > 0) {
-        NCMentionedInfo *mentionedInfo = [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
-                                                                     userIdList:mentionedUserIdList.copy
-                                                               mentionedContent:nil];
+        NCMentionedInfo *mentionedInfo =
+            [[NCMentionedInfo alloc] initWithType:NCMentionedTypeUsers
+                                       userIdList:mentionedUserIdList.copy
+                                 mentionedContent:nil];
         //    [self.mentionedRangeInfoList removeAllObjects];
         return mentionedInfo;
     }
@@ -1342,7 +1484,8 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 
 - (NCVoiceRecordControl *)voiceRecordControl {
     if (!_voiceRecordControl) {
-        _voiceRecordControl = [[NCVoiceRecordControl alloc] initWithConversationType:self.channelType];
+        _voiceRecordControl =
+            [[NCVoiceRecordControl alloc] initWithConversationType:self.channelType];
         _voiceRecordControl.delegate = self;
     }
     return _voiceRecordControl;
@@ -1361,8 +1504,9 @@ NSString *const NCUIKeyboardWillShowNotification = @"NCUIKeyboardWillShowNotific
 - (void)addBottomAreaView {
     CGFloat bottom = [NCChatUIUtility getWindowSafeAreaInsets].bottom;
     if (bottom > 0) {
-        UIView * bottomAreaView= [[UIView alloc] initWithFrame:CGRectMake(0, self.containerView.bounds.size.height - bottom,
-                                                                          self.containerView.bounds.size.width, bottom)];
+        UIView *bottomAreaView = [[UIView alloc]
+            initWithFrame:CGRectMake(0, self.containerView.bounds.size.height - bottom,
+                                     self.containerView.bounds.size.width, bottom)];
         bottomAreaView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
         self.safeAreaView = bottomAreaView;
         [self.containerView addSubview:bottomAreaView];

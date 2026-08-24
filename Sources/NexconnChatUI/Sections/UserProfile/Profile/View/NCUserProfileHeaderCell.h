@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCStackTableViewCell.h"
 #import "NCImageView.h"
 #import "NCOnlineStatusView.h"
+#import "NCStackTableViewCell.h"
 
-UIKIT_EXTERN NSString  * _Nullable const NCUserProfileHeaderCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCUserProfileHeaderCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

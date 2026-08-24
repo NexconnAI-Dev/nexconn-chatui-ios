@@ -7,9 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-typedef BOOL(^NCFriendApplyItemFilterBlock)(id _Nonnull obj, NSInteger start, NSInteger end, BOOL * _Nonnull stop);
+typedef BOOL (^NCFriendApplyItemFilterBlock)(id _Nonnull obj, NSInteger start, NSInteger end,
+                                             BOOL *_Nonnull stop);
 
-typedef NSComparisonResult(^NCFriedApplyItemCompareBlock)(id _Nonnull obj1, id _Nonnull obj2);
+typedef NSComparisonResult (^NCFriedApplyItemCompareBlock)(id _Nonnull obj1, id _Nonnull obj2);
 
 NS_ASSUME_NONNULL_BEGIN
 

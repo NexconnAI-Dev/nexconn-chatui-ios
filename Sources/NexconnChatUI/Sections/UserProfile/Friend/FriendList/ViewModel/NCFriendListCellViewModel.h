@@ -11,9 +11,8 @@
 #import <NexconnChatSDK/NexconnChatSDK.h>
 NS_ASSUME_NONNULL_BEGIN
 
-
 /// Friend list cell view model
-@interface NCFriendListCellViewModel : NCBaseCellViewModel<NCCellViewModelProtocol>
+@interface NCFriendListCellViewModel : NCBaseCellViewModel <NCCellViewModelProtocol>
 
 /// Friend info
 @property (nonatomic, strong) NCFriendInfo *friendInfo;
@@ -28,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)registerCellForTableView:(UITableView *)tableView;
 
 /// Initializes the instance
-- (instancetype)initWithFriend:(NCFriendInfo  * _Nullable )friendInfo;
+- (instancetype)initWithFriend:(NCFriendInfo *_Nullable)friendInfo;
 
 /// Refreshes the friend list
 - (void)refreshWithFriend:(NCFriendInfo *)friendInfo;

@@ -78,7 +78,8 @@ typedef NS_ENUM(NSInteger, NCMessageBubbleTipViewAlignment) {
  @param alignment   Position of the badge
  @return Badge view object
  */
-- (instancetype)initWithParentView:(UIView *)parentView alignment:(NCMessageBubbleTipViewAlignment)alignment;
+- (instancetype)initWithParentView:(UIView *)parentView
+                         alignment:(NCMessageBubbleTipViewAlignment)alignment;
 
 /*!
  Set the badge value

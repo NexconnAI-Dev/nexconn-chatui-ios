@@ -7,11 +7,11 @@
 //
 
 #import "NCVoiceCaptureControl.h"
+#import "NCBaseImageView.h"
 #import "NCChatUICommonDefine.h"
+#import "NCChatUIConfig.h"
 #import "NCChatUIUtility.h"
 #import "NCVoiceRecorder.h"
-#import "NCChatUIConfig.h"
-#import "NCBaseImageView.h"
 @interface NCVoiceCaptureControl () <NCVoiceRecorderDelegate>
 
 @property (nonatomic, strong) UIView *contentView;
@@ -49,7 +49,7 @@
 #pragma mark - Public Methods
 
 - (void)startRecord {
-    //显示UI
+    // 显示UI
     UIWindow *keyWindow = [NCChatUIUtility getWindowForView:nil];
     if (!keyWindow) {
         return;
@@ -86,8 +86,7 @@
     self.textLabel.text = NCUILocalizedString(@"release_to_cancel_title");
     [self.textLabel setBackgroundColor:NCDynamicColor(@"hint_color")];
     self.textLabel.textColor = NCDynamicColor(@"control_title_white_color");
-    self.textLabel.frame = CGRectMake((self.contentView.frame.size.width-136)/2, 126, 136, 20);
-
+    self.textLabel.frame = CGRectMake((self.contentView.frame.size.width - 136) / 2, 126, 136, 20);
 }
 
 - (void)hideCancelView {
@@ -117,7 +116,6 @@
     [self.contentView addSubview:self.recordStatusView];
     [self.contentView addSubview:self.escapeTimeLabel];
     [self.contentView addSubview:self.textLabel];
-
 
     _myRecorder = [NCVoiceRecorder hqVoiceRecorder];
 #pragma clang diagnostic push
@@ -162,8 +160,8 @@
         __block NSData *_wavData = nil;
         __block NSTimeInterval ses = 0.0f;
         [self.myRecorder stopRecord:^(NSData *wavData, NSTimeInterval secs) {
-            _wavData = wavData;
-            ses = secs;
+          _wavData = wavData;
+          ses = secs;
         }];
         if (self.escapeTime < self.seconds) {
             _duration = self.escapeTime;
@@ -213,23 +211,25 @@
 }
 
 #pragma mark - Getter
-- (UILabel *)textLabel{
+- (UILabel *)textLabel {
     if (!_textLabel) {
-        _textLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 127, self.contentView.frame.size.width, 22)];
+        _textLabel = [[UILabel alloc]
+            initWithFrame:CGRectMake(0, 127, self.contentView.frame.size.width, 22)];
         [_textLabel setTextAlignment:NSTextAlignmentCenter];
         [_textLabel setFont:[[NCChatUIConfig defaultConfig].font fontOfGuideLevel]];
         [_textLabel setText:NCUILocalizedString(@"slide_up_to_cancel_title")];
         _textLabel.textColor = NCDynamicColor(@"control_title_white_color");
         _textLabel.layer.cornerRadius = 2;
         _textLabel.layer.masksToBounds = YES;
-
     }
     return _textLabel;
 }
 
-- (UILabel *)escapeTimeLabel{
+- (UILabel *)escapeTimeLabel {
     if (!_escapeTimeLabel) {
-        _escapeTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake((self.contentView.frame.size.width-100)/2, 21.0f, 100, 90)];
+        _escapeTimeLabel =
+            [[UILabel alloc] initWithFrame:CGRectMake((self.contentView.frame.size.width - 100) / 2,
+                                                      21.0f, 100, 90)];
         _escapeTimeLabel.tag = 444;
         _escapeTimeLabel.font = [[NCChatUIConfig defaultConfig].font fontOfSize:80];
         _escapeTimeLabel.textAlignment = NSTextAlignmentCenter;
@@ -239,19 +239,24 @@
     return _escapeTimeLabel;
 }
 
-- (NCBaseImageView *)recordStatusView{
+- (NCBaseImageView *)recordStatusView {
     if (!_recordStatusView) {
-        _recordStatusView = [[NCBaseImageView alloc] initWithFrame:CGRectMake(29.0f, 20.0f, 102, 102)];
+        _recordStatusView =
+            [[NCBaseImageView alloc] initWithFrame:CGRectMake(29.0f, 20.0f, 102, 102)];
         [_recordStatusView setImage:NCDynamicImage(@"channel_mic_volume_0_img")];
     }
     return _recordStatusView;
 }
 
-- (UIView *)contentView{
+- (UIView *)contentView {
     if (!_contentView) {
         _contentView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 160, 160)];
-        [_contentView setCenter:CGPointMake(self.bounds.size.width / 2, self.bounds.size.height / 2 - 34)];
-        _contentView.backgroundColor = [NCChatUIUtility generateDynamicColor:NCMASKCOLOR(0x000000, 0.6) darkColor:NCMASKCOLOR(0x000000, 0.8)];;
+        [_contentView
+            setCenter:CGPointMake(self.bounds.size.width / 2, self.bounds.size.height / 2 - 34)];
+        _contentView.backgroundColor =
+            [NCChatUIUtility generateDynamicColor:NCMASKCOLOR(0x000000, 0.6)
+                                        darkColor:NCMASKCOLOR(0x000000, 0.8)];
+        ;
         _contentView.layer.cornerRadius = 6;
         _contentView.layer.masksToBounds = YES;
     }

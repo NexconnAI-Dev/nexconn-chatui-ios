@@ -7,10 +7,10 @@
 //
 
 #import "NCFriendListPermanentCellViewModel.h"
-#import "NCFriendListPermanentCell.h"
 #import "NCChatUICommonDefine.h"
+#import "NCFriendListPermanentCell.h"
 
-@interface NCFriendListPermanentCellViewModel()
+@interface NCFriendListPermanentCellViewModel ()
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, strong) UIImage *portrait;
 @property (nonatomic, copy) NCPermanentCellViewModelBlock touchBlock;
@@ -18,10 +18,9 @@
 
 @implementation NCFriendListPermanentCellViewModel
 
-- (instancetype)initWithTitle:(NSString *)title 
+- (instancetype)initWithTitle:(NSString *)title
                      portrait:(UIImage *)portrait
-                   touchBlock:(NCPermanentCellViewModelBlock)touchBlock
-{
+                   touchBlock:(NCPermanentCellViewModelBlock)touchBlock {
     self = [super init];
     if (self) {
         self.title = title;
@@ -31,13 +30,15 @@
     return self;
 }
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:[NCFriendListPermanentCell class] forCellReuseIdentifier:NCFriendListPermanentCellIdentifier];
+    [tableView registerClass:[NCFriendListPermanentCell class]
+        forCellReuseIdentifier:NCFriendListPermanentCellIdentifier];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCFriendListPermanentCell *cell = [tableView dequeueReusableCellWithIdentifier:NCFriendListPermanentCellIdentifier
-                                                                      forIndexPath:indexPath];
+    NCFriendListPermanentCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCFriendListPermanentCellIdentifier
+                                        forIndexPath:indexPath];
     cell.labName.text = self.title;
     cell.hideSeparatorLine = self.hideSeparatorLine;
     [cell showPortraitByImage:self.portrait];
@@ -47,7 +48,7 @@
 - (void)itemDidSelectedByViewController:(UIViewController *)vc {
     if (self.touchBlock) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.touchBlock(vc);
+          self.touchBlock(vc);
         });
     }
 }

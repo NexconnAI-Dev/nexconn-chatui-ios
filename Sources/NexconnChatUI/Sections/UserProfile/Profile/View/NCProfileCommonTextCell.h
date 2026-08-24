@@ -7,7 +7,7 @@
 //
 
 #import "NCProfileCommonCell.h"
-UIKIT_EXTERN NSString * _Nullable const NCProfileTextCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCProfileTextCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 

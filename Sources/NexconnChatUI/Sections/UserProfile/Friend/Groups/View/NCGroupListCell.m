@@ -7,9 +7,9 @@
 //
 
 #import "NCGroupListCell.h"
-#import "NCImageView.h"
 #import "NCChatUICommonDefine.h"
-NSString  * const NCGroupListCellIdentifier = @"NCGroupListCellIdentifier";
+#import "NCImageView.h"
+NSString *const NCGroupListCellIdentifier = @"NCGroupListCellIdentifier";
 
 @implementation NCGroupListCell
 

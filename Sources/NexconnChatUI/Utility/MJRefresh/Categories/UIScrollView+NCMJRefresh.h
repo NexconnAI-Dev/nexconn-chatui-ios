@@ -9,8 +9,8 @@
 //  Modified by Nexconn in 2026.
 //  Adds refresh controls to UIScrollView
 
-#import <UIKit/UIKit.h>
 #import "NCMJRefreshConst.h"
+#import <UIKit/UIKit.h>
 
 @class NCMJRefreshHeader, NCMJRefreshFooter;
 

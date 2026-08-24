@@ -30,8 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Initializes the view model
 /// @param userInfo The user info
 /// @param readTime The read timestamp
-- (instancetype)initWithUserInfo:(NCChatUIUserInfo *)userInfo
-                        readTime:(long long)readTime;
+- (instancetype)initWithUserInfo:(NCChatUIUserInfo *)userInfo readTime:(long long)readTime;
 
 @end
 

@@ -30,7 +30,8 @@
 
  - Returns: `int` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (int)intForQuery:(NSString *)query, ...;
@@ -42,7 +43,8 @@
 
  - Returns: `long` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (long)longForQuery:(NSString *)query, ...;
@@ -54,7 +56,8 @@
 
  - Returns: `BOOL` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (BOOL)boolForQuery:(NSString *)query, ...;
@@ -66,7 +69,8 @@
 
  - Returns: `double` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (double)doubleForQuery:(NSString *)query, ...;
@@ -78,7 +82,8 @@
 
  - Returns: `NSString` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (NSString *)stringForQuery:(NSString *)query, ...;
@@ -90,7 +95,8 @@
 
  - Returns: `NSData` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (NSData *)dataForQuery:(NSString *)query, ...;
@@ -102,7 +108,8 @@
 
  - Returns: `NSDate` value.
 
- @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your project.
+ @note To use this method from Swift, you must include `FMDatabaseAdditionsVariadic.swift` in your
+ project.
  */
 
 - (NSDate *)dateForQuery:(NSString *)query, ...;
@@ -126,8 +133,8 @@
 
 /** The schema of the database.
 
- This will be the schema for the entire database. For each entity, each row of the result set will include the following
- fields:
+ This will be the schema for the entire database. For each entity, each row of the result set will
+ include the following fields:
 
  - `type` - The type of entity (e.g. table, index, view, or trigger)
  - `name` - The name of the object
@@ -190,17 +197,18 @@
  @warning Deprecated - use `<columnExists:inTableWithName:>` instead.
  */
 
-- (BOOL)columnExists:(NSString *)tableName columnName:(NSString *)columnName __attribute__((deprecated));
+- (BOOL)columnExists:(NSString *)tableName
+          columnName:(NSString *)columnName __attribute__((deprecated));
 
 /** Validate SQL statement
 
- This validates SQL statement by performing `sqlite3_prepare_v2`, but not returning the results, but instead immediately
- calling `sqlite3_finalize`.
+ This validates SQL statement by performing `sqlite3_prepare_v2`, but not returning the results, but
+ instead immediately calling `sqlite3_finalize`.
 
  @param sql The SQL statement being validated.
 
- @param error This is a pointer to a `NSError` object that will receive the autoreleased `NSError` object if there was
- any error. If this is `nil`, no `NSError` result will be returned.
+ @param error This is a pointer to a `NSError` object that will receive the autoreleased `NSError`
+ object if there was any error. If this is `nil`, no `NSError` result will be returned.
 
  - Returns: `YES` if validation succeeded without incident; `NO` otherwise.
 

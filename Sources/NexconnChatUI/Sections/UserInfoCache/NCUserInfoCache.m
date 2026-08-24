@@ -7,12 +7,12 @@
 //
 
 #import "NCUserInfoCache.h"
-#import <NexconnChatUI/NCChatUILog.h>
-#import "NCChatUIUserInfo.h"
-#import "NCThreadSafeMutableDictionary.h"
-#import "NCInfoProvider.h"
-#import "NCImageLoader.h"
 #import "NCChatUIExtensionManager.h"
+#import "NCChatUIUserInfo.h"
+#import "NCImageLoader.h"
+#import "NCInfoProvider.h"
+#import "NCThreadSafeMutableDictionary.h"
+#import <NexconnChatUI/NCChatUILog.h>
 
 @interface NCUserInfoCache ()
 
@@ -27,10 +27,10 @@
     static NCUserInfoCache *defaultCache = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (!defaultCache) {
-            defaultCache = [[NCUserInfoCache alloc] init];
-            defaultCache.cache = [[NCThreadSafeMutableDictionary alloc] init];
-        }
+      if (!defaultCache) {
+          defaultCache = [[NCUserInfoCache alloc] init];
+          defaultCache.cache = [[NCThreadSafeMutableDictionary alloc] init];
+      }
     });
     return defaultCache;
 }
@@ -58,9 +58,9 @@
 
         __weak typeof(self) weakSelf = self;
         dispatch_async(ncUserInfoDBQueue, ^{
-            [ncUserInfoWriteDBHelper replaceUserInfoFromDB:userInfo forUserId:userId];
-            NCLogI(@"updateUserInfo:forUserId:;;;userId=%@", userId);
-            [weakSelf.updateDelegate onUserInfoUpdate:userInfo];
+          [ncUserInfoWriteDBHelper replaceUserInfoFromDB:userInfo forUserId:userId];
+          NCLogI(@"updateUserInfo:forUserId:;;;userId=%@", userId);
+          [weakSelf.updateDelegate onUserInfoUpdate:userInfo];
         });
     }
 }
@@ -70,8 +70,8 @@
     if (!cacheUserInfo) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(ncUserInfoDBQueue, ^{
-            NCChatUIUserInfo *dbUserInfo = [ncUserInfoWriteDBHelper selectUserInfoFromDB:userId];
-            [weakSelf removeImageCache:dbUserInfo];
+          NCChatUIUserInfo *dbUserInfo = [ncUserInfoWriteDBHelper selectUserInfoFromDB:userId];
+          [weakSelf removeImageCache:dbUserInfo];
         });
     } else {
         [self removeImageCache:cacheUserInfo];
@@ -85,23 +85,23 @@
         [self removeImageCache:cacheUserInfo];
         [self.cache removeObjectForKey:userId];
     }
-//    else {
-//        __weak typeof(self) weakSelf = self;
-//        dispatch_async(ncUserInfoDBQueue, ^{
-//            NCChatUIUserInfo *dbUserInfo = [ncUserInfoWriteDBHelper selectUserInfoFromDB:userId];
-//            [weakSelf removeImageCache:dbUserInfo];
-//        });
-//    }
+    //    else {
+    //        __weak typeof(self) weakSelf = self;
+    //        dispatch_async(ncUserInfoDBQueue, ^{
+    //            NCChatUIUserInfo *dbUserInfo = [ncUserInfoWriteDBHelper
+    //            selectUserInfoFromDB:userId]; [weakSelf removeImageCache:dbUserInfo];
+    //        });
+    //    }
     __weak typeof(self) weakSelf = self;
     dispatch_async(ncUserInfoDBQueue, ^{
-        NCChatUIUserInfo *dbUserInfo = [ncUserInfoWriteDBHelper selectUserInfoFromDB:userId];
-        if (!dbUserInfo) {
-            return;
-        }
-        [ncUserInfoWriteDBHelper deleteUserInfoFromDB:userId];
-        NCChatUIUserInfo *userInfo = [[NCChatUIUserInfo alloc] init];
-        userInfo.userId = userId;
-        [weakSelf.updateDelegate onUserInfoUpdate:userInfo];
+      NCChatUIUserInfo *dbUserInfo = [ncUserInfoWriteDBHelper selectUserInfoFromDB:userId];
+      if (!dbUserInfo) {
+          return;
+      }
+      [ncUserInfoWriteDBHelper deleteUserInfoFromDB:userId];
+      NCChatUIUserInfo *userInfo = [[NCChatUIUserInfo alloc] init];
+      userInfo.userId = userId;
+      [weakSelf.updateDelegate onUserInfoUpdate:userInfo];
     });
 }
 
@@ -113,18 +113,19 @@
 
     //    __weak typeof(self) weakSelf = self;
     dispatch_async(ncUserInfoDBQueue, ^{
-        //        NSArray *dbUserInfoList = [ncUserInfoWriteDBHelper selectAllUserInfoFromDB];
-        //        for (NCChatUIUserInfo *dbUserInfo in dbUserInfoList) {
-        //            [weakSelf removeImageCache:dbUserInfo];
-        //        }
-        [ncUserInfoWriteDBHelper deleteAllUserInfoFromDB];
+      //        NSArray *dbUserInfoList = [ncUserInfoWriteDBHelper selectAllUserInfoFromDB];
+      //        for (NCChatUIUserInfo *dbUserInfo in dbUserInfoList) {
+      //            [weakSelf removeImageCache:dbUserInfo];
+      //        }
+      [ncUserInfoWriteDBHelper deleteAllUserInfoFromDB];
     });
 }
 
 #pragma mark - image cache
 - (void)removeImageCache:(NCChatUIUserInfo *)userInfo {
     //    if ([userInfo.avatarUrl length] > 0) {
-    //        [[NCImageLoader sharedImageLoader] clearCacheForURL:[NSURL URLWithString:userInfo.avatarUrl]];
+    //        [[NCImageLoader sharedImageLoader] clearCacheForURL:[NSURL
+    //        URLWithString:userInfo.avatarUrl]];
     //    }
 }
 

@@ -19,9 +19,9 @@ static const CGFloat kOnlineStatusSize = 6.0;
     // Make the indicator circular.
     self.layer.cornerRadius = kOnlineStatusSize / 2.0;
     self.layer.masksToBounds = YES;
-    
+
     self.frame = CGRectMake(0, 0, kOnlineStatusSize, kOnlineStatusSize);
-    
+
     // Hidden by default.
     self.hidden = YES;
 }

@@ -7,8 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 #import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 @class NCMessageContent;
 @class NCMessage;
@@ -60,8 +60,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Sent time of the last message in the channel (Unix timestamp, milliseconds).
 @property (nonatomic, assign) long long sentTime;
 
-/// Operation time of the channel (Unix timestamp, milliseconds), used as the timestamp for paginated channel list queries.
-/// Initial value equals sentTime; operations like pinning will update this timestamp.
+/// Operation time of the channel (Unix timestamp, milliseconds), used as the timestamp for
+/// paginated channel list queries. Initial value equals sentTime; operations like pinning will
+/// update this timestamp.
 @property (nonatomic, assign) long long operationTime;
 
 /// Draft text in the channel.
@@ -106,7 +107,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Number of unread mentioned (@) messages in the channel.
 @property (nonatomic, assign) int mentionedCount;
 
-
 /// Timestamp of the first unread message in the channel (Unix timestamp, milliseconds).
 ///
 /// Only supported for ultra group channels.
@@ -128,7 +128,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note Only displayed for direct chat channels; other channel types do not show online status.
 @property (nonatomic, strong) NCSubscribeUserOnlineStatus *onlineStatus;
 
-
 /// Data management info, including channel name and avatar.
 ///
 /// Only supported for direct, group, and system channels.
@@ -139,8 +138,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param channel               The channel object.
 /// @param extend                User-defined extension data.
 /// @return The channel cell data model instance.
-- (instancetype)initWithChannel:(NCBaseChannel *)channel
-                              extend:(nullable id)extend;
+- (instancetype)initWithChannel:(NCBaseChannel *)channel extend:(nullable id)extend;
 
 /// Update the data model with the latest message.
 ///
@@ -176,7 +174,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param channelType Channel type.
 /// @param channelId    Channel ID.
 /// @return Whether the channel and data model match.
-- (BOOL)isMatchingChannelType:(NCChannelType)channelType
-                     channelId:(NSString *)channelId;
+- (BOOL)isMatchingChannelType:(NCChannelType)channelType channelId:(NSString *)channelId;
 @end
 NS_ASSUME_NONNULL_END

@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "NCStreamViewModelProtocol.h"
+#import <Foundation/Foundation.h>
 @class NCStreamContentView;
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface NCStreamContentViewModel : NSObject<NCStreamViewModelProtocol>
+@interface NCStreamContentViewModel : NSObject <NCStreamViewModelProtocol>
 
 @property (nonatomic, copy) NSString *content;
 

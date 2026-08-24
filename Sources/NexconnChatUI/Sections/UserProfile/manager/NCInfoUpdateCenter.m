@@ -7,8 +7,8 @@
 //
 
 #import "NCInfoUpdateCenter.h"
-#import "NCChatUIUserInfo.h"
 #import "NCChatUIGroup.h"
+#import "NCChatUIUserInfo.h"
 
 @implementation NCInfoUpdateCenter
 
@@ -16,7 +16,8 @@
     static NSHashTable<id<NCInfoUpdateDelegate>> *delegates = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        delegates = [NSHashTable hashTableWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality];
+      delegates = [NSHashTable hashTableWithOptions:NSPointerFunctionsWeakMemory |
+                                                    NSPointerFunctionsObjectPointerPersonality];
     });
     return delegates;
 }
@@ -61,7 +62,7 @@
     dispatch_async(dispatch_get_main_queue(), block);
 }
 
-#pragma mark -- dispatch update
+#pragma mark-- dispatch update
 
 + (void)dispatchUserInfoUpdate:(NCChatUIUserInfo *)userInfo {
     if (!userInfo.userId) {
@@ -69,32 +70,31 @@
     }
     NSArray<id<NCInfoUpdateDelegate>> *delegates = [self infoUpdateDelegateSnapshot];
     [self dispatchInfoUpdate:^{
-        for (id<NCInfoUpdateDelegate> delegate in delegates) {
-            if (![self containsInfoUpdateDelegate:delegate]) {
-                continue;
-            }
-            if ([delegate respondsToSelector:@selector(onUserInfoUpdate:)]) {
-                [delegate onUserInfoUpdate:userInfo];
-            }
-        }
+      for (id<NCInfoUpdateDelegate> delegate in delegates) {
+          if (![self containsInfoUpdateDelegate:delegate]) {
+              continue;
+          }
+          if ([delegate respondsToSelector:@selector(onUserInfoUpdate:)]) {
+              [delegate onUserInfoUpdate:userInfo];
+          }
+      }
     }];
 }
 
-+ (void)dispatchGroupMemberInfoUpdate:(NCChatUIUserInfo *)userInfo
-                               groupId:(NSString *)groupId {
++ (void)dispatchGroupMemberInfoUpdate:(NCChatUIUserInfo *)userInfo groupId:(NSString *)groupId {
     if (!groupId || !userInfo.userId) {
         return;
     }
     NSArray<id<NCInfoUpdateDelegate>> *delegates = [self infoUpdateDelegateSnapshot];
     [self dispatchInfoUpdate:^{
-        for (id<NCInfoUpdateDelegate> delegate in delegates) {
-            if (![self containsInfoUpdateDelegate:delegate]) {
-                continue;
-            }
-            if ([delegate respondsToSelector:@selector(onGroupMemberInfoUpdate:groupId:)]) {
-                [delegate onGroupMemberInfoUpdate:userInfo groupId:groupId];
-            }
-        }
+      for (id<NCInfoUpdateDelegate> delegate in delegates) {
+          if (![self containsInfoUpdateDelegate:delegate]) {
+              continue;
+          }
+          if ([delegate respondsToSelector:@selector(onGroupMemberInfoUpdate:groupId:)]) {
+              [delegate onGroupMemberInfoUpdate:userInfo groupId:groupId];
+          }
+      }
     }];
 }
 
@@ -102,14 +102,14 @@
     if (groupInfo.groupId) {
         NSArray<id<NCInfoUpdateDelegate>> *delegates = [self infoUpdateDelegateSnapshot];
         [self dispatchInfoUpdate:^{
-            for (id<NCInfoUpdateDelegate> delegate in delegates) {
-                if (![self containsInfoUpdateDelegate:delegate]) {
-                    continue;
-                }
-                if ([delegate respondsToSelector:@selector(onGroupInfoUpdate:)]) {
-                    [delegate onGroupInfoUpdate:groupInfo];
-                }
-            }
+          for (id<NCInfoUpdateDelegate> delegate in delegates) {
+              if (![self containsInfoUpdateDelegate:delegate]) {
+                  continue;
+              }
+              if ([delegate respondsToSelector:@selector(onGroupInfoUpdate:)]) {
+                  [delegate onGroupInfoUpdate:groupInfo];
+              }
+          }
         }];
     }
 }

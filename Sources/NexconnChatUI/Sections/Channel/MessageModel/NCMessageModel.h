@@ -6,10 +6,10 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
 #import "NCChatUIUserInfo.h"
+#import <Foundation/Foundation.h>
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 /*!
@@ -110,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /*!
  Whether the message can contain extension info
- 
+
   This property is determined at send time and cannot be modified afterward
   Extension info is only supported in private and group chats
 */
@@ -118,7 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /*!
  Message extension info list
- 
+
   Extension info is only supported in private and group chats
 */
 @property (nonatomic, strong, nullable) NSDictionary<NSString *, NSString *> *expansionDic;

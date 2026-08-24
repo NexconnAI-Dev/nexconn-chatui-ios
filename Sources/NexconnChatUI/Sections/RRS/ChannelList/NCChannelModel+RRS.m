@@ -34,14 +34,16 @@
 }
 
 - (NCMessageIdentifier *)rrs_messageIdentifier {
-    if (self.channelId.length == 0 || ![self hasLatestMessage] || self.latestMessageId.length == 0) {
+    if (self.channelId.length == 0 || ![self hasLatestMessage] ||
+        self.latestMessageId.length == 0) {
         return nil;
     }
     NCChannelIdentifier *channelIdentifier = nil;
     NSString *subChannelId = self.subChannelId ?: @"";
     if (subChannelId.length > 0) {
-        channelIdentifier = [[NCCommunitySubChannelIdentifier alloc] initWithChannelId:self.channelId
-                                                                           subChannelId:subChannelId];
+        channelIdentifier =
+            [[NCCommunitySubChannelIdentifier alloc] initWithChannelId:self.channelId
+                                                          subChannelId:subChannelId];
     } else {
         channelIdentifier = [[NCChannelIdentifier alloc] initWithChannelType:self.channelType
                                                                    channelId:self.channelId];
@@ -50,6 +52,6 @@
         return nil;
     }
     return [[NCMessageIdentifier alloc] initWithChannelIdentifier:channelIdentifier
-                                                         messageId:self.latestMessageId];
+                                                        messageId:self.latestMessageId];
 }
 @end

@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <NexconnChatSDK/NexconnChatSDK.h>
-#import "NCCellViewModelProtocol.h"
 #import "NCBaseCellViewModel.h"
+#import "NCCellViewModelProtocol.h"
 #import "NCListViewModelProtocol.h"
+#import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,8 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Initializes the instance
 /// @param groupInfo The group info
 /// @param keyword The highlight keyword
-- (instancetype)initWithGroupInfo:(NCGroupInfo *)groupInfo
-                          keyword:(NSString *)keyword;
+- (instancetype)initWithGroupInfo:(NCGroupInfo *)groupInfo keyword:(NSString *)keyword;
 
 /// Registers the cell
 + (void)registerCellForTableView:(UITableView *)tableView;

@@ -6,11 +6,11 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "NCMessageModel.h"
 #import "NCBaseButton.h"
-#import "NCBaseView.h"
 #import "NCBaseLabel.h"
+#import "NCBaseView.h"
+#import "NCMessageModel.h"
+#import <UIKit/UIKit.h>
 @class NCReferencingView;
 
 @protocol NCReferencingViewDelegate <NSObject>

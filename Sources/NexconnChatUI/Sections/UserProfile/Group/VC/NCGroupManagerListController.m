@@ -10,11 +10,8 @@
 #import "NCBaseTableView.h"
 #import "NCChatUICommonDefine.h"
 
-@interface NCGroupManagerListController ()<
-UITableViewDelegate,
-UITableViewDataSource,
-NCListViewModelResponder
->
+@interface NCGroupManagerListController () <UITableViewDelegate, UITableViewDataSource,
+                                            NCListViewModelResponder>
 
 @property (nonatomic, strong) NCBaseTableView *tableView;
 
@@ -47,24 +44,28 @@ NCListViewModelResponder
     [self.viewModel fetchGroupAdmins];
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (void)setNavigationBarItems {
     UIImage *imgMirror = NCDynamicImage(@"navigation_bar_btn_back_img");
-    self.navigationItem.leftBarButtonItems = [NCChatUIUtility getLeftNavigationItems:imgMirror title:@"" target:self action:@selector(leftBarButtonItemPressed)];
+    self.navigationItem.leftBarButtonItems =
+        [NCChatUIUtility getLeftNavigationItems:imgMirror
+                                          title:@""
+                                         target:self
+                                         action:@selector(leftBarButtonItemPressed)];
 }
 
 - (void)setupView {
     [self.tableView addSubview:self.emptyLabel];
 }
 
-#pragma mark -- action
+#pragma mark-- action
 
 - (void)leftBarButtonItemPressed {
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-#pragma mark -- NCListViewModelResponder
+#pragma mark-- NCListViewModelResponder
 
 - (void)reloadData:(BOOL)isEmpty {
     [self.tableView reloadData];
@@ -74,21 +75,23 @@ NCListViewModelResponder
     return self;
 }
 
-#pragma mark -- UITableViewDataSource
+#pragma mark-- UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return [self.viewModel numberOfSections];;
+    return [self.viewModel numberOfSections];
+    ;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [self.viewModel numberOfRowsInSection:section];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     return [self.viewModel tableView:tableView cellForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- UITableViewDelegate
+#pragma mark-- UITableViewDelegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self.viewModel viewController:self tableView:tableView didSelectRow:indexPath];
@@ -98,7 +101,7 @@ NCListViewModelResponder
     return [self.viewModel tableView:tableView heightForRowAtIndexPath:indexPath];
 }
 
-#pragma mark -- getter
+#pragma mark-- getter
 
 - (NCBaseTableView *)tableView {
     if (!_tableView) {
@@ -108,7 +111,8 @@ NCListViewModelResponder
         _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         _tableView.backgroundColor = NCDynamicColor(@"auxiliary_background_1_color");
         _tableView.tableFooterView = [UIView new];
-        _tableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 15)];
+        _tableView.tableHeaderView =
+            [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 15)];
         _tableView.sectionHeaderHeight = 0;
         if (@available(iOS 15.0, *)) {
             _tableView.sectionHeaderTopPadding = 15;
@@ -129,6 +133,5 @@ NCListViewModelResponder
     }
     return _emptyLabel;
 }
-
 
 @end

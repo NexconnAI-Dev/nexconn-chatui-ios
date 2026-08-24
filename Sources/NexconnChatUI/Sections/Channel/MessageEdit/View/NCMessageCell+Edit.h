@@ -6,8 +6,8 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import "NCMessageCell.h"
 #import "NCCircularLoadingView.h"
+#import "NCMessageCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,4 +34,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-NS_ASSUME_NONNULL_END 
+NS_ASSUME_NONNULL_END

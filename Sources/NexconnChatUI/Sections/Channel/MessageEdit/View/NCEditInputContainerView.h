@@ -6,18 +6,18 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "NCButton.h"
-#import "NCTextView.h"
 #import "NCBaseView.h"
+#import "NCButton.h"
 #import "NCChatSessionInputBarDefine.h"
+#import "NCTextView.h"
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 // Edit mode height state
 typedef NS_ENUM(NSInteger, NCEditHeightMode) {
-    NCEditHeightModeNormal = 0,     // Normal editing
-    NCEditHeightModeExpanded = 1    // Full-screen editing
+    NCEditHeightModeNormal = 0,  // Normal editing
+    NCEditHeightModeExpanded = 1 // Full-screen editing
 };
 
 @protocol NCEditInputContainerViewDelegate;
@@ -76,7 +76,8 @@ typedef NS_ENUM(NSInteger, NCEditHeightMode) {
 /// Set the referenced message content
 /// @param senderName The sender name
 /// @param content The message content
-- (void)setReferencedContentWithSenderName:(NSString * _Nullable)senderName content:(NSString * _Nullable)content;
+- (void)setReferencedContentWithSenderName:(NSString *_Nullable)senderName
+                                   content:(NSString *_Nullable)content;
 
 /// Clear the referenced message
 - (void)clearReferencedMessage;
@@ -97,7 +98,7 @@ typedef NS_ENUM(NSInteger, NCEditHeightMode) {
 /// Set the enabled state of the input container (including UI and interaction state)
 /// @param enabled Whether the container is enabled
 /// @param statusMessage The status message to display, or nil to hide the message
-- (void)setEditEnabled:(BOOL)enabled withStatusMessage:(NSString * _Nullable)statusMessage;
+- (void)setEditEnabled:(BOOL)enabled withStatusMessage:(NSString *_Nullable)statusMessage;
 
 @end
 
@@ -113,12 +114,14 @@ typedef NS_ENUM(NSInteger, NCEditHeightMode) {
 
 /// Request collapsing from full-screen edit mode
 /// @param editContainerView The edit container view
-- (void)editInputContainerViewCollapseFromFullScreenEdit:(NCEditInputContainerView *)editContainerView;
+- (void)editInputContainerViewCollapseFromFullScreenEdit:
+    (NCEditInputContainerView *)editContainerView;
 
 /// Edit confirmed
 /// @param editContainerView The edit container view
 /// @param text The edited text
-- (void)editInputContainerViewEditConfirm:(NCEditInputContainerView *)editContainerView withText:(NSString *)text;
+- (void)editInputContainerViewEditConfirm:(NCEditInputContainerView *)editContainerView
+                                 withText:(NSString *)text;
 
 /// Edit cancelled
 /// @param editContainerView The edit container view
@@ -133,12 +136,14 @@ typedef NS_ENUM(NSInteger, NCEditHeightMode) {
 /// Container view height changed
 /// @param editContainerView The edit container view
 /// @param frame The new frame
-- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView didChangeFrame:(CGRect)frame;
+- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView
+                didChangeFrame:(CGRect)frame;
 
 /// Input text changed
 /// @param editContainerView The edit container view
 /// @param textView The text input view
-- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView inputTextViewDidChange:(UITextView *)textView;
+- (void)editInputContainerView:(NCEditInputContainerView *)editContainerView
+        inputTextViewDidChange:(UITextView *)textView;
 
 /// Input text is about to change
 /// @param editContainerView The edit container view
@@ -147,8 +152,8 @@ typedef NS_ENUM(NSInteger, NCEditHeightMode) {
 /// @param text The replacement text
 - (BOOL)editInputContainerView:(NCEditInputContainerView *)editContainerView
                  inputTextView:(UITextView *)textView
-         shouldChangeTextInRange:(NSRange)range 
-                 replacementText:(NSString *)text;
+       shouldChangeTextInRange:(NSRange)range
+               replacementText:(NSString *)text;
 
 @end
 

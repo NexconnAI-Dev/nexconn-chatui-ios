@@ -6,14 +6,14 @@
 //  Copyright (c) 2026 Nexconn. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import "NCBaseViewModel.h"
-#import "NCListViewModelProtocol.h"
-#import "NCNavigationItemsViewModel.h"
-#import "NCCellViewModelProtocol.h"
 #import "NCApplyFriendCellViewModel.h"
 #import "NCApplyFriendSectionItem.h"
+#import "NCBaseViewModel.h"
+#import "NCCellViewModelProtocol.h"
+#import "NCListViewModelProtocol.h"
+#import "NCNavigationItemsViewModel.h"
 #import <NexconnChatSDK/NexconnChatSDK.h>
+#import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 
 @class NCApplyFriendListViewModel;
@@ -26,14 +26,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return The data source processed by the app, or `nil` to use the default
 ///
 
-- (NSArray <NCApplyFriendCellViewModel *> *_Nullable)applyFriendListViewModel:(NCApplyFriendListViewModel *)viewModel
-                                                    willLoadItemsInDataSource:(NSArray *_Nullable)dataSource;
+- (NSArray<NCApplyFriendCellViewModel *> *_Nullable)
+     applyFriendListViewModel:(NCApplyFriendListViewModel *)viewModel
+    willLoadItemsInDataSource:(NSArray *_Nullable)dataSource;
 
 /// Configures custom right navigation items
 /// @param viewModel viewModel
 /// @return Custom navigation items view model, or `nil` to use the default
 ///
-- (NCNavigationItemsViewModel *_Nullable)willConfigureRightNavigationItemsForApplyFriendListViewModel:(NCApplyFriendListViewModel *)viewModel;
+- (NCNavigationItemsViewModel *_Nullable)
+    willConfigureRightNavigationItemsForApplyFriendListViewModel:
+        (NCApplyFriendListViewModel *)viewModel;
 
 /// Called when the user taps a cell
 ///   - viewModel: viewModel
@@ -44,14 +47,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return `YES` if the app handled the event; `NO` to let the SDK handle it
 ///
 - (BOOL)applyFriendListViewModel:(NCApplyFriendListViewModel *)viewModel
-                  viewController:(UIViewController*)viewController
+                  viewController:(UIViewController *)viewController
                        tableView:(UITableView *)tableView
                     didSelectRow:(NSIndexPath *)indexPath
                    cellViewModel:(NCApplyFriendCellViewModel *)cellViewModel;
 @end
 
 /// Friend request list view controller
-@interface NCApplyFriendListViewModel : NCBaseViewModel<NCListViewModelProtocol>
+@interface NCApplyFriendListViewModel : NCBaseViewModel <NCListViewModelProtocol>
 
 /// Delegate
 @property (nonatomic, weak) id<NCApplyFriendListDelegate> delegate;
@@ -61,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param option The configuration
 /// @param types The list of types
 /// @param status The list of statuses
-- (instancetype)initWithSectionItems:(nullable NSArray <NCApplyFriendSectionItem *>*)items
+- (instancetype)initWithSectionItems:(nullable NSArray<NCApplyFriendSectionItem *> *)items
                               option:(nullable NCFriendApplicationsQueryParams *)option
                                types:(nullable NSArray<NSNumber *> *)types
                               status:(nullable NSArray<NSNumber *> *)status;
@@ -74,7 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)fetchData;
 
 /// Binds the responder
-- (void)bindResponder:(UIViewController <NCListViewModelResponder>*)responder;
+- (void)bindResponder:(UIViewController<NCListViewModelResponder> *)responder;
 
 /// Cell height
 ///   - tableView: tableView

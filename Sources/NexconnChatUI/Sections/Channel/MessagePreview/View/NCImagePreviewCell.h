@@ -19,7 +19,7 @@
 
 @interface NCImagePreviewCell : NCBaseCollectionViewCell
 
-@property (nonatomic, weak)  id<NCImagePreviewCellDelegate> delegate;
+@property (nonatomic, weak) id<NCImagePreviewCellDelegate> delegate;
 
 @property (nonatomic, strong) NCMessageModel *messageModel;
 
@@ -28,4 +28,3 @@
 - (void)resetSubviews;
 
 @end
-

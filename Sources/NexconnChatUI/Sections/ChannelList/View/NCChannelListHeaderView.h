@@ -7,9 +7,9 @@
 //
 
 #import "NCChannelModel.h"
-#import "NCMessageBubbleTipView.h"
 #import "NCChatUIThemeDefine.h"
 #import "NCImageView.h"
+#import "NCMessageBubbleTipView.h"
 #import <UIKit/UIKit.h>
 
 @interface NCChannelListHeaderView : UIView

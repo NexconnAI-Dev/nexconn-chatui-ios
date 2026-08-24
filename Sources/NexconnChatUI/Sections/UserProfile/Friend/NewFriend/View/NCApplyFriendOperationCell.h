@@ -8,7 +8,7 @@
 
 #import "NCApplyFriendCell.h"
 
-UIKIT_EXTERN NSString * _Nullable const NCFriendApplyOperationCellIdentifier;
+UIKIT_EXTERN NSString *_Nullable const NCFriendApplyOperationCellIdentifier;
 
 NS_ASSUME_NONNULL_BEGIN
 /// Friend request operation cell

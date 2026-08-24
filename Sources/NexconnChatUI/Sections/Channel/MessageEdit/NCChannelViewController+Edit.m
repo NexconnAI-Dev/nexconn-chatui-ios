@@ -24,6 +24,7 @@
 #import "NCMessageEditUtil.h"
 #import "NCMessageSenderInfo.h"
 #import "NCChatUIErrorCode.h"
+#import "NCToastView.h"
 
 static CGFloat NC_KIT_UNREAD_BOTTOM_ICON_WIDTH = 35;
 static CGFloat NC_KIT_UNREAD_BOTTOM_ICON_HEIGHT = 35;
@@ -59,31 +60,31 @@ static CGFloat NC_KIT_UNREAD_BOTTOM_ICON_HEIGHT = 35;
 static NCChannelIdentifier *NCEditConversationChannelIdentifier(NCChannelViewController *chatVC) {
     NSString *channelId = chatVC.channelId ?: @"";
     switch (chatVC.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
-                                                          channelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
-                                                          channelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
-                                                          channelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeDirect
+                                                      channelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeGroup
+                                                      channelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCChannelIdentifier alloc] initWithChannelType:NCChannelTypeSystem
+                                                      channelId:channelId];
+    default:
+        return nil;
     }
 }
 
 static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC) {
     NSString *channelId = chatVC.channelId ?: @"";
     switch (chatVC.channelType) {
-        case NCChannelTypeDirect:
-            return [[NCDirectChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeGroup:
-            return [[NCGroupChannel alloc] initWithChannelId:channelId];
-        case NCChannelTypeSystem:
-            return [[NCSystemChannel alloc] initWithChannelId:channelId];
-        default:
-            return nil;
+    case NCChannelTypeDirect:
+        return [[NCDirectChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeGroup:
+        return [[NCGroupChannel alloc] initWithChannelId:channelId];
+    case NCChannelTypeSystem:
+        return [[NCSystemChannel alloc] initWithChannelId:channelId];
+    default:
+        return nil;
     }
 }
 
@@ -99,9 +100,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 }
 
 - (void)edit_viewDidAppear:(BOOL)animated {
-    if ([self edit_isMessageEditing]
-        && !self.fullScreenEditView
-        && self.latestInputBottomBarStatus == KBottomBarKeyboardStatus) {
+    if ([self edit_isMessageEditing] && !self.fullScreenEditView &&
+        self.latestInputBottomBarStatus == KBottomBarKeyboardStatus) {
         [self.editInputBarControl restoreFocus];
     }
 }
@@ -128,7 +128,10 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         return;
     }
     if (!self.editInputBarControl) {
-        CGRect frame = CGRectMake(0, self.view.bounds.size.height - NC_ChatSessionInputBar_Height - [self getSafeAreaExtraBottomHeight], self.view.bounds.size.width, NC_ChatSessionInputBar_Height);
+        CGRect frame = CGRectMake(0,
+                                  self.view.bounds.size.height - NC_ChatSessionInputBar_Height -
+                                      [self getSafeAreaExtraBottomHeight],
+                                  self.view.bounds.size.width, NC_ChatSessionInputBar_Height);
         self.editInputBarControl = [[NCEditInputBarControl alloc] initWithFrame:frame];
         self.editInputBarControl.delegate = self;
         self.editInputBarControl.dataSource = self;
@@ -144,8 +147,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 }
 
 - (BOOL)edit_markEditIsExpired:(NCEditInputBarControl *)inputBar {
-    if (!self.editingInputBarConfig
-        || ![NCMessageEditUtil isEditTimeValid:self.editingInputBarConfig.sentTime]) {
+    if (!self.editingInputBarConfig ||
+        ![NCMessageEditUtil isEditTimeValid:self.editingInputBarConfig.sentTime]) {
 
         [inputBar markEditAsExpired];
         return YES;
@@ -162,7 +165,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     }
     // Refresh the navigation bar for the edit state.
     [self notifyUpdateUnreadMessageCount];
-    
+
     BOOL multiSelect = [NCMessageSelectionUtility sharedManager].multiSelect;
     if (multiSelect) {
         [[NCMessageSelectionUtility sharedManager] addMessageModel:self.currentSelectedModel];
@@ -172,7 +175,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         [self.messageSelectionToolbar removeFromSuperview];
     }
     [self.editInputBarControl hideEditInputBar:multiSelect];
-    
+
     [self.messageCollectionView reloadData];
     [self.messageCollectionView setNeedsLayout];
     [self.messageCollectionView layoutIfNeeded];
@@ -180,52 +183,65 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 }
 
 - (BOOL)edit_onReferenceMessageCell:(id)sender {
-    [self edit_exitEditModeAndRestoreNormalWithAnimation:NO activateNormal:NO completion:^{
-        // Switch the regular input bar to reference mode.
-        [self onReferenceMessageCellAndEditing:YES];
-    }];
+    [self edit_exitEditModeAndRestoreNormalWithAnimation:NO
+                                          activateNormal:NO
+                                              completion:^{
+                                                // Switch the regular input bar to reference mode.
+                                                [self onReferenceMessageCellAndEditing:YES];
+                                              }];
     return [self edit_isMessageEditing];
 }
 
 // Starts editing the selected message.
 - (void)edit_onEditMessage:(id)sender {
     // Ignore repeated edit requests for the active message.
-    if ([self.editingInputBarConfig.messageId isEqualToString:self.currentSelectedModel.messageId]) {
+    if ([self.editingInputBarConfig.messageId
+            isEqualToString:self.currentSelectedModel.messageId]) {
         return;
     }
-    
+
     if (self.editingInputBarConfig) {
-        [NCAlertView showAlertController:NCUILocalizedString(@"tip") message:NCUILocalizedString(@"message_editing_alert") actionTitles:nil cancelTitle:NCUILocalizedString(@"cancel") confirmTitle:NCUILocalizedString(@"confirm") preferredStyle:(UIAlertControllerStyleAlert) actionsBlock:nil cancelBlock:nil confirmBlock:^{
-            self.editingInputBarConfig = nil;
-            [self edit_enterEditWithModel:self.currentSelectedModel];
-        } inViewController:self];
+        [NCAlertView showAlertController:NCUILocalizedString(@"tip")
+                                 message:NCUILocalizedString(@"message_editing_alert")
+                            actionTitles:nil
+                             cancelTitle:NCUILocalizedString(@"cancel")
+                            confirmTitle:NCUILocalizedString(@"confirm")
+                          preferredStyle:(UIAlertControllerStyleAlert)actionsBlock:nil
+                             cancelBlock:nil
+                            confirmBlock:^{
+                              self.editingInputBarConfig = nil;
+                              [self edit_enterEditWithModel:self.currentSelectedModel];
+                            }
+                        inViewController:self];
         return;
     }
-    
+
     // Preserve the current draft before entering edit mode.
     [self.util saveDraftIfNeed];
-    
+
     // Enter edit mode with the selected message.
     [self edit_enterEditWithModel:self.currentSelectedModel];
 }
 
 - (void)edit_syncGetReferenceMessageContent:(NCMessageModel *)model
-                                 completion:(void(^)(NSString *referMsgUserName, NSString *referContent))completion {
-    
-    void (^safeCompletion)(NSString *, NSString *) = ^(NSString *referMsgUserName, NSString *referContent){
-        if (completion) {
-            completion(referMsgUserName, referContent);
-        }
-    };
-    
+                                 completion:(void (^)(NSString *referMsgUserName,
+                                                      NSString *referContent))completion {
+
+    void (^safeCompletion)(NSString *, NSString *) =
+        ^(NSString *referMsgUserName, NSString *referContent) {
+          if (completion) {
+              completion(referMsgUserName, referContent);
+          }
+        };
+
     if (!model || ![model edit_hasReferenceMessage]) {
         safeCompletion(nil, nil);
         return;
     }
-    
+
     NSString *referMsgUserName;
     NSString *referContent;
-    
+
     NSString *referenceUserId = [model edit_referenceMessageUserId];
     if (referenceUserId) {
         NCMessageSenderInfo *senderInfo = [self edit_senderInfoForReferenceMessageModel:model];
@@ -254,33 +270,36 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         return nil;
     }
     NCReferenceMessage *referenceMessage = [model edit_referenceMessage];
-    NCChatUIUserInfo *userInfo = [NCMessageSenderUserInfoResolver userInfoForChannelType:model.channelType
-                                                                               channelId:model.channelId
-                                                                            senderUserId:referenceMessage.referMsgSenderId
-                                                                          senderUserInfo:referenceMessage.referMsg.senderUserInfo];
+    NCChatUIUserInfo *userInfo = [NCMessageSenderUserInfoResolver
+        userInfoForChannelType:model.channelType
+                     channelId:model.channelId
+                  senderUserId:referenceMessage.referMsgSenderId
+                senderUserInfo:referenceMessage.referMsg.senderUserInfo];
     return [NCMessageSenderInfo infoWithUserInfo:userInfo];
 }
 
 - (void)edit_enterEditWithModel:(NCMessageModel *)model {
     // Read the original editable message content.
     NSString *originalText = @"";
-    
+
     __block NSString *referencedSenderName = nil;
     __block NSString *referencedContent = nil;
     NCReferenceMessageStatus referencedMsgStatus = NCReferenceMessageStatusDefault;
-    
+
     NSString *editableText = [model edit_editableText];
     if (editableText) {
         originalText = editableText ?: @"";
     }
     if ([model edit_hasReferenceMessage]) {
-        [self edit_syncGetReferenceMessageContent:model completion:^(NSString *referMsgUserName, NSString *referContent) {
-            referencedSenderName = referMsgUserName;
-            referencedContent = referContent;
-        }];
+        [self edit_syncGetReferenceMessageContent:model
+                                       completion:^(NSString *referMsgUserName,
+                                                    NSString *referContent) {
+                                         referencedSenderName = referMsgUserName;
+                                         referencedContent = referContent;
+                                       }];
         referencedMsgStatus = [model edit_referenceMessageStatus];
     }
-    
+
     NCEditInputBarConfig *config = [[NCEditInputBarConfig alloc] init];
     config.messageId = model.messageId;
     config.sentTime = model.sentTime;
@@ -298,12 +317,13 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
               becomeFirstResponder:(BOOL)becomeFirstResponder {
     // Clear stale cached edit state when starting a new edit.
     [self edit_clearSavedEditState];
-    
-    // Save the input configuration only for a new edit or after leaving edit mode, so returning from full screen does not reset it.
+
+    // Save the input configuration only for a new edit or after leaving edit mode, so returning
+    // from full screen does not reset it.
     if (!self.editingInputBarConfig) {
         self.editingInputBarConfig = config;
     }
-    
+
     if (!self.chatSessionInputBarControl.hidden) {
         if (self.chatSessionInputBarControl.currentBottomBarStatus != KBottomBarDefaultStatus) {
             [self.chatSessionInputBarControl updateStatus:KBottomBarDefaultStatus animated:NO];
@@ -322,18 +342,27 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 
 - (void)edit_checkConfirmData:(NCEditInputBarControl *)editInputBarControl
                          text:(NSString *)text
-                   completion:(void (^)(NCMessageModel * _Nullable message, BOOL shouldExitEditing))completion {
-    
-    void (^safeCompletion)(NCMessageModel * _Nullable, BOOL) = ^(NCMessageModel * _Nullable model, BOOL shouldExitEditing){
-        if (completion) {
-            [self performOnMainThread:^{
+                   completion:(void (^)(NCMessageModel *_Nullable message,
+                                        BOOL shouldExitEditing))completion {
+
+    void (^safeCompletion)(NCMessageModel *_Nullable, BOOL) =
+        ^(NCMessageModel *_Nullable model, BOOL shouldExitEditing) {
+          if (completion) {
+              [self performOnMainThread:^{
                 completion(model, shouldExitEditing);
-            }];
-        }
-    };
-    
-    NSString *trimmedText = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+              }];
+          }
+        };
+
+    NSString *trimmedText =
+        [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (trimmedText.length == 0) {
+        safeCompletion(nil, NO);
+        return;
+    }
+    if ([NCChatUIUtility isMessageTextOverMaxVisibleCharacterLimit:text]) {
+        UIView *rootView = editInputBarControl.superview ?: self.view;
+        [NCToastView showToast:NCUILocalizedString(@"nc_message_too_long") rootView:rootView];
         safeCompletion(nil, NO);
         return;
     }
@@ -341,36 +370,42 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         safeCompletion(nil, NO);
         return;
     }
-    NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageId:self.editingInputBarConfig.messageId];
-    [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-        (void)error;
-        NCMessageModel *model = message ? [NCMessageModel modelWithNCMessage:message] : nil;
-        if (!model) {
-            [self edit_exitUnavailableMessageEditModeWithInputBarControl:editInputBarControl];
-            safeCompletion(nil, NO);
-            return;
-        }
-        safeCompletion(model, NO);
-    }];
+    NCGetMessageByIdParams *params =
+        [[NCGetMessageByIdParams alloc] initWithMessageId:self.editingInputBarConfig.messageId];
+    [NCBaseChannel
+        getMessageByIdWithParams:params
+                      completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                        (void)error;
+                        NCMessageModel *model =
+                            message ? [NCMessageModel modelWithNCMessage:message] : nil;
+                        if (!model) {
+                            [self edit_exitUnavailableMessageEditModeWithInputBarControl:
+                                      editInputBarControl];
+                            safeCompletion(nil, NO);
+                            return;
+                        }
+                        safeCompletion(model, NO);
+                      }];
 }
 
-- (void)edit_exitUnavailableMessageEditModeWithInputBarControl:(NCEditInputBarControl *)editInputBarControl {
+- (void)edit_exitUnavailableMessageEditModeWithInputBarControl:
+    (NCEditInputBarControl *)editInputBarControl {
     [self performOnMainThread:^{
-        [editInputBarControl.editInputContainer resignInputViewFirstResponder];
-        self.chatSessionInputBarControl.hidden = NO;
-        void (^showDeletedAlert)(void) = ^{
-            [self edit_showAlert:NCUILocalizedString(@"message_edit_deleted_alert") confirmBlock:nil];
-        };
-        void (^exitEditMode)(void) = ^{
-            [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
-                                                  activateNormal:YES
-                                                      completion:showDeletedAlert];
-        };
-        if (self.fullScreenEditView) {
-            [self edit_exitFullScreenEditView:exitEditMode];
-            return;
-        }
-        exitEditMode();
+      [editInputBarControl.editInputContainer resignInputViewFirstResponder];
+      self.chatSessionInputBarControl.hidden = NO;
+      void (^showDeletedAlert)(void) = ^{
+        [self edit_showAlert:NCUILocalizedString(@"message_edit_deleted_alert") confirmBlock:nil];
+      };
+      void (^exitEditMode)(void) = ^{
+        [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                              activateNormal:YES
+                                                  completion:showDeletedAlert];
+      };
+      if (self.fullScreenEditView) {
+          [self edit_exitFullScreenEditView:exitEditMode];
+          return;
+      }
+      exitEditMode();
     }];
 }
 
@@ -378,11 +413,15 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
                         mentionedInfo:(nullable NCMentionedInfo *)mentionedInfo
                          messageModel:(NCMessageModel *)messageModel {
     // Do not submit empty edited text.
-    NSString *trimmedText = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *trimmedText =
+        [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (trimmedText.length == 0 || !messageModel) {
         return;
     }
-    [self edit_editMessageModel:messageModel editContent:text mentionedInfo:mentionedInfo isRetry:NO];
+    [self edit_editMessageModel:messageModel
+                    editContent:text
+                  mentionedInfo:mentionedInfo
+                        isRetry:NO];
 }
 
 // 编辑消息：基于原内容构造新内容副本后发起更新。
@@ -404,48 +443,58 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
             return;
         }
     } else {
-        newContent = [self edit_newContentFrom:oldContent text:editContent mentionedInfo:mentionedInfo];
+        newContent = [self edit_newContentFrom:oldContent
+                                          text:editContent
+                                 mentionedInfo:mentionedInfo];
     }
     if (!newContent) {
         return;
     }
 
-    // 乐观更新：先把新内容与“编辑中”状态写入 model 并刷新，保证 collectionView 重新测高时读到最新文本。
-    long long updateTimestamp = model.updateInfo ? model.updateInfo.timestamp
-                                                 : (long long)([[NSDate date] timeIntervalSince1970] * 1000);
-    model.updateInfo = [[NCMessageUpdateInfo alloc] initWithTimestamp:updateTimestamp
-                                                             content:newContent
-                                                              status:NCMessageUpdateStatusUpdating];
+    // 乐观更新：先把新内容与“编辑中”状态写入 model 并刷新，保证 collectionView
+    // 重新测高时读到最新文本。
+    long long updateTimestamp = model.updateInfo
+                                    ? model.updateInfo.timestamp
+                                    : (long long)([[NSDate date] timeIntervalSince1970] * 1000);
+    model.updateInfo =
+        [[NCMessageUpdateInfo alloc] initWithTimestamp:updateTimestamp
+                                               content:newContent
+                                                status:NCMessageUpdateStatusUpdating];
     model.content = newContent;
-    [self.dataSource edit_refreshUIMessagesEditedStatus:@[model]];
+    [self.dataSource edit_refreshUIMessagesEditedStatus:@[ model ]];
 
-    NCUpdateMessageParams *updateParams = [[NCUpdateMessageParams alloc] initWithMessageId:model.messageId
-                                                                                    content:newContent];
-    [NCBaseChannel updateMessageWithParams:updateParams completion:^(NCMessage * _Nullable updatedMessage,
-                                                                    NCError * _Nullable error) {
-        [self performOnMainThread:^{
-            if (error) {
-                [self edit_showEditErrorAlert:(NCChatUIErrorCode)error.code isRetry:isRetry];
-                // 更新失败（含断网）：把界面内容回退为原文——不显示新内容、不显示“已编辑”，
-                // 并把待更新内容保存到 updateInfo，供“重发”重试。
-                NCMessageUpdateInfo *info = model.updateInfo;
-                long long failedTimestamp = info ? info.timestamp
-                                                 : (long long)([[NSDate date] timeIntervalSince1970] * 1000);
-                NCMessageContent *retryContent = info.content ?: newContent;
-                model.content = oldContent;
-                model.updateInfo = [[NCMessageUpdateInfo alloc] initWithTimestamp:failedTimestamp
-                                                                         content:retryContent
-                                                                          status:NCMessageUpdateStatusFailed];
-                [self.dataSource edit_refreshUIMessagesEditedStatus:@[model]];
-                return;
-            }
-            // 成功：以服务端返回的消息刷新，此时才展示新内容与“已编辑”。
-            if (updatedMessage) {
-                NCMessageModel *updatedModel = [NCMessageModel modelWithNCMessage:updatedMessage];
-                [self.dataSource edit_refreshUIMessagesEditedStatus:@[updatedModel]];
-            }
-        }];
-    }];
+    NCUpdateMessageParams *updateParams =
+        [[NCUpdateMessageParams alloc] initWithMessageId:model.messageId content:newContent];
+    [NCBaseChannel
+        updateMessageWithParams:updateParams
+                     completion:^(NCMessage *_Nullable updatedMessage, NCError *_Nullable error) {
+                       [self performOnMainThread:^{
+                         if (error) {
+                             [self edit_showEditErrorAlert:(NCChatUIErrorCode)error.code
+                                                   isRetry:isRetry];
+                             // 更新失败（含断网）：把界面内容回退为原文——不显示新内容、不显示“已编辑”，
+                             // 并把待更新内容保存到 updateInfo，供“重发”重试。
+                             NCMessageUpdateInfo *info = model.updateInfo;
+                             long long failedTimestamp =
+                                 info ? info.timestamp
+                                      : (long long)([[NSDate date] timeIntervalSince1970] * 1000);
+                             NCMessageContent *retryContent = info.content ?: newContent;
+                             model.content = oldContent;
+                             model.updateInfo = [[NCMessageUpdateInfo alloc]
+                                 initWithTimestamp:failedTimestamp
+                                           content:retryContent
+                                            status:NCMessageUpdateStatusFailed];
+                             [self.dataSource edit_refreshUIMessagesEditedStatus:@[ model ]];
+                             return;
+                         }
+                         // 成功：以服务端返回的消息刷新，此时才展示新内容与“已编辑”。
+                         if (updatedMessage) {
+                             NCMessageModel *updatedModel =
+                                 [NCMessageModel modelWithNCMessage:updatedMessage];
+                             [self.dataSource edit_refreshUIMessagesEditedStatus:@[ updatedModel ]];
+                         }
+                       }];
+                     }];
 }
 
 // 基于原内容构造用于编辑的新内容副本，保留 @、扩展、发送者等公共字段，
@@ -477,11 +526,19 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 }
 
 - (void)edit_showAlert:(NSString *)alertMessage confirmBlock:(void (^)(void))confirmBlock {
-    [NCAlertView showAlertController:NCUILocalizedString(@"tip") message:alertMessage actionTitles:nil cancelTitle:nil confirmTitle:NCUILocalizedString(@"confirm") preferredStyle:(UIAlertControllerStyleAlert) actionsBlock:nil cancelBlock:nil confirmBlock:^{
-        if (confirmBlock) {
-            confirmBlock();
-        }
-    } inViewController:self];
+    [NCAlertView showAlertController:NCUILocalizedString(@"tip")
+                             message:alertMessage
+                        actionTitles:nil
+                         cancelTitle:nil
+                        confirmTitle:NCUILocalizedString(@"confirm")
+                      preferredStyle:(UIAlertControllerStyleAlert)actionsBlock:nil
+                         cancelBlock:nil
+                        confirmBlock:^{
+                          if (confirmBlock) {
+                              confirmBlock();
+                          }
+                        }
+                    inViewController:self];
 }
 
 - (void)edit_showEditErrorAlert:(NCChatUIErrorCode)code isRetry:(BOOL)isRetry {
@@ -490,26 +547,24 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     }
     NSString *alertContent = @"";
     switch (code) {
-        case NCChatUIErrorCodeOriginalMessageNotExist:
-            alertContent = NCUILocalizedString(@"message_edit_not_exist");
-            break;
-        case NCChatUIErrorCodeDangerousContent:
-        case NCChatUIErrorCodeContentReviewRejected:
-            alertContent = NCUILocalizedString(@"message_edit_content_sensitive");
-            break;
-        case NCChatUIErrorCodeMessageOverModifyTimeFail:
-        case NCChatUIErrorCodeModifiedMessageTimeout:
-            alertContent = NCUILocalizedString(@"message_edit_expired_toast");
-            break;
-        default:
-        {
-            if (isRetry) {
-                alertContent = NCUILocalizedString(@"message_edit_retry_failed");
-            } else {
-                alertContent = NCUILocalizedString(@"message_edit_failed");
-            }
+    case NCChatUIErrorCodeOriginalMessageNotExist:
+        alertContent = NCUILocalizedString(@"message_edit_not_exist");
+        break;
+    case NCChatUIErrorCodeDangerousContent:
+    case NCChatUIErrorCodeContentReviewRejected:
+        alertContent = NCUILocalizedString(@"message_edit_content_sensitive");
+        break;
+    case NCChatUIErrorCodeMessageOverModifyTimeFail:
+    case NCChatUIErrorCodeModifiedMessageTimeout:
+        alertContent = NCUILocalizedString(@"message_edit_expired_toast");
+        break;
+    default: {
+        if (isRetry) {
+            alertContent = NCUILocalizedString(@"message_edit_retry_failed");
+        } else {
+            alertContent = NCUILocalizedString(@"message_edit_failed");
         }
-            break;
+    } break;
     }
     if (alertContent.length > 0) {
         [NCAlertView showAlertController:nil message:alertContent hiddenAfterDelay:2];
@@ -523,11 +578,11 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (![self edit_isMessageEditing]) {
         return NO;
     }
-    
+
     if (!self.editInputBarControl.isMentionedEnabled) {
         return NO;
     }
-    
+
     if (userInfo) {
         [self.editInputBarControl addMentionedUser:userInfo symbolRequest:YES];
         [self.editInputBarControl restoreFocus];
@@ -536,17 +591,18 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     return NO;
 }
 
-- (NSArray <NCMentionedStringRangeInfo *> *)edit_toMentionedRangeInfo:(NCMentionedInfo *)mentionedInfo
-                                                               inText:(NSString *)text {
+- (NSArray<NCMentionedStringRangeInfo *> *)edit_toMentionedRangeInfo:
+                                               (NCMentionedInfo *)mentionedInfo
+                                                              inText:(NSString *)text {
     if (!mentionedInfo || mentionedInfo.userIdList.count == 0) {
         return nil;
     }
     if (!text || text.length == 0) {
         return nil;
     }
-    
+
     NSMutableArray<NCMentionedStringRangeInfo *> *rangeInfoList = [NSMutableArray array];
-    
+
     // Resolve all candidate user display information first.
     NSMutableDictionary *userDisplayNames = [NSMutableDictionary dictionary];
     for (NSString *userId in mentionedInfo.userIdList) {
@@ -555,10 +611,10 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
             userDisplayNames[userId] = userInfo.name ?: userId;
         }
     }
-    
+
     // Scan the text for matching mention tokens.
     NSRange searchRange = NSMakeRange(0, text.length);
-    
+
     while (searchRange.location < text.length) {
         NSRange atRange = [text rangeOfString:@"@" options:0 range:searchRange];
         if (atRange.location == NSNotFound) {
@@ -567,15 +623,17 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         // Match this @ position against known user names.
         for (NSString *userId in mentionedInfo.userIdList) {
             NSString *displayName = userDisplayNames[userId];
-            if (!displayName) continue;
-            
+            if (!displayName)
+                continue;
+
             NSString *pattern = [NSString stringWithFormat:@"@%@ ", displayName];
             if ([self text:text hasPrefix:pattern atIndex:atRange.location]) {
                 NSRange matchRange = NSMakeRange(atRange.location, pattern.length);
                 // Avoid recording the same range more than once.
                 if (![self isRangeAlreadyInMatches:matchRange matches:rangeInfoList]) {
                     // Store metadata for the matched mention range.
-                    NCMentionedStringRangeInfo *rangeInfo = [[NCMentionedStringRangeInfo alloc] init];
+                    NCMentionedStringRangeInfo *rangeInfo =
+                        [[NCMentionedStringRangeInfo alloc] init];
                     rangeInfo.range = matchRange;
                     rangeInfo.userId = userId;
                     rangeInfo.content = pattern;
@@ -604,7 +662,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 
 // Updates the referenced-message preview above the regular input bar.
 - (void)edit_refreshNormalInputReferenceViewIfNeeded:(NSArray<NCMessageModel *> *)messageModels {
-    NSMutableDictionary<NSString *, NCMessageModel *> *messageModelDict = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSString *, NCMessageModel *> *messageModelDict =
+        [NSMutableDictionary dictionary];
     for (NCMessageModel *model in messageModels) {
         if (model.messageId.length > 0) {
             messageModelDict[model.messageId] = model;
@@ -627,12 +686,12 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (!self.currentSelectedModel) {
         self.currentSelectedModel = model;
     }
-    [self performOnMainThread: ^{
-        self.referencingView.referModel = model;
-        self.referencingView.textLabel.text = [NCChatUIUtility formatMessage:model.content
+    [self performOnMainThread:^{
+      self.referencingView.referModel = model;
+      self.referencingView.textLabel.text = [NCChatUIUtility formatMessage:model.content
                                                                  channelId:model.channelId
-                                                         channelType:model.channelType
-                                                             isAllMessage:YES];
+                                                               channelType:model.channelType
+                                                              isAllMessage:YES];
     }];
 }
 
@@ -642,7 +701,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (![self edit_isMessageEditing]) {
         return;
     }
-    NSMutableDictionary<NSString *, NCMessageModel *> *messageModelDict = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSString *, NCMessageModel *> *messageModelDict =
+        [NSMutableDictionary dictionary];
     for (NCMessageModel *model in messageModels) {
         if (model.messageId.length > 0) {
             messageModelDict[model.messageId] = model;
@@ -651,41 +711,57 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (messageModelDict.count == 0) {
         return;
     }
-    NCGetMessageByIdParams *params = [[NCGetMessageByIdParams alloc] initWithMessageId:self.editingInputBarConfig.messageId];
-    [NCBaseChannel getMessageByIdWithParams:params completion:^(NCMessage * _Nullable message, NCError * _Nullable error) {
-        (void)error;
-        NCMessageModel *messageModel = message ? [NCMessageModel modelWithNCMessage:message] : nil;
-        if (![messageModel edit_hasReferenceMessage]) {
-            return;
-        }
-        
-        // Resolve the referenced message model.
-        NCMessageModel *referMessageModel = messageModelDict[[messageModel edit_referenceMessageUId]];
-        if (!referMessageModel) {
-            return;
-        }
-        
-        NCEditInputBarControl *editInputBarControl = [self edit_currentActiveEditInputBarControl];
-        if (editInputBarControl) {
-            // Replace content only for an edited message; deleted or recalled references retain their status placeholder.
-            if (status == NCReferenceMessageStatusUpdated) {
-                [messageModel edit_updateReferencedMessageContentFromModel:referMessageModel];
-            }
-            [messageModel edit_setReferenceMessageStatus:status];
-            
-            [self edit_syncGetReferenceMessageContent:messageModel completion:^(NSString *referMsgUserName, NSString *referContent) {
-                self.editingInputBarConfig.referencedSenderName = referMsgUserName;
-                self.editingInputBarConfig.referencedContent = referContent;
-                
-                [self performOnMainThread:^{
-                    [editInputBarControl setReferenceInfo:referMsgUserName content:referContent];
-                }];
-            }];
-            if ([messageModel edit_hasReferenceMessage]) {
-                self.editingInputBarConfig.referencedMsgStatus = [messageModel edit_referenceMessageStatus];
-            }
-        }
-    }];
+    NCGetMessageByIdParams *params =
+        [[NCGetMessageByIdParams alloc] initWithMessageId:self.editingInputBarConfig.messageId];
+    [NCBaseChannel
+        getMessageByIdWithParams:params
+                      completion:^(NCMessage *_Nullable message, NCError *_Nullable error) {
+                        (void)error;
+                        NCMessageModel *messageModel =
+                            message ? [NCMessageModel modelWithNCMessage:message] : nil;
+                        if (![messageModel edit_hasReferenceMessage]) {
+                            return;
+                        }
+
+                        // Resolve the referenced message model.
+                        NCMessageModel *referMessageModel =
+                            messageModelDict[[messageModel edit_referenceMessageUId]];
+                        if (!referMessageModel) {
+                            return;
+                        }
+
+                        NCEditInputBarControl *editInputBarControl =
+                            [self edit_currentActiveEditInputBarControl];
+                        if (editInputBarControl) {
+                            // Replace content only for an edited message; deleted or recalled
+                            // references retain their status placeholder.
+                            if (status == NCReferenceMessageStatusUpdated) {
+                                [messageModel
+                                    edit_updateReferencedMessageContentFromModel:referMessageModel];
+                            }
+                            [messageModel edit_setReferenceMessageStatus:status];
+
+                            [self edit_syncGetReferenceMessageContent:messageModel
+                                                           completion:^(NSString *referMsgUserName,
+                                                                        NSString *referContent) {
+                                                             self.editingInputBarConfig
+                                                                 .referencedSenderName =
+                                                                 referMsgUserName;
+                                                             self.editingInputBarConfig
+                                                                 .referencedContent = referContent;
+
+                                                             [self performOnMainThread:^{
+                                                               [editInputBarControl
+                                                                   setReferenceInfo:referMsgUserName
+                                                                            content:referContent];
+                                                             }];
+                                                           }];
+                            if ([messageModel edit_hasReferenceMessage]) {
+                                self.editingInputBarConfig.referencedMsgStatus =
+                                    [messageModel edit_referenceMessageStatus];
+                            }
+                        }
+                      }];
 }
 
 #pragma mark - Edit State Persistence
@@ -702,54 +778,58 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
         return;
     }
     NCEditInputBarConfig *editConfig = [[NCEditInputBarConfig alloc] initWithData:draft.content];
-    
-    void (^showBlock)(NCEditInputBarConfig *) = ^(NCEditInputBarConfig *config){
-        [self performOnMainThread:^{
-            [self edit_showEditBarWithConfig:editConfig becomeFirstResponder:NO];
-            // Restore the keyboard bottom-bar state so viewDidAppear can reopen the keyboard.
-            self.latestInputBottomBarStatus = KBottomBarKeyboardStatus;
-        }];
+
+    void (^showBlock)(NCEditInputBarConfig *) = ^(NCEditInputBarConfig *config) {
+      [self performOnMainThread:^{
+        [self edit_showEditBarWithConfig:editConfig becomeFirstResponder:NO];
+        // Restore the keyboard bottom-bar state so viewDidAppear can reopen the keyboard.
+        self.latestInputBottomBarStatus = KBottomBarKeyboardStatus;
+      }];
     };
-    
+
     // Refresh the cached referenced-message content.
-    if (editConfig.messageId.length > 0
-        && editConfig.referencedContent.length > 0
-        && editConfig.referencedMsgStatus != NCReferenceMessageStatusDeleted
-        && editConfig.referencedMsgStatus != NCReferenceMessageStatusRecalled) {
-        
+    if (editConfig.messageId.length > 0 && editConfig.referencedContent.length > 0 &&
+        editConfig.referencedMsgStatus != NCReferenceMessageStatusDeleted &&
+        editConfig.referencedMsgStatus != NCReferenceMessageStatusRecalled) {
+
         NCChannelIdentifier *channelIdentifier = NCEditConversationChannelIdentifier(self);
         if (!channelIdentifier) {
             showBlock(editConfig);
             return;
         }
-        NCRefreshReferenceMessageParams *params =
-            [[NCRefreshReferenceMessageParams alloc] initWithChannelIdentifier:channelIdentifier
-                                                                    messageIds:@[editConfig.messageId]];
-        
-        void (^resultsBlock)(NSArray<NCMessageResult *> *)  = ^(NSArray<NCMessageResult *> *results){
-            if (results.count == 1) {
-                NCMessageModel *model = results[0].message ? [NCMessageModel modelWithNCMessage:results[0].message] : nil;
-                if (model) {
-                    [self edit_syncGetReferenceMessageContent:model completion:^(NSString *referMsgUserName, NSString *referContent) {
-                        editConfig.referencedSenderName = referMsgUserName;
-                        editConfig.referencedContent = referContent;
-                    }];
-                    
-                    if ([model edit_hasReferenceMessage]) {
-                        editConfig.referencedMsgStatus = [model edit_referenceMessageStatus];
-                    }
-                    showBlock(editConfig);
-                }
-            }
+        NCRefreshReferenceMessageParams *params = [[NCRefreshReferenceMessageParams alloc]
+            initWithChannelIdentifier:channelIdentifier
+                           messageIds:@[ editConfig.messageId ]];
+
+        void (^resultsBlock)(NSArray<NCMessageResult *> *) = ^(
+            NSArray<NCMessageResult *> *results) {
+          if (results.count == 1) {
+              NCMessageModel *model =
+                  results[0].message ? [NCMessageModel modelWithNCMessage:results[0].message] : nil;
+              if (model) {
+                  [self edit_syncGetReferenceMessageContent:model
+                                                 completion:^(NSString *referMsgUserName,
+                                                              NSString *referContent) {
+                                                   editConfig.referencedSenderName =
+                                                       referMsgUserName;
+                                                   editConfig.referencedContent = referContent;
+                                                 }];
+
+                  if ([model edit_hasReferenceMessage]) {
+                      editConfig.referencedMsgStatus = [model edit_referenceMessageStatus];
+                  }
+                  showBlock(editConfig);
+              }
+          }
         };
-        
+
         [NCBaseChannel refreshReferenceMessageWithParams:params
-                                      localMessageHandler:resultsBlock
-                                     remoteMessageHandler:resultsBlock
-                                            errorHandler:^(NCError * _Nullable error) {
-            (void)error;
-            showBlock(editConfig);
-        }];
+                                     localMessageHandler:resultsBlock
+                                    remoteMessageHandler:resultsBlock
+                                            errorHandler:^(NCError *_Nullable error) {
+                                              (void)error;
+                                              showBlock(editConfig);
+                                            }];
     } else {
         showBlock(editConfig);
     }
@@ -759,7 +839,7 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (![self edit_isMessageEditing]) {
         return;
     }
-    
+
     NCEditInputBarControl *editInputBar = [self edit_currentActiveEditInputBarControl];
     if (![editInputBar hasContent]) {
         return;
@@ -772,10 +852,11 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (!channel) {
         return;
     }
-    [channel saveEditedMessageDraft:draft completion:^(BOOL isSaved, NCError * _Nullable error) {
-        (void)isSaved;
-        (void)error;
-    }];
+    [channel saveEditedMessageDraft:draft
+                         completion:^(BOOL isSaved, NCError *_Nullable error) {
+                           (void)isSaved;
+                           (void)error;
+                         }];
 }
 
 - (void)edit_clearSavedEditState {
@@ -783,58 +864,63 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (!channel) {
         return;
     }
-    [channel clearEditedMessageDraftWithCompletion:^(BOOL isCleared, NCError * _Nullable error) {
-        (void)isCleared;
-        (void)error;
+    [channel clearEditedMessageDraftWithCompletion:^(BOOL isCleared, NCError *_Nullable error) {
+      (void)isCleared;
+      (void)error;
     }];
 }
 
 /// Exits edit mode and restores the regular input bar.
 - (void)edit_exitEditModeAndRestoreNormalWithAnimation:(BOOL)animated
                                         activateNormal:(BOOL)activate
-                                            completion:(void (^ _Nullable)())completion {
+                                            completion:(void (^_Nullable)())completion {
     if (![self edit_isMessageEditing]) {
         return;
     }
     [self performOnMainThread:^{
-         [self edit_exitEditModeWithAnimation:animated completion:^{
-             [self edit_restoreNormalInputWithActivate:activate completion:completion];
-        }];
+      [self edit_exitEditModeWithAnimation:animated
+                                completion:^{
+                                  [self edit_restoreNormalInputWithActivate:activate
+                                                                 completion:completion];
+                                }];
     }];
 }
 
 /// Exits edit mode.
-- (void)edit_exitEditModeWithAnimation:(BOOL)animated completion:(void (^ _Nullable)())completion {
-    [self.editInputBarControl exitWithAnimation:animated completion:^{
-        self.editingInputBarConfig = nil;
-        [self.editInputBarControl resetEditInputBar];
-        [self edit_clearSavedEditState];
-        if (completion) {
-            completion();
-        }
-    }];
+- (void)edit_exitEditModeWithAnimation:(BOOL)animated completion:(void (^_Nullable)())completion {
+    [self.editInputBarControl exitWithAnimation:animated
+                                     completion:^{
+                                       self.editingInputBarConfig = nil;
+                                       [self.editInputBarControl resetEditInputBar];
+                                       [self edit_clearSavedEditState];
+                                       if (completion) {
+                                           completion();
+                                       }
+                                     }];
 }
 
 /// Restores the regular input bar.
-- (void)edit_restoreNormalInputWithActivate:(BOOL)activate completion:(void (^ _Nullable)())completion {
+- (void)edit_restoreNormalInputWithActivate:(BOOL)activate
+                                 completion:(void (^_Nullable)())completion {
     self.chatSessionInputBarControl.hidden = NO;
     // Restore the draft, including any referenced-message preview it contains.
     NCBaseChannel *channel = NCEditConversationChannel(self);
     if (!channel) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.chatSessionInputBarControl.draft = nil;
-            if (activate) {
-                [self.chatSessionInputBarControl.inputTextView becomeFirstResponder];
-            }
-            if (completion) {
-                completion();
-            }
+          self.chatSessionInputBarControl.draft = nil;
+          if (activate) {
+              [self.chatSessionInputBarControl.inputTextView becomeFirstResponder];
+          }
+          if (completion) {
+              completion();
+          }
         });
         return;
     }
-    [channel reloadWithCompletion:^(NCBaseChannel * _Nullable latestChannel, NSError * _Nullable error) {
-        (void)error;
-        dispatch_async(dispatch_get_main_queue(), ^{
+    [channel
+        reloadWithCompletion:^(NCBaseChannel *_Nullable latestChannel, NSError *_Nullable error) {
+          (void)error;
+          dispatch_async(dispatch_get_main_queue(), ^{
             NCBaseChannel *activeChannel = latestChannel ?: channel;
             self.chatSessionInputBarControl.draft = activeChannel.draft;
             if (activate) {
@@ -843,30 +929,38 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
             if (completion) {
                 completion();
             }
-        });
-    }];
+          });
+        }];
 }
 
 - (NCEditInputBarControl *)edit_currentActiveEditInputBarControl {
     // Prefer the full-screen editor because it overlays the regular edit control.
-    return self.fullScreenEditView ?
-    self.fullScreenEditView.editInputBarControl :
-    self.editInputBarControl;
+    return self.fullScreenEditView ? self.fullScreenEditView.editInputBarControl
+                                   : self.editInputBarControl;
 }
 
 #pragma mark - Edit Delegates
 
-- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl didConfirmWithText:(NSString *)text {
+- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+              didConfirmWithText:(NSString *)text {
     if (self.editingInputBarConfig) {
-        [self edit_checkConfirmData:editInputBarControl text:text completion:^(NCMessageModel *model, BOOL shouldExitEditing) {
-            if (model) {
-                [self edit_didUpdateMessageWithText:text mentionedInfo:editInputBarControl.mentionedInfo messageModel:model];
-                // Exit edit mode after confirmation.
-                [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
-            } else if (shouldExitEditing) {
-                [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
-            }
-        }];
+        [self edit_checkConfirmData:editInputBarControl
+                               text:text
+                         completion:^(NCMessageModel *model, BOOL shouldExitEditing) {
+                           if (model) {
+                               [self edit_didUpdateMessageWithText:text
+                                                     mentionedInfo:editInputBarControl.mentionedInfo
+                                                      messageModel:model];
+                               // Exit edit mode after confirmation.
+                               [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                                                     activateNormal:YES
+                                                                         completion:nil];
+                           } else if (shouldExitEditing) {
+                               [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                                                     activateNormal:YES
+                                                                         completion:nil];
+                           }
+                         }];
     }
 }
 
@@ -874,18 +968,20 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
 }
 
-- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl shouldChangeFrame:(CGRect)frame {
+- (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+               shouldChangeFrame:(CGRect)frame {
     if (![self edit_isMessageEditing]) {
         return;
     }
     // Subtract the multi-select toolbar height because it hides the edit input bar.
     BOOL multiSelect = [NCMessageSelectionUtility sharedManager].multiSelect;
     CGFloat extraHeight = multiSelect ? self.messageSelectionToolbar.bounds.size.height : 0;
-    
+
     CGRect collectionViewRect = self.messageCollectionView.frame;
-    collectionViewRect.size.height = CGRectGetMinY(frame) - collectionViewRect.origin.y - extraHeight;
+    collectionViewRect.size.height =
+        CGRectGetMinY(frame) - collectionViewRect.origin.y - extraHeight;
     [self.messageCollectionView setFrame:collectionViewRect];
-    
+
     CGFloat width = NC_KIT_UNREAD_BOTTOM_ICON_WIDTH;
     CGFloat height = NC_KIT_UNREAD_BOTTOM_ICON_HEIGHT;
     CGFloat rightOrLeftPadding = 5.5;
@@ -893,14 +989,15 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     CGFloat editInputBarControlY = editInputBarControl.frame.origin.y;
     CGFloat x = self.view.frame.size.width - rightOrLeftPadding - width;
     CGFloat y = editInputBarControlY - bottom - height;
-    
+
     if ([NCChatUIUtility isRTL]) {
         x = rightOrLeftPadding;
     }
     [self.unreadRightBottomIcon setFrame:CGRectMake(x, y, width, height)];
-    
+
     if (self.locatedMessageSentTime == 0) {
-        // Do not scroll to the bottom before viewWillAppear/viewDidLoad when a message location is forced.
+        // Do not scroll to the bottom before viewWillAppear/viewDidLoad when a message location is
+        // forced.
         if (self.dataSource.isLoadingHistoryMessage || [self isRemainMessageExisted]) {
             [self loadRemainMessageAndScrollToBottom:YES];
         } else if (self.isConversationAppear) {
@@ -910,36 +1007,37 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 }
 
 - (void)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
-           showUserSelector:(void (^)(NCChatUIUserInfo *selectedUser))selectedBlock
-                     cancel:(void (^)(void))cancelBlock {
+                showUserSelector:(void (^)(NCChatUIUserInfo *selectedUser))selectedBlock
+                          cancel:(void (^)(void))cancelBlock {
     void (^restoreFocus)(void) = ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [editInputBarControl restoreFocus];
-        });
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [editInputBarControl restoreFocus];
+      });
     };
     // Wrap the callback so focus returns after user selection.
     void (^wrappedCompletion)(NCChatUIUserInfo *) = ^(NCChatUIUserInfo *selectedUser) {
-        if (selectedBlock) {
-            selectedBlock(selectedUser);
-        }
-        restoreFocus();
+      if (selectedBlock) {
+          selectedBlock(selectedUser);
+      }
+      restoreFocus();
     };
-    
+
     void (^wrappedCancelBlock)(void) = ^{
-        if (cancelBlock) {
-            cancelBlock();
-        }
-        restoreFocus();
+      if (cancelBlock) {
+          cancelBlock();
+      }
+      restoreFocus();
     };
-    
+
     if ([self respondsToSelector:@selector(showChooseUserViewController:cancel:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self showChooseUserViewController:wrappedCompletion cancel:wrappedCancelBlock];
+          [self showChooseUserViewController:wrappedCompletion cancel:wrappedCancelBlock];
         });
     }
 }
 
-- (nullable NCChatUIUserInfo *)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl getUserInfo:(NSString *)userId {
+- (nullable NCChatUIUserInfo *)edit_editInputBarControl:(NCEditInputBarControl *)editInputBarControl
+                                            getUserInfo:(NSString *)userId {
     // Reuse the regular chat input bar's user lookup path.
     return [self getSelectingUserInfo:userId];
 }
@@ -947,96 +1045,116 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 - (void)edit_editInputBarControlRequestFullScreenEdit:(NCEditInputBarControl *)editInputBarControl {
     // Save the current cursor location.
     NSRange currentCursorPosition = [editInputBarControl getCurrentCursorPosition];
-    
-    [editInputBarControl hideBottomPanelsWithAnimation:YES completion:^{
-        // Hide the regular edit control while full-screen editing is active.
-        editInputBarControl.isVisible = NO;
-        
-        [self edit_setupFullScreenEditView];
-        
-        if (self.navigationController) {
-            [self.navigationController.view addSubview:self.fullScreenEditView];
-        } else {
-            UIWindow *keyWindow = [self edit_keyWindow];
-            if (keyWindow) {
-                [keyWindow addSubview:self.fullScreenEditView];
-            }
-        }
-        
-        [self.fullScreenEditView showWithConfig:editInputBarControl.inputBarConfig animation:YES];
-        
-        // Restore the cursor in the full-screen editor.
-        if (currentCursorPosition.location != NSNotFound) {
-            [self.fullScreenEditView.editInputBarControl setCursorPosition:currentCursorPosition];
-        }
-        
-        [self edit_markEditIsExpired:self.fullScreenEditView.editInputBarControl];
-    }];
+
+    [editInputBarControl
+        hideBottomPanelsWithAnimation:YES
+                           completion:^{
+                             // Hide the regular edit control while full-screen editing is active.
+                             editInputBarControl.isVisible = NO;
+
+                             [self edit_setupFullScreenEditView];
+
+                             if (self.navigationController) {
+                                 [self.navigationController.view
+                                     addSubview:self.fullScreenEditView];
+                             } else {
+                                 UIWindow *keyWindow = [self edit_keyWindow];
+                                 if (keyWindow) {
+                                     [keyWindow addSubview:self.fullScreenEditView];
+                                 }
+                             }
+
+                             [self.fullScreenEditView
+                                 showWithConfig:editInputBarControl.inputBarConfig
+                                      animation:YES];
+
+                             // Restore the cursor in the full-screen editor.
+                             if (currentCursorPosition.location != NSNotFound) {
+                                 [self.fullScreenEditView.editInputBarControl
+                                     setCursorPosition:currentCursorPosition];
+                             }
+
+                             [self edit_markEditIsExpired:self.fullScreenEditView
+                                                              .editInputBarControl];
+                           }];
 }
 
 #pragma mark - Full-Screen Editing
 
 - (void)edit_fullScreenEditViewCollapse:(NCFullScreenEditView *)fullScreenEditView {
     // Save the full-screen editor cursor location.
-    NSRange currentCursorPosition = [fullScreenEditView.editInputBarControl getCurrentCursorPosition];
-    
+    NSRange currentCursorPosition =
+        [fullScreenEditView.editInputBarControl getCurrentCursorPosition];
+
     // Capture the full-screen edit state.
     NCEditInputBarConfig *config = fullScreenEditView.editInputBarControl.inputBarConfig;
-    
+
     // Restore the regular edit mode.
     [self edit_showEditBarWithConfig:config becomeFirstResponder:NO];
-    
+
     [self edit_exitFullScreenEditView:^{
-        // Restore the cursor in the regular editor.
-        if (currentCursorPosition.location != NSNotFound) {
-            [self.editInputBarControl setCursorPosition:currentCursorPosition];
-        }
-        
-        // Restore focus asynchronously after the regular editor state is applied.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.editInputBarControl restoreFocus];
-        });
+      // Restore the cursor in the regular editor.
+      if (currentCursorPosition.location != NSNotFound) {
+          [self.editInputBarControl setCursorPosition:currentCursorPosition];
+      }
+
+      // Restore focus asynchronously after the regular editor state is applied.
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self.editInputBarControl restoreFocus];
+      });
     }];
 }
 
 - (void)edit_fullScreenEditViewCancel:(NCFullScreenEditView *)fullScreenEditView {
     [self edit_exitFullScreenEditView:^{
-        // Exit the regular edit mode.
-        [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
+      // Exit the regular edit mode.
+      [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
     }];
 }
 
 - (void)edit_fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView
-               showUserSelector:(void (^)(NCChatUIUserInfo * _Nonnull))selectedBlock
+               showUserSelector:(void (^)(NCChatUIUserInfo *_Nonnull))selectedBlock
                          cancel:(void (^)(void))cancelBlock {
-    [self edit_editInputBarControl:fullScreenEditView.editInputBarControl showUserSelector:selectedBlock cancel:cancelBlock];
+    [self edit_editInputBarControl:fullScreenEditView.editInputBarControl
+                  showUserSelector:selectedBlock
+                            cancel:cancelBlock];
 }
 
-- (void)edit_fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView didConfirmWithText:(NSString *)text {
-    [self edit_checkConfirmData:fullScreenEditView.editInputBarControl text:text completion:^(NCMessageModel *model, BOOL shouldExitEditing) {
-        if (model) {
-            [self edit_exitFullScreenEditView:^{
-                [self edit_didUpdateMessageWithText:text
-                                      mentionedInfo:fullScreenEditView.editInputBarControl.mentionedInfo
-                                       messageModel:model];
-                [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
-            }];
-        } else if (shouldExitEditing) {
-            [self edit_exitFullScreenEditView:^{
-                [self edit_exitEditModeAndRestoreNormalWithAnimation:YES activateNormal:YES completion:nil];
-            }];
-        }
-    }];
-    
+- (void)edit_fullScreenEditView:(NCFullScreenEditView *)fullScreenEditView
+             didConfirmWithText:(NSString *)text {
+    [self
+        edit_checkConfirmData:fullScreenEditView.editInputBarControl
+                         text:text
+                   completion:^(NCMessageModel *model, BOOL shouldExitEditing) {
+                     if (model) {
+                         [self edit_exitFullScreenEditView:^{
+                           [self
+                               edit_didUpdateMessageWithText:text
+                                               mentionedInfo:fullScreenEditView.editInputBarControl
+                                                                 .mentionedInfo
+                                                messageModel:model];
+                           [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                                                 activateNormal:YES
+                                                                     completion:nil];
+                         }];
+                     } else if (shouldExitEditing) {
+                         [self edit_exitFullScreenEditView:^{
+                           [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                                                 activateNormal:YES
+                                                                     completion:nil];
+                         }];
+                     }
+                   }];
 }
 
-- (void)edit_exitFullScreenEditView:(void(^)(void))completion {
-    [self.fullScreenEditView hideWithAnimation:YES completion:^{
-        if (completion) {
-            completion();
-        }
-        self.fullScreenEditView = nil;
-    }];
+- (void)edit_exitFullScreenEditView:(void (^)(void))completion {
+    [self.fullScreenEditView hideWithAnimation:YES
+                                    completion:^{
+                                      if (completion) {
+                                          completion();
+                                      }
+                                      self.fullScreenEditView = nil;
+                                    }];
 }
 
 - (void)edit_didTapEditRetryButton:(NCMessageModel *)model {
@@ -1084,12 +1202,12 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
     if (!text || !prefix || index < 0 || index >= text.length) {
         return NO;
     }
-    
+
     NSInteger remainingLength = text.length - index;
     if (remainingLength < prefix.length) {
         return NO; // The remaining text is shorter than the prefix.
     }
-    
+
     NSRange checkRange = NSMakeRange(index, prefix.length);
     NSString *substring = [text substringWithRange:checkRange];
     return [substring isEqualToString:prefix];
@@ -1099,7 +1217,8 @@ static NCBaseChannel *NCEditConversationChannel(NCChannelViewController *chatVC)
 /// @param range The range to find.
 /// @param matches The existing matches.
 /// @return YES when the range is already present; otherwise NO.
-- (BOOL)isRangeAlreadyInMatches:(NSRange)range matches:(NSArray<NCMentionedStringRangeInfo *> *)matches {
+- (BOOL)isRangeAlreadyInMatches:(NSRange)range
+                        matches:(NSArray<NCMentionedStringRangeInfo *> *)matches {
     for (NCMentionedStringRangeInfo *match in matches) {
         if (NSEqualRanges(range, match.range)) {
             return YES;

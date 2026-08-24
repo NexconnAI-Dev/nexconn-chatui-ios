@@ -7,12 +7,11 @@
 //
 
 #import "NCRemoveGroupMemberCellViewModel.h"
-#import "NCRemoveGroupMemberCell.h"
-#import "NCGroupManager.h"
 #import "NCChatUICommonDefine.h"
+#import "NCGroupManager.h"
+#import "NCRemoveGroupMemberCell.h"
 
-
-@interface NCRemoveGroupMemberCellViewModel()
+@interface NCRemoveGroupMemberCellViewModel ()
 
 @property (nonatomic, strong) NCGroupMemberInfo *member;
 
@@ -41,13 +40,16 @@
 }
 
 + (void)registerCellForTableView:(UITableView *)tableView {
-    [tableView registerClass:NCRemoveGroupMemberCell.class forCellReuseIdentifier:NCRemoveGroupMemberCellIdentifier];
+    [tableView registerClass:NCRemoveGroupMemberCell.class
+        forCellReuseIdentifier:NCRemoveGroupMemberCellIdentifier];
 }
 
-#pragma mark -- NCCellViewModelProtocol
+#pragma mark-- NCCellViewModelProtocol
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NCRemoveGroupMemberCell *cell = [tableView dequeueReusableCellWithIdentifier:NCRemoveGroupMemberCellIdentifier];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NCRemoveGroupMemberCell *cell =
+        [tableView dequeueReusableCellWithIdentifier:NCRemoveGroupMemberCellIdentifier];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.portraitImageView.imageURL = [NSURL URLWithString:self.member.avatarUrl];
     cell.roleLabel.hidden = self.hiddenRole;
@@ -68,19 +70,19 @@
     return NCUserManagementCellHeight;
 }
 
-#pragma mark -- private
+#pragma mark-- private
 
 - (NSString *)getRoleString:(NCGroupMemberRole)role {
     NSString *string;
     switch (role) {
-        case NCGroupMemberRoleOwner:
-            string = NCUILocalizedString(@"group_owner");
-            break;
-        case NCGroupMemberRoleAdmin:
-            string = NCUILocalizedString(@"group_manager");
-            break;
-        default:
-            break;
+    case NCGroupMemberRoleOwner:
+        string = NCUILocalizedString(@"group_owner");
+        break;
+    case NCGroupMemberRoleAdmin:
+        string = NCUILocalizedString(@"group_manager");
+        break;
+    default:
+        break;
     }
     return string;
 }

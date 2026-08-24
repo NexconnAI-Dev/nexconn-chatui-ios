@@ -27,8 +27,8 @@
 
 - (UIActivityIndicatorView *)loadingView {
     if (!_loadingView) {
-        UIActivityIndicatorView *loadingView =
-            [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:self.activityIndicatorViewStyle];
+        UIActivityIndicatorView *loadingView = [[UIActivityIndicatorView alloc]
+            initWithActivityIndicatorStyle:self.activityIndicatorViewStyle];
         loadingView.hidesWhenStopped = YES;
         [self addSubview:_loadingView = loadingView];
     }
@@ -82,24 +82,25 @@
             self.arrowView.transform = CGAffineTransformMakeRotation(0.000001 - M_PI);
             [UIView animateWithDuration:NCMJRefreshSlowAnimationDuration
                 animations:^{
-                    self.loadingView.alpha = 0.0;
+                  self.loadingView.alpha = 0.0;
                 }
                 completion:^(BOOL finished) {
-                    // Stop only if the state is still idle when the animation completes.
-                    if (state != NCMJRefreshStateIdle)
-                        return;
+                  // Stop only if the state is still idle when the animation completes.
+                  if (state != NCMJRefreshStateIdle)
+                      return;
 
-                    self.loadingView.alpha = 1.0;
-                    [self.loadingView stopAnimating];
+                  self.loadingView.alpha = 1.0;
+                  [self.loadingView stopAnimating];
 
-                    self.arrowView.hidden = NO;
+                  self.arrowView.hidden = NO;
                 }];
         } else {
             self.arrowView.hidden = NO;
             [self.loadingView stopAnimating];
             [UIView animateWithDuration:NCMJRefreshFastAnimationDuration
                              animations:^{
-                                 self.arrowView.transform = CGAffineTransformMakeRotation(0.000001 - M_PI);
+                               self.arrowView.transform =
+                                   CGAffineTransformMakeRotation(0.000001 - M_PI);
                              }];
         }
     }
@@ -108,7 +109,7 @@
         [self.loadingView stopAnimating];
         [UIView animateWithDuration:NCMJRefreshFastAnimationDuration
                          animations:^{
-                             self.arrowView.transform = CGAffineTransformIdentity;
+                           self.arrowView.transform = CGAffineTransformIdentity;
                          }];
     }
     else if (state == NCMJRefreshStateRefreshing) {

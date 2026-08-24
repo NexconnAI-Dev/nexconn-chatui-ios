@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NCViewModelAdapterCenter : NSObject
 
 /// Registers a delegate for a view model class
-/// 
+///
 /// @param delegate The delegate object
 /// @param cls The view model class
 /// @return Whether the operation succeeded
