@@ -457,6 +457,25 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     return YES;
 }
 
+// 与 Android ChannelViewModel 的历史消息合并规则保持一致：按 clientId 去重，并按发送时间插入。
+- (NSInteger)insertHistoryMessageModelBySentTime:(NCMessageModel *)model {
+    if (![self appendMessageModel:model]) {
+        return NSNotFound;
+    }
+
+    NSInteger insertIndex = 0;
+    for (NSInteger index = (NSInteger)self.chatVC.channelDataRepository.count - 1; index >= 0;
+         index--) {
+        NCMessageModel *existingModel = self.chatVC.channelDataRepository[index];
+        if (existingModel.sentTime <= model.sentTime) {
+            insertIndex = index + 1;
+            break;
+        }
+    }
+    [self.chatVC.channelDataRepository insertObject:model atIndex:insertIndex];
+    return insertIndex;
+}
+
 - (void)loadLatestHistoryMessage {
     if (self.chatVC.locatedMessageSentTime > 0) {
         [self loadHistorylocatedMessageV2];
@@ -764,10 +783,11 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                      }];
 }
 
-// Only the initial load can call back twice. isDoubleCallback marks local and remote versions of
-// the same page; the remote result wins.
+// Only the initial load can call back twice. The remote page is merged with the local page so
+// messages received between the two callbacks are retained.
 - (void)loadLatestHistoryMessageV2:(NSArray<NCMessage *> *)messages
                   isDoubleCallback:(BOOL)isDoubleCallback {
+    (void)isDoubleCallback;
     if (messages.count <= 0) {
         return;
     }
@@ -776,25 +796,26 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
         self.recordTime = messages.lastObject.sentTime;
     }
 
-    // For an initial double callback, remove the first local page before applying the authoritative
-    // remote page.
-    if (isDoubleCallback) {
-        [self.chatVC.channelDataRepository removeAllObjects];
-    }
     NSMutableArray *itemToFetchReceipt = [NSMutableArray array];
-    NSInteger insertedCount = 0;
+    NSInteger firstInsertedIndex = NSNotFound;
 
     for (int i = 0; i < messages.count; i++) {
         NCMessage *message = [messages objectAtIndex:i];
         NCMessageModel *model = [NCMessageModel modelWithNCMessage:message];
-        if ([self pushOldMessageModel:model]) {
+        NSInteger insertedIndex = [self insertHistoryMessageModelBySentTime:model];
+        if (insertedIndex != NSNotFound) {
             [itemToFetchReceipt addObject:model];
-            insertedCount++;
+            if (firstInsertedIndex == NSNotFound || insertedIndex < firstInsertedIndex) {
+                firstInsertedIndex = insertedIndex;
+            }
         }
     }
     [self rrs_fetchReadReceiptInfo:itemToFetchReceipt];
-    if (insertedCount > 0) {
-        [self.chatVC.util figureOutConversationDataRepositoryFromIndex:0 toIndex:insertedCount - 1];
+    if (firstInsertedIndex != NSNotFound) {
+        [self.chatVC.util
+            figureOutConversationDataRepositoryFromIndex:firstInsertedIndex
+                                                 toIndex:self.chatVC.channelDataRepository.count -
+                                                         1];
     }
     [self.chatVC.messageCollectionView reloadData];
     [self handleAfterLoadLastestMessage];
@@ -849,8 +870,8 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
     }
 }
 
-// Only the initial load can call back twice. isDoubleCallback marks local and remote versions of
-// the same page; the remote result wins.
+// Only the initial load can call back twice. isDoubleCallback identifies the remote page so callers
+// can preserve the callback phase when needed.
 - (void)getHistoryMessageV2:(long long)time
                       order:(NCChannelHistoryMessageOrder)order
                    loadType:(NCChannelLoadMessageType)loadType
@@ -932,11 +953,9 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                   order:order
                   completion:^(NSArray<NCMessage *> *remoteMessages, BOOL isRemaining,
                                NCChatUIErrorCode code) {
-                    // Message deduplication requires removing the local page before applying
-                    // gap-recovery results to preserve ordering. Signal the second callback so the
-                    // caller clears its data and UI together before applying this page.
-                    // isDoubleCallback identifies the remote replacement for the first local
-                    // result.
+                    // Signal the second callback; the caller merges this page with the local result
+                    // by clientId and sentTime, preserving messages received during
+                    // synchronization.
                     completeHandle(remoteMessages, isRemaining, code, YES);
                   }
                   fallback:^{
@@ -952,11 +971,9 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                   order:order
                   completion:^(NSArray<NCMessage *> *remoteMessages, BOOL isRemaining,
                                NCChatUIErrorCode code) {
-                    // Message deduplication requires removing the local page before applying
-                    // gap-recovery results to preserve ordering. Signal the second callback so the
-                    // caller clears its data and UI together before applying this page.
-                    // isDoubleCallback identifies the remote replacement for the first local
-                    // result.
+                    // Signal the second callback; the caller merges this page with the local result
+                    // by clientId and sentTime, preserving messages received during
+                    // synchronization.
                     completeHandle(remoteMessages, isRemaining, code, YES);
                   }
                   fallback:^{
@@ -1604,6 +1621,7 @@ static NSString *NCConversationMessageHandlerIdentifier(NCChannelViewController 
                        [strongSelf.chatVC.unReadButton removeFromSuperview];
                        strongSelf.chatVC.unReadButton = nil;
                        strongSelf.chatVC.unReadMessage = 0;
+                       strongSelf.isLoadingHistoryMessage = NO;
                      }];
 }
 

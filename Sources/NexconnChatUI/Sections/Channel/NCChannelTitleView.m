@@ -65,6 +65,10 @@
     self.onlineStatusView.online = isOnline;
 }
 
+- (void)hideOnlineStatus {
+    [self.onlineStatusView reset];
+}
+
 - (CGSize)intrinsicContentSize {
     CGSize stackSize =
         [self.contentStackView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];

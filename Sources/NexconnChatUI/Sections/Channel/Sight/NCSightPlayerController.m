@@ -20,6 +20,8 @@
 #define RATE_KEYPATH @"rate"
 /// Playback progress refresh interval
 #define REFRESH_INTERVAL 0.01f
+static const NSInteger NCSightDownloadRequestExistErrorCode = 33202;
+
 @interface NCSightPlayerController () <NCSightTransportDelegate>
 
 @property (strong, nonatomic) AVAsset *asset;
@@ -527,6 +529,10 @@
               if (!strongSelf) {
                   return;
               }
+              if (error.code == NCSightDownloadRequestExistErrorCode) {
+                  [strongSelf p_playRemoteSightWithURLString:remoteURL];
+                  return;
+              }
               if (error || mediaPath.length == 0) {
                   [strongSelf p_handleSightDownloadError:error];
                   return;
@@ -595,6 +601,35 @@
           }
                      error:^(NSError *error){
                      }];
+    });
+}
+
+- (void)p_playRemoteSightWithURLString:(NSString *)remoteURLString {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      NSURL *remoteURL = [NSURL URLWithString:remoteURLString];
+      if (!remoteURL || remoteURL.isFileURL) {
+          [self p_handleSightDownloadError:nil];
+          return;
+      }
+      [self.progressView stopIndeterminateAnimation];
+      [self.progressView removeFromSuperview];
+      [self->_errorTipsLabel removeFromSuperview];
+
+      // 33202 表示同一 URL 的旧下载任务仍在执行，新页面无法订阅其回调，直接回退到远端播放。
+      self.sightURL = remoteURL;
+      __weak typeof(self) weakSelf = self;
+      [self
+          prepareWithBlock:^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (!strongSelf) {
+                return;
+            }
+            strongSelf.isPlaying = YES;
+            [strongSelf.player play];
+          }
+          error:^(NSError *error) {
+            [weakSelf p_handleSightDownloadError:error];
+          }];
     });
 }
 

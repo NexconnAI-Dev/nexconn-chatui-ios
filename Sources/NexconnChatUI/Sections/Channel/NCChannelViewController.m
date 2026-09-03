@@ -133,27 +133,46 @@ static BOOL RCConversationGroupOperationInvalidatesCurrentUser(NCGroupOperationE
 @property (nonatomic, copy) void (^errorBlock)(NSInteger errorCode);
 @end
 
-static int NCUnreadCountForDisplayConversationTypes(NSArray *displayConversationTypeArray) {
+static NSString *NCSubChannelIdForChannel(NCBaseChannel *channel) {
+    if ([channel respondsToSelector:NSSelectorFromString(@"subChannelId")]) {
+        return [channel valueForKey:@"subChannelId"] ?: @"";
+    }
+    return @"";
+}
+
+static BOOL NCChannelMatchesChannel(NCBaseChannel *channel, NCBaseChannel *otherChannel) {
+    if (!channel || !otherChannel || channel.channelType != otherChannel.channelType ||
+        ![channel.channelId isEqualToString:otherChannel.channelId]) {
+        return NO;
+    }
+    return
+        [NCSubChannelIdForChannel(channel) isEqualToString:NCSubChannelIdForChannel(otherChannel)];
+}
+
+static void NCUnreadCountForDisplayConversationTypes(NSArray *displayConversationTypeArray,
+                                                     NCBaseChannel *excludedChannel,
+                                                     void (^completion)(int unreadCount)) {
     if (displayConversationTypeArray.count == 0) {
-        return 0;
+        completion(0);
+        return;
     }
 
-    NCChannelsUnreadCountParams *params = [[NCChannelsUnreadCountParams alloc] init];
-    params.channelTypes = [displayConversationTypeArray copy];
-    params.levels = @[ @(NCChannelNoDisturbLevelAllMessage) ];
-
-    __block int unreadCount = 0;
-    dispatch_semaphore_t waitUnreadCount = dispatch_semaphore_create(0);
-    [NCBaseChannel
-        getChannelsUnreadCountByNoDisturbLevelWithParams:params
-                                              completion:^(NSInteger count,
-                                                           NCError *_Nullable error) {
-                                                (void)error;
-                                                unreadCount = (int)count;
-                                                dispatch_semaphore_signal(waitUnreadCount);
-                                              }];
-    dispatch_semaphore_wait(waitUnreadCount, DISPATCH_TIME_FOREVER);
-    return unreadCount;
+    [NCBaseChannel getUnreadChannels:[displayConversationTypeArray copy]
+                          completion:^(NSArray<NCBaseChannel *> *_Nullable channels,
+                                       NCError *_Nullable error) {
+                            if (error) {
+                                completion(0);
+                                return;
+                            }
+                            NSInteger unreadCount = 0;
+                            for (NCBaseChannel *channel in channels) {
+                                if (NCChannelMatchesChannel(channel, excludedChannel)) {
+                                    continue;
+                                }
+                                unreadCount += channel.unreadCount;
+                            }
+                            completion((int)unreadCount);
+                          }];
 }
 
 static NSString *NCCombinePreviewNavigationTitle(NCCombineMessage *message) {
@@ -222,8 +241,12 @@ static NSString *NCCombinePreviewNavigationTitle(NCCombineMessage *message) {
 @property (nonatomic, strong) NSTimer *typingStatusRestoreTimer;
 @property (nonatomic, strong) NSArray<UIBarButtonItem *> *leftBarButtonItems;
 @property (nonatomic, strong) NSArray<UIBarButtonItem *> *rightBarButtonItems;
+@property (nonatomic, assign) int leftBackButtonUnreadCount;
+@property (nonatomic, copy) NSArray *leftBackButtonUnreadCountChannelTypes;
+@property (nonatomic, assign) NSUInteger leftBackButtonUnreadCountRequestID;
 @property (nonatomic, strong)
     NCBatchSubmitManager *readReceiptBatchManager; // Batches read receipt submissions.
+@property (nonatomic, assign) BOOL hasHandledInvalidGroupOperation;
 
 - (BOOL)isInputTextTooLong:(NSString *)text;
 - (void)showTypingNavigationTitle:(NSString *)title sentTime:(long long)sentTime;
@@ -778,6 +801,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 
 - (void)setNavigationItem {
     self.navigationItem.leftBarButtonItems = [self getLeftBackButton];
+    [self refreshLeftBackButtonUnreadCount];
 
     // Direct channels use a custom title view to display presence.
     if ([self isDisplayOnlineStatus]) {
@@ -2308,6 +2332,15 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     }
 
     if ([self edit_isMessageEditing]) {
+        // 正在编辑的消息被撤回/删除时，退出编辑态并收起键盘。
+        NSString *editingMessageId = self.editingInputBarConfig.messageId;
+        if (editingMessageId.length > 0 && deletedMessage.messageId.length > 0 &&
+            [editingMessageId isEqualToString:deletedMessage.messageId]) {
+            [self edit_exitEditModeAndRestoreNormalWithAnimation:YES
+                                                  activateNormal:NO
+                                                      completion:nil];
+            return;
+        }
         NCMessageModel *model = [NCMessageModel modelWithNCMessage:deletedMessage];
         if (model) {
             [self edit_refreshEditInputReferenceViewIfNeeded:@[ model ]
@@ -2509,6 +2542,8 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
         if (!self.displayChannelTypeArray) {
             dispatch_async(dispatch_get_main_queue(), ^{
               __strong typeof(__weakself) strongSelf = __weakself;
+              // 使已发出的查询失效，避免异步结果覆盖恢复后的导航栏。
+              strongSelf.leftBackButtonUnreadCountRequestID += 1;
               strongSelf.navigationItem.leftBarButtonItems = strongSelf.leftBarButtonItems;
               strongSelf.leftBarButtonItems = nil;
               if (strongSelf.rightBarButtonItems) {
@@ -2525,6 +2560,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
               self.navigationItem.rightBarButtonItems = self.rightBarButtonItems;
               self.rightBarButtonItems = nil;
           }
+          [self refreshLeftBackButtonUnreadCount];
         });
     }
 }
@@ -2858,7 +2894,21 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
         return;
     }
     void (^leaveBlock)(void) = ^{
+      if (self.hasHandledInvalidGroupOperation) {
+          return;
+      }
+      self.hasHandledInvalidGroupOperation = YES;
       [self quitConversationViewAndClear];
+
+      // 群设置页也会处理同一退群事件。聊天页被其他页面覆盖或已展示退群提示时，
+      // 这里只清理资源，不再叠加 UIAlertController，避免遮罩残留导致页面无法交互。
+      UIViewController *topViewController = self.navigationController.topViewController;
+      BOOL isCovered = self.navigationController && topViewController != self;
+      BOOL isPresentingAlert =
+          [self.presentedViewController isKindOfClass:[UIAlertController class]];
+      if (isCovered || isPresentingAlert) {
+          return;
+      }
       [self alertErrorAndLeft:NCUILocalizedString(@"not_in_group")];
     };
     if ([NSThread isMainThread]) {
@@ -3871,8 +3921,12 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
 
     NCSubscribeUserOnlineStatus *onlineStatus =
         [[NCUserOnlineStatusManager sharedManager] getCachedOnlineStatus:self.channelId];
-    // Keep the status icon visible for both online and offline states.
-    [self.conversationTitleView updateOnlineStatus:onlineStatus.isOnline];
+    if (onlineStatus) {
+        [self.conversationTitleView updateOnlineStatus:onlineStatus.isOnline];
+    } else {
+        // Unknown/unloaded status must not be shown as offline.
+        [self.conversationTitleView hideOnlineStatus];
+    }
     if (!onlineStatus) {
         [[NCUserOnlineStatusManager sharedManager] fetchOnlineStatus:self.channelId
                                                processSubscribeLimit:NO];
@@ -4041,7 +4095,7 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
         _unReadButton.frame =
             CGRectMake(0,
                        [NCChatUIUtility getWindowSafeAreaInsetsForView:self.view].top +
-                           self.navigationController.navigationBar.frame.size.height + 14,
+                           self.navigationController.navigationBar.frame.size.height + 30,
                        0, height);
         [_unReadButton setBackgroundImage:NCDynamicImage(@"channel_unread_button_bg_img")
                                  forState:UIControlStateNormal];
@@ -4136,8 +4190,32 @@ static NSString *const ncMessageBaseCellIndentifier = @"ncMessageBaseCellIndenti
     return _messageSelectionToolbar;
 }
 
+- (void)refreshLeftBackButtonUnreadCount {
+    NSArray *channelTypes = [self.displayChannelTypeArray copy];
+    NCBaseChannel *currentChannel = self.currentChannel;
+    NSUInteger requestID = ++self.leftBackButtonUnreadCountRequestID;
+    __weak typeof(self) weakSelf = self;
+    NCUnreadCountForDisplayConversationTypes(channelTypes, currentChannel, ^(int unreadCount) {
+      dispatch_main_async_safe(^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf || requestID != strongSelf.leftBackButtonUnreadCountRequestID ||
+            strongSelf.allowsMessageCellSelection ||
+            ![strongSelf.displayChannelTypeArray isEqualToArray:channelTypes]) {
+            return;
+        }
+
+        strongSelf.leftBackButtonUnreadCount = unreadCount;
+        strongSelf.leftBackButtonUnreadCountChannelTypes = channelTypes;
+        [strongSelf.navigationItem setLeftBarButtonItems:[strongSelf getLeftBackButton]];
+      });
+    });
+}
+
 - (NSArray *)getLeftBackButton {
-    int count = NCUnreadCountForDisplayConversationTypes(self.displayChannelTypeArray);
+    int count = 0;
+    if ([self.leftBackButtonUnreadCountChannelTypes isEqualToArray:self.displayChannelTypeArray]) {
+        count = self.leftBackButtonUnreadCount;
+    }
 
     NSString *backString = nil;
     if (count > 0 && count < 100) {

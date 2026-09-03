@@ -49,7 +49,10 @@
       if (self.indexPath) {
           NCFriendListCell *cell = [self.tableView cellForRowAtIndexPath:self.indexPath];
           if (cell && [cell isKindOfClass:[NCFriendListCell class]]) {
-              cell.onlineStatusView.online = onlineStatus.isOnline;
+              cell.onlineStatusView.hidden = (onlineStatus == nil);
+              if (onlineStatus) {
+                  cell.onlineStatusView.online = onlineStatus.isOnline;
+              }
           }
       }
     });
@@ -66,8 +69,8 @@
         [cell showPortrait:self.friendInfo.avatarUrl];
         cell.labName.text =
             self.friendInfo.remark.length > 0 ? self.friendInfo.remark : self.friendInfo.name;
-        cell.onlineStatusView.hidden = !self.displayOnlineStatus;
-        if (self.displayOnlineStatus) {
+        cell.onlineStatusView.hidden = !self.displayOnlineStatus || (self.onlineStatus == nil);
+        if (self.displayOnlineStatus && self.onlineStatus) {
             cell.onlineStatusView.online = self.onlineStatus.isOnline;
         }
     }

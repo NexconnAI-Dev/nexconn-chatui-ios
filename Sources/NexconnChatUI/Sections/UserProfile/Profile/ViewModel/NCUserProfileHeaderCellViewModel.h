@@ -25,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Defaults to NO, indicating offline status.
 @property (nonatomic, assign) BOOL isOnline;
 
+/// Whether the online status has been resolved (non-nil). Defaults to NO.
+@property (nonatomic, assign) BOOL hasOnlineStatus;
+
 - (instancetype)initWithPortrait:(NSString *)portrait
                             name:(NSString *)name
                           remark:(NSString *)remark;

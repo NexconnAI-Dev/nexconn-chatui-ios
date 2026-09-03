@@ -42,8 +42,10 @@
     [cell.portraitImageView setImageURL:[NSURL URLWithString:self.portrait]];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
-    [cell hiddenOnlineStatusView:!self.displayOnlineStatus];
-    [cell updateOnlineStatus:self.isOnline];
+    [cell hiddenOnlineStatusView:!self.displayOnlineStatus || !self.hasOnlineStatus];
+    if (self.displayOnlineStatus && self.hasOnlineStatus) {
+        [cell updateOnlineStatus:self.isOnline];
+    }
     return cell;
 }
 

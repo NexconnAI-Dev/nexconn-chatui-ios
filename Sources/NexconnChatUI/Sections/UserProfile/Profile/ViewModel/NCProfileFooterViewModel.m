@@ -247,10 +247,13 @@
           return;
       }
       dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf.responder.navigationController popViewControllerAnimated:YES];
         [NCAlertView showAlertController:nil
                                  message:NCUILocalizedString(@"group_dismiss_success")
-                        hiddenAfterDelay:1];
+                        hiddenAfterDelay:1
+                        inViewController:weakSelf.responder
+                       dismissCompletion:^{
+                         [weakSelf.responder.navigationController popViewControllerAnimated:YES];
+                       }];
       });
     }];
 }

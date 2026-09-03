@@ -39,6 +39,8 @@ typedef NS_ENUM(NSInteger, NCChatUIErrorCode) {
     NCChatUIErrorCodeInvalidParameterMessageUid = 34203,
     /// The message was sent after sensitive words were replaced.
     NCChatUIErrorCodeMessageReplacedSensitiveWord = 21502,
+    /// The in-flight media message send was canceled by the user.
+    NCChatUIErrorCodeRequestCanceled = 33200,
     /// The target channel is invalid.
     NCChatUIErrorCodeChannelInvalid = 30001,
     /// The network is unavailable.

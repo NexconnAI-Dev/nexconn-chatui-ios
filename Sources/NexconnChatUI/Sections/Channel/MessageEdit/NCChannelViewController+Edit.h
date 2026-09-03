@@ -86,6 +86,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// Clears the saved edit state.
 - (void)edit_clearSavedEditState;
 
+/// Exits edit mode and restores the regular input bar.
+/// - Parameter animated Whether the exit transition is animated.
+/// - Parameter activate Whether to activate the regular input bar (show the keyboard) after exit.
+/// - Parameter completion Completion handler invoked after exiting edit mode.
+- (void)edit_exitEditModeAndRestoreNormalWithAnimation:(BOOL)animated
+                                        activateNormal:(BOOL)activate
+                                            completion:(void (^_Nullable)())completion;
+
 #pragma mark - Edit Delegate Implementation Methods
 
 /// Handles edit confirmation.

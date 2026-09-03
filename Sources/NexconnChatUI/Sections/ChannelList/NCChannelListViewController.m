@@ -352,7 +352,6 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     __weak typeof(self) ws = self;
     [self.dataSource loadMoreConversations:^(NSMutableArray<NCChannelModel *> *modelList) {
       if (modelList.count > 0) {
-          [ws.conversationListTableView reloadData];
           [ws updateEmptyConversationView];
       }
       [ws.footer endRefreshing];
@@ -608,7 +607,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
     dispatch_async(dispatch_get_main_queue(), ^{
       [self updateConnectionStatusView];
       [self updateNetworkIndicatorView];
-      if (event.status == NCConnectionStatusConnected) {
+      if (event.status == NCConnectionStatusConnected && self.dataSource.dataList.count == 0) {
           [self refreshConversationTableViewIfNeeded];
       }
     });
@@ -768,13 +767,15 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
 }
 
 - (void)finishPendingDraftSaveAfterUpdate {
+    BOOL shouldRefresh = self.needsRefreshAfterDraftSave;
     if (self.pendingDraftSaveCount > 0) {
         self.pendingDraftSaveCount -= 1;
     }
-    if (self.pendingDraftSaveCount == 0) {
-        self.needsRefreshAfterDraftSave = NO;
+    if (self.pendingDraftSaveCount > 0) {
+        return;
     }
-    if (self.dataSource.isConverstaionListAppear) {
+    self.needsRefreshAfterDraftSave = NO;
+    if (shouldRefresh && self.dataSource.isConverstaionListAppear) {
         [self refreshConversationTableViewIfNeeded];
     }
 }
@@ -951,6 +952,7 @@ static NSString *const NCChatUIChannelDraftSaveWillBeginNotificationName =
         conversationVC.channelId = model.channelId;
         conversationVC.subChannelId = model.subChannelId;
         conversationVC.title = model.conversationTitle;
+        conversationVC.displayChannelTypeArray = [self.displayConversationTypeArray copy];
         if (model.conversationModelType == NC_CONVERSATION_MODEL_TYPE_NORMAL) {
             conversationVC.unReadMessage = model.unreadMessageCount;
             conversationVC.enableNewComingMessageIcon = YES; // Enable the new-message indicator.

@@ -36,8 +36,7 @@
 }
 
 - (void)createGroup:(NSString *)groupName inViewController:(UIViewController *)viewController {
-    NSString *validGroupName = [groupName
-        stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *validGroupName = [self p_validGroupNameFromGroupName:groupName];
     if (validGroupName.length < 1) {
         [NCAlertView showAlertController:nil
                                  message:NCUILocalizedString(@"group_name_empty_tip")
@@ -138,5 +137,17 @@
 - (NSString *)p_validGroupIdFromGroupId:(NSString *)groupId {
     return
         [groupId stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
+- (NSString *)p_validGroupNameFromGroupName:(NSString *)groupName {
+    static NSCharacterSet *trimCharacterSet;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+      NSMutableCharacterSet *characterSet =
+          [[NSCharacterSet whitespaceAndNewlineCharacterSet] mutableCopy];
+      [characterSet addCharactersInString:@"\u3000"];
+      trimCharacterSet = [characterSet copy];
+    });
+    return [groupName stringByTrimmingCharactersInSet:trimCharacterSet];
 }
 @end

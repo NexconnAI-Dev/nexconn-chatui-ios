@@ -97,7 +97,7 @@ NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey =
 - (void)p_notifyNetworkStatusChanged:(NCChatUINetworkStatus)status;
 @end
 
-static NSString *const NexconnChatUIVersion = @"0.100.2";
+static NSString *const NexconnChatUIVersion = @"0.100.8";
 static NSString *const NCChatUIMessageHandlerIdentifier = @"NCChatUI.global";
 static NSString *const NCChatUIConnectionStatusHandlerIdentifier = @"NCChatUI.connectionStatus";
 static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
@@ -1168,6 +1168,10 @@ static NSArray<Class> *NCChatUIDefaultCustomMessageClasses(void) {
           }
         }
         completionHandler:^(NCMessage *_Nullable sentMessage, NCError *_Nullable error) {
+          // 取消发送由 cancelHandler 单独通知，不按发送失败处理，避免误显示失败图标。
+          if (error.code == NCChatUIErrorCodeRequestCanceled) {
+              return;
+          }
           BOOL isSensitiveWordReplaced =
               (error.code == NCChatUIErrorCodeMessageReplacedSensitiveWord);
           if (!error || isSensitiveWordReplaced) {

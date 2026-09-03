@@ -42,6 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)updateOnlineStatus:(BOOL)isOnline;
 
+/// Hides the online status indicator for an unknown/unloaded status.
+- (void)hideOnlineStatus;
+
 @end
 
 NS_ASSUME_NONNULL_END

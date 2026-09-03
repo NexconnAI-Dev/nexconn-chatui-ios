@@ -1815,10 +1815,43 @@ static BOOL NCGroupOperationInvalidatesCurrentUser(NCGroupOperationEvent *event)
 #pragma mark-- subscription
 - (void)onSubscriptionChanged:(NCSubscriptionChangedEvent *)event {
     for (NCSubscriptionStatusInfo *subscribeEvent in event.events) {
-        if (subscribeEvent.subscribeType == NCSubscribeTypeUserProfile ||
-            subscribeEvent.subscribeType == NCSubscribeTypeFriendUserProfile) {
-            [self.cache removeUserCache:subscribeEvent.userId];
+        if (subscribeEvent.subscribeType != NCSubscribeTypeUserProfile &&
+            subscribeEvent.subscribeType != NCSubscribeTypeFriendUserProfile) {
+            continue;
         }
+        NSString *userId = subscribeEvent.userId;
+        NCUserProfile *profile = subscribeEvent.userProfile;
+        if (userId.length == 0) {
+            continue;
+        }
+        // 事件未携带最新资料时，仅清除缓存，下次访问时重新拉取。
+        if (!profile) {
+            [self.cache removeUserCache:userId];
+            continue;
+        }
+        // 用事件携带的最新资料更新缓存，并通知会话列表等 UI 刷新昵称/头像。
+        NCChatUIUserInfo *updatedUser = [self.cache getUserCache:userId] ?: [NCChatUIUserInfo new];
+        updatedUser.userId = userId;
+        updatedUser.name = profile.name;
+        if (profile.avatarUrl.length > 0) {
+            updatedUser.avatarUrl = profile.avatarUrl;
+        }
+        if (updatedUser.friendInfo) {
+            updatedUser.friendInfo.name = profile.name;
+            if (profile.avatarUrl.length > 0) {
+                updatedUser.friendInfo.avatarUrl = profile.avatarUrl;
+            }
+        }
+        if (updatedUser.profile) {
+            updatedUser.profile.name = profile.name;
+            if (profile.avatarUrl.length > 0) {
+                updatedUser.profile.avatarUrl = profile.avatarUrl;
+            }
+        } else if (!updatedUser.friendInfo) {
+            updatedUser.profile = profile;
+        }
+        [self.cache cacheUser:updatedUser];
+        [NCInfoUpdateCenter dispatchUserInfoUpdate:updatedUser];
     }
 }
 

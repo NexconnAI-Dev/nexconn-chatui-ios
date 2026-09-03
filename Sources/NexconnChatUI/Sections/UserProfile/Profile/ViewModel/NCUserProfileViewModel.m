@@ -233,6 +233,7 @@ static NSString *NCProfileCurrentUserId(void) { return [NCEngine getCurrentUserI
                     (NCUserProfileHeaderCellViewModel *)headerVM;
                 NCSubscribeUserOnlineStatus *onlineStatus =
                     [NCUserOnlineStatusManager.sharedManager getCachedOnlineStatus:userId];
+                headerCellVM.hasOnlineStatus = (onlineStatus != nil);
                 headerCellVM.isOnline = onlineStatus.isOnline;
                 [self.responder reloadData:NO];
             }
@@ -419,6 +420,7 @@ static NSString *NCProfileCurrentUserId(void) { return [NCEngine getCurrentUserI
         return;
     }
     NCSubscribeUserOnlineStatus *onlineStatus = [self getUserOnlineStatus:self.userId];
+    headerVM.hasOnlineStatus = (onlineStatus != nil);
     headerVM.isOnline = onlineStatus.isOnline;
     headerVM.displayOnlineStatus = YES;
 }

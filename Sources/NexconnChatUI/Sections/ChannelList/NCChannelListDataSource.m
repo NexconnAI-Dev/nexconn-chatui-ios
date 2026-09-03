@@ -31,6 +31,8 @@
 @property (nonatomic, copy) void (^throttleReloadAction)(void);
 @property (nonatomic, strong, nullable) NCChannelsQuery *channelsQuery;
 @property (nonatomic, strong) NSMutableSet<NSString *> *conversationKeySet;
+@property (nonatomic, strong)
+    NSMutableDictionary<NSString *, NCChannelModel *> *conversationModelMap;
 @end
 
 @implementation NCChannelListDataSource
@@ -41,6 +43,7 @@
             dispatch_queue_create("ai.nexconn.conversation.updateEventQueue", NULL);
         self.currentCount = 0;
         self.conversationKeySet = [[NSMutableSet alloc] init];
+        self.conversationModelMap = [[NSMutableDictionary alloc] init];
         self.dataList = [[NSMutableArray alloc] init];
         self.isConverstaionListAppear = NO;
         self.cellBackgroundColor = NCDynamicColor(@"channel-list_background_color");
@@ -131,6 +134,10 @@
                                              [ws.dataList addObject:model];
                                              [ws.conversationKeySet
                                                  addObject:[ws conversationKeyForModel:model]];
+                                             NSString *key = [ws conversationKeyForModel:model];
+                                             if (key.length > 0) {
+                                                 ws.conversationModelMap[key] = model;
+                                             }
                                              [insertedModels addObject:model];
                                              [insertIndexPaths
                                                  addObject:[NSIndexPath
@@ -164,7 +171,7 @@
     if (key.length == 0) {
         return NO;
     }
-    return [self.conversationKeySet containsObject:key];
+    return self.conversationModelMap[key] != nil;
 }
 
 - (NSString *)conversationKeyForModel:(NCChannelModel *)model {
@@ -185,12 +192,156 @@
 
 - (void)rebuildConversationKeySet {
     [self.conversationKeySet removeAllObjects];
+    [self.conversationModelMap removeAllObjects];
     for (NCChannelModel *model in self.dataList) {
         NSString *key = [self conversationKeyForModel:model];
         if (key.length > 0) {
             [self.conversationKeySet addObject:key];
+            self.conversationModelMap[key] = model;
         }
     }
+}
+
+- (nullable NCChannelModel *)conversationModelForChannelType:(NCChannelType)channelType
+                                                   channelId:(NSString *)channelId
+                                                subChannelId:(NSString *)subChannelId {
+    NSString *key = [self conversationKeyForChannelType:channelType
+                                              channelId:channelId
+                                           subChannelId:subChannelId];
+    if (key.length == 0) {
+        return nil;
+    }
+    return self.conversationModelMap[key];
+}
+
+- (void)updateConversationModelWithMessage:(NCMessage *)message {
+    NCChannelIdentifier *identifier = message.channelIdentifier;
+    if (!identifier || identifier.channelId.length == 0 ||
+        ![self isSupportedListRefreshChannelType:identifier.channelType]) {
+        return;
+    }
+
+    NSString *subChannelId = nil;
+    if ([identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]) {
+        subChannelId = ((NCCommunitySubChannelIdentifier *)identifier).subChannelId;
+    }
+
+    NCChannelModel *matchingModel = [self conversationModelForChannelType:identifier.channelType
+                                                                channelId:identifier.channelId
+                                                             subChannelId:subChannelId];
+    if (matchingModel) {
+        NSString *oldKey = [self conversationKeyForModel:matchingModel];
+        [matchingModel updateWithMessage:message];
+        NSString *newKey = [self conversationKeyForModel:matchingModel];
+        if (oldKey.length > 0 && ![oldKey isEqualToString:newKey]) {
+            [self.conversationKeySet removeObject:oldKey];
+            [self.conversationModelMap removeObjectForKey:oldKey];
+            if (newKey.length > 0) {
+                [self.conversationKeySet addObject:newKey];
+                self.conversationModelMap[newKey] = matchingModel;
+            }
+        }
+    }
+
+    [self refreshConversationModelWithChannelType:identifier.channelType
+                                        channelId:identifier.channelId
+                                     subChannelId:subChannelId];
+}
+
+- (void)reloadConversationModelWithChannelType:(NCChannelType)channelType
+                                     channelId:(NSString *)channelId
+                                  subChannelId:(NSString *)subChannelId {
+    if (![self isSupportedListRefreshChannelType:channelType] || channelId.length == 0) {
+        return;
+    }
+
+    [self
+        getChannelByChannelType:channelType
+                      channelId:channelId
+                   subChannelId:subChannelId
+                     completion:^(NCBaseChannel *_Nullable channel) {
+                       dispatch_async(dispatch_get_main_queue(), ^{
+                         NCChannelModel *existingModel =
+                             [self conversationModelForChannelType:channelType
+                                                         channelId:channelId
+                                                      subChannelId:subChannelId];
+                         NCChannelModel *appliedModel = nil;
+                         if (!channel) {
+                             if (existingModel) {
+                                 [self refreshConversationModelWithChannelType:channelType
+                                                                     channelId:channelId
+                                                                  subChannelId:subChannelId];
+                             }
+                             return;
+                         }
+
+                         NCChannelModel *newModel = [[NCChannelModel alloc] initWithChannel:channel
+                                                                                     extend:nil];
+                         newModel.topCellBackgroundColor = self.topCellBackgroundColor;
+                         newModel.cellBackgroundColor = self.cellBackgroundColor;
+                         if (!existingModel) {
+                             appliedModel = newModel;
+                             NSUInteger newIndex = [self getFirstModelIndex:newModel.isTop
+                                                                   sentTime:newModel.sentTime];
+                             [self.dataList insertObject:newModel atIndex:newIndex];
+                             [self rebuildConversationKeySet];
+                             if (self.delegate &&
+                                 [self.delegate
+                                     respondsToSelector:@selector(
+                                                            dataSource:willInsertAtIndexPaths:)]) {
+                                 [self.delegate dataSource:self
+                                     willInsertAtIndexPaths:@[ [NSIndexPath indexPathForRow:newIndex
+                                                                                  inSection:0] ]];
+                             }
+                         } else {
+                             NSUInteger oldIndex = [self.dataList indexOfObject:existingModel];
+                             if (oldIndex == NSNotFound) {
+                                 [self rebuildConversationKeySet];
+                                 return;
+                             }
+
+                             appliedModel = newModel;
+                             NSUInteger newIndex = [self getFirstModelIndex:newModel.isTop
+                                                                   sentTime:newModel.sentTime];
+                             if (oldIndex == newIndex) {
+                                 [self.dataList replaceObjectAtIndex:oldIndex withObject:newModel];
+                                 [self rebuildConversationKeySet];
+                                 if (self.delegate &&
+                                     [self.delegate
+                                         respondsToSelector:
+                                             @selector(dataSource:willReloadAtIndexPaths:)]) {
+                                     [self.delegate dataSource:self
+                                         willReloadAtIndexPaths:@[ [NSIndexPath
+                                                                    indexPathForRow:oldIndex
+                                                                          inSection:0] ]];
+                                 }
+                             } else {
+                                 [self.dataList removeObjectAtIndex:oldIndex];
+                                 [self.dataList insertObject:newModel atIndex:newIndex];
+                                 [self rebuildConversationKeySet];
+                                 if (self.delegate &&
+                                     [self.delegate
+                                         respondsToSelector:@selector(
+                                                                dataSource:willDeleteAtIndexPaths:
+                                                                willInsertAtIndexPaths:)]) {
+                                     [self.delegate dataSource:self
+                                         willDeleteAtIndexPaths:@[ [NSIndexPath
+                                                                    indexPathForRow:oldIndex
+                                                                          inSection:0] ]
+                                         willInsertAtIndexPaths:@[ [NSIndexPath
+                                                                    indexPathForRow:newIndex
+                                                                          inSection:0] ]];
+                                 }
+                             }
+                         }
+
+                         if (appliedModel) {
+                             [self rrs_refreshCachedAndFetchReceiptInfo:@[ appliedModel ]];
+                             [self fetchUserProfile:@[ appliedModel ]];
+                             [self fetchUserOnlineStatus:@[ appliedModel ]];
+                         }
+                       });
+                     }];
 }
 
 - (void)forceLoadConversationModelList:
@@ -400,16 +551,9 @@
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-      NCChannelModel *matchingModel = nil;
-      for (NCChannelModel *model in self.dataList) {
-          if ([self model:model
-                  matchesChannelType:identifier.channelType
-                           channelId:channelId
-                        subChannelId:subChannelId]) {
-              matchingModel = model;
-              break;
-          }
-      }
+      NCChannelModel *matchingModel = [self conversationModelForChannelType:identifier.channelType
+                                                                  channelId:channelId
+                                                               subChannelId:subChannelId];
       if (!matchingModel) {
           return;
       }
@@ -489,16 +633,9 @@
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-      NCChannelModel *matchingModel = nil;
-      for (NCChannelModel *model in self.dataList) {
-          if ([self model:model
-                  matchesChannelType:channelType
-                           channelId:channelId
-                        subChannelId:subChannelId]) {
-              matchingModel = model;
-              break;
-          }
-      }
+      NCChannelModel *matchingModel = [self conversationModelForChannelType:channelType
+                                                                  channelId:channelId
+                                                               subChannelId:subChannelId];
 
       if (matchingModel) {
           NSUInteger oldIndex = [self.dataList indexOfObject:matchingModel];
@@ -549,6 +686,10 @@
                                  [self.dataList insertObject:newModel atIndex:newIndex];
                                  [self.conversationKeySet
                                      addObject:[self conversationKeyForModel:newModel]];
+                                 NSString *key = [self conversationKeyForModel:newModel];
+                                 if (key.length > 0) {
+                                     self.conversationModelMap[key] = newModel;
+                                 }
                                  if (self.delegate &&
                                      [self.delegate
                                          respondsToSelector:
@@ -621,10 +762,26 @@
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-      if (self.delegate &&
-          [self.delegate
-              respondsToSelector:@selector(refreshConversationTableViewIfNeededInDataSource:)]) {
-          [self.delegate refreshConversationTableViewIfNeededInDataSource:self];
+      NSMutableSet<NSString *> *handledKeys = [NSMutableSet set];
+      for (NCMessage *message in event.messages) {
+          NCChannelIdentifier *identifier = message.channelIdentifier;
+          if (!identifier || identifier.channelId.length == 0) {
+              continue;
+          }
+          NSString *subChannelId = nil;
+          if ([identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]) {
+              subChannelId = ((NCCommunitySubChannelIdentifier *)identifier).subChannelId;
+          }
+          NSString *key = [self conversationKeyForChannelType:identifier.channelType
+                                                    channelId:identifier.channelId
+                                                 subChannelId:subChannelId];
+          if (key.length == 0 || [handledKeys containsObject:key]) {
+              continue;
+          }
+          [handledKeys addObject:key];
+          [self reloadConversationModelWithChannelType:identifier.channelType
+                                             channelId:identifier.channelId
+                                          subChannelId:subChannelId];
       }
     });
 }
@@ -743,20 +900,40 @@
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-      if (self.delegate &&
-          [self.delegate
-              respondsToSelector:@selector(refreshConversationTableViewIfNeededInDataSource:)]) {
-          [self.delegate refreshConversationTableViewIfNeededInDataSource:self];
+      NSMutableDictionary<NSString *, NCMessage *> *messageByKey = [NSMutableDictionary dictionary];
+      for (NCMessage *message in messages) {
+          NCChannelIdentifier *identifier = message.channelIdentifier;
+          if (!identifier || identifier.channelId.length == 0) {
+              continue;
+          }
+          NSString *subChannelId = nil;
+          if ([identifier isKindOfClass:[NCCommunitySubChannelIdentifier class]]) {
+              subChannelId = ((NCCommunitySubChannelIdentifier *)identifier).subChannelId;
+          }
+          NSString *key = [self conversationKeyForChannelType:identifier.channelType
+                                                    channelId:identifier.channelId
+                                                 subChannelId:subChannelId];
+          if (key.length == 0) {
+              continue;
+          }
+          messageByKey[key] = message;
+      }
+      for (NCMessage *message in messageByKey.allValues) {
+          [self updateConversationModelWithMessage:message];
       }
     });
 }
 
 - (void)onReceivedMessage:(NCMessage *)message left:(int)left offline:(BOOL)offline {
-    (void)message;
     (void)offline;
     dispatch_async(self.updateEventQueue, ^{
       if (self.isConverstaionListAppear) {
-          self.throttleReloadAction();
+          if (!message) {
+              return;
+          }
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [self updateConversationModelWithMessage:message];
+          });
       } else if (left == 0) {
           if (self.delegate &&
               [self.delegate

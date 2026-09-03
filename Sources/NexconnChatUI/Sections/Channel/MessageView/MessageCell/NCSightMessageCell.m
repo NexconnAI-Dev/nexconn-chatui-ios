@@ -70,15 +70,18 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
     [super setDataModel:model];
     self.thumbnailView.image = nil;
     UIImage *thumbnailImage = [self.model sightMessageThumbnailImage];
+
+    CGSize imageSize = [NCSightMessageCell getSightImageSize:self.model];
+    self.messageContentView.contentSize = imageSize;
+    self.thumbnailView.frame = self.messageContentView.bounds;
+    self.thumbnailOverlayView.frame = self.thumbnailView.bounds;
+    self.thumbnailView.hidden = (thumbnailImage == nil);
+
     if (thumbnailImage) {
-        CGSize imageSize = [NCSightMessageCell getSightImageSize:self.model];
         self.durationLabel.text =
             [self getSightDurationLabelText:[self.model sightMessageDuration]];
         self.thumbnailView.image = thumbnailImage;
 
-        self.messageContentView.contentSize = imageSize;
-        self.thumbnailView.frame = self.messageContentView.bounds;
-        self.thumbnailOverlayView.frame = self.thumbnailView.bounds;
         if (self.progressView.superview) {
             [self.progressView removeFromSuperview];
         }
@@ -142,8 +145,10 @@ extern NSString *const NCUIDispatchDownloadMediaNotification;
             imageWidth = 160 * rate;
         }
     } else {
-        imageWidth = imageSize.width;
-        imageHeight = imageSize.height;
+        // 缩略图缺失：回退到最小头像尺寸，保证 sizeForMessageModel 与 setDataModel
+        // 计算的内容高度一致，避免复用残留导致气泡重叠。
+        imageWidth = NCChatUIConfigCenter.ui.globalMessagePortraitSize.width;
+        imageHeight = NCChatUIConfigCenter.ui.globalMessagePortraitSize.height;
     }
     return CGSizeMake(imageWidth, imageHeight);
 }

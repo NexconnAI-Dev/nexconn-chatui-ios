@@ -266,7 +266,13 @@
 }
 
 - (void)updateOnlineStatusDisplay {
-    [self updateOnlineStatus:self.model.onlineStatus.isOnline];
+    NCSubscribeUserOnlineStatus *onlineStatus = self.model.onlineStatus;
+    if (!onlineStatus) {
+        // Unknown/unloaded status must not be shown as offline.
+        self.onlineStatusView.hidden = YES;
+        return;
+    }
+    [self updateOnlineStatus:onlineStatus.isOnline];
 }
 
 - (BOOL)hideSenderNameForDefault:(NCChannelModel *)model {

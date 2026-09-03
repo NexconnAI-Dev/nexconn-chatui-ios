@@ -36,7 +36,7 @@
 /// Default subscription lifetime: seven days, in seconds.
 static const NSInteger kNCOnlineStatusDefaultSubscribeExpiry = 7 * 24 * 60 * 60;
 
-/// Raw remaining-time threshold used to select resubscription candidates: one day in seconds.
+/// Remaining-time threshold used to select resubscription candidates: one day in seconds.
 static const NSInteger kNCOnlineStatusSubscribeExpiryThreshold = 1 * 24 * 60 * 60;
 
 /// Default maximum subscription count.
@@ -1186,24 +1186,29 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch, id context,
     }
 }
 
-/// Selects users whose current raw remaining-time calculation is positive and within the threshold.
+/// Selects users whose subscription has not expired and will expire within the threshold.
 - (NSArray<NSString *> *)findUsersNeedResubscribe:(NSArray<NCSubscriptionStatusInfo *> *)events {
     NSMutableArray *resubscribeList = [NSMutableArray array];
-    NSTimeInterval currentTime =
-        [[NSDate date] timeIntervalSince1970] * 1000; // Current epoch time in milliseconds.
+    int64_t currentTimeMs = (int64_t)([[NSDate date] timeIntervalSince1970] * 1000);
+    int64_t thresholdMs = (int64_t)kNCOnlineStatusSubscribeExpiryThreshold * 1000;
 
     for (NCSubscriptionStatusInfo *event in events) {
         if (event.userId && event.userId.length > 0) {
-            // Subtract the current millisecond timestamp from subscribeTime without unit
-            // conversion.
-            NSTimeInterval remainingTime = event.subscribeTime - currentTime;
+            if (event.subscribeTime <= 0 || event.expiry <= 0) {
+                NCLogD(@"Skip invalid subscription record for user %@, subscribeTime:%lld, "
+                       @"expiry:%ld",
+                       event.userId, event.subscribeTime, (long)event.expiry);
+                continue;
+            }
 
-            // Compare the positive raw difference directly with the seconds-based threshold.
-            if (remainingTime > 0 && remainingTime <= kNCOnlineStatusSubscribeExpiryThreshold) {
+            int64_t expiryTimeMs = event.subscribeTime + (int64_t)event.expiry * 1000;
+            int64_t remainingTimeMs = expiryTimeMs - currentTimeMs;
+
+            if (remainingTimeMs > 0 && remainingTimeMs <= thresholdMs) {
                 [resubscribeList addObject:event.userId];
-                NCLogD(
-                    @"User %@ has raw remaining time %.0f (threshold: %ld), needs resubscription",
-                    event.userId, remainingTime, (long)kNCOnlineStatusSubscribeExpiryThreshold);
+                NCLogD(@"User %@ has remaining time %lldms (threshold: %lldms), needs "
+                       @"resubscription",
+                       event.userId, remainingTimeMs, thresholdMs);
             }
         }
     }
@@ -1249,7 +1254,7 @@ typedef void (^NCBatchExecutorBlock)(NSArray *batch, id context,
       }
       usersToUnsubscribe = [unsubscribeList copy];
 
-      // 3. Select current subscriptions that match the raw remaining-time threshold.
+      // 3. Select current subscriptions that are close to expiry.
       usersToResubscribe = [self findUsersNeedResubscribe:allSubscribedEvents];
 
       // 4. Subscribe retained IDs that are not currently subscribed.

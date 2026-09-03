@@ -58,6 +58,7 @@ static BOOL NCGroupProfileOperationInvalidatesCurrentUser(NCGroupOperationEvent 
 @property (nonatomic, assign) BOOL showGroupFollowsCell;
 @property (nonatomic, copy) NSString *groupEventHandlerId;
 @property (nonatomic, copy) NSString *channelEventHandlerId;
+@property (nonatomic, assign) BOOL hasHandledInvalidGroupOperation;
 
 - (void)p_leaveProfileForInvalidGroupOperation;
 
@@ -206,6 +207,13 @@ static BOOL NCGroupProfileOperationInvalidatesCurrentUser(NCGroupOperationEvent 
 
 - (void)onGroupOperation:(NCGroupOperationEvent *)event {
     if ([event.groupId isEqualToString:self.groupId]) {
+        // 群主自己主动解散群时，dismissGroup 已负责退出资料页并弹出“解散群组成功”提示，
+        // 这里跳过，避免两条路径重复 pop + 弹框导致提示框无法关闭。
+        NSString *currentUserId = NCGroupProfileCurrentUserId();
+        if (event.operation == NCGroupOperationDismiss && currentUserId.length > 0 &&
+            [event.operatorInfo.userId isEqualToString:currentUserId]) {
+            return;
+        }
         if (NCGroupProfileOperationInvalidatesCurrentUser(event)) {
             [self p_leaveProfileForInvalidGroupOperation];
         } else {
@@ -218,6 +226,14 @@ static BOOL NCGroupProfileOperationInvalidatesCurrentUser(NCGroupOperationEvent 
 
 - (void)p_leaveProfileForInvalidGroupOperation {
     void (^leaveBlock)(void) = ^{
+      // 群操作事件可能重复到达，且已退出页面可能因在途查询而延迟释放。
+      // 只允许当前 ViewModel 执行一次导航和弹窗，避免多个 UIAlertController 叠加后无法消失。
+      if (self.hasHandledInvalidGroupOperation) {
+          return;
+      }
+      self.hasHandledInvalidGroupOperation = YES;
+      [NCEngine removeGroupChannelHandlerForIdentifier:self.groupEventHandlerId];
+
       UIViewController *viewController = [self.responder currentViewController];
       [viewController.navigationController popViewControllerAnimated:YES];
       [NCAlertView showAlertController:nil
