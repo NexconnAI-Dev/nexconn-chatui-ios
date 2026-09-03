@@ -97,7 +97,7 @@ NSString *const NCChatUIUserOnlineStatusChangedUserIdsKey =
 - (void)p_notifyNetworkStatusChanged:(NCChatUINetworkStatus)status;
 @end
 
-static NSString *const NexconnChatUIVersion = @"0.100.8";
+static NSString *const NexconnChatUIVersion = @"26.4.2";
 static NSString *const NCChatUIMessageHandlerIdentifier = @"NCChatUI.global";
 static NSString *const NCChatUIConnectionStatusHandlerIdentifier = @"NCChatUI.connectionStatus";
 static NSString *const NCChatUIChannelHandlerIdentifier = @"NCChatUI.channel";
